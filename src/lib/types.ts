@@ -6,6 +6,7 @@ export interface Bounty {
   description: string;
   images: string[];
   category: BountyCategory;
+  subcategory?: string;
   tags: string[];
   bountyAmount: number;
   targetPriceMin?: number;
@@ -94,15 +95,149 @@ export interface Rating {
   createdAt: Date;
 }
 
-// Enums
+// Category system - Main categories with subcategories
+export interface CategoryStructure {
+  [key: string]: {
+    label: string;
+    subcategories: {
+      [key: string]: string;
+    };
+  };
+}
+
+export const CATEGORY_STRUCTURE: CategoryStructure = {
+  'vehicles-parts': {
+    label: 'Vehicles & Parts',
+    subcategories: {
+      'cars-trucks': 'Cars & Trucks',
+      'motorcycles': 'Motorcycles',
+      'boats': 'Boats',
+      'auto-parts': 'Auto Parts & Accessories',
+      'tires-wheels': 'Tires & Wheels',
+      'car-electronics': 'Car Electronics',
+      'other-vehicles': 'Other Vehicles'
+    }
+  },
+  'home-garden': {
+    label: 'Home & Garden',
+    subcategories: {
+      'furniture': 'Furniture',
+      'kitchen-dining': 'Kitchen & Dining',
+      'home-decor': 'Home Decor',
+      'garden-patio': 'Garden & Patio',
+      'home-improvement': 'Home Improvement',
+      'appliances': 'Appliances',
+      'lighting': 'Lighting'
+    }
+  },
+  'clothing-accessories': {
+    label: 'Clothing & Accessories',
+    subcategories: {
+      'mens-clothing': "Men's Clothing",
+      'womens-clothing': "Women's Clothing",
+      'kids-clothing': "Kids' Clothing",
+      'shoes': 'Shoes',
+      'jewelry-watches': 'Jewelry & Watches',
+      'handbags': 'Handbags & Accessories',
+      'vintage-clothing': 'Vintage Clothing'
+    }
+  },
+  'electronics': {
+    label: 'Electronics',
+    subcategories: {
+      'computers': 'Computers & Tablets',
+      'cell-phones': 'Cell Phones & Smart Watches',
+      'audio-video': 'Audio & Video',
+      'gaming': 'Gaming',
+      'cameras': 'Cameras & Photo',
+      'tv-home-theater': 'TV & Home Theater',
+      'electronics-accessories': 'Electronics Accessories'
+    }
+  },
+  'collectibles': {
+    label: 'Collectibles',
+    subcategories: {
+      'coins-currency': 'Coins & Currency',
+      'comics': 'Comics & Graphic Novels',
+      'sports-cards': 'Sports Trading Cards',
+      'antiques': 'Antiques',
+      'vintage-items': 'Vintage Items',
+      'memorabilia': 'Memorabilia',
+      'stamps': 'Stamps'
+    }
+  },
+  'toys-hobbies': {
+    label: 'Toys & Hobbies',
+    subcategories: {
+      'action-figures': 'Action Figures',
+      'model-trains': 'Model Trains & Railroad',
+      'crafts': 'Crafts & Sewing',
+      'board-games': 'Board Games & Puzzles',
+      'radio-control': 'Radio Control & Control Line',
+      'slot-cars': 'Slot Cars',
+      'outdoor-toys': 'Outdoor Toys & Structures'
+    }
+  },
+  'books-media': {
+    label: 'Books & Media',
+    subcategories: {
+      'books': 'Books',
+      'movies-tv': 'Movies & TV',
+      'music': 'Music',
+      'magazines': 'Magazines',
+      'video-games': 'Video Games',
+      'educational': 'Educational Materials'
+    }
+  },
+  'health-beauty': {
+    label: 'Health & Beauty',
+    subcategories: {
+      'skincare': 'Skincare',
+      'makeup': 'Makeup',
+      'hair-care': 'Hair Care',
+      'fitness': 'Fitness & Wellness',
+      'vitamins': 'Vitamins & Supplements',
+      'nail-care': 'Nail Care',
+      'fragrance': 'Fragrance'
+    }
+  },
+  'sports-outdoors': {
+    label: 'Sports & Outdoors',
+    subcategories: {
+      'athletic-apparel': 'Athletic Apparel',
+      'exercise-equipment': 'Exercise & Fitness Equipment',
+      'outdoor-sports': 'Outdoor Sports',
+      'team-sports': 'Team Sports',
+      'water-sports': 'Water Sports',
+      'winter-sports': 'Winter Sports',
+      'fishing': 'Fishing'
+    }
+  },
+  'business-industrial': {
+    label: 'Business & Industrial',
+    subcategories: {
+      'manufacturing': 'Manufacturing & Metalworking',
+      'office-supplies': 'Office Supplies',
+      'restaurant-catering': 'Restaurant & Catering',
+      'construction': 'Construction',
+      'medical-dental': 'Medical & Dental',
+      'printing': 'Printing & Graphic Arts'
+    }
+  }
+};
+
+// Enums for backward compatibility and ease of use
 export enum BountyCategory {
+  VEHICLES_PARTS = 'vehicles-parts',
+  HOME_GARDEN = 'home-garden',
+  CLOTHING_ACCESSORIES = 'clothing-accessories',
   ELECTRONICS = 'electronics',
-  FASHION = 'fashion',
-  HOME = 'home',
-  AUTOMOTIVE = 'automotive',
   COLLECTIBLES = 'collectibles',
-  SERVICES = 'services',
-  OTHER = 'other'
+  TOYS_HOBBIES = 'toys-hobbies',
+  BOOKS_MEDIA = 'books-media',
+  HEALTH_BEAUTY = 'health-beauty',
+  SPORTS_OUTDOORS = 'sports-outdoors',
+  BUSINESS_INDUSTRIAL = 'business-industrial'
 }
 
 export enum BountyStatus {
@@ -140,6 +275,7 @@ export interface PostBountyForm {
   description: string;
   images: File[];
   category: BountyCategory;
+  subcategory?: string;
   tags: string[];
   targetPriceMin?: number;
   targetPriceMax?: number;
@@ -159,6 +295,7 @@ export interface ClaimForm {
 export interface SearchFilters {
   keyword?: string;
   category?: BountyCategory;
+  subcategory?: string;
   minBounty?: number;
   maxBounty?: number;
   location?: string;

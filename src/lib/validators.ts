@@ -1,6 +1,6 @@
 // Form validation schemas using Zod
 import { z } from 'zod';
-import { BountyCategory, ClaimType } from './types';
+import { BountyCategory, ClaimType, CATEGORY_STRUCTURE } from './types';
 
 // Post Bounty form validation
 export const postBountySchema = z.object({
@@ -15,6 +15,8 @@ export const postBountySchema = z.object({
   category: z.nativeEnum(BountyCategory, {
     required_error: 'Please select a category'
   }),
+  
+  subcategory: z.string().optional(),
   
   tags: z.array(z.string())
     .min(1, 'Add at least one tag')
@@ -74,6 +76,7 @@ export const claimSchema = z.object({
 export const searchFiltersSchema = z.object({
   keyword: z.string().max(100).optional(),
   category: z.nativeEnum(BountyCategory).optional(),
+  subcategory: z.string().optional(),
   minBounty: z.number().min(0).optional(),
   maxBounty: z.number().min(0).optional(),
   location: z.string().max(100).optional(),

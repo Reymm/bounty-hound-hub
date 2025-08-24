@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { postBountySchema, PostBountyFormData } from '@/lib/validators';
-import { BountyCategory } from '@/lib/types';
+import { BountyCategory, CATEGORY_STRUCTURE } from '@/lib/types';
 import { mockApi } from '@/lib/api/mock';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,6 +49,7 @@ export default function PostBounty() {
   const watchedBountyAmount = watch('bountyAmount');
   const watchedTargetMin = watch('targetPriceMin');
   const watchedTargetMax = watch('targetPriceMax');
+  const selectedCategory = watch('category');
 
   const addTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim()) && tags.length < 10) {
@@ -95,7 +96,8 @@ export default function PostBounty() {
       const bounty = await mockApi.createBounty({
         title: data.title,
         description: data.description,
-        category: data.category,
+              category: data.category,
+              subcategory: data.subcategory,
         location: data.location,
         deadline: data.deadline,
         bountyAmount: data.bountyAmount,
@@ -176,14 +178,17 @@ export default function PostBounty() {
                 <Label htmlFor="category">
                   Category <span className="text-destructive">*</span>
                 </Label>
-                <Select onValueChange={(value) => setValue('category', value as BountyCategory)}>
+                <Select onValueChange={(value) => {
+                  setValue('category', value as BountyCategory);
+                  setValue('subcategory', undefined); // Clear subcategory when category changes
+                }}>
                   <SelectTrigger id="category" className={errors.category ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.values(BountyCategory).map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ')}
+                    {Object.entries(CATEGORY_STRUCTURE).map(([key, categoryData]) => (
+                      <SelectItem key={key} value={key}>
+                        {categoryData.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -193,23 +198,42 @@ export default function PostBounty() {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="location">
-                  Location <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="location"
-                    placeholder="City, State or Region"
-                    className={`pl-10 ${errors.location ? 'border-destructive' : ''}`}
-                    {...register('location')}
-                  />
+              {/* Subcategory - Only show if category is selected */}
+              {selectedCategory && (
+                <div className="space-y-2">
+                  <Label htmlFor="subcategory">Subcategory</Label>
+                  <Select onValueChange={(value) => setValue('subcategory', value)}>
+                    <SelectTrigger id="subcategory">
+                      <SelectValue placeholder="Select a subcategory (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(CATEGORY_STRUCTURE[selectedCategory]?.subcategories || {}).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                {errors.location && (
-                  <p className="text-sm text-destructive">{errors.location.message}</p>
-                )}
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">
+                Location <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  id="location"
+                  placeholder="City, State or Region"
+                  className={`pl-10 ${errors.location ? 'border-destructive' : ''}`}
+                  {...register('location')}
+                />
               </div>
+              {errors.location && (
+                <p className="text-sm text-destructive">{errors.location.message}</p>
+              )}
             </div>
 
             {/* Tags */}

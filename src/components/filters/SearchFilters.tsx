@@ -19,7 +19,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { BountyCategory, SearchFilters as SearchFiltersType } from '@/lib/types';
+import { BountyCategory, SearchFilters as SearchFiltersType, CATEGORY_STRUCTURE } from '@/lib/types';
 
 interface SearchFiltersProps {
   filters: SearchFiltersType;
@@ -98,18 +98,41 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
               onValueChange={(value) => handleFilterChange('category', value === 'all' ? undefined : value)}
             >
               <SelectTrigger id="category-filter">
-                <SelectValue placeholder="All categories" />
+                <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All categories</SelectItem>
-                {Object.values(BountyCategory).map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ')}
+                <SelectItem value="all">All Categories</SelectItem>
+                {Object.entries(CATEGORY_STRUCTURE).map(([key, categoryData]) => (
+                  <SelectItem key={key} value={key}>
+                    {categoryData.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Subcategory Filter - Only show if category is selected */}
+          {localFilters.category && (
+            <div className="space-y-2">
+              <Label htmlFor="subcategory-filter">Subcategory</Label>
+              <Select 
+                value={localFilters.subcategory || ''} 
+                onValueChange={(value) => handleFilterChange('subcategory', value === 'all' ? undefined : value)}
+              >
+                <SelectTrigger id="subcategory-filter">
+                  <SelectValue placeholder="All Subcategories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subcategories</SelectItem>
+                  {Object.entries(CATEGORY_STRUCTURE[localFilters.category]?.subcategories || {}).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Bounty Amount Range */}
           <div className="space-y-4">
@@ -183,24 +206,40 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
             </Select>
           </div>
 
-          {/* Active Filters Summary */}
-          {activeFiltersCount > 0 && (
-            <div className="space-y-2 pt-4 border-t border-border">
-              <Label className="text-sm font-medium">Active Filters</Label>
-              <div className="flex flex-wrap gap-2">
-                {filters.category && (
-                  <Badge variant="secondary" className="text-xs">
-                    {filters.category}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 ml-1 hover:bg-transparent"
-                      onClick={() => handleFilterChange('category', undefined)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                )}
+              {/* Active Filters Summary */}
+              {activeFiltersCount > 0 && (
+                <div className="space-y-2 pt-4 border-t border-border">
+                  <Label className="text-sm font-medium">Active Filters</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {filters.category && (
+                      <Badge variant="secondary" className="text-xs">
+                        {CATEGORY_STRUCTURE[filters.category]?.label || filters.category}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 ml-1 hover:bg-transparent"
+                          onClick={() => {
+                            handleFilterChange('category', undefined);
+                            handleFilterChange('subcategory', undefined); // Clear subcategory when category is cleared
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    {filters.subcategory && (
+                      <Badge variant="secondary" className="text-xs">
+                        {CATEGORY_STRUCTURE[filters.category!]?.subcategories[filters.subcategory] || filters.subcategory}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 ml-1 hover:bg-transparent"
+                          onClick={() => handleFilterChange('subcategory', undefined)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    )}
                 {(filters.minBounty || filters.maxBounty) && (
                   <Badge variant="secondary" className="text-xs">
                     ${filters.minBounty || 0} - ${filters.maxBounty || '∞'}
