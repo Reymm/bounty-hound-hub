@@ -65,9 +65,9 @@ export function TopNav({ onSearch }: TopNavProps) {
               asChild 
               className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
             >
-              <Link to="/post" aria-label="Post a new bounty">
+              <Link to="/post" aria-label="Sign up for free">
                 <Plus className="h-4 w-4 mr-2" />
-                Post Bounty
+                Sign Up Free
               </Link>
             </Button>
 
@@ -148,7 +148,7 @@ export function TopNav({ onSearch }: TopNavProps) {
             <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
               <Link to="/post" onClick={() => setIsMobileMenuOpen(false)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Post Bounty
+                Sign Up Free
               </Link>
             </Button>
 
