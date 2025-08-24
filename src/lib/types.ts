@@ -106,138 +106,80 @@ export interface CategoryStructure {
 }
 
 export const CATEGORY_STRUCTURE: CategoryStructure = {
-  'vehicles-parts': {
-    label: 'Vehicles & Parts',
+  'collectibles': {
+    label: 'Collectibles',
     subcategories: {
-      'cars-trucks': 'Cars & Trucks',
-      'motorcycles': 'Motorcycles',
-      'boats': 'Boats',
-      'auto-parts': 'Auto Parts & Accessories',
-      'tires-wheels': 'Tires & Wheels',
-      'car-electronics': 'Car Electronics',
-      'other-vehicles': 'Other Vehicles'
-    }
-  },
-  'home-garden': {
-    label: 'Home & Garden',
-    subcategories: {
-      'furniture': 'Furniture',
-      'kitchen-dining': 'Kitchen & Dining',
-      'home-decor': 'Home Decor',
-      'garden-patio': 'Garden & Patio',
-      'home-improvement': 'Home Improvement',
-      'appliances': 'Appliances',
-      'lighting': 'Lighting'
-    }
-  },
-  'clothing-accessories': {
-    label: 'Clothing & Accessories',
-    subcategories: {
-      'mens-clothing': "Men's Clothing",
-      'womens-clothing': "Women's Clothing",
-      'kids-clothing': "Kids' Clothing",
-      'shoes': 'Shoes',
-      'jewelry-watches': 'Jewelry & Watches',
-      'handbags': 'Handbags & Accessories',
-      'vintage-clothing': 'Vintage Clothing'
+      'vintage-toys': 'Vintage Toys',
+      'rare-coins': 'Rare Coins',
+      'comic-books': 'Comic Books',
+      'sports-memorabilia': 'Sports Memorabilia',
+      'antiques': 'Antiques',
+      'trading-cards': 'Trading Cards',
+      'stamps': 'Stamps',
+      'vintage-items': 'Vintage Items'
     }
   },
   'electronics': {
     label: 'Electronics',
     subcategories: {
-      'computers': 'Computers & Tablets',
-      'cell-phones': 'Cell Phones & Smart Watches',
-      'audio-video': 'Audio & Video',
-      'gaming': 'Gaming',
-      'cameras': 'Cameras & Photo',
+      'computers': 'Computers & Laptops',
+      'cell-phones': 'Cell Phones & Tablets',
+      'audio-video': 'Audio & Video Equipment',
+      'gaming': 'Gaming Consoles & Games',
+      'cameras': 'Cameras & Photography',
       'tv-home-theater': 'TV & Home Theater',
-      'electronics-accessories': 'Electronics Accessories'
+      'wearable-tech': 'Wearable Technology',
+      'electronics-parts': 'Electronics Parts & Components'
     }
   },
-  'collectibles': {
-    label: 'Collectibles',
+  'fashion-apparel': {
+    label: 'Fashion & Apparel',
     subcategories: {
-      'coins-currency': 'Coins & Currency',
-      'comics': 'Comics & Graphic Novels',
-      'sports-cards': 'Sports Trading Cards',
-      'antiques': 'Antiques',
-      'vintage-items': 'Vintage Items',
-      'memorabilia': 'Memorabilia',
-      'stamps': 'Stamps'
-    }
-  },
-  'toys-hobbies': {
-    label: 'Toys & Hobbies',
-    subcategories: {
-      'action-figures': 'Action Figures',
-      'model-trains': 'Model Trains & Railroad',
-      'crafts': 'Crafts & Sewing',
-      'board-games': 'Board Games & Puzzles',
-      'radio-control': 'Radio Control & Control Line',
-      'slot-cars': 'Slot Cars',
-      'outdoor-toys': 'Outdoor Toys & Structures'
+      'mens-clothing': "Men's Clothing",
+      'womens-clothing': "Women's Clothing",
+      'shoes': 'Shoes & Footwear',
+      'jewelry-watches': 'Jewelry & Watches',
+      'handbags-accessories': 'Handbags & Accessories',
+      'vintage-fashion': 'Vintage Fashion',
+      'designer-items': 'Designer Items',
+      'activewear': 'Activewear & Sportswear'
     }
   },
   'books-media': {
     label: 'Books & Media',
     subcategories: {
-      'books': 'Books',
-      'movies-tv': 'Movies & TV',
-      'music': 'Music',
-      'magazines': 'Magazines',
+      'rare-books': 'Rare & Collectible Books',
+      'textbooks': 'Textbooks & Educational',
+      'magazines': 'Magazines & Periodicals',
+      'movies-dvd': 'Movies & DVDs',
+      'music-vinyl': 'Music & Vinyl Records',
       'video-games': 'Video Games',
-      'educational': 'Educational Materials'
+      'digital-media': 'Digital Media',
+      'manuscripts': 'Manuscripts & Documents'
     }
   },
-  'health-beauty': {
-    label: 'Health & Beauty',
+  'miscellaneous': {
+    label: 'Miscellaneous',
     subcategories: {
-      'skincare': 'Skincare',
-      'makeup': 'Makeup',
-      'hair-care': 'Hair Care',
-      'fitness': 'Fitness & Wellness',
-      'vitamins': 'Vitamins & Supplements',
-      'nail-care': 'Nail Care',
-      'fragrance': 'Fragrance'
-    }
-  },
-  'sports-outdoors': {
-    label: 'Sports & Outdoors',
-    subcategories: {
-      'athletic-apparel': 'Athletic Apparel',
-      'exercise-equipment': 'Exercise & Fitness Equipment',
-      'outdoor-sports': 'Outdoor Sports',
-      'team-sports': 'Team Sports',
-      'water-sports': 'Water Sports',
-      'winter-sports': 'Winter Sports',
-      'fishing': 'Fishing'
-    }
-  },
-  'business-industrial': {
-    label: 'Business & Industrial',
-    subcategories: {
-      'manufacturing': 'Manufacturing & Metalworking',
-      'office-supplies': 'Office Supplies',
-      'restaurant-catering': 'Restaurant & Catering',
-      'construction': 'Construction',
-      'medical-dental': 'Medical & Dental',
-      'printing': 'Printing & Graphic Arts'
+      'home-garden': 'Home & Garden',
+      'automotive': 'Automotive Parts & Accessories',
+      'tools-hardware': 'Tools & Hardware',
+      'health-beauty': 'Health & Beauty',
+      'sports-outdoors': 'Sports & Outdoors',
+      'crafts-hobbies': 'Crafts & Hobbies',
+      'business-industrial': 'Business & Industrial',
+      'other': 'Other Items'
     }
   }
 };
 
 // Enums for backward compatibility and ease of use
 export enum BountyCategory {
-  VEHICLES_PARTS = 'vehicles-parts',
-  HOME_GARDEN = 'home-garden',
-  CLOTHING_ACCESSORIES = 'clothing-accessories',
-  ELECTRONICS = 'electronics',
   COLLECTIBLES = 'collectibles',
-  TOYS_HOBBIES = 'toys-hobbies',
+  ELECTRONICS = 'electronics',
+  FASHION_APPAREL = 'fashion-apparel',
   BOOKS_MEDIA = 'books-media',
-  HEALTH_BEAUTY = 'health-beauty',
-  SPORTS_OUTDOORS = 'sports-outdoors',
-  BUSINESS_INDUSTRIAL = 'business-industrial'
+  MISCELLANEOUS = 'miscellaneous'
 }
 
 export enum BountyStatus {
