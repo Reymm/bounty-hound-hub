@@ -158,16 +158,100 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
       'manuscripts': 'Manuscripts & Documents'
     }
   },
+  'home-garden': {
+    label: 'Home & Garden',
+    subcategories: {
+      'furniture': 'Furniture',
+      'decor': 'Home Decor',
+      'garden-tools': 'Garden Tools & Equipment',
+      'plants-seeds': 'Plants & Seeds',
+      'outdoor-living': 'Outdoor Living',
+      'home-improvement': 'Home Improvement',
+      'kitchen-dining': 'Kitchen & Dining',
+      'bedding-bath': 'Bedding & Bath'
+    }
+  },
+  'automotive': {
+    label: 'Automotive Parts & Accessories',
+    subcategories: {
+      'car-parts': 'Car Parts',
+      'motorcycle-parts': 'Motorcycle Parts',
+      'truck-parts': 'Truck Parts',
+      'automotive-tools': 'Automotive Tools',
+      'car-electronics': 'Car Electronics',
+      'tires-wheels': 'Tires & Wheels',
+      'car-care': 'Car Care Products',
+      'performance-parts': 'Performance Parts'
+    }
+  },
+  'tools-hardware': {
+    label: 'Tools & Hardware',
+    subcategories: {
+      'hand-tools': 'Hand Tools',
+      'power-tools': 'Power Tools',
+      'hardware': 'Hardware & Fasteners',
+      'safety-equipment': 'Safety Equipment',
+      'measuring-tools': 'Measuring Tools',
+      'electrical-supplies': 'Electrical Supplies',
+      'plumbing-supplies': 'Plumbing Supplies',
+      'workshop-equipment': 'Workshop Equipment'
+    }
+  },
+  'health-beauty': {
+    label: 'Health & Beauty',
+    subcategories: {
+      'skincare': 'Skincare',
+      'makeup': 'Makeup & Cosmetics',
+      'hair-care': 'Hair Care',
+      'fragrances': 'Fragrances',
+      'health-supplements': 'Health Supplements',
+      'medical-devices': 'Medical Devices',
+      'fitness-equipment': 'Fitness Equipment',
+      'personal-care': 'Personal Care'
+    }
+  },
+  'sports-outdoors': {
+    label: 'Sports & Outdoors',
+    subcategories: {
+      'fitness-exercise': 'Fitness & Exercise',
+      'outdoor-recreation': 'Outdoor Recreation',
+      'team-sports': 'Team Sports',
+      'water-sports': 'Water Sports',
+      'winter-sports': 'Winter Sports',
+      'hunting-fishing': 'Hunting & Fishing',
+      'camping-hiking': 'Camping & Hiking',
+      'cycling': 'Cycling'
+    }
+  },
+  'crafts-hobbies': {
+    label: 'Crafts & Hobbies',
+    subcategories: {
+      'art-supplies': 'Art Supplies',
+      'sewing-crafts': 'Sewing & Crafts',
+      'model-kits': 'Model Kits',
+      'woodworking': 'Woodworking',
+      'jewelry-making': 'Jewelry Making',
+      'scrapbooking': 'Scrapbooking',
+      'painting-drawing': 'Painting & Drawing',
+      'musical-instruments': 'Musical Instruments'
+    }
+  },
+  'business-industrial': {
+    label: 'Business & Industrial',
+    subcategories: {
+      'office-supplies': 'Office Supplies',
+      'industrial-equipment': 'Industrial Equipment',
+      'safety-supplies': 'Safety Supplies',
+      'packaging-supplies': 'Packaging Supplies',
+      'restaurant-equipment': 'Restaurant Equipment',
+      'medical-equipment': 'Medical Equipment',
+      'manufacturing': 'Manufacturing Equipment',
+      'warehouse-supplies': 'Warehouse Supplies'
+    }
+  },
   'miscellaneous': {
     label: 'Miscellaneous',
     subcategories: {
-      'home-garden': 'Home & Garden',
-      'automotive': 'Automotive Parts & Accessories',
-      'tools-hardware': 'Tools & Hardware',
-      'health-beauty': 'Health & Beauty',
-      'sports-outdoors': 'Sports & Outdoors',
-      'crafts-hobbies': 'Crafts & Hobbies',
-      'business-industrial': 'Business & Industrial',
       'other': 'Other Items'
     }
   }
@@ -179,6 +263,13 @@ export enum BountyCategory {
   ELECTRONICS = 'electronics',
   FASHION_APPAREL = 'fashion-apparel',
   BOOKS_MEDIA = 'books-media',
+  HOME_GARDEN = 'home-garden',
+  AUTOMOTIVE = 'automotive',
+  TOOLS_HARDWARE = 'tools-hardware',
+  HEALTH_BEAUTY = 'health-beauty',
+  SPORTS_OUTDOORS = 'sports-outdoors',
+  CRAFTS_HOBBIES = 'crafts-hobbies',
+  BUSINESS_INDUSTRIAL = 'business-industrial',
   MISCELLANEOUS = 'miscellaneous'
 }
 
