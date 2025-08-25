@@ -11,12 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
 const profileSetupSchema = z.object({
+  email: z.string()
+    .email('Please enter a valid email address')
+    .min(1, 'Email address is required'),
   displayName: z.string()
     .min(2, 'Display name must be at least 2 characters')
     .max(50, 'Display name must be less than 50 characters'),
   region: z.string()
-    .min(2, 'Region must be at least 2 characters')
-    .max(100, 'Region must be less than 100 characters'),
+    .max(100, 'Region must be less than 100 characters')
+    .optional(),
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -90,6 +93,23 @@ const ProfileSetup = () => {
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  {...register('email')}
+                  className={errors.email ? 'border-destructive' : ''}
+                />
+                <p className="text-sm text-muted-foreground">
+                  We'll send confirmations and important updates here.
+                </p>
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name *</Label>
                 <Input
                   id="displayName"
@@ -103,12 +123,12 @@ const ProfileSetup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="region">Your Region *</Label>
+                <Label htmlFor="region">Your Region</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     id="region"
-                    placeholder="e.g., New York, London, Tokyo"
+                    placeholder="e.g., New York, London, Tokyo (optional)"
                     className={`pl-10 ${errors.region ? 'border-destructive' : ''}`}
                     {...register('region')}
                   />
