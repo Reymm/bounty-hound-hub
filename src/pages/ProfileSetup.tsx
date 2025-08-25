@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,6 +26,7 @@ const profileSetupSchema = z.object({
   accountType: z.enum(['poster', 'hunter', 'both'], {
     required_error: 'Please select an account type',
   }),
+  emailNotifications: z.boolean().optional(),
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -46,6 +48,7 @@ const ProfileSetup = () => {
     mode: 'onChange',
     defaultValues: {
       accountType: 'both',
+      emailNotifications: false,
     },
   });
 
@@ -197,6 +200,17 @@ const ProfileSetup = () => {
                 {errors.accountType && (
                   <p className="text-sm text-destructive">{errors.accountType.message}</p>
                 )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="emailNotifications"
+                  checked={watch('emailNotifications')}
+                  onCheckedChange={(checked) => setValue('emailNotifications', !!checked)}
+                />
+                <Label htmlFor="emailNotifications" className="text-sm font-normal cursor-pointer">
+                  Email me when someone finds a match or messages me
+                </Label>
               </div>
 
               <div className="bg-primary/5 rounded-lg p-4">
