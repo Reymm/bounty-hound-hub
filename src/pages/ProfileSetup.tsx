@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, User, MapPin, CheckCircle } from 'lucide-react';
+import { ArrowRight, User, MapPin, CheckCircle, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
 const profileSetupSchema = z.object({
@@ -32,6 +33,7 @@ const ProfileSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showChooserModal, setShowChooserModal] = useState(false);
 
   const {
     register,
@@ -62,8 +64,15 @@ const ProfileSetup = () => {
         description: "Welcome to BountyBay. You can now post your first bounty or start hunting.",
       });
       
-      // Redirect to Post Bounty page
-      navigate('/post');
+      // Route based on account type
+      if (data.accountType === 'poster') {
+        navigate('/post');
+      } else if (data.accountType === 'hunter') {
+        navigate('/bounties');
+      } else {
+        // Both - show chooser modal
+        setShowChooserModal(true);
+      }
       
     } catch (error) {
       console.error('Error setting up profile:', error);
@@ -74,6 +83,15 @@ const ProfileSetup = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleChoice = (choice: 'post' | 'browse') => {
+    setShowChooserModal(false);
+    if (choice === 'post') {
+      navigate('/post');
+    } else {
+      navigate('/bounties');
     }
   };
 
@@ -220,6 +238,32 @@ const ProfileSetup = () => {
           </p>
         </div>
       </div>
+
+      {/* Chooser Modal for "Both" account type */}
+      <Dialog open={showChooserModal} onOpenChange={setShowChooserModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">What do you want to do first?</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <Button
+              onClick={() => handleChoice('post')}
+              className="h-12 bg-primary hover:bg-primary-hover text-primary-foreground"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Post a Bounty
+            </Button>
+            <Button
+              onClick={() => handleChoice('browse')}
+              variant="outline"
+              className="h-12"
+            >
+              <Search className="h-5 w-5 mr-2" />
+              Browse Bounties
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
