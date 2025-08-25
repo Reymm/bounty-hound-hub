@@ -89,12 +89,14 @@ const ProfileSetup = () => {
     }
   };
 
-  const handleChoice = (choice: 'post' | 'browse') => {
+  const handleChoice = (choice: 'post' | 'browse' | 'profile') => {
     setShowChooserModal(false);
     if (choice === 'post') {
       navigate('/post');
-    } else {
+    } else if (choice === 'browse') {
       navigate('/bounties');
+    } else {
+      navigate('/me/profile');
     }
   };
 
@@ -260,7 +262,7 @@ const ProfileSetup = () => {
           <DialogHeader>
             <DialogTitle className="text-center">What do you want to do first?</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
+          <div className="flex flex-col gap-3 py-4">
             <Button
               onClick={() => handleChoice('post')}
               className="h-12 bg-primary hover:bg-primary-hover text-primary-foreground"
@@ -275,6 +277,13 @@ const ProfileSetup = () => {
             >
               <Search className="h-5 w-5 mr-2" />
               Browse Bounties
+            </Button>
+            <Button
+              onClick={() => handleChoice('profile')}
+              variant="ghost"
+              className="h-10 text-muted-foreground hover:text-foreground"
+            >
+              Decide later
             </Button>
           </div>
         </DialogContent>
