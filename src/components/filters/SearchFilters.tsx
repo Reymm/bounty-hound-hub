@@ -64,16 +64,16 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button 
-          variant="outline" 
-          className="relative focus-ring"
+          size="lg"
+          className="relative focus-ring bg-primary hover:bg-primary-hover text-primary-foreground font-medium"
           aria-label={`Filters${activeFiltersCount > 0 ? ` (${activeFiltersCount} active)` : ''}`}
         >
-          <Filter className="h-4 w-4 mr-2" />
+          <Filter className="h-5 w-5 mr-2" />
           Filters
           {activeFiltersCount > 0 && (
             <Badge 
               variant="secondary" 
-              className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+              className="ml-2 h-6 w-6 p-0 flex items-center justify-center text-xs bg-white/20 text-white border-white/30"
             >
               {activeFiltersCount}
             </Badge>
