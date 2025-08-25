@@ -14,6 +14,7 @@ import BountyDetail from "./pages/BountyDetail";
 import Messages from "./pages/Messages";
 import MyBounties from "./pages/MyBounties";
 import Profile from "./pages/Profile";
+import ProfileSetup from "./pages/ProfileSetup";
 import Checkout from "./pages/Checkout";
 import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/messages" element={<Messages />} />
               <Route path="/me/bounties" element={<MyBounties />} />
               <Route path="/me/profile" element={<Profile />} />
+              <Route path="/setup" element={<ProfileSetup />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />

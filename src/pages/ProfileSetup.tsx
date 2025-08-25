@@ -1,0 +1,164 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { ArrowRight, User, MapPin, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+
+const profileSetupSchema = z.object({
+  displayName: z.string()
+    .min(2, 'Display name must be at least 2 characters')
+    .max(50, 'Display name must be less than 50 characters'),
+  region: z.string()
+    .min(2, 'Region must be at least 2 characters')
+    .max(100, 'Region must be less than 100 characters'),
+});
+
+type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
+
+const ProfileSetup = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<ProfileSetupFormData>({
+    resolver: zodResolver(profileSetupSchema),
+    mode: 'onChange'
+  });
+
+  const onSubmit = async (data: ProfileSetupFormData) => {
+    try {
+      setIsSubmitting(true);
+      
+      // TODO: Save profile data to Supabase
+      console.log('Profile setup data:', data);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Profile setup complete!",
+        description: "Welcome to BountyBay. You can now post your first bounty.",
+      });
+      
+      // Redirect to Post Bounty page
+      navigate('/post');
+      
+    } catch (error) {
+      console.error('Error setting up profile:', error);
+      toast({
+        title: "Error setting up profile",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-success/5 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-2xl font-bold text-primary-foreground mx-auto mb-4">
+            <User className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Welcome to BountyBay!
+          </h1>
+          <p className="text-muted-foreground">
+            Let's set up your profile so you can start posting bounties
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <CheckCircle className="h-5 w-5 text-primary" />
+              Complete Your Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Display Name *</Label>
+                <Input
+                  id="displayName"
+                  placeholder="How should others see you?"
+                  {...register('displayName')}
+                  className={errors.displayName ? 'border-destructive' : ''}
+                />
+                {errors.displayName && (
+                  <p className="text-sm text-destructive">{errors.displayName.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="region">Your Region *</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="region"
+                    placeholder="e.g., New York, London, Tokyo"
+                    className={`pl-10 ${errors.region ? 'border-destructive' : ''}`}
+                    {...register('region')}
+                  />
+                </div>
+                {errors.region && (
+                  <p className="text-sm text-destructive">{errors.region.message}</p>
+                )}
+              </div>
+
+              <div className="bg-primary/5 rounded-lg p-4">
+                <h4 className="font-medium text-sm mb-2">What's next?</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Post your first bounty</li>
+                  <li>• Connect with hunters worldwide</li>
+                  <li>• Find exactly what you're looking for</li>
+                </ul>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-primary hover:bg-primary-hover text-primary-foreground"
+                disabled={!isValid || isSubmitting}
+              >
+                {isSubmitting ? (
+                  'Setting up your profile...'
+                ) : (
+                  <>
+                    Complete Setup & Post Bounty
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="text-center mt-6">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <button 
+              onClick={() => navigate('/me/profile')}
+              className="text-primary hover:underline"
+            >
+              Go to your profile
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProfileSetup;
