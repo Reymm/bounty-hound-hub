@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 
 // Pages
 import Index from "./pages/Index";
+import ActiveBounties from "./pages/ActiveBounties";
 import PostBounty from "./pages/PostBounty";
 import BountyDetail from "./pages/BountyDetail";
 import Messages from "./pages/Messages";
@@ -31,6 +32,7 @@ const App = () => (
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/bounties" element={<ActiveBounties />} />
               <Route path="/post" element={<PostBounty />} />
               <Route path="/b/:id" element={<BountyDetail />} />
               <Route path="/messages" element={<Messages />} />
