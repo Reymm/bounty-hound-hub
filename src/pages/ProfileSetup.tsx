@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 
 const profileSetupSchema = z.object({
@@ -20,6 +21,9 @@ const profileSetupSchema = z.object({
   region: z.string()
     .max(100, 'Region must be less than 100 characters')
     .optional(),
+  accountType: z.enum(['poster', 'hunter', 'both'], {
+    required_error: 'Please select an account type',
+  }),
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -33,9 +37,14 @@ const ProfileSetup = () => {
     register,
     handleSubmit,
     formState: { errors, isValid },
+    setValue,
+    watch,
   } = useForm<ProfileSetupFormData>({
     resolver: zodResolver(profileSetupSchema),
-    mode: 'onChange'
+    mode: 'onChange',
+    defaultValues: {
+      accountType: 'both',
+    },
   });
 
   const onSubmit = async (data: ProfileSetupFormData) => {
@@ -138,6 +147,40 @@ const ProfileSetup = () => {
                 )}
               </div>
 
+              <div className="space-y-3">
+                <Label>Account Type *</Label>
+                <RadioGroup
+                  value={watch('accountType')}
+                  onValueChange={(value) => setValue('accountType', value as 'poster' | 'hunter' | 'both')}
+                  className="flex flex-col space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="poster" id="poster" />
+                    <Label htmlFor="poster" className="font-normal cursor-pointer">
+                      Poster - I want to post bounties for items I need
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="hunter" id="hunter" />
+                    <Label htmlFor="hunter" className="font-normal cursor-pointer">
+                      Hunter - I want to find items for others
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="both" id="both" />
+                    <Label htmlFor="both" className="font-normal cursor-pointer">
+                      Both - I want to post bounties and hunt for others
+                    </Label>
+                  </div>
+                </RadioGroup>
+                <p className="text-sm text-muted-foreground">
+                  You can change this later in Settings.
+                </p>
+                {errors.accountType && (
+                  <p className="text-sm text-destructive">{errors.accountType.message}</p>
+                )}
+              </div>
+
               <div className="bg-primary/5 rounded-lg p-4">
                 <h4 className="font-medium text-sm mb-2">What's next?</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
@@ -156,7 +199,7 @@ const ProfileSetup = () => {
                   'Setting up your profile...'
                 ) : (
                   <>
-                    Complete Setup & Get Started
+                    Complete Setup
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </>
                 )}
