@@ -66,7 +66,6 @@ export function TopNav({ onSearch }: TopNavProps) {
               className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
             >
               <Link to="/setup" aria-label="Sign up for free">
-                <Plus className="h-4 w-4 mr-2" />
                 Sign Up Free
               </Link>
             </Button>
@@ -147,7 +146,6 @@ export function TopNav({ onSearch }: TopNavProps) {
           <div className="md:hidden border-t border-border py-4 space-y-4">
             <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
               <Link to="/setup" onClick={() => setIsMobileMenuOpen(false)}>
-                <Plus className="h-4 w-4 mr-2" />
                 Sign Up Free
               </Link>
             </Button>
