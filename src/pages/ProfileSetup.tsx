@@ -50,7 +50,7 @@ const ProfileSetup = () => {
       
       toast({
         title: "Profile setup complete!",
-        description: "Welcome to BountyBay. You can now post your first bounty.",
+        description: "Welcome to BountyBay. You can now post your first bounty or start hunting.",
       });
       
       // Redirect to Post Bounty page
@@ -79,7 +79,7 @@ const ProfileSetup = () => {
             Welcome to BountyBay!
           </h1>
           <p className="text-muted-foreground">
-            Let's set up your profile so you can start posting bounties
+            Set up your profile so you can start posting or hunting bounties
           </p>
         </div>
 
@@ -141,7 +141,7 @@ const ProfileSetup = () => {
               <div className="bg-primary/5 rounded-lg p-4">
                 <h4 className="font-medium text-sm mb-2">What's next?</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Post your first bounty</li>
+                  <li>• Post your first bounty or start hunting</li>
                   <li>• Connect with hunters worldwide</li>
                   <li>• Find exactly what you're looking for</li>
                 </ul>
@@ -156,7 +156,7 @@ const ProfileSetup = () => {
                   'Setting up your profile...'
                 ) : (
                   <>
-                    Complete Setup & Post Bounty
+                    Complete Setup & Get Started
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </>
                 )}
