@@ -91,10 +91,12 @@ const Index = () => {
       <section className="bg-gradient-to-br from-primary/10 via-background to-success/5 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
-              Find anything with the power of
-              <span className="text-primary block">crowdsourced hunting</span>
+            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
+              Helping People Find the Unfindable.
             </h1>
+            <h2 className="text-xl lg:text-2xl font-semibold text-primary mb-6">
+              Powered by crowdsourced hunting.
+            </h2>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
               Post a bounty for hard-to-find items and let our community of hunters 
               help you discover exactly what you're looking for.
