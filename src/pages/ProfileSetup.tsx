@@ -207,6 +207,7 @@ const ProfileSetup = () => {
                   id="emailNotifications"
                   checked={watch('emailNotifications')}
                   onCheckedChange={(checked) => setValue('emailNotifications', !!checked)}
+                  className="rounded-none"
                 />
                 <Label htmlFor="emailNotifications" className="text-sm font-normal cursor-pointer">
                   Email me when someone finds a match or messages me
