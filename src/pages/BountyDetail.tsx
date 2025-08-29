@@ -35,6 +35,7 @@ export default function BountyDetail() {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [claimsLoading, setClaimsLoading] = useState(true);
+  const [isClaimTypeModalOpen, setIsClaimTypeModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [claimForm, setClaimForm] = useState({
     type: ClaimType.FOUND,
@@ -73,6 +74,12 @@ export default function BountyDetail() {
       setLoading(false);
       setClaimsLoading(false);
     }
+  };
+
+  const handleClaimTypeSelect = (claimType: ClaimType) => {
+    setClaimForm(prev => ({ ...prev, type: claimType }));
+    setIsClaimTypeModalOpen(false);
+    setIsClaimModalOpen(true);
   };
 
   const handleClaimSubmit = async () => {
@@ -288,13 +295,45 @@ export default function BountyDetail() {
                     </Link>
                   </Button>
 
-                  <Dialog open={isClaimModalOpen} onOpenChange={setIsClaimModalOpen}>
+                  {/* Claim Type Selection Modal */}
+                  <Dialog open={isClaimTypeModalOpen} onOpenChange={setIsClaimTypeModalOpen}>
                     <DialogTrigger asChild>
                       <Button className="w-full bg-primary hover:bg-primary-hover">
                         <Flag className="h-4 w-4 mr-2" />
-                        I Have a Lead / Found It
+                        Claim This Bounty
                       </Button>
                     </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>What kind of claim are you making?</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <Button 
+                          className="w-full justify-start h-auto p-4"
+                          variant="outline"
+                          onClick={() => handleClaimTypeSelect(ClaimType.LEAD)}
+                        >
+                          <div className="text-left">
+                            <div className="font-medium">I Have a Lead</div>
+                            <div className="text-sm text-muted-foreground">For users who know where the item might be or who might have it</div>
+                          </div>
+                        </Button>
+                        <Button 
+                          className="w-full justify-start h-auto p-4"
+                          variant="outline"
+                          onClick={() => handleClaimTypeSelect(ClaimType.FOUND)}
+                        >
+                          <div className="text-left">
+                            <div className="font-medium">I Found It</div>
+                            <div className="text-sm text-muted-foreground">For users who already have the item or can directly fulfill the bounty</div>
+                          </div>
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Claim Form Modal */}
+                  <Dialog open={isClaimModalOpen} onOpenChange={setIsClaimModalOpen}>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle>Submit a Claim</DialogTitle>
@@ -526,10 +565,10 @@ export default function BountyDetail() {
 
               <Button 
                 className="w-full bg-primary hover:bg-primary-hover"
-                onClick={() => setIsClaimModalOpen(true)}
+                onClick={() => setIsClaimTypeModalOpen(true)}
               >
                 <Flag className="h-4 w-4 mr-2" />
-                I Have a Lead / Found It
+                Claim This Bounty
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
