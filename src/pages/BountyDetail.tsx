@@ -303,29 +303,33 @@ export default function BountyDetail() {
                         Claim This Bounty
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader className="pb-4">
                         <DialogTitle>What kind of claim are you making?</DialogTitle>
                       </DialogHeader>
-                      <div className="space-y-3">
+                      <div className="space-y-4 px-1">
                         <Button 
-                          className="w-full justify-start h-auto p-4"
+                          className="w-full justify-start h-auto p-5 text-left"
                           variant="outline"
                           onClick={() => handleClaimTypeSelect(ClaimType.LEAD)}
                         >
-                          <div className="text-left">
-                            <div className="font-medium">I Have a Lead</div>
-                            <div className="text-sm text-muted-foreground">For users who know where the item might be or who might have it</div>
+                          <div className="w-full">
+                            <div className="font-medium text-base mb-1">I Have a Lead</div>
+                            <div className="text-sm text-muted-foreground leading-relaxed">
+                              For users who know where the item might be or who might have it
+                            </div>
                           </div>
                         </Button>
                         <Button 
-                          className="w-full justify-start h-auto p-4"
+                          className="w-full justify-start h-auto p-5 text-left"
                           variant="outline"
                           onClick={() => handleClaimTypeSelect(ClaimType.FOUND)}
                         >
-                          <div className="text-left">
-                            <div className="font-medium">I Found It</div>
-                            <div className="text-sm text-muted-foreground">For users who already have the item or can directly fulfill the bounty</div>
+                          <div className="w-full">
+                            <div className="font-medium text-base mb-1">I Found It</div>
+                            <div className="text-sm text-muted-foreground leading-relaxed">
+                              For users who already have the item or can directly fulfill the bounty
+                            </div>
                           </div>
                         </Button>
                       </div>
