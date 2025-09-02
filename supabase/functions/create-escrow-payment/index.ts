@@ -42,10 +42,20 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const { amount, currency = 'usd' } = await req.json();
-    if (!amount || amount < 500 || amount > 1000000) {
+    if (!amount || amount < 5 || amount > 10000) {
       throw new Error("Amount must be between $5 and $10,000");
     }
-    logStep("Amount validated", { amount, currency });
+    
+    // Calculate platform fee (3.5% of bounty amount)
+    const platformFee = Math.round(amount * 0.035 * 100) / 100; // Round to 2 decimal places
+    const totalChargeAmount = amount + platformFee;
+    
+    logStep("Amount and fees calculated", { 
+      bountyAmount: amount, 
+      platformFee, 
+      totalCharge: totalChargeAmount, 
+      currency 
+    });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
@@ -65,14 +75,16 @@ serve(async (req) => {
 
     // Create payment intent for escrow (capture_method: manual for later capture)
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: Math.round(totalChargeAmount * 100), // Convert total charge to cents
       currency: currency.toLowerCase(),
       customer: customer.id,
       capture_method: 'manual', // We'll capture later when bounty is completed
-      description: `Escrow deposit for bounty`,
+      description: `Escrow deposit for bounty ($${amount}) + platform fee ($${platformFee})`,
       metadata: {
         supabase_user_id: user.id,
-        type: 'escrow_deposit'
+        type: 'escrow_deposit',
+        bounty_amount: amount.toString(),
+        platform_fee: platformFee.toString()
       }
     });
     logStep("Created payment intent", { paymentIntentId: paymentIntent.id, status: paymentIntent.status });
@@ -83,7 +95,9 @@ serve(async (req) => {
       .insert({
         poster_id: user.id,
         stripe_payment_intent_id: paymentIntent.id,
-        amount: amount,
+        amount: amount, // Bounty amount (what goes to hunter)
+        platform_fee_amount: platformFee, // Platform fee
+        total_charged_amount: totalChargeAmount, // Total charged to poster
         currency: currency.toLowerCase(),
         status: paymentIntent.status
       })
@@ -100,7 +114,9 @@ serve(async (req) => {
       payment_intent_id: paymentIntent.id,
       client_secret: paymentIntent.client_secret,
       escrow_id: escrowData.id,
-      amount: amount,
+      bounty_amount: amount,
+      platform_fee: platformFee,
+      total_charge: totalChargeAmount,
       status: paymentIntent.status
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

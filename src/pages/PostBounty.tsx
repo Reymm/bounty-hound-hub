@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,10 +42,15 @@ function PostBountyForm() {
   const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'details' | 'payment' | 'processing'>('details');
+  const [currentStep, setCurrentStep] = useState<'details' | 'kyc' | 'payment' | 'processing'>('details');
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [escrowId, setEscrowId] = useState<string | null>(null);
+  const [kycRequired, setKycRequired] = useState(false);
+  const [kycStatus, setKycStatus] = useState<'not_started' | 'pending' | 'verified' | 'failed'>('not_started');
+  const [kycVerificationUrl, setKycVerificationUrl] = useState<string | null>(null);
+  const [platformFee, setPlatformFee] = useState(0);
+  const [totalCharge, setTotalCharge] = useState(0);
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
@@ -70,6 +75,21 @@ function PostBountyForm() {
   const watchedTargetMin = watch('targetPriceMin');
   const watchedTargetMax = watch('targetPriceMax');
   const selectedCategory = watch('category');
+
+  // Calculate fees when bounty amount changes
+  useEffect(() => {
+    if (watchedBountyAmount) {
+      const fee = Math.round(watchedBountyAmount * 0.035 * 100) / 100;
+      const total = watchedBountyAmount + fee;
+      setPlatformFee(fee);
+      setTotalCharge(total);
+      setKycRequired(watchedBountyAmount > 50);
+    } else {
+      setPlatformFee(0);
+      setTotalCharge(0);
+      setKycRequired(false);
+    }
+  }, [watchedBountyAmount]);
 
   const addTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim()) && tags.length < 10) {
@@ -112,7 +132,23 @@ function PostBountyForm() {
     try {
       setIsSubmitting(true);
       
-      // Create payment intent for escrow
+      // Set flag that user is in bounty posting process
+      sessionStorage.setItem('bounty_post_in_progress', 'true');
+      
+      // Check if KYC is required and user is verified
+      if (kycRequired) {
+        const { data: kycData, error: kycError } = await supabase.functions.invoke('check-kyc-status');
+        
+        if (kycError) throw kycError;
+        
+        if (!kycData.verified) {
+          setKycStatus(kycData.status);
+          setCurrentStep('kyc');
+          return;
+        }
+      }
+      
+      // Proceed to payment
       const { data: paymentData, error } = await supabase.functions.invoke('create-escrow-payment', {
         body: {
           amount: data.bountyAmount,
@@ -125,11 +161,13 @@ function PostBountyForm() {
       setPaymentIntentId(paymentData.payment_intent_id);
       setClientSecret(paymentData.client_secret);
       setEscrowId(paymentData.escrow_id);
+      setPlatformFee(paymentData.platform_fee);
+      setTotalCharge(paymentData.total_charge);
       setCurrentStep('payment');
       
       toast({
         title: "Payment created",
-        description: "Please complete your escrow payment to secure the bounty funds.",
+        description: `Please complete your payment of $${paymentData.total_charge} (includes $${paymentData.platform_fee} platform fee).`,
       });
 
     } catch (error: any) {
@@ -141,6 +179,68 @@ function PostBountyForm() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleKycVerification = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      const { data: kycData, error } = await supabase.functions.invoke('create-kyc-verification');
+      
+      if (error) throw error;
+      
+      if (kycData.status === 'already_verified') {
+        setKycStatus('verified');
+        // Continue to payment step
+        const formData = getValues();
+        await onDetailsSubmit(formData);
+        return;
+      }
+      
+      setKycVerificationUrl(kycData.verification_url);
+      setKycStatus('pending');
+      
+      // Open KYC verification in new tab
+      window.open(kycData.verification_url, '_blank');
+      
+      toast({
+        title: "Identity verification required",
+        description: "Please complete your identity verification in the new tab, then return here.",
+      });
+      
+    } catch (error: any) {
+      console.error('Error creating KYC verification:', error);
+      toast({
+        title: "Error starting verification",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const checkKycStatus = async () => {
+    try {
+      const { data: kycData, error } = await supabase.functions.invoke('check-kyc-status');
+      
+      if (error) throw error;
+      
+      setKycStatus(kycData.status);
+      
+      if (kycData.verified) {
+        toast({
+          title: "Identity verified!",
+          description: "You can now proceed with posting your bounty.",
+        });
+        // Continue to payment step
+        const formData = getValues();
+        await onDetailsSubmit(formData);
+      }
+      
+    } catch (error: any) {
+      console.error('Error checking KYC status:', error);
     }
   };
 
@@ -193,6 +293,9 @@ function PostBountyForm() {
           description: "Your bounty is now live with funds secured in escrow.",
         });
 
+        // Clear the bounty posting flag
+        sessionStorage.removeItem('bounty_post_in_progress');
+
         navigate(`/b/${bountyData.bounty_id}`);
       }
     } catch (error: any) {
@@ -208,6 +311,86 @@ function PostBountyForm() {
     }
   };
 
+  if (currentStep === 'kyc') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Identity Verification Required</h1>
+          <p className="text-muted-foreground">
+            Bounties over $50 require identity verification for security purposes.
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              KYC Verification
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Alert>
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                This verification process is secure, compliant, and protects all users on the platform.
+              </AlertDescription>
+            </Alert>
+
+            {kycStatus === 'not_started' && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  To post bounties over $50, please verify your identity using a government-issued ID.
+                </p>
+                <Button onClick={handleKycVerification} disabled={isSubmitting}>
+                  {isSubmitting ? 'Starting Verification...' : 'Start Identity Verification'}
+                </Button>
+              </div>
+            )}
+
+            {kycStatus === 'pending' && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Please complete your identity verification in the new tab, then check the status below.
+                </p>
+                <div className="flex gap-4">
+                  <Button variant="outline" onClick={checkKycStatus}>
+                    Check Verification Status
+                  </Button>
+                  {kycVerificationUrl && (
+                    <Button variant="outline" onClick={() => window.open(kycVerificationUrl, '_blank')}>
+                      Open Verification Page
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {kycStatus === 'failed' && (
+              <div className="space-y-4">
+                <p className="text-sm text-destructive">
+                  Verification failed. Please try again or contact support if the issue persists.
+                </p>
+                <Button onClick={handleKycVerification} disabled={isSubmitting}>
+                  Retry Verification
+                </Button>
+              </div>
+            )}
+
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCurrentStep('details')}
+              >
+                Back to Details
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (currentStep === 'payment') {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -222,7 +405,12 @@ function PostBountyForm() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Escrow Payment - ${watchedBountyAmount}
+              Escrow Payment - ${totalCharge}
+              {platformFee > 0 && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (${watchedBountyAmount} bounty + ${platformFee} fee)
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -270,7 +458,7 @@ function PostBountyForm() {
                   ) : (
                     <>
                       <CreditCard className="h-4 w-4 mr-2" />
-                      Secure ${watchedBountyAmount} in Escrow
+                      Secure ${totalCharge} in Escrow
                     </>
                   )}
                 </Button>
@@ -496,6 +684,33 @@ function PostBountyForm() {
               </p>
             </div>
 
+            {/* Fee Breakdown */}
+            {platformFee > 0 && (
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <h4 className="font-medium">Payment Breakdown</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Bounty Amount:</span>
+                    <span>${watchedBountyAmount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Platform Fee (3.5%):</span>
+                    <span>${platformFee}</span>
+                  </div>
+                  {kycRequired && (
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>KYC Required:</span>
+                      <span>Bounty {'>'}$50</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-1 flex justify-between font-medium">
+                    <span>Total Charge:</span>
+                    <span>${totalCharge}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="targetPriceMin">Target Price Range (Optional)</Label>
@@ -664,7 +879,7 @@ function PostBountyForm() {
             disabled={isSubmitting || !watchedBountyAmount || watchedBountyAmount < 5 || watchedBountyAmount > 10000}
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
-            {isSubmitting ? 'Creating Payment...' : `Continue to Payment ${watchedBountyAmount ? `($${watchedBountyAmount})` : ''}`}
+            {isSubmitting ? 'Creating Payment...' : `Continue to ${kycRequired ? 'Verification' : 'Payment'} ${totalCharge > 0 ? `($${totalCharge} total)` : watchedBountyAmount ? `($${watchedBountyAmount})` : ''}`}
           </Button>
         </div>
       </form>

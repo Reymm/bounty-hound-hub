@@ -19,6 +19,7 @@ import Checkout from "./pages/Checkout";
 import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
 import NotFound from "./pages/NotFound";
+import KycComplete from "./pages/KycComplete";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/me/profile" element={<Profile />} />
               <Route path="/setup" element={<ProfileSetup />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/kyc-complete" element={<KycComplete />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

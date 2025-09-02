@@ -84,9 +84,11 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          platform_fee_amount: number | null
           poster_id: string
           status: string
           stripe_payment_intent_id: string
+          total_charged_amount: number | null
           updated_at: string
         }
         Insert: {
@@ -95,9 +97,11 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          platform_fee_amount?: number | null
           poster_id: string
           status?: string
           stripe_payment_intent_id: string
+          total_charged_amount?: number | null
           updated_at?: string
         }
         Update: {
@@ -106,9 +110,11 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          platform_fee_amount?: number | null
           poster_id?: string
           status?: string
           stripe_payment_intent_id?: string
+          total_charged_amount?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -121,6 +127,39 @@ export type Database = {
           },
         ]
       }
+      kyc_verifications: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          stripe_verification_session_id: string | null
+          updated_at: string
+          user_id: string
+          verification_type: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_verification_session_id?: string | null
+          updated_at?: string
+          user_id: string
+          verification_type?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_verification_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_type?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -128,6 +167,8 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          kyc_verified: boolean | null
+          kyc_verified_at: string | null
           updated_at: string | null
           username: string | null
         }
@@ -137,6 +178,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          kyc_verified?: boolean | null
+          kyc_verified_at?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -146,6 +189,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          kyc_verified?: boolean | null
+          kyc_verified_at?: string | null
           updated_at?: string | null
           username?: string | null
         }
