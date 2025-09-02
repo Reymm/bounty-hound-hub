@@ -17,36 +17,63 @@ export type Database = {
       Bounties: {
         Row: {
           amount: number | null
+          category: string | null
           created_at: string
+          deadline: string | null
           description: string | null
           escrow_amount: number | null
           escrow_status: string | null
           id: string
+          images: string[] | null
+          location: string | null
           poster_id: string | null
           status: string
+          subcategory: string | null
+          tags: string[] | null
+          target_price_max: number | null
+          target_price_min: number | null
           title: string
+          verification_requirements: string[] | null
         }
         Insert: {
           amount?: number | null
+          category?: string | null
           created_at?: string
+          deadline?: string | null
           description?: string | null
           escrow_amount?: number | null
           escrow_status?: string | null
           id?: string
+          images?: string[] | null
+          location?: string | null
           poster_id?: string | null
           status?: string
+          subcategory?: string | null
+          tags?: string[] | null
+          target_price_max?: number | null
+          target_price_min?: number | null
           title: string
+          verification_requirements?: string[] | null
         }
         Update: {
           amount?: number | null
+          category?: string | null
           created_at?: string
+          deadline?: string | null
           description?: string | null
           escrow_amount?: number | null
           escrow_status?: string | null
           id?: string
+          images?: string[] | null
+          location?: string | null
           poster_id?: string | null
           status?: string
+          subcategory?: string | null
+          tags?: string[] | null
+          target_price_max?: number | null
+          target_price_min?: number | null
           title?: string
+          verification_requirements?: string[] | null
         }
         Relationships: []
       }
@@ -153,6 +180,13 @@ export type Database = {
           status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_submissions_bounty"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "Submissions_bounty_id_fkey"
             columns: ["bounty_id"]
