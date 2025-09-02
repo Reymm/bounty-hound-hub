@@ -1,1 +1,7 @@
 project_id = "lenyuvobgktgdearflim"
+
+[functions.create-escrow-payment]
+verify_jwt = true
+
+[functions.confirm-escrow-and-create-bounty]
+verify_jwt = true

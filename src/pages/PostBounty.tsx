@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,11 +23,29 @@ import { postBountySchema, PostBountyFormData } from '@/lib/validators';
 import { BountyCategory, CATEGORY_STRUCTURE } from '@/lib/types';
 import { mockApi } from '@/lib/api/mock';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+const stripePromise = loadStripe('pk_test_51QfOrlJBfkPjzFmqPq7zLJhSaKnE7Nf7HRdBK9GR0OHfhE6AEHwAJDKt8H0XhHyPzOBGQrj6hVRQNj6YGFmHxC300g4kxUEfr');
 
 export default function PostBounty() {
+  return (
+    <Elements stripe={stripePromise}>
+      <PostBountyForm />
+    </Elements>
+  );
+}
+
+function PostBountyForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const stripe = useStripe();
+  const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'details' | 'payment' | 'processing'>('details');
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [escrowId, setEscrowId] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
@@ -36,7 +56,7 @@ export default function PostBounty() {
     formState: { errors },
     setValue,
     watch,
-    reset
+    getValues
   } = useForm<PostBountyFormData>({
     resolver: zodResolver(postBountySchema),
     defaultValues: {
@@ -88,43 +108,191 @@ export default function PostBounty() {
     }
   };
 
-  const onSubmit = async (data: PostBountyFormData) => {
+  const onDetailsSubmit = async (data: PostBountyFormData) => {
     try {
       setIsSubmitting(true);
-
-      // TODO: Replace with actual Supabase call
-      const bounty = await mockApi.createBounty({
-        title: data.title,
-        description: data.description,
-              category: data.category,
-              subcategory: data.subcategory,
-        location: data.location,
-        deadline: data.deadline,
-        bountyAmount: data.bountyAmount,
-        targetPriceMin: data.targetPriceMin,
-        targetPriceMax: data.targetPriceMax,
-        tags,
-        verificationRequirements: verificationRequirements.filter(req => req.trim()),
-        images: [] // TODO: Handle image uploads
+      
+      // Create payment intent for escrow
+      const { data: paymentData, error } = await supabase.functions.invoke('create-escrow-payment', {
+        body: {
+          amount: data.bountyAmount,
+          currency: 'usd'
+        }
       });
 
+      if (error) throw error;
+
+      setPaymentIntentId(paymentData.payment_intent_id);
+      setClientSecret(paymentData.client_secret);
+      setEscrowId(paymentData.escrow_id);
+      setCurrentStep('payment');
+      
       toast({
-        title: "Bounty posted successfully!",
-        description: "Your bounty is now live and hunters can start claiming it.",
+        title: "Payment created",
+        description: "Please complete your escrow payment to secure the bounty funds.",
       });
 
-      navigate(`/b/${bounty.id}`);
-    } catch (error) {
-      console.error('Error posting bounty:', error);
+    } catch (error: any) {
+      console.error('Error creating payment:', error);
       toast({
-        title: "Error posting bounty",
-        description: "Please try again later.",
+        title: "Error creating payment",
+        description: error.message || "Please try again later.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handlePaymentSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    
+    if (!stripe || !elements || !clientSecret) {
+      return;
+    }
+
+    setIsPaymentProcessing(true);
+    setCurrentStep('processing');
+
+    try {
+      const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement)!,
+        }
+      });
+
+      if (paymentError) {
+        throw new Error(paymentError.message);
+      }
+
+      if (paymentIntent.status === 'requires_capture') {
+        // Payment successful, create bounty
+        const formData = getValues();
+        const { data: bountyData, error: bountyError } = await supabase.functions.invoke('confirm-escrow-and-create-bounty', {
+          body: {
+            payment_intent_id: paymentIntent.id,
+            bounty_data: {
+              title: formData.title,
+              description: formData.description,
+              category: formData.category,
+              subcategory: formData.subcategory,  
+              location: formData.location,
+              deadline: formData.deadline,
+              targetPriceMin: formData.targetPriceMin,
+              targetPriceMax: formData.targetPriceMax,
+              tags,
+              verificationRequirements: verificationRequirements.filter(req => req.trim())
+            }
+          }
+        });
+
+        if (bountyError) throw bountyError;
+
+        toast({
+          title: "Bounty posted successfully!",
+          description: "Your bounty is now live with funds secured in escrow.",
+        });
+
+        navigate(`/b/${bountyData.bounty_id}`);
+      }
+    } catch (error: any) {
+      console.error('Error processing payment:', error);
+      toast({
+        title: "Payment failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+      setCurrentStep('payment');
+    } finally {
+      setIsPaymentProcessing(false);
+    }
+  };
+
+  if (currentStep === 'payment') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Secure Your Bounty</h1>
+          <p className="text-muted-foreground">
+            Complete your escrow payment to post your bounty with funds secured.
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Escrow Payment - ${watchedBountyAmount}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Alert>
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                Your payment will be held securely in escrow until you approve the successful hunter's claim.
+              </AlertDescription>
+            </Alert>
+
+            <form onSubmit={handlePaymentSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label>Payment Method</Label>
+                <div className="p-4 border rounded-md">
+                  <CardElement options={{
+                    style: {
+                      base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                          color: '#aab7c4',
+                        },
+                      },
+                    },
+                  }} />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentStep('details')}
+                  disabled={isPaymentProcessing}
+                >
+                  Back to Details
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={!stripe || !elements || isPaymentProcessing}
+                  className="flex-1"
+                >
+                  {isPaymentProcessing ? (
+                    <>Processing...</>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Secure ${watchedBountyAmount} in Escrow
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (currentStep === 'processing') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold mb-2">Processing Your Bounty</h2>
+          <p className="text-muted-foreground">Please wait while we secure your funds and create your bounty...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -135,7 +303,7 @@ export default function PostBounty() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(onDetailsSubmit)} className="space-y-8">
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -297,9 +465,10 @@ export default function PostBounty() {
           </CardHeader>
           <CardContent className="space-y-6">
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <Shield className="h-4 w-4" />
               <AlertDescription>
-                The bounty amount will be held in escrow and released to the successful hunter upon your approval.
+                To ensure trust and security, bounty funds must be deposited in escrow before posting. 
+                This guarantees payment to successful hunters and protects both parties.
               </AlertDescription>
             </Alert>
 
@@ -312,7 +481,7 @@ export default function PostBounty() {
                 <Input
                   id="bountyAmount"
                   type="number"
-                  min="10"
+                  min="5"
                   max="10000"
                   placeholder="500"
                   className={`pl-10 ${errors.bountyAmount ? 'border-destructive' : ''}`}
@@ -323,7 +492,7 @@ export default function PostBounty() {
                 <p className="text-sm text-destructive">{errors.bountyAmount.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Amount to reward the successful hunter ($10 - $10,000)
+                Amount to reward the successful hunter ($5 - $10,000)
               </p>
             </div>
 
@@ -492,10 +661,10 @@ export default function PostBounty() {
           </Button>
           <Button 
             type="submit" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || !watchedBountyAmount || watchedBountyAmount < 5 || watchedBountyAmount > 10000}
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
-            {isSubmitting ? 'Posting Bounty...' : `Post Bounty ${watchedBountyAmount ? `($${watchedBountyAmount})` : ''}`}
+            {isSubmitting ? 'Creating Payment...' : `Continue to Payment ${watchedBountyAmount ? `($${watchedBountyAmount})` : ''}`}
           </Button>
         </div>
       </form>

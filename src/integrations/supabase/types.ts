@@ -19,6 +19,8 @@ export type Database = {
           amount: number | null
           created_at: string
           description: string | null
+          escrow_amount: number | null
+          escrow_status: string | null
           id: string
           poster_id: string | null
           status: string
@@ -28,6 +30,8 @@ export type Database = {
           amount?: number | null
           created_at?: string
           description?: string | null
+          escrow_amount?: number | null
+          escrow_status?: string | null
           id?: string
           poster_id?: string | null
           status?: string
@@ -37,12 +41,58 @@ export type Database = {
           amount?: number | null
           created_at?: string
           description?: string | null
+          escrow_amount?: number | null
+          escrow_status?: string | null
           id?: string
           poster_id?: string | null
           status?: string
           title?: string
         }
         Relationships: []
+      }
+      escrow_transactions: {
+        Row: {
+          amount: number
+          bounty_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          poster_id: string
+          status: string
+          stripe_payment_intent_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bounty_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          poster_id: string
+          status?: string
+          stripe_payment_intent_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bounty_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          poster_id?: string
+          status?: string
+          stripe_payment_intent_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_transactions_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
