@@ -10,15 +10,24 @@ import {
   Calendar,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
+  Activity,
+  Settings,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { ActivityHistory } from '@/components/profile/ActivityHistory';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType, IdvStatus } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
@@ -31,6 +40,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -58,6 +68,8 @@ export default function Profile() {
       if (profileData) {
         reset({
           displayName: profileData.displayName,
+          username: profileData.username || '',
+          bio: profileData.bio || '',
           region: profileData.region
         });
       }
@@ -144,6 +156,48 @@ export default function Profile() {
     }
   };
 
+  const handleAvatarChange = async (url: string | null) => {
+    if (!profile || !user) return;
+
+    try {
+      const updatedProfile = await supabaseApi.updateProfile(user.id, { avatarUrl: url });
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+      }
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      toast({
+        title: "Error updating avatar",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setDeleting(true);
+      
+      // TODO: Implement account deletion
+      console.log('TODO: Implement account deletion');
+      
+      toast({
+        title: "Account deletion requested",
+        description: "TODO: This will process account deletion.",
+      });
+      
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast({
+        title: "Error deleting account",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const getIdvStatusIcon = (status: IdvStatus) => {
     switch (status) {
       case IdvStatus.VERIFIED:
@@ -197,7 +251,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Profile Settings</h1>
         <p className="text-muted-foreground">
@@ -205,61 +259,191 @@ export default function Profile() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Profile */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Basic Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input
-                    id="displayName"
-                    placeholder="Your display name"
-                    {...register('displayName')}
-                    className={errors.displayName ? 'border-destructive' : ''}
-                  />
-                  {errors.displayName && (
-                    <p className="text-sm text-destructive">{errors.displayName.message}</p>
-                  )}
-                </div>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="verification">Verification</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
-                <div className="space-y-2">
-                  <Label htmlFor="region">Region</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="region"
-                      placeholder="Your city or region"
-                      className={`pl-10 ${errors.region ? 'border-destructive' : ''}`}
-                      {...register('region')}
-                    />
+        <TabsContent value="profile" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Basic Profile */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Basic Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    {/* Avatar Upload */}
+                    <div className="flex flex-col items-center">
+                      <AvatarUpload
+                        currentAvatarUrl={profile.avatarUrl}
+                        fallbackText={profile.displayName.charAt(0)}
+                        onAvatarChange={handleAvatarChange}
+                        disabled={updating}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="displayName">Display Name</Label>
+                        <Input
+                          id="displayName"
+                          placeholder="Your display name"
+                          {...register('displayName')}
+                          className={errors.displayName ? 'border-destructive' : ''}
+                        />
+                        {errors.displayName && (
+                          <p className="text-sm text-destructive">{errors.displayName.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                          id="username"
+                          placeholder="Optional username"
+                          {...register('username')}
+                          className={errors.username ? 'border-destructive' : ''}
+                        />
+                        {errors.username && (
+                          <p className="text-sm text-destructive">{errors.username.message}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          This will be your unique identifier on the platform
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">Bio</Label>
+                      <Textarea
+                        id="bio"
+                        placeholder="Tell others about yourself..."
+                        rows={3}
+                        {...register('bio')}
+                        className={errors.bio ? 'border-destructive' : ''}
+                      />
+                      {errors.bio && (
+                        <p className="text-sm text-destructive">{errors.bio.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="region">Region</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                          id="region"
+                          placeholder="Your city or region"
+                          className={`pl-10 ${errors.region ? 'border-destructive' : ''}`}
+                          {...register('region')}
+                        />
+                      </div>
+                      {errors.region && (
+                        <p className="text-sm text-destructive">{errors.region.message}</p>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={!isDirty || updating}
+                        className="bg-primary hover:bg-primary-hover text-primary-foreground"
+                      >
+                        {updating ? 'Updating...' : 'Update Profile'}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Profile Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Profile Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <Avatar className="w-16 h-16 mx-auto mb-3">
+                      {profile.avatarUrl ? (
+                        <AvatarImage src={profile.avatarUrl} alt="Profile picture" />
+                      ) : null}
+                      <AvatarFallback className="text-2xl">
+                        {profile.displayName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h3 className="font-semibold text-lg">{profile.displayName}</h3>
+                    {profile.username && (
+                      <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                    )}
+                    <p className="text-sm text-muted-foreground">{profile.email}</p>
+                    {profile.bio && (
+                      <p className="text-sm text-muted-foreground mt-2 italic">"{profile.bio}"</p>
+                    )}
                   </div>
-                  {errors.region && (
-                    <p className="text-sm text-destructive">{errors.region.message}</p>
-                  )}
-                </div>
 
-                <div className="flex justify-end">
-                  <Button 
-                    type="submit" 
-                    disabled={!isDirty || updating}
-                    className="bg-primary hover:bg-primary-hover text-primary-foreground"
-                  >
-                    {updating ? 'Updating...' : 'Update Profile'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                  <Separator />
 
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Rating</span>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                        <span className="font-medium">
+                          {profile.rating > 0 ? profile.rating.toFixed(1) : 'No ratings'}
+                        </span>
+                        {profile.ratingCount > 0 && (
+                          <span className="text-sm text-muted-foreground">
+                            ({profile.ratingCount})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Reputation</span>
+                      <span className="font-medium">{profile.reputationScore.toFixed(1)}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Completed Bounties</span>
+                      <span className="font-medium">{profile.completedBounties}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Posted Bounties</span>
+                      <span className="font-medium">{profile.postedBounties}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Member Since</span>
+                      <span className="font-medium">
+                        {format(profile.joinedAt, 'MMM yyyy')}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-6">
+          <ActivityHistory userId={profile.id} />
+        </TabsContent>
+
+        <TabsContent value="verification" className="space-y-6">
           {/* Identity Verification */}
           <Card>
             <CardHeader>
@@ -376,87 +560,115 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Profile Summary */}
+        <TabsContent value="settings" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Summary</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Account Settings
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-2xl font-bold text-primary-foreground mx-auto mb-3">
-                  {profile.displayName.charAt(0)}
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="p-4 border border-border rounded-lg">
+                  <h4 className="font-medium mb-2">Account Status</h4>
+                  {profile.isSuspended ? (
+                    <div className="space-y-2">
+                      <Badge variant="destructive">Account Suspended</Badge>
+                      {profile.suspendedUntil && (
+                        <p className="text-sm text-muted-foreground">
+                          Suspended until: {format(profile.suspendedUntil, 'PPP')}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <Badge className="bg-success-light text-success">Active</Badge>
+                  )}
                 </div>
-                <h3 className="font-semibold text-lg">{profile.displayName}</h3>
-                <p className="text-sm text-muted-foreground">{profile.email}</p>
-              </div>
 
-              <Separator />
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Rating</span>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="font-medium">
-                      {profile.rating > 0 ? profile.rating.toFixed(1) : 'No ratings'}
-                    </span>
-                    {profile.ratingCount > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        ({profile.ratingCount})
-                      </span>
-                    )}
+                <div className="p-4 border border-border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Notifications</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Manage your email and push notification preferences
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" disabled>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Manage
+                    </Button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Completed Bounties</span>
-                  <span className="font-medium">{profile.completedBounties}</span>
+                <div className="p-4 border border-border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Privacy Settings</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Control who can see your profile and activity
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" disabled>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Configure
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Posted Bounties</span>
-                  <span className="font-medium">{profile.postedBounties}</span>
-                </div>
+                <Separator />
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Member Since</span>
-                  <span className="font-medium">
-                    {format(profile.joinedAt, 'MMM yyyy')}
-                  </span>
+                <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-destructive mb-2">Danger Zone</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Once you delete your account, there is no going back. All your data will be permanently removed.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={deleting}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {deleting ? 'Deleting...' : 'Delete Account'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your account
+                          and remove all your data from our servers, including:
+                          <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li>Your profile information</li>
+                            <li>All bounties you've posted</li>
+                            <li>Your claim history</li>
+                            <li>Messages and conversations</li>
+                            <li>Ratings and reviews</li>
+                          </ul>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Yes, delete my account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start" disabled>
-                <Calendar className="h-4 w-4 mr-2" />
-                View Activity History
-              </Button>
-              
-              <Button variant="outline" className="w-full justify-start" disabled>
-                <Star className="h-4 w-4 mr-2" />
-                Ratings & Reviews
-              </Button>
-              
-              <Separator className="my-3" />
-              
-              <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" disabled>
-                Delete Account
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

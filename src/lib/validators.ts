@@ -101,6 +101,18 @@ export const profileUpdateSchema = z.object({
     .min(2, 'Display name must be at least 2 characters')
     .max(50, 'Display name must be less than 50 characters'),
   
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username must be less than 30 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, hyphens, and underscores')
+    .optional()
+    .or(z.literal('')),
+  
+  bio: z.string()
+    .max(500, 'Bio must be less than 500 characters')
+    .optional()
+    .or(z.literal('')),
+    
   region: z.string()
     .min(2, 'Region must be at least 2 characters')
     .max(100, 'Region must be less than 100 characters')

@@ -253,7 +253,10 @@ let profiles: Profile[] = [
   {
     id: 'u1',
     displayName: 'Sarah Chen',
+    username: 'sarahc',
     email: 'sarah@example.com',
+    bio: 'Passionate collector of vintage items and rare finds.',
+    avatarUrl: undefined,
     region: 'San Francisco Bay Area',
     rating: 4.8,
     ratingCount: 23,
@@ -261,7 +264,12 @@ let profiles: Profile[] = [
     idvStatus: IdvStatus.VERIFIED,
     hasPayoutMethod: true,
     completedBounties: 15,
-    postedBounties: 8
+    postedBounties: 8,
+    reputationScore: 4.8,
+    totalSuccessfulClaims: 15,
+    totalFailedClaims: 2,
+    isSuspended: false,
+    suspendedUntil: undefined
   }
 ];
 

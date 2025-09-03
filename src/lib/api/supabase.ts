@@ -8,6 +8,7 @@ import {
   Profile, 
   BountyStatus, 
   ClaimStatus, 
+  IdvStatus,
   SearchFilters,
   PaginatedResponse,
   PostBountyForm,
@@ -440,29 +441,48 @@ export const supabaseApi = {
   // Profile
   async getProfile(userId: string): Promise<Profile | null> {
     try {
-      const { data, error } = await supabase
+      // Get profile data
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') return null; // Not found
-        throw error;
+      if (profileError) {
+        if (profileError.code === 'PGRST116') return null;
+        throw profileError;
       }
 
+      // Get user email from auth.users
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const userEmail = (user && user.id === userId) ? user.email : '';
+
+      // Get user's bounty count
+      const { count: userBounties } = await supabase
+        .from('Bounties')
+        .select('*', { count: 'exact', head: true })
+        .eq('poster_id', userId);
+
       return {
-        id: data.id,
-        displayName: data.full_name || data.username || '',
-        email: '', // Email not stored in profiles table
-        region: '', // TODO: Add region to profiles table
-        rating: data.reputation_score || 0,
-        ratingCount: (data.total_successful_claims || 0) + (data.total_failed_claims || 0),
-        joinedAt: new Date(data.created_at || Date.now()),
-        idvStatus: data.kyc_verified ? 'verified' : 'not_started' as any,
-        hasPayoutMethod: false, // TODO: Add payout method tracking
-        completedBounties: data.total_successful_claims || 0,
-        postedBounties: 0 // TODO: Calculate from bounties table
+        id: profileData.id,
+        displayName: profileData.full_name || profileData.username || 'Anonymous',
+        username: profileData.username || undefined,
+        email: userEmail || '',
+        bio: profileData.bio || undefined,
+        avatarUrl: profileData.avatar_url || undefined,
+        region: 'Unknown',
+        rating: profileData.reputation_score || 5.0,
+        ratingCount: (profileData.total_successful_claims || 0) + (profileData.total_failed_claims || 0),
+        joinedAt: new Date(profileData.created_at),
+        idvStatus: profileData.kyc_verified ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
+        hasPayoutMethod: false,
+        completedBounties: profileData.total_successful_claims || 0,
+        postedBounties: userBounties || 0,
+        reputationScore: profileData.reputation_score || 5.0,
+        totalSuccessfulClaims: profileData.total_successful_claims || 0,
+        totalFailedClaims: profileData.total_failed_claims || 0,
+        isSuspended: profileData.is_suspended || false,
+        suspendedUntil: profileData.suspended_until ? new Date(profileData.suspended_until) : undefined
       };
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -470,14 +490,17 @@ export const supabaseApi = {
     }
   },
 
-  async updateProfile(userId: string, updates: { displayName?: string; region?: string }): Promise<Profile | null> {
+  async updateProfile(userId: string, updates: { displayName?: string; username?: string; bio?: string; region?: string; avatarUrl?: string }): Promise<Profile | null> {
     try {
+      const updateData: any = {};
+      if (updates.displayName !== undefined) updateData.full_name = updates.displayName;
+      if (updates.username !== undefined) updateData.username = updates.username || null;
+      if (updates.bio !== undefined) updateData.bio = updates.bio || null;
+      if (updates.avatarUrl !== undefined) updateData.avatar_url = updates.avatarUrl || null;
+
       const { data, error } = await supabase
         .from('profiles')
-        .update({
-          full_name: updates.displayName,
-          // TODO: Add region field to profiles table
-        })
+        .update(updateData)
         .eq('id', userId)
         .select('*')
         .single();
@@ -487,15 +510,23 @@ export const supabaseApi = {
       return {
         id: data.id,
         displayName: data.full_name || data.username || '',
+        username: data.username || undefined,
         email: '',
+        bio: data.bio || undefined,
+        avatarUrl: data.avatar_url || undefined,
         region: '',
         rating: data.reputation_score || 0,
         ratingCount: (data.total_successful_claims || 0) + (data.total_failed_claims || 0),
         joinedAt: new Date(data.created_at || Date.now()),
-        idvStatus: data.kyc_verified ? 'verified' : 'not_started' as any,
+        idvStatus: data.kyc_verified ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
         hasPayoutMethod: false,
         completedBounties: data.total_successful_claims || 0,
-        postedBounties: 0
+        postedBounties: 0,
+        reputationScore: data.reputation_score || 0,
+        totalSuccessfulClaims: data.total_successful_claims || 0,
+        totalFailedClaims: data.total_failed_claims || 0,
+        isSuspended: data.is_suspended || false,
+        suspendedUntil: data.suspended_until ? new Date(data.suspended_until) : undefined
       };
     } catch (error) {
       console.error('Error updating profile:', error);

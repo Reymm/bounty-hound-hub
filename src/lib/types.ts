@@ -65,7 +65,10 @@ export interface MessageThread {
 export interface Profile {
   id: string;
   displayName: string;
+  username?: string;
   email: string;
+  bio?: string;
+  avatarUrl?: string;
   region: string;
   rating: number;
   ratingCount: number;
@@ -74,6 +77,23 @@ export interface Profile {
   hasPayoutMethod: boolean;
   completedBounties: number;
   postedBounties: number;
+  reputationScore: number;
+  totalSuccessfulClaims: number;
+  totalFailedClaims: number;
+  isSuspended: boolean;
+  suspendedUntil?: Date;
+}
+
+export interface Activity {
+  id: string;
+  type: 'bounty_posted' | 'claim_submitted' | 'claim_accepted' | 'claim_rejected' | 'rating_received';
+  title: string;
+  description: string;
+  bountyId?: string;
+  bountyTitle?: string;
+  amount?: number;
+  rating?: number;
+  createdAt: Date;
 }
 
 export interface IdvCheck {
