@@ -74,7 +74,7 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
         .from('messages')
         .select(`
           *,
-          sender_profile:profiles!messages_sender_id_fkey(full_name, avatar_url)
+          sender_profile:profiles!sender_id(full_name, avatar_url)
         `)
         .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
         .order('created_at', { ascending: true });
