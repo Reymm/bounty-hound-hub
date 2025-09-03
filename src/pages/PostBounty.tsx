@@ -711,42 +711,51 @@ function PostBountyForm() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="targetPriceMin">Target Price Range (Optional)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="targetPriceMin"
-                    type="number"
-                    min="1"
-                    placeholder="Min price"
-                    className={`pl-10 ${errors.targetPriceMin ? 'border-destructive' : ''}`}
-                    {...register('targetPriceMin', { valueAsNumber: true })}
-                  />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="targetPriceMin">Target Price Range (Optional)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="targetPriceMin"
+                      type="number"
+                      min="1"
+                      placeholder="Min price"
+                      className={`pl-10 ${errors.targetPriceMin ? 'border-destructive' : ''}`}
+                      {...register('targetPriceMin', { 
+                        setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
+                      })}
+                    />
+                  </div>
+                  {errors.targetPriceMin && (
+                    <p className="text-sm text-destructive">{errors.targetPriceMin.message}</p>
+                  )}
                 </div>
-                {errors.targetPriceMin && (
-                  <p className="text-sm text-destructive">{errors.targetPriceMin.message}</p>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="targetPriceMax">&nbsp;</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="targetPriceMax"
-                    type="number"
-                    min="1"
-                    placeholder="Max price"
-                    className={`pl-10 ${errors.targetPriceMax ? 'border-destructive' : ''}`}
-                    {...register('targetPriceMax', { valueAsNumber: true })}
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="targetPriceMax">&nbsp;</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="targetPriceMax"
+                      type="number"
+                      min="1"
+                      placeholder="Max price"
+                      className={`pl-10 ${errors.targetPriceMax ? 'border-destructive' : ''}`}
+                      {...register('targetPriceMax', { 
+                        setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
+                      })}
+                    />
+                  </div>
+                  {errors.targetPriceMax && (
+                    <p className="text-sm text-destructive">{errors.targetPriceMax.message}</p>
+                  )}
                 </div>
-                {errors.targetPriceMax && (
-                  <p className="text-sm text-destructive">{errors.targetPriceMax.message}</p>
-                )}
               </div>
+              <p className="text-xs text-muted-foreground">
+                This is what you're willing to pay for the item you're looking for (separate from the bounty reward)
+              </p>
             </div>
 
             {watchedTargetMin && watchedTargetMax && watchedTargetMin > watchedTargetMax && (
