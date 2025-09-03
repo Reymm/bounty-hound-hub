@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MessageThread, Message } from '@/lib/types';
-import { mockApi } from '@/lib/api/mock';
+import { supabaseApi } from '@/lib/api/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 
@@ -23,6 +24,7 @@ export default function Messages() {
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadThreads();
@@ -51,10 +53,11 @@ export default function Messages() {
   }, [selectedThread]);
 
   const loadThreads = async () => {
+    if (!user) return;
+    
     try {
       setThreadsLoading(true);
-      // TODO: Get current user ID from Supabase auth
-      const threadsData = await mockApi.getMessageThreads('current-user');
+      const threadsData = await supabaseApi.getMessageThreads(user.id);
       setThreads(threadsData);
       
       // Auto-select first thread if none selected
@@ -74,9 +77,16 @@ export default function Messages() {
   };
 
   const loadMessages = async (threadId: string) => {
+    if (!user) return;
+    
     try {
       setMessagesLoading(true);
-      const messagesData = await mockApi.getMessages(threadId);
+      // Extract participant IDs from threadId (format: participant1-participant2)
+      const participants = threadId.split('-');
+      const otherParticipant = participants.find(p => p !== user.id);
+      if (!otherParticipant) return;
+      
+      const messagesData = await supabaseApi.getMessages(user.id, otherParticipant);
       setMessages(messagesData);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -91,12 +101,17 @@ export default function Messages() {
   };
 
   const sendMessage = async () => {
-    if (!selectedThread || !newMessage.trim()) return;
-
+    if (!user || !selectedThread || !newMessage.trim()) return;
+    
     try {
       setSendingMessage(true);
       
-      const message = await mockApi.sendMessage(selectedThread.id, newMessage.trim());
+      // Extract participant IDs from threadId
+      const participants = selectedThread.id.split('-');
+      const recipientId = participants.find(p => p !== user.id);
+      if (!recipientId) return;
+      
+      const message = await supabaseApi.sendMessage(recipientId, selectedThread.bountyId, newMessage.trim());
       setMessages(prev => [...prev, message]);
       setNewMessage('');
 

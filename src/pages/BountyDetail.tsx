@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Bounty, Claim, BountyStatus, ClaimType, ClaimStatus } from '@/lib/types';
-import { mockApi } from '@/lib/api/mock';
+import { supabaseApi } from '@/lib/api/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -57,8 +57,8 @@ export default function BountyDetail() {
       setClaimsLoading(true);
       
       const [bountyData, claimsData] = await Promise.all([
-        mockApi.getBounty(id),
-        mockApi.getClaims(id)
+        supabaseApi.getBounty(id),
+        supabaseApi.getClaims(id)
       ]);
       
       setBounty(bountyData);
@@ -88,7 +88,7 @@ export default function BountyDetail() {
     try {
       setSubmittingClaim(true);
       
-      await mockApi.createClaim(id, {
+      await supabaseApi.createClaim(id, {
         type: claimForm.type,
         message: claimForm.message,
         proofUrls: claimForm.proofUrls.filter(url => url.trim()),
@@ -108,7 +108,7 @@ export default function BountyDetail() {
       });
 
       // Reload claims
-      const newClaims = await mockApi.getClaims(id);
+      const newClaims = await supabaseApi.getClaims(id);
       setClaims(newClaims);
 
     } catch (error) {

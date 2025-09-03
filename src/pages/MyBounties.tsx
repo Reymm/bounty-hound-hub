@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Bounty, Claim, BountyStatus, ClaimStatus, ClaimType } from '@/lib/types';
-import { mockApi } from '@/lib/api/mock';
+import { supabaseApi } from '@/lib/api/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -17,44 +18,23 @@ export default function MyBounties() {
   const [appliedBounties, setAppliedBounties] = useState<(Bounty & { claim: Claim })[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadMyBounties();
-  }, []);
+  }, [user]);
 
   const loadMyBounties = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       
-      // TODO: Filter by current user ID from Supabase auth
-      // For now, using mock data that shows what the interface will look like
-      const [allBounties] = await Promise.all([
-        mockApi.getBounties(1, 100) // Get all bounties for demo
-      ]);
+      const userBountiesData = await supabaseApi.getUserBounties(user.id);
+      setPostedBounties(userBountiesData);
 
-      // Mock: Filter posted bounties (in real app, filter by poster_id = current user)
-      const posted = allBounties.data.slice(0, 2); // Show first 2 as posted by user
-      setPostedBounties(posted);
-
-      // Mock: Applied bounties with claims (in real app, join bounties with user's claims)
-      const applied = allBounties.data.slice(2, 3).map(bounty => ({
-        ...bounty,
-        claim: {
-          id: 'c-mock',
-          bountyId: bounty.id,
-          hunterId: 'current-user',
-          hunterName: 'Current User',
-          hunterRating: 4.5,
-          type: ClaimType.FOUND,
-          message: 'I found this item and can provide details.',
-          proofUrls: [],
-          proofImages: [],
-          status: ClaimStatus.SUBMITTED,
-          submittedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
-        }
-      }));
-      setAppliedBounties(applied);
+      // For now, appliedBounties will be empty until we implement claims/submissions properly
+      setAppliedBounties([]);
 
     } catch (error) {
       console.error('Error loading bounties:', error);

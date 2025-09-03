@@ -4,7 +4,7 @@ import { Plus, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
-import { mockApi } from '@/lib/api/mock';
+import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,7 +36,7 @@ const Index = () => {
     try {
       setLoading(true);
       const currentPage = reset ? 1 : page;
-      const response = await mockApi.getBounties(currentPage, 20, filters);
+      const response = await supabaseApi.getBounties(currentPage, 20, filters);
       
       if (reset) {
         setBounties(response.data);

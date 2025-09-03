@@ -21,7 +21,8 @@ import { Separator } from '@/components/ui/separator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType, IdvStatus } from '@/lib/types';
-import { mockApi } from '@/lib/api/mock';
+import { supabaseApi } from '@/lib/api/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -31,6 +32,7 @@ export default function Profile() {
   const [updating, setUpdating] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const {
     register,
@@ -46,10 +48,11 @@ export default function Profile() {
   }, []);
 
   const loadProfile = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      // TODO: Get current user ID from Supabase auth
-      const profileData = await mockApi.getProfile('u1'); // Mock current user
+      const profileData = await supabaseApi.getProfile(user.id);
       setProfile(profileData);
       
       if (profileData) {
@@ -76,8 +79,7 @@ export default function Profile() {
     try {
       setUpdating(true);
       
-      // TODO: Replace with actual Supabase call
-      const updatedProfile = await mockApi.updateProfile(profile.id, data);
+      const updatedProfile = await supabaseApi.updateProfile(user.id, data);
       
       if (updatedProfile) {
         setProfile(updatedProfile);
