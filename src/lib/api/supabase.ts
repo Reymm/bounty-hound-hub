@@ -94,8 +94,7 @@ export const supabaseApi = {
             total_failed_claims
           )
         `)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+        .eq('status', 'open');
 
       // Apply filters
       if (filters.keyword) {
@@ -122,10 +121,22 @@ export const supabaseApi = {
         query = query.lte('amount', filters.maxBounty);
       }
 
+      if (filters.deadlineBefore) {
+        query = query.lte('deadline', filters.deadlineBefore.toISOString());
+      }
+
+      // Apply sorting
+      if (filters.deadline === 'soonest') {
+        query = query.order('deadline', { ascending: true }); // Closest deadlines first
+      } else {
+        query = query.order('created_at', { ascending: false }); // Newest first by default
+      }
+
       // Get total count for pagination
       const { count } = await supabase
         .from('Bounties')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'open');
       
       // Get paginated results
       const start = (page - 1) * limit;

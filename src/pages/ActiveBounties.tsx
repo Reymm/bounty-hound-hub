@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { TrendingUp, Filter } from 'lucide-react';
+import { TrendingUp, Filter, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
 import { supabaseApi } from '@/lib/api/supabase';
@@ -59,7 +60,26 @@ const ActiveBounties = () => {
     try {
       setLoading(true);
       const currentPage = reset ? 1 : page;
-      const response = await supabaseApi.getBounties(currentPage, 20, filters);
+
+      // Process deadline filter
+      let processedFilters = { ...filters };
+      if (filters.deadline) {
+        const now = new Date();
+        switch (filters.deadline) {
+          case 'week':
+            processedFilters.deadlineBefore = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'month':
+            processedFilters.deadlineBefore = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            break;
+          case 'soonest':
+            // Will be handled by sorting in API
+            break;
+        }
+        delete processedFilters.deadline; // Remove the string value, API doesn't need it
+      }
+
+      const response = await supabaseApi.getBounties(currentPage, 20, processedFilters);
       
       if (reset) {
         setAllBounties(response.data);
@@ -170,6 +190,29 @@ const ActiveBounties = () => {
               onFiltersChange={handleFiltersChange}
               onClearFilters={handleClearFilters}
             />
+          </div>
+
+          {/* Main Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md mx-auto lg:mx-0">
+              <Input
+                placeholder="Search bounties..."
+                value={filters.keyword || ''}
+                onChange={(e) => handleFiltersChange({ ...filters, keyword: e.target.value })}
+                className="pl-10 h-12 text-base"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              {filters.keyword && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                  onClick={() => handleFiltersChange({ ...filters, keyword: undefined })}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
 
           <BountyGrid 

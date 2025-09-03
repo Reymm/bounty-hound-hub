@@ -333,6 +333,7 @@ export interface SearchFilters {
   maxBounty?: number;
   location?: string;
   deadline?: 'soonest' | 'week' | 'month';
+  deadlineBefore?: Date; // Internal use for API
   status?: BountyStatus[];
 }
 
