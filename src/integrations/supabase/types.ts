@@ -349,30 +349,23 @@ export type Database = {
       }
     }
     Views: {
-      conversations: {
-        Row: {
-          bounty_id: string | null
-          last_message: string | null
-          last_message_at: string | null
-          participant_1: string | null
-          participant_2: string | null
-          unread_count: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_bounty_id_fkey"
-            columns: ["bounty_id"]
-            isOneToOne: false
-            referencedRelation: "Bounties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       can_user_claim_bounty: {
         Args: { bounty_id: string; user_id: string }
         Returns: boolean
+      }
+      get_user_conversations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bounty_id: string
+          last_message: string
+          last_message_at: string
+          participant_1: string
+          participant_2: string
+          unread_count: number
+        }[]
       }
       update_user_reputation: {
         Args: { bounty_amount: number; rating: number; user_id: string }
