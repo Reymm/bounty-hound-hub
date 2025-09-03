@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X } from 'lucide-react';
+import { Search, Plus, MessageCircle, User, Menu, X, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -10,7 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TopNavProps {
   onSearch?: (query: string) => void;
@@ -20,6 +22,7 @@ export function TopNav({ onSearch }: TopNavProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +30,16 @@ export function TopNav({ onSearch }: TopNavProps) {
       onSearch?.(searchQuery.trim());
       navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsMobileMenuOpen(false);
+    navigate('/');
+  };
+
+  const getUserInitials = (email: string) => {
+    return email.substring(0, 2).toUpperCase();
   };
 
   const unreadMessages = 2; // TODO: Get from actual message state
@@ -61,56 +74,101 @@ export function TopNav({ onSearch }: TopNavProps) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button 
-              asChild 
-              className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
-            >
-              <Link to="/setup" aria-label="Sign up for free">
-                Sign Up Free
-              </Link>
-            </Button>
-
-            <Button asChild variant="ghost" size="sm" className="relative focus-ring">
-              <Link to="/messages" aria-label={`Messages${unreadMessages > 0 ? ` (${unreadMessages} unread)` : ''}`}>
-                <MessageCircle className="h-5 w-5" />
-                {unreadMessages > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                    aria-label={`${unreadMessages} unread messages`}
-                  >
-                    {unreadMessages}
-                  </Badge>
-                )}
-              </Link>
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="focus-ring" aria-label="Profile menu">
-                  <User className="h-5 w-5" />
+            {user ? (
+              <>
+                <Button 
+                  asChild 
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
+                >
+                  <Link to="/post" aria-label="Post a bounty">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Post Bounty
+                  </Link>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link to="/me/profile">Profile Settings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/me/bounties">My Bounties</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/legal/terms">Terms of Service</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/legal/privacy">Privacy Policy</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+                <Button asChild variant="ghost" size="sm" className="relative focus-ring">
+                  <Link to="/messages" aria-label={`Messages${unreadMessages > 0 ? ` (${unreadMessages} unread)` : ''}`}>
+                    <MessageCircle className="h-5 w-5" />
+                    {unreadMessages > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                        aria-label={`${unreadMessages} unread messages`}
+                      >
+                        {unreadMessages}
+                      </Badge>
+                    )}
+                  </Link>
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 focus-ring">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="" alt={user.email} />
+                        <AvatarFallback className="text-xs">
+                          {getUserInitials(user.email || 'U')}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex flex-col space-y-1 leading-none">
+                        <p className="font-medium text-sm">{user.email}</p>
+                        <p className="w-[200px] truncate text-xs text-muted-foreground">
+                          Welcome to BountyBay
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/me/profile">
+                        <User className="mr-2 h-4 w-4" />
+                        Profile Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/me/bounties">
+                        <Settings className="mr-2 h-4 w-4" />
+                        My Bounties
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/legal/terms">Terms of Service</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/legal/privacy">Privacy Policy</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/auth')}
+                  className="focus-ring"
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  asChild 
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
+                >
+                  <Link to="/auth" aria-label="Sign up for free">
+                    Sign Up Free
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -144,56 +202,83 @@ export function TopNav({ onSearch }: TopNavProps) {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-4">
-            <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
-              <Link to="/setup" onClick={() => setIsMobileMenuOpen(false)}>
-                Sign Up Free
-              </Link>
-            </Button>
+            {user ? (
+              <>
+                <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
+                  <Link to="/post" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Post Bounty
+                  </Link>
+                </Button>
 
-            <Button asChild variant="ghost" className="w-full justify-start relative">
-              <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Messages
-                {unreadMessages > 0 && (
-                  <Badge variant="destructive" className="ml-auto">
-                    {unreadMessages}
-                  </Badge>
-                )}
-              </Link>
-            </Button>
+                <Button asChild variant="ghost" className="w-full justify-start relative">
+                  <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Messages
+                    {unreadMessages > 0 && (
+                      <Badge variant="destructive" className="ml-auto">
+                        {unreadMessages}
+                      </Badge>
+                    )}
+                  </Link>
+                </Button>
 
-            <div className="space-y-2 pt-2 border-t border-border">
-              <Button asChild variant="ghost" className="w-full justify-start">
-                <Link to="/me/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                  Profile Settings
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" className="w-full justify-start">
-                <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
-                  My Bounties
-                </Link>
-              </Button>
-            </div>
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/me/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Profile Settings
+                    </Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      My Bounties
+                    </Link>
+                  </Button>
+                </div>
 
-            <div className="space-y-2 pt-2 border-t border-border">
-              <Button asChild variant="ghost" className="w-full justify-start text-sm">
-                <Link to="/legal/terms" onClick={() => setIsMobileMenuOpen(false)}>
-                  Terms of Service
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" className="w-full justify-start text-sm">
-                <Link to="/legal/privacy" onClick={() => setIsMobileMenuOpen(false)}>
-                  Privacy Policy
-                </Link>
-              </Button>
-            </div>
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <Button asChild variant="ghost" className="w-full justify-start text-sm">
+                    <Link to="/legal/terms" onClick={() => setIsMobileMenuOpen(false)}>
+                      Terms of Service
+                    </Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="w-full justify-start text-sm">
+                    <Link to="/legal/privacy" onClick={() => setIsMobileMenuOpen(false)}>
+                      Privacy Policy
+                    </Link>
+                  </Button>
+                </div>
 
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              Sign Out
-            </Button>
+                <Button 
+                  onClick={handleSignOut}
+                  variant="ghost" 
+                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  onClick={() => { navigate('/auth'); setIsMobileMenuOpen(false); }}
+                  variant="ghost" 
+                  className="w-full justify-start"
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  asChild 
+                  className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground"
+                >
+                  <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                    Sign Up Free
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

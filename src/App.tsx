@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
 
@@ -20,6 +22,7 @@ import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
 import NotFound from "./pages/NotFound";
 import KycComplete from "./pages/KycComplete";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -29,28 +32,71 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="min-h-screen flex flex-col bg-background">
-          <TopNav />
-          <main className="flex-1">
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col bg-background">
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/bounties" element={<ActiveBounties />} />
-              <Route path="/post" element={<PostBounty />} />
-              <Route path="/b/:id" element={<BountyDetail />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/me/bounties" element={<MyBounties />} />
-              <Route path="/me/profile" element={<Profile />} />
-              <Route path="/setup" element={<ProfileSetup />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/kyc-complete" element={<KycComplete />} />
+              {/* Public routes */}
+              <Route path="/auth" element={<Auth />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+              
+              {/* Routes with navigation */}
+              <Route path="/*" element={
+                <>
+                  <TopNav />
+                  <main className="flex-1">
+                    <Routes>
+                      {/* Public routes */}
+                      <Route path="/" element={<Index />} />
+                      <Route path="/bounties" element={<ActiveBounties />} />
+                      <Route path="/b/:id" element={<BountyDetail />} />
+                      
+                      {/* Protected routes */}
+                      <Route path="/post" element={
+                        <ProtectedRoute>
+                          <PostBounty />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/messages" element={
+                        <ProtectedRoute>
+                          <Messages />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/me/bounties" element={
+                        <ProtectedRoute>
+                          <MyBounties />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/me/profile" element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/setup" element={
+                        <ProtectedRoute>
+                          <ProfileSetup />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/checkout" element={
+                        <ProtectedRoute>
+                          <Checkout />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/kyc-complete" element={
+                        <ProtectedRoute>
+                          <KycComplete />
+                        </ProtectedRoute>
+                      } />
+                      
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </>
+              } />
             </Routes>
-          </main>
-          <Footer />
-        </div>
+          </div>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
