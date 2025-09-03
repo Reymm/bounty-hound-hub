@@ -24,6 +24,8 @@ import { BountyCategory, CATEGORY_STRUCTURE } from '@/lib/types';
 import { mockApi } from '@/lib/api/mock';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadFile, deleteFile } from '@/lib/storage';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 const stripePromise = loadStripe('pk_test_51QfOrlJBfkPjzFmqPq7zLJhSaKnE7Nf7HRdBK9GR0OHfhE6AEHwAJDKt8H0XhHyPzOBGQrj6hVRQNj6YGFmHxC300g4kxUEfr');
 
@@ -54,6 +56,7 @@ function PostBountyForm() {
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const {
     register,
@@ -125,6 +128,77 @@ function PostBountyForm() {
       const newRequirements = verificationRequirements.filter((_, i) => i !== index);
       setVerificationRequirements(newRequirements);
       setValue('verificationRequirements', newRequirements.filter(req => req.trim()));
+    }
+  };
+
+  const handleImageUpload = async (files: File[]) => {
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User must be logged in to upload images');
+      }
+
+      const uploadPromises = files.map(file => uploadFile(file, 'bounty-images', user.id));
+      const uploadResults = await Promise.all(uploadPromises);
+      
+      const successfulUploads = uploadResults
+        .filter(result => !result.error && result.url)
+        .map(result => result.url!);
+      
+      const failedUploads = uploadResults.filter(result => result.error);
+      
+      if (failedUploads.length > 0) {
+        console.error('Some uploads failed:', failedUploads);
+      }
+      
+      const newImages = [...uploadedImages, ...successfulUploads];
+      setUploadedImages(newImages);
+      setValue('images', newImages);
+      
+      toast({
+        title: "Images uploaded",
+        description: `${successfulUploads.length} image(s) uploaded successfully.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload images",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleImageRemove = async (imageUrl: string) => {
+    try {
+      // Extract file path from URL - for public URLs, we need the path after the bucket name
+      const urlParts = imageUrl.split('/');
+      const bucketIndex = urlParts.findIndex(part => part === 'bounty-images');
+      if (bucketIndex === -1) {
+        throw new Error('Invalid image URL format');
+      }
+      
+      const filePath = urlParts.slice(bucketIndex + 1).join('/');
+      const result = await deleteFile('bounty-images', filePath);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      const newImages = uploadedImages.filter(img => img !== imageUrl);
+      setUploadedImages(newImages);
+      setValue('images', newImages);
+      
+      toast({
+        title: "Image removed",
+        description: "Image has been removed successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Remove failed", 
+        description: error.message || "Failed to remove image",
+        variant: "destructive",
+      });
     }
   };
 
@@ -281,7 +355,8 @@ function PostBountyForm() {
               targetPriceMin: formData.targetPriceMin,
               targetPriceMax: formData.targetPriceMax,
               tags,
-              verificationRequirements: verificationRequirements.filter(req => req.trim())
+              verificationRequirements: verificationRequirements.filter(req => req.trim()),
+              images: uploadedImages
             }
           }
         });
@@ -849,7 +924,7 @@ function PostBountyForm() {
           </CardContent>
         </Card>
 
-        {/* Image Upload (TODO) */}
+        {/* Image Upload */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -858,18 +933,16 @@ function PostBountyForm() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-              <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-2">
-                Upload reference images to help hunters understand what you're looking for
-              </p>
-              <p className="text-xs text-muted-foreground">
-                TODO: Image upload will be implemented with Supabase Storage
-              </p>
-              <Button type="button" variant="outline" disabled className="mt-4">
-                Choose Images
-              </Button>
-            </div>
+            <ImageUpload
+              onUpload={handleImageUpload}
+              onRemove={handleImageRemove}
+              uploadedImages={uploadedImages}
+              maxFiles={5}
+              maxSize={5 * 1024 * 1024} // 5MB
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Upload up to 5 reference images to help hunters understand what you're looking for
+            </p>
           </CardContent>
         </Card>
 

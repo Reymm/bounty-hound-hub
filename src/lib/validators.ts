@@ -44,7 +44,11 @@ export const postBountySchema = z.object({
   
   verificationRequirements: z.array(z.string())
     .min(1, 'Add at least one verification requirement')
-    .max(10, 'Maximum 10 verification requirements')
+    .max(10, 'Maximum 10 verification requirements'),
+    
+  images: z.array(z.string().url())
+    .max(5, 'Maximum 5 images allowed')
+    .optional()
 }).refine(data => {
   if (data.targetPriceMin && data.targetPriceMax) {
     return data.targetPriceMin <= data.targetPriceMax;
