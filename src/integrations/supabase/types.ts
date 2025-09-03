@@ -77,6 +77,41 @@ export type Database = {
         }
         Relationships: []
       }
+      claim_reports: {
+        Row: {
+          created_at: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string | null
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string | null
+          submission_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_reports_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "Submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       escrow_transactions: {
         Row: {
           amount: number
@@ -167,8 +202,13 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          is_suspended: boolean | null
           kyc_verified: boolean | null
           kyc_verified_at: string | null
+          reputation_score: number | null
+          suspended_until: string | null
+          total_failed_claims: number | null
+          total_successful_claims: number | null
           updated_at: string | null
           username: string | null
         }
@@ -178,8 +218,13 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          reputation_score?: number | null
+          suspended_until?: string | null
+          total_failed_claims?: number | null
+          total_successful_claims?: number | null
           updated_at?: string | null
           username?: string | null
         }
@@ -189,8 +234,13 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          reputation_score?: number | null
+          suspended_until?: string | null
+          total_failed_claims?: number | null
+          total_successful_claims?: number | null
           updated_at?: string | null
           username?: string | null
         }
@@ -204,6 +254,10 @@ export type Database = {
           id: string
           image_url: string | null
           message: string | null
+          proof_urls: string[] | null
+          rejection_reason: string | null
+          reported_as_spam: boolean | null
+          requires_approval: boolean | null
           status: string | null
         }
         Insert: {
@@ -213,6 +267,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           message?: string | null
+          proof_urls?: string[] | null
+          rejection_reason?: string | null
+          reported_as_spam?: boolean | null
+          requires_approval?: boolean | null
           status?: string | null
         }
         Update: {
@@ -222,6 +280,10 @@ export type Database = {
           id?: string
           image_url?: string | null
           message?: string | null
+          proof_urls?: string[] | null
+          rejection_reason?: string | null
+          reported_as_spam?: boolean | null
+          requires_approval?: boolean | null
           status?: string | null
         }
         Relationships: [
@@ -246,7 +308,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_user_claim_bounty: {
+        Args: { bounty_id: string; user_id: string }
+        Returns: boolean
+      }
+      update_user_reputation: {
+        Args: { bounty_amount: number; rating: number; user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
