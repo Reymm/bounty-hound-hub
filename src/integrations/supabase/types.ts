@@ -34,6 +34,7 @@ export type Database = {
           target_price_min: number | null
           title: string
           verification_requirements: string[] | null
+          view_count: number | null
         }
         Insert: {
           amount?: number | null
@@ -54,6 +55,7 @@ export type Database = {
           target_price_min?: number | null
           title: string
           verification_requirements?: string[] | null
+          view_count?: number | null
         }
         Update: {
           amount?: number | null
@@ -74,6 +76,7 @@ export type Database = {
           target_price_min?: number | null
           title?: string
           verification_requirements?: string[] | null
+          view_count?: number | null
         }
         Relationships: []
       }
@@ -380,6 +383,10 @@ export type Database = {
           participant_2: string
           unread_count: number
         }[]
+      }
+      increment_bounty_views: {
+        Args: { bounty_id: string }
+        Returns: undefined
       }
       update_user_reputation: {
         Args: { bounty_amount: number; rating: number; user_id: string }

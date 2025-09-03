@@ -59,7 +59,7 @@ const transformBountyRow = (row: any): Bounty => ({
   createdAt: new Date(row.created_at),
   updatedAt: new Date(row.created_at),
   claimsCount: 0, // Will be populated separately if needed
-  viewsCount: 0 // TODO: Add views tracking
+  viewsCount: row.view_count || 0
 });
 
 const transformSubmissionRow = (row: any): Claim => ({
@@ -150,6 +150,9 @@ export const supabaseApi = {
 
   async getBounty(id: string): Promise<Bounty | null> {
     try {
+      // First increment the view count
+      await supabase.rpc('increment_bounty_views', { bounty_id: id });
+
       const { data, error } = await supabase
         .from('Bounties')
         .select(`

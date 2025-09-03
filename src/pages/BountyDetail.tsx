@@ -1,49 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { 
-  Calendar, 
-  MapPin, 
-  Star, 
-  Eye, 
-  Users, 
-  MessageCircle, 
-  Flag,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  ArrowLeft
-} from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { Bounty, Claim, BountyStatus, ClaimType, ClaimStatus } from '@/lib/types';
+import { ClaimDialog } from '@/components/bounty/ClaimDialog';
+import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { supabaseApi } from '@/lib/api/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { formatDistanceToNow, format } from 'date-fns';
+import { Bounty, BountyStatus } from '@/lib/types';
+import { format, formatDistanceToNow } from 'date-fns';
 
 export default function BountyDetail() {
   const { id } = useParams<{ id: string }>();
   const [bounty, setBounty] = useState<Bounty | null>(null);
-  const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
-  const [claimsLoading, setClaimsLoading] = useState(true);
-  const [isClaimTypeModalOpen, setIsClaimTypeModalOpen] = useState(false);
-  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
-  const [claimForm, setClaimForm] = useState({
-    type: ClaimType.FOUND,
-    message: '',
-    proofUrls: [''],
-  });
-  const [submittingClaim, setSubmittingClaim] = useState(false);
+  const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadBountyDetail();
@@ -54,15 +32,8 @@ export default function BountyDetail() {
     
     try {
       setLoading(true);
-      setClaimsLoading(true);
-      
-      const [bountyData, claimsData] = await Promise.all([
-        supabaseApi.getBounty(id),
-        supabaseApi.getClaims(id)
-      ]);
-      
+      const bountyData = await supabaseApi.getBounty(id);
       setBounty(bountyData);
-      setClaims(claimsData);
     } catch (error) {
       console.error('Error loading bounty:', error);
       toast({
@@ -72,71 +43,15 @@ export default function BountyDetail() {
       });
     } finally {
       setLoading(false);
-      setClaimsLoading(false);
     }
   };
 
-  const handleClaimTypeSelect = (claimType: ClaimType) => {
-    setClaimForm(prev => ({ ...prev, type: claimType }));
-    setIsClaimTypeModalOpen(false);
-    setIsClaimModalOpen(true);
-  };
-
-  const handleClaimSubmit = async () => {
-    if (!id || !claimForm.message.trim()) return;
-
-    try {
-      setSubmittingClaim(true);
-      
-      await supabaseApi.createClaim(id, {
-        type: claimForm.type,
-        message: claimForm.message,
-        proofUrls: claimForm.proofUrls.filter(url => url.trim()),
-        proofImages: [] // TODO: Handle file uploads
-      });
-
-      toast({
-        title: "Claim submitted!",
-        description: "Your claim has been sent to the bounty poster for review.",
-      });
-
-      setIsClaimModalOpen(false);
-      setClaimForm({
-        type: ClaimType.FOUND,
-        message: '',
-        proofUrls: [''],
-      });
-
-      // Reload claims
-      const newClaims = await supabaseApi.getClaims(id);
-      setClaims(newClaims);
-
-    } catch (error) {
-      console.error('Error submitting claim:', error);
-      toast({
-        title: "Error submitting claim",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmittingClaim(false);
-    }
-  };
-
-  const addProofUrl = () => {
-    if (claimForm.proofUrls.length < 5) {
-      setClaimForm(prev => ({
-        ...prev,
-        proofUrls: [...prev.proofUrls, '']
-      }));
-    }
-  };
-
-  const updateProofUrl = (index: number, value: string) => {
-    setClaimForm(prev => ({
-      ...prev,
-      proofUrls: prev.proofUrls.map((url, i) => i === index ? value : url)
-    }));
+  const handleClaimSubmitted = () => {
+    setRefreshKey(prev => prev + 1);
+    toast({
+      title: "Claim submitted successfully!",
+      description: "The bounty poster will review your submission.",
+    });
   };
 
   if (loading) {
@@ -180,21 +95,6 @@ export default function BountyDetail() {
         return <Badge className="status-completed">Fulfilled</Badge>;
       default:
         return <Badge variant="secondary">{bounty.status}</Badge>;
-    }
-  };
-
-  const getClaimStatusBadge = (status: ClaimStatus) => {
-    switch (status) {
-      case ClaimStatus.SUBMITTED:
-        return <Badge variant="secondary">Submitted</Badge>;
-      case ClaimStatus.ACCEPTED:
-        return <Badge className="status-active">Accepted</Badge>;
-      case ClaimStatus.REJECTED:
-        return <Badge variant="destructive">Rejected</Badge>;
-      case ClaimStatus.FULFILLED:
-        return <Badge className="status-completed">Fulfilled</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -295,116 +195,14 @@ export default function BountyDetail() {
                     </Link>
                   </Button>
 
-                  {/* Claim Type Selection Modal */}
-                  <Dialog open={isClaimTypeModalOpen} onOpenChange={setIsClaimTypeModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full bg-primary hover:bg-primary-hover">
-                        <Flag className="h-4 w-4 mr-2" />
-                        Claim This Bounty
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-lg">
-                      <DialogHeader className="pb-4">
-                        <DialogTitle>What kind of claim are you making?</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 px-1">
-                        <Button 
-                          className="w-full justify-start h-auto p-5 text-left"
-                          variant="outline"
-                          onClick={() => handleClaimTypeSelect(ClaimType.LEAD)}
-                        >
-                          <div className="w-full">
-                            <div className="font-medium text-base mb-1">I Have a Lead</div>
-                            <div className="text-sm text-muted-foreground leading-relaxed">
-                              For users who know where the item might be or who might have it
-                            </div>
-                          </div>
-                        </Button>
-                        <Button 
-                          className="w-full justify-start h-auto p-5 text-left"
-                          variant="outline"
-                          onClick={() => handleClaimTypeSelect(ClaimType.FOUND)}
-                        >
-                          <div className="w-full">
-                            <div className="font-medium text-base mb-1">I Found It</div>
-                            <div className="text-sm text-muted-foreground leading-relaxed">
-                              For users who already have the item or can directly fulfill the bounty
-                            </div>
-                          </div>
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* Claim Form Modal */}
-                  <Dialog open={isClaimModalOpen} onOpenChange={setIsClaimModalOpen}>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Submit a Claim</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Claim Type</Label>
-                          <Select 
-                            value={claimForm.type} 
-                            onValueChange={(value) => setClaimForm(prev => ({...prev, type: value as ClaimType}))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={ClaimType.LEAD}>I have a lead</SelectItem>
-                              <SelectItem value={ClaimType.FOUND}>I found it</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Message</Label>
-                          <Textarea
-                            placeholder="Describe your lead or finding..."
-                            value={claimForm.message}
-                            onChange={(e) => setClaimForm(prev => ({...prev, message: e.target.value}))}
-                            rows={3}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Proof URLs (Optional)</Label>
-                          {claimForm.proofUrls.map((url, index) => (
-                            <Input
-                              key={index}
-                              placeholder="https://example.com/proof"
-                              value={url}
-                              onChange={(e) => updateProofUrl(index, e.target.value)}
-                            />
-                          ))}
-                          {claimForm.proofUrls.length < 5 && (
-                            <Button type="button" variant="outline" size="sm" onClick={addProofUrl}>
-                              Add URL
-                            </Button>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setIsClaimModalOpen(false)}
-                            className="flex-1"
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            onClick={handleClaimSubmit}
-                            disabled={submittingClaim || !claimForm.message.trim()}
-                            className="flex-1"
-                          >
-                            {submittingClaim ? 'Submitting...' : 'Submit Claim'}
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary-hover"
+                    onClick={() => setIsClaimDialogOpen(true)}
+                    disabled={!user}
+                  >
+                    <Flag className="h-4 w-4 mr-2" />
+                    Claim This Bounty
+                  </Button>
 
                   <p className="text-xs text-muted-foreground text-center">
                     💡 Identity verification required before messaging or claiming
@@ -423,7 +221,7 @@ export default function BountyDetail() {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              <TabsTrigger value="claims">Claims ({claims.length})</TabsTrigger>
+              <TabsTrigger value="claims">Claims</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
@@ -440,18 +238,36 @@ export default function BountyDetail() {
                 </CardContent>
               </Card>
 
-              {/* TODO: Image Gallery */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Images</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No images uploaded</p>
-                    <p className="text-xs">TODO: Image gallery will be implemented with Supabase Storage</p>
-                  </div>
-                </CardContent>
-              </Card>
+              {bounty.images && bounty.images.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Images</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {bounty.images.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt={`Bounty image ${index + 1}`}
+                          className="rounded-lg object-cover w-full h-32"
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Images</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No images uploaded</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="requirements">
@@ -463,7 +279,7 @@ export default function BountyDetail() {
                   <div className="space-y-3">
                     {bounty.verificationRequirements.map((requirement, index) => (
                       <div key={index} className="flex items-start gap-3">
-                        <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                         <p className="text-foreground">{requirement}</p>
                       </div>
                     ))}
@@ -473,76 +289,13 @@ export default function BountyDetail() {
             </TabsContent>
 
             <TabsContent value="claims">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Claims & Leads</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {claimsLoading ? (
-                    <div className="space-y-4">
-                      {Array.from({ length: 2 }).map((_, i) => (
-                        <LoadingSkeleton key={i} className="h-24" />
-                      ))}
-                    </div>
-                  ) : claims.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No claims submitted yet</p>
-                      <p className="text-sm">Be the first to help find this item!</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {claims.map((claim) => (
-                        <div key={claim.id} className="border border-border rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-sm font-medium">
-                                {claim.hunterName.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="font-medium">{claim.hunterName}</p>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                                  {claim.hunterRating.toFixed(1)}
-                                  <span>•</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {claim.type === ClaimType.LEAD ? 'Lead' : 'Found'}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              {getClaimStatusBadge(claim.status)}
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(claim.submittedAt, { addSuffix: true })}
-                              </span>
-                            </div>
-                          </div>
-
-                          <p className="text-foreground mb-3">{claim.message}</p>
-
-                          {claim.proofUrls.length > 0 && (
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium">Proof URLs:</p>
-                              {claim.proofUrls.map((url, index) => (
-                                <a
-                                  key={index}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-primary hover:underline block"
-                                >
-                                  {url}
-                                </a>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <SubmissionsList 
+                key={refreshKey}
+                bountyId={bounty.id}
+                posterId={bounty.posterId}
+                currentUserId={user?.id}
+                onRefresh={() => setRefreshKey(prev => prev + 1)}
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -569,7 +322,8 @@ export default function BountyDetail() {
 
               <Button 
                 className="w-full bg-primary hover:bg-primary-hover"
-                onClick={() => setIsClaimTypeModalOpen(true)}
+                onClick={() => setIsClaimDialogOpen(true)}
+                disabled={!user}
               >
                 <Flag className="h-4 w-4 mr-2" />
                 Claim This Bounty
@@ -582,6 +336,15 @@ export default function BountyDetail() {
           </Card>
         </div>
       </div>
+
+      {/* Claim Dialog */}
+      <ClaimDialog
+        bountyId={bounty.id}
+        bountyTitle={bounty.title}
+        isOpen={isClaimDialogOpen}
+        onClose={() => setIsClaimDialogOpen(false)}
+        onClaimSubmitted={handleClaimSubmitted}
+      />
     </div>
   );
 }
