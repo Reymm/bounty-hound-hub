@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, MessageCircle, Settings, Plus, Package } from 'lucide-react';
+import { Eye, MessageCircle, Settings, Plus, Package, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -185,15 +185,17 @@ export default function MyBounties() {
                         </Button>
                         
                         <Button asChild variant="outline" size="sm">
+                          <Link to={`/b/${bounty.id}?tab=claims`}>
+                            <Users className="h-4 w-4 mr-2" />
+                            Manage Claims
+                          </Link>
+                        </Button>
+                        
+                        <Button asChild variant="outline" size="sm">
                           <Link to="/messages">
                             <MessageCircle className="h-4 w-4 mr-2" />
                             Messages
                           </Link>
-                        </Button>
-
-                        <Button variant="outline" size="sm" disabled>
-                          <Settings className="h-4 w-4 mr-2" />
-                          Manage
                         </Button>
                       </div>
                     </div>

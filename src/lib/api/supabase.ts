@@ -37,37 +37,39 @@ interface CreateBountyData {
 }
 
 // Helper functions to transform database rows to app types
-const transformBountyRow = (row: any): Bounty => ({
-  id: row.id,
-  title: row.title,
-  description: row.description || '',
-  images: row.images || [],
-  category: row.category as any,
-  subcategory: row.subcategory || undefined,
-  tags: row.tags || [],
-  bountyAmount: row.amount || 0,
-  targetPriceMin: row.target_price_min || undefined,
-  targetPriceMax: row.target_price_max || undefined,
-  location: row.location || '',
-  deadline: row.deadline ? new Date(row.deadline) : new Date(),
-  status: row.status as BountyStatus,
-  posterId: row.poster_id || '',
-  posterName: row.profiles?.full_name || row.profiles?.username || 'Unknown User',
-  posterRating: row.profiles?.reputation_score || 0,
-  posterRatingCount: (row.profiles?.total_successful_claims || 0) + (row.profiles?.total_failed_claims || 0),
-  verificationRequirements: row.verification_requirements || [],
-  createdAt: new Date(row.created_at),
-  updatedAt: new Date(row.created_at),
-  claimsCount: 0, // Will be populated separately if needed
-  viewsCount: row.view_count || 0
-});
+function transformBountyRow(row: BountyRow, profile?: any): Bounty {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description || '',
+    images: row.images || [],
+    category: row.category as any,
+    subcategory: row.subcategory || undefined,
+    tags: row.tags || [],
+    bountyAmount: row.amount || 0,
+    targetPriceMin: row.target_price_min || undefined,
+    targetPriceMax: row.target_price_max || undefined,
+    location: row.location || '',
+    deadline: row.deadline ? new Date(row.deadline) : new Date(),
+    status: row.status as BountyStatus,
+    posterId: row.poster_id || '',
+    posterName: profile?.full_name || profile?.username || 'Anonymous',
+    posterRating: Number(profile?.reputation_score || 5),
+    posterRatingCount: (profile?.total_successful_claims || 0) + (profile?.total_failed_claims || 0),
+    verificationRequirements: row.verification_requirements || [],
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.created_at),
+    claimsCount: 0, // Will be populated separately if needed
+    viewsCount: row.view_count || 0
+  };
+}
 
 const transformSubmissionRow = (row: any): Claim => ({
   id: row.id,
   bountyId: row.bounty_id,
   hunterId: row.hunter_id,
-  hunterName: row.profiles?.full_name || row.profiles?.username || 'Unknown Hunter',
-  hunterRating: row.profiles?.reputation_score || 0,
+  hunterName: 'Anonymous', // Will be overridden with actual profile data
+  hunterRating: 5, // Will be overridden with actual profile data
   type: 'found' as any, // Default to 'found' - adjust based on your needs
   message: row.message || '',
   proofUrls: row.proof_urls || [],
@@ -84,16 +86,7 @@ export const supabaseApi = {
     try {
       let query = supabase
         .from('Bounties')
-        .select(`
-          *,
-          profiles:poster_id (
-            full_name,
-            username,
-            reputation_score,
-            total_successful_claims,
-            total_failed_claims
-          )
-        `)
+        .select('*')
         .eq('status', 'open');
 
       // Apply filters
@@ -144,14 +137,21 @@ export const supabaseApi = {
 
       if (error) throw error;
 
-      const bounties = (data || []).map(transformBountyRow);
-      
+      // Fetch profile data for all bounties
+      const posterIds = data?.map(bounty => bounty.poster_id).filter(Boolean) || [];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, reputation_score, total_successful_claims, total_failed_claims')
+        .in('id', posterIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
       return {
-        data: bounties,
+        data: data?.map(bounty => transformBountyRow(bounty, profileMap.get(bounty.poster_id))) || [],
         total: count || 0,
         page,
         limit,
-        hasMore: (count || 0) > start + limit
+        hasMore: (count || 0) > page * limit
       };
     } catch (error) {
       console.error('Error fetching bounties:', error);
@@ -166,16 +166,7 @@ export const supabaseApi = {
 
       const { data, error } = await supabase
         .from('Bounties')
-        .select(`
-          *,
-          profiles:poster_id (
-            full_name,
-            username,
-            reputation_score,
-            total_successful_claims,
-            total_failed_claims
-          )
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -184,7 +175,14 @@ export const supabaseApi = {
         throw error;
       }
 
-      return transformBountyRow(data);
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, reputation_score, total_successful_claims, total_failed_claims')
+        .eq('id', data.poster_id)
+        .single();
+
+      return transformBountyRow(data, profile);
     } catch (error) {
       console.error('Error fetching bounty:', error);
       return null;
@@ -214,21 +212,19 @@ export const supabaseApi = {
           poster_id: user.id,
           status: 'open'
         })
-        .select(`
-          *,
-          profiles:poster_id (
-            full_name,
-            username,
-            reputation_score,
-            total_successful_claims,
-            total_failed_claims
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
 
-      return transformBountyRow(data);
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, reputation_score, total_successful_claims, total_failed_claims')
+        .eq('id', user.id)
+        .single();
+
+      return transformBountyRow(data, profile);
     } catch (error) {
       console.error('Error creating bounty:', error);
       throw error;
@@ -255,20 +251,28 @@ export const supabaseApi = {
     try {
       const { data, error } = await supabase
         .from('Submissions')
-        .select(`
-          *,
-          profiles:hunter_id (
-            full_name,
-            username,
-            reputation_score
-          )
-        `)
+        .select('*')
         .eq('bounty_id', bountyId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return (data || []).map(transformSubmissionRow);
+      // Fetch profile data for all hunters
+      const hunterIds = data?.map(submission => submission.hunter_id).filter(Boolean) || [];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, reputation_score')
+        .in('id', hunterIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+      return (data || []).map(submission => ({
+        ...transformSubmissionRow(submission),
+        hunterName: profileMap.get(submission.hunter_id)?.full_name || 
+                   profileMap.get(submission.hunter_id)?.username || 
+                   'Anonymous',
+        hunterRating: profileMap.get(submission.hunter_id)?.reputation_score || 5
+      }));
     } catch (error) {
       console.error('Error fetching claims:', error);
       throw error;
@@ -289,22 +293,46 @@ export const supabaseApi = {
           proof_urls: form.proofUrls,
           status: 'submitted'
         })
-        .select(`
-          *,
-          profiles:hunter_id (
-            full_name,
-            username,
-            reputation_score
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
 
-      return transformSubmissionRow(data);
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, reputation_score')
+        .eq('id', user.id)
+        .single();
+
+      return {
+        ...transformSubmissionRow(data),
+        hunterName: profile?.full_name || profile?.username || 'You',
+        hunterRating: profile?.reputation_score || 5
+      };
     } catch (error) {
       console.error('Error creating claim:', error);
       throw error;
+    }
+  },
+
+  async updateClaimStatus(submissionId: string, status: ClaimStatus, rejectionReason?: string): Promise<boolean> {
+    try {
+      const updateData: any = { status };
+      if (rejectionReason) {
+        updateData.rejection_reason = rejectionReason;
+      }
+
+      const { error } = await supabase
+        .from('Submissions')
+        .update(updateData)
+        .eq('id', submissionId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error updating claim status:', error);
+      return false;
     }
   },
 
@@ -480,22 +508,20 @@ export const supabaseApi = {
     try {
       const { data, error } = await supabase
         .from('Bounties')
-        .select(`
-          *,
-          profiles:poster_id (
-            full_name,
-            username,
-            reputation_score,
-            total_successful_claims,
-            total_failed_claims
-          )
-        `)
+        .select('*')
         .eq('poster_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return (data || []).map(transformBountyRow);
+      // Fetch profile data for the user
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, reputation_score, total_successful_claims, total_failed_claims')
+        .eq('id', userId)
+        .single();
+
+      return (data || []).map(bounty => transformBountyRow(bounty, profile));
     } catch (error) {
       console.error('Error fetching user bounties:', error);
       return [];

@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageCircle, ExternalLink, FileText } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface SubmissionsListProps {
   bountyId: string;
@@ -19,6 +22,10 @@ interface SubmissionsListProps {
 export function SubmissionsList({ bountyId, posterId, currentUserId, onRefresh }: SubmissionsListProps) {
   const [submissions, setSubmissions] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     loadSubmissions();
@@ -48,6 +55,52 @@ export function SubmissionsList({ bountyId, posterId, currentUserId, onRefresh }
         return <Badge className="status-completed">Fulfilled</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const handleAcceptClaim = async (submissionId: string) => {
+    const success = await supabaseApi.updateClaimStatus(submissionId, ClaimStatus.ACCEPTED);
+    if (success) {
+      toast({
+        title: "Claim accepted",
+        description: "The submission has been accepted.",
+      });
+      await loadSubmissions();
+      onRefresh?.();
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to accept the claim. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectClaim = async () => {
+    if (!selectedSubmission) return;
+    
+    const success = await supabaseApi.updateClaimStatus(
+      selectedSubmission, 
+      ClaimStatus.REJECTED, 
+      rejectionReason
+    );
+    
+    if (success) {
+      toast({
+        title: "Claim rejected",
+        description: "The submission has been rejected.",
+      });
+      await loadSubmissions();
+      onRefresh?.();
+      setRejectionDialogOpen(false);
+      setSelectedSubmission(null);
+      setRejectionReason('');
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to reject the claim. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -145,10 +198,23 @@ export function SubmissionsList({ bountyId, posterId, currentUserId, onRefresh }
                 <div className="flex items-center gap-2">
                   {isOwner && submission.status === ClaimStatus.SUBMITTED && (
                     <>
-                      <Button size="sm" variant="outline" disabled>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleAcceptClaim(submission.id)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
                         Accept
                       </Button>
-                      <Button size="sm" variant="outline" disabled>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedSubmission(submission.id);
+                          setRejectionDialogOpen(true);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
                         Reject
                       </Button>
                     </>
@@ -163,6 +229,45 @@ export function SubmissionsList({ bountyId, posterId, currentUserId, onRefresh }
           </Card>
         ))}
       </div>
+
+      {/* Rejection Dialog */}
+      <Dialog open={rejectionDialogOpen} onOpenChange={setRejectionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Submission</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Please provide a reason for rejecting this submission:
+            </p>
+            <Textarea
+              placeholder="Enter rejection reason..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setRejectionDialogOpen(false);
+                setSelectedSubmission(null);
+                setRejectionReason('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleRejectClaim}
+              disabled={!rejectionReason.trim()}
+            >
+              Reject Submission
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
