@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-submission-notification]
 verify_jwt = false
+
+[functions.moderate-content]
+verify_jwt = true

@@ -209,6 +209,31 @@ function PostBountyForm() {
       // Set flag that user is in bounty posting process
       sessionStorage.setItem('bounty_post_in_progress', 'true');
       
+      // Content moderation check
+      toast({
+        title: "Checking content",
+        description: "Verifying your bounty meets community guidelines...",
+      });
+      
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-content', {
+        body: {
+          title: data.title,
+          description: data.description,
+          tags: tags
+        }
+      });
+      
+      if (moderationError) throw moderationError;
+      
+      if (!moderationData.allowed) {
+        toast({
+          title: "Content not allowed",
+          description: moderationData.message || "Your bounty content violates community guidelines. Please revise and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Check if KYC is required and user is verified
       if (kycRequired) {
         const { data: kycData, error: kycError } = await supabase.functions.invoke('check-kyc-status');
@@ -245,9 +270,9 @@ function PostBountyForm() {
       });
 
     } catch (error: any) {
-      console.error('Error creating payment:', error);
+      console.error('Error in bounty submission:', error);
       toast({
-        title: "Error creating payment",
+        title: "Submission error",
         description: error.message || "Please try again later.",
         variant: "destructive",
       });
