@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { ClaimDialog } from '@/components/bounty/ClaimDialog';
 import { SubmissionsList } from '@/components/bounty/SubmissionsList';
+import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -158,7 +159,7 @@ export default function BountyDetail() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-medium text-primary-foreground">
                     {bounty.posterName.charAt(0)}
@@ -171,6 +172,14 @@ export default function BountyDetail() {
                     </div>
                   </div>
                 </div>
+                
+                {user && user.id !== bounty.posterId && (
+                  <ReportUserDialog 
+                    reportedUserId={bounty.posterId}
+                    reportedUserName={bounty.posterName}
+                    bountyId={bounty.id}
+                  />
+                )}
               </div>
 
               {bounty.tags.length > 0 && (
