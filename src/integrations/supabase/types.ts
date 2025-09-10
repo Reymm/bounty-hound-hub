@@ -431,6 +431,10 @@ export type Database = {
         Args: { bounty_id: string }
         Returns: undefined
       }
+      increment_bounty_views_secure: {
+        Args: { bounty_id: string }
+        Returns: undefined
+      }
       mark_message_as_read: {
         Args: { message_id: string }
         Returns: boolean

@@ -173,8 +173,8 @@ export const supabaseApi = {
 
   async getBounty(id: string): Promise<Bounty | null> {
     try {
-      // First increment the view count
-      await supabase.rpc('increment_bounty_views', { bounty_id: id });
+      // First increment the view count securely
+      await supabase.rpc('increment_bounty_views_secure', { bounty_id: id });
 
       const { data, error } = await supabase
         .from('Bounties')
