@@ -504,6 +504,48 @@ export type Database = {
           },
         ]
       }
+      user_reports: {
+        Row: {
+          admin_notes: string | null
+          bounty_id: string | null
+          created_at: string
+          description: string
+          id: string
+          report_type: Database["public"]["Enums"]["user_report_type"]
+          reported_user_id: string
+          reporter_id: string
+          resolved_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          bounty_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          report_type: Database["public"]["Enums"]["user_report_type"]
+          reported_user_id: string
+          reporter_id: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          bounty_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          report_type?: Database["public"]["Enums"]["user_report_type"]
+          reported_user_id?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -565,6 +607,25 @@ export type Database = {
           submission_id: string
           title: string
           type: Database["public"]["Enums"]["support_ticket_type"]
+          updated_at: string
+        }[]
+      }
+      get_admin_user_reports: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          admin_notes: string
+          bounty_id: string
+          bounty_title: string
+          created_at: string
+          description: string
+          id: string
+          report_type: Database["public"]["Enums"]["user_report_type"]
+          reported_user_email: string
+          reported_user_id: string
+          reporter_email: string
+          reporter_id: string
+          resolved_at: string
+          status: string
           updated_at: string
         }[]
       }
@@ -630,6 +691,13 @@ export type Database = {
         | "account_issue"
         | "bug_report"
         | "feature_request"
+        | "other"
+      user_report_type:
+        | "fraud"
+        | "harassment"
+        | "spam"
+        | "inappropriate_behavior"
+        | "non_delivery"
         | "other"
     }
     CompositeTypes: {
@@ -774,6 +842,14 @@ export const Constants = {
         "account_issue",
         "bug_report",
         "feature_request",
+        "other",
+      ],
+      user_report_type: [
+        "fraud",
+        "harassment",
+        "spam",
+        "inappropriate_behavior",
+        "non_delivery",
         "other",
       ],
     },
