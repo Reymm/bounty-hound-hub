@@ -332,6 +332,19 @@ export const supabaseApi = {
 
       const profile = publicProfile?.[0];
 
+      // Send notification email to bounty poster
+      try {
+        await supabase.functions.invoke('send-submission-notification', {
+          body: {
+            bountyId,
+            hunterId: user.id
+          }
+        });
+      } catch (emailError) {
+        console.log('Failed to send submission notification:', emailError);
+        // Don't fail the whole request if email fails
+      }
+
       return {
         ...transformSubmissionRow(data),
         hunterName: profile?.username || 'You',

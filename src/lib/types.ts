@@ -345,7 +345,7 @@ export interface ClaimForm {
   type: ClaimType;
   message: string;
   proofUrls: string[];
-  proofImages: File[];
+  proofImages: string[]; // Changed from File[] to string[] for URLs
 }
 
 export interface SearchFilters {

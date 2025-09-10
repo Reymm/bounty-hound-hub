@@ -9,6 +9,9 @@ import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
 import { Plus, X } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { uploadFile } from '@/lib/storage';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ClaimDialogProps {
   bountyId: string;
@@ -21,6 +24,7 @@ interface ClaimDialogProps {
 export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSubmitted }: ClaimDialogProps) {
   const [message, setMessage] = useState('');
   const [proofUrls, setProofUrls] = useState<string[]>(['']);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -37,6 +41,36 @@ export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSub
     const updated = [...proofUrls];
     updated[index] = value;
     setProofUrls(updated);
+  };
+
+  const handleImageUpload = async (files: File[]) => {
+    try {
+      const uploadPromises = files.map(file => uploadFile(file, 'submission-files', user!.id));
+      const uploadResults = await Promise.all(uploadPromises);
+      
+      const successfulUploads = uploadResults
+        .filter(result => !result.error && result.url)
+        .map(result => result.url!);
+      
+      const newImages = [...uploadedImages, ...successfulUploads];
+      setUploadedImages(newImages);
+      
+      toast({
+        title: "Images uploaded",
+        description: `${successfulUploads.length} image(s) uploaded successfully.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload images",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleImageRemove = async (imageUrl: string) => {
+    const newImages = uploadedImages.filter(img => img !== imageUrl);
+    setUploadedImages(newImages);
   };
 
   const handleSubmit = async () => {
@@ -68,7 +102,7 @@ export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSub
         type: ClaimType.FOUND, // Default to 'found' type
         message: message.trim(),
         proofUrls: validUrls,
-        proofImages: [] // No file uploads for now
+        proofImages: uploadedImages // This should be URLs, not File objects
       });
 
       toast({
@@ -80,6 +114,7 @@ export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSub
       // Reset form
       setMessage('');
       setProofUrls(['']);
+      setUploadedImages([]);
       onClaimSubmitted();
       onClose();
     } catch (error) {
@@ -150,6 +185,20 @@ export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSub
               <Plus className="h-4 w-4 mr-2" />
               Add Another Proof URL
             </Button>
+          </div>
+
+          <div className="space-y-3">
+            <Label>Upload Proof Images</Label>
+            <p className="text-sm text-muted-foreground">
+              Upload photos or documents that support your claim
+            </p>
+            <ImageUpload
+              onUpload={handleImageUpload}
+              onRemove={handleImageRemove}
+              uploadedImages={uploadedImages}
+              maxFiles={5}
+              maxSize={10 * 1024 * 1024} // 10MB
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
