@@ -307,6 +307,39 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       Submissions: {
         Row: {
           bounty_id: string
@@ -373,6 +406,16 @@ export type Database = {
         Args: { bounty_id: string; user_id: string }
         Returns: boolean
       }
+      get_public_profile_data: {
+        Args: { profile_id: string }
+        Returns: {
+          avatar_url: string
+          id: string
+          reputation_score: number
+          total_successful_claims: number
+          username: string
+        }[]
+      }
       get_user_conversations: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -387,6 +430,18 @@ export type Database = {
       increment_bounty_views: {
         Args: { bounty_id: string }
         Returns: undefined
+      }
+      mark_message_as_read: {
+        Args: { message_id: string }
+        Returns: boolean
+      }
+      update_submission_status: {
+        Args: {
+          new_status: string
+          rejection_reason?: string
+          submission_id: string
+        }
+        Returns: boolean
       }
       update_user_reputation: {
         Args: { bounty_amount: number; rating: number; user_id: string }

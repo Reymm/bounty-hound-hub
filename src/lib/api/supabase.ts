@@ -138,14 +138,25 @@ export const supabaseApi = {
 
       if (error) throw error;
 
-      // Fetch profile data for all bounties
+      // Fetch profile data for all bounties using secure function
       const posterIds = data?.map(bounty => bounty.poster_id).filter(Boolean) || [];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, reputation_score, total_successful_claims, total_failed_claims')
-        .in('id', posterIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profilePromises = posterIds.map(async (posterId) => {
+        const { data } = await supabase.rpc('get_public_profile_data', {
+          profile_id: posterId
+        });
+        return data?.[0] ? { 
+          id: posterId, 
+          ...data[0],
+          total_failed_claims: 0 // Default for public access
+        } : null;
+      });
+      
+      const profiles = await Promise.all(profilePromises);
+      const profileMap = new Map(
+        profiles
+          .filter(Boolean)
+          .map(p => [p.id, p])
+      );
 
       return {
         data: data?.map(bounty => transformBountyRow(bounty, profileMap.get(bounty.poster_id))) || [],
@@ -176,12 +187,16 @@ export const supabaseApi = {
         throw error;
       }
 
-      // Fetch profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, reputation_score, total_successful_claims, total_failed_claims')
-        .eq('id', data.poster_id)
-        .single();
+      // Fetch profile data using secure function
+      const { data: publicProfile } = await supabase.rpc('get_public_profile_data', {
+        profile_id: data.poster_id
+      });
+      
+      const profile = publicProfile?.[0] ? {
+        ...publicProfile[0],
+        full_name: publicProfile[0].username, // Use username as display name for public profiles
+        total_failed_claims: 0 // Default for public access
+      } : null;
 
       return transformBountyRow(data, profile);
     } catch (error) {
@@ -258,14 +273,25 @@ export const supabaseApi = {
 
       if (error) throw error;
 
-      // Fetch profile data for all hunters
+      // Fetch profile data for all hunters using secure function
       const hunterIds = data?.map(submission => submission.hunter_id).filter(Boolean) || [];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, reputation_score')
-        .in('id', hunterIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profilePromises = hunterIds.map(async (hunterId) => {
+        const { data } = await supabase.rpc('get_public_profile_data', {
+          profile_id: hunterId
+        });
+        return data?.[0] ? { 
+          id: hunterId, 
+          ...data[0],
+          full_name: data[0].username // Use username as display name for public profiles
+        } : null;
+      });
+      
+      const profiles = await Promise.all(profilePromises);
+      const profileMap = new Map(
+        profiles
+          .filter(Boolean)
+          .map(p => [p.id, p])
+      );
 
       return (data || []).map(submission => ({
         ...transformSubmissionRow(submission),
@@ -299,16 +325,16 @@ export const supabaseApi = {
 
       if (error) throw error;
 
-      // Fetch profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, reputation_score')
-        .eq('id', user.id)
-        .single();
+      // Fetch profile data using secure function
+      const { data: publicProfile } = await supabase.rpc('get_public_profile_data', {
+        profile_id: user.id
+      });
+
+      const profile = publicProfile?.[0];
 
       return {
         ...transformSubmissionRow(data),
-        hunterName: profile?.full_name || profile?.username || 'You',
+        hunterName: profile?.username || 'You',
         hunterRating: profile?.reputation_score || 5
       };
     } catch (error) {
@@ -319,18 +345,14 @@ export const supabaseApi = {
 
   async updateClaimStatus(submissionId: string, status: ClaimStatus, rejectionReason?: string): Promise<boolean> {
     try {
-      const updateData: any = { status };
-      if (rejectionReason) {
-        updateData.rejection_reason = rejectionReason;
-      }
-
-      const { error } = await supabase
-        .from('Submissions')
-        .update(updateData)
-        .eq('id', submissionId);
+      const { data, error } = await supabase.rpc('update_submission_status', {
+        submission_id: submissionId,
+        new_status: status,
+        rejection_reason: rejectionReason
+      });
 
       if (error) throw error;
-      return true;
+      return !!data;
     } catch (error) {
       console.error('Error updating claim status:', error);
       return false;
@@ -441,20 +463,52 @@ export const supabaseApi = {
   // Profile
   async getProfile(userId: string): Promise<Profile | null> {
     try {
-      // Get profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // Check if this is the current user's profile (full access)
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      let profileData;
+      if (user && user.id === userId) {
+        // Full profile access for own profile
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-      if (profileError) {
-        if (profileError.code === 'PGRST116') return null;
-        throw profileError;
+        if (error) {
+          if (error.code === 'PGRST116') return null;
+          throw error;
+        }
+        profileData = data;
+      } else {
+        // Public profile access for other users
+        const { data, error } = await supabase.rpc('get_public_profile_data', {
+          profile_id: userId
+        });
+
+        if (error) throw error;
+        if (!data || data.length === 0) return null;
+        
+        // Convert RPC result to full profile format with limited data
+        profileData = {
+          id: data[0].id,
+          username: data[0].username,
+          avatar_url: data[0].avatar_url,
+          reputation_score: data[0].reputation_score,
+          total_successful_claims: data[0].total_successful_claims,
+          // Default values for sensitive fields
+          full_name: null,
+          bio: null,
+          kyc_verified: false,
+          kyc_verified_at: null,
+          total_failed_claims: 0,
+          is_suspended: false,
+          suspended_until: null,
+          created_at: null
+        };
       }
 
-      // Get user email from auth.users
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      // Get user email from auth.users (only for own profile)
       const userEmail = (user && user.id === userId) ? user.email : '';
 
       // Get user's bounty count
@@ -473,7 +527,7 @@ export const supabaseApi = {
         region: 'Unknown',
         rating: profileData.reputation_score || 5.0,
         ratingCount: (profileData.total_successful_claims || 0) + (profileData.total_failed_claims || 0),
-        joinedAt: new Date(profileData.created_at),
+        joinedAt: profileData.created_at ? new Date(profileData.created_at) : new Date(),
         idvStatus: profileData.kyc_verified ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
         hasPayoutMethod: false,
         completedBounties: profileData.total_successful_claims || 0,
@@ -545,12 +599,16 @@ export const supabaseApi = {
 
       if (error) throw error;
 
-      // Fetch profile data for the user
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, reputation_score, total_successful_claims, total_failed_claims')
-        .eq('id', userId)
-        .single();
+      // Fetch profile data using secure function
+      const { data: publicProfile } = await supabase.rpc('get_public_profile_data', {
+        profile_id: userId
+      });
+      
+      const profile = publicProfile?.[0] ? {
+        ...publicProfile[0],
+        full_name: publicProfile[0].username, // Use username as display name for public profiles
+        total_failed_claims: 0 // Default for public access
+      } : null;
 
       return (data || []).map(bounty => transformBountyRow(bounty, profile));
     } catch (error) {
