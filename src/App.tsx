@@ -9,6 +9,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
 
 // Pages
+import { SupportTicket } from "./pages/SupportTicket";
 import { Support } from "./pages/Support";
 import Index from "./pages/Index";
 import ActiveBounties from "./pages/ActiveBounties";
@@ -91,6 +92,11 @@ const App = () => (
                       <Route path="/support" element={
                         <ProtectedRoute>
                           <Support />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/support/:ticketId" element={
+                        <ProtectedRoute>
+                          <SupportTicket />
                         </ProtectedRoute>
                       } />
                       

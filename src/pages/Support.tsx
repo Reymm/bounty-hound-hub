@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CreateTicketForm } from '@/components/support/CreateTicketForm';
+import { TicketList } from '@/components/support/TicketList';
 import { Plus, MessageSquare, Clock, CheckCircle } from 'lucide-react';
 
 export function Support() {
@@ -72,28 +73,7 @@ export function Support() {
         </TabsContent>
 
         <TabsContent value="tickets" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Support Tickets</CardTitle>
-              <CardDescription>
-                View and manage your support tickets. Click on any ticket to continue the conversation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No support tickets yet.</p>
-                <p className="text-sm">Create your first ticket to get started.</p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => setActiveTab('create')}
-                >
-                  Create Ticket
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <TicketList />
         </TabsContent>
       </Tabs>
     </div>
