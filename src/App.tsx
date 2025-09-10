@@ -9,6 +9,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
 
 // Pages
+import { Support } from "./pages/Support";
 import Index from "./pages/Index";
 import ActiveBounties from "./pages/ActiveBounties";
 import PostBounty from "./pages/PostBounty";
@@ -85,6 +86,11 @@ const App = () => (
                       <Route path="/kyc-complete" element={
                         <ProtectedRoute>
                           <KycComplete />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/support" element={
+                        <ProtectedRoute>
+                          <Support />
                         </ProtectedRoute>
                       } />
                       

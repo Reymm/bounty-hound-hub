@@ -134,6 +134,12 @@ export function TopNav({ onSearch }: TopNavProps) {
                         My Bounties
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/support">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Support
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/legal/terms">Terms of Service</Link>
@@ -234,6 +240,12 @@ export function TopNav({ onSearch }: TopNavProps) {
                     <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
                       <Settings className="h-4 w-4 mr-2" />
                       My Bounties
+                    </Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Support
                     </Link>
                   </Button>
                 </div>

@@ -397,6 +397,110 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          attachment_urls: string[] | null
+          created_at: string
+          id: string
+          is_admin_reply: boolean
+          message: string
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          attachment_urls?: string[] | null
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean
+          message: string
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          attachment_urls?: string[] | null
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean
+          message?: string
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          bounty_id: string | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          internal_notes: string | null
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          submission_id: string | null
+          title: string
+          type: Database["public"]["Enums"]["support_ticket_type"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          bounty_id?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          internal_notes?: string | null
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          submission_id?: string | null
+          title: string
+          type: Database["public"]["Enums"]["support_ticket_type"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          bounty_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          internal_notes?: string | null
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          submission_id?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["support_ticket_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "Submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -453,7 +557,22 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      support_ticket_priority: "low" | "medium" | "high" | "critical"
+      support_ticket_status:
+        | "open"
+        | "in_progress"
+        | "waiting_for_user"
+        | "resolved"
+        | "closed"
+      support_ticket_type:
+        | "platform_issue"
+        | "bounty_dispute"
+        | "submission_dispute"
+        | "payment_issue"
+        | "account_issue"
+        | "bug_report"
+        | "feature_request"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -580,6 +699,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      support_ticket_priority: ["low", "medium", "high", "critical"],
+      support_ticket_status: [
+        "open",
+        "in_progress",
+        "waiting_for_user",
+        "resolved",
+        "closed",
+      ],
+      support_ticket_type: [
+        "platform_issue",
+        "bounty_dispute",
+        "submission_dispute",
+        "payment_issue",
+        "account_issue",
+        "bug_report",
+        "feature_request",
+        "other",
+      ],
+    },
   },
 } as const
