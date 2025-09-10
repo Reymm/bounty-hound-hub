@@ -28,6 +28,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { ActivityHistory } from '@/components/profile/ActivityHistory';
+import { RatingSummary } from '@/components/ratings/RatingSummary';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType, IdvStatus } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
@@ -260,8 +261,9 @@ export default function Profile() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="ratings">Ratings</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="verification">Verification</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -401,11 +403,11 @@ export default function Profile() {
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 text-yellow-500 fill-current" />
                         <span className="font-medium">
-                          {profile.rating > 0 ? profile.rating.toFixed(1) : 'No ratings'}
+                          {profile.average_rating ? profile.average_rating.toFixed(1) : 'No ratings'}
                         </span>
-                        {profile.ratingCount > 0 && (
+                        {profile.total_ratings_received > 0 && (
                           <span className="text-sm text-muted-foreground">
-                            ({profile.ratingCount})
+                            ({profile.total_ratings_received})
                           </span>
                         )}
                       </div>
@@ -437,6 +439,10 @@ export default function Profile() {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="ratings" className="space-y-6">
+          <RatingSummary userId={profile.id} />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">

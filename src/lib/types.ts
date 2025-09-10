@@ -72,6 +72,9 @@ export interface Profile {
   region: string;
   rating: number;
   ratingCount: number;
+  average_rating: number;
+  total_ratings_received: number;
+  total_ratings_given: number;
   joinedAt: Date;
   idvStatus: IdvStatus;
   hasPayoutMethod: boolean;

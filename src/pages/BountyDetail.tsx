@@ -9,6 +9,7 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { ClaimDialog } from '@/components/bounty/ClaimDialog';
 import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
+import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -307,13 +308,23 @@ export default function BountyDetail() {
             </TabsContent>
 
             <TabsContent value="claims">
-              <SubmissionsList 
-                key={refreshKey}
-                bountyId={bounty.id}
-                posterId={bounty.posterId}
-                currentUserId={user?.id}
-                onRefresh={() => setRefreshKey(prev => prev + 1)}
-              />
+              <div className="space-y-6">
+                <SubmissionsList 
+                  key={refreshKey}
+                  bountyId={bounty.id}
+                  posterId={bounty.posterId}
+                  currentUserId={user?.id}
+                  onRefresh={() => setRefreshKey(prev => prev + 1)}
+                />
+                
+                {/* Rating Section - Show after bounty completion */}
+                <BountyRatingSection
+                  bountyId={bounty.id}
+                  posterId={bounty.posterId}
+                  posterName={bounty.posterName}
+                  bountyStatus={bounty.status}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </div>

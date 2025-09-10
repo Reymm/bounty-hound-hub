@@ -260,6 +260,9 @@ let profiles: Profile[] = [
     region: 'San Francisco Bay Area',
     rating: 4.8,
     ratingCount: 23,
+    average_rating: 4.8,
+    total_ratings_received: 23,
+    total_ratings_given: 15,
     joinedAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000), // 1 year ago
     idvStatus: IdvStatus.VERIFIED,
     hasPayoutMethod: true,
