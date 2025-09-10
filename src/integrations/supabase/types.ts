@@ -259,6 +259,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          average_rating: number | null
           bio: string | null
           created_at: string | null
           full_name: string | null
@@ -270,12 +271,15 @@ export type Database = {
           reputation_score: number | null
           suspended_until: string | null
           total_failed_claims: number | null
+          total_ratings_given: number | null
+          total_ratings_received: number | null
           total_successful_claims: number | null
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -287,12 +291,15 @@ export type Database = {
           reputation_score?: number | null
           suspended_until?: string | null
           total_failed_claims?: number | null
+          total_ratings_given?: number | null
+          total_ratings_received?: number | null
           total_successful_claims?: number | null
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -304,6 +311,8 @@ export type Database = {
           reputation_score?: number | null
           suspended_until?: string | null
           total_failed_claims?: number | null
+          total_ratings_given?: number | null
+          total_ratings_received?: number | null
           total_successful_claims?: number | null
           updated_at?: string | null
           username?: string | null
@@ -504,6 +513,42 @@ export type Database = {
           },
         ]
       }
+      user_ratings: {
+        Row: {
+          bounty_id: string
+          created_at: string
+          id: string
+          rated_user_id: string
+          rater_id: string
+          rating: number
+          rating_type: string
+          review_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          bounty_id: string
+          created_at?: string
+          id?: string
+          rated_user_id: string
+          rater_id: string
+          rating: number
+          rating_type: string
+          review_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bounty_id?: string
+          created_at?: string
+          id?: string
+          rated_user_id?: string
+          rater_id?: string
+          rating?: number
+          rating_type?: string
+          review_text?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_reports: {
         Row: {
           admin_notes: string | null
@@ -661,6 +706,10 @@ export type Database = {
       mark_message_as_read: {
         Args: { message_id: string }
         Returns: boolean
+      }
+      recalculate_user_rating: {
+        Args: { user_id_param: string }
+        Returns: undefined
       }
       update_submission_status: {
         Args: {
