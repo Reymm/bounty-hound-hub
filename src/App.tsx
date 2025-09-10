@@ -9,6 +9,8 @@ import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
 
 // Pages
+import { AdminSupport } from "./pages/admin/AdminSupport";
+import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
 import { SupportTicket } from "./pages/SupportTicket";
 import { Support } from "./pages/Support";
 import Index from "./pages/Index";
@@ -97,6 +99,16 @@ const App = () => (
                       <Route path="/support/:ticketId" element={
                         <ProtectedRoute>
                           <SupportTicket />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/support" element={
+                        <ProtectedRoute>
+                          <AdminSupport />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/support/:ticketId" element={
+                        <ProtectedRoute>
+                          <AdminSupportTicket />
                         </ProtectedRoute>
                       } />
                       

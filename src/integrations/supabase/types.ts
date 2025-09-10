@@ -263,6 +263,7 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          is_support_admin: boolean
           is_suspended: boolean | null
           kyc_verified: boolean | null
           kyc_verified_at: string | null
@@ -279,6 +280,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          is_support_admin?: boolean
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
@@ -295,6 +297,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          is_support_admin?: boolean
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
@@ -506,9 +509,64 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_send_message: {
+        Args: {
+          attachment_urls_param?: string[]
+          message_param: string
+          ticket_id_param: string
+        }
+        Returns: string
+      }
       can_user_claim_bounty: {
         Args: { bounty_id: string; user_id: string }
         Returns: boolean
+      }
+      get_admin_ticket_details: {
+        Args: { ticket_id_param: string }
+        Returns: {
+          assigned_to: string
+          bounty_id: string
+          bounty_title: string
+          created_at: string
+          created_by: string
+          creator_email: string
+          creator_username: string
+          description: string
+          id: string
+          internal_notes: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at: string
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          submission_id: string
+          submission_message: string
+          title: string
+          type: Database["public"]["Enums"]["support_ticket_type"]
+          updated_at: string
+        }[]
+      }
+      get_admin_ticket_overview: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          assigned_to: string
+          bounty_id: string
+          bounty_title: string
+          created_at: string
+          created_by: string
+          creator_email: string
+          description: string
+          id: string
+          internal_notes: string
+          last_message_at: string
+          last_message_preview: string
+          message_count: number
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at: string
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          submission_id: string
+          title: string
+          type: Database["public"]["Enums"]["support_ticket_type"]
+          updated_at: string
+        }[]
       }
       get_public_profile_data: {
         Args: { profile_id: string }
