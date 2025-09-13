@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
@@ -89,7 +90,7 @@ export default function Auth() {
     }
 
     try {
-      const { error } = await signUp(signupEmail, signupPassword, {
+      const { data, error } = await signUp(signupEmail, signupPassword, {
         full_name: fullName.trim() || undefined
       });
 
@@ -102,6 +103,33 @@ export default function Auth() {
           setError(error.message);
         }
         return;
+      }
+
+      // Send custom confirmation email if signup was successful
+      if (data?.user) {
+        try {
+          // We need to wait for Supabase to generate the confirmation URL
+          // For now, we'll create a generic confirmation URL
+          const confirmationUrl = `${window.location.origin}/auth`;
+          
+          const { error: emailError } = await supabase.functions.invoke('send-confirmation-email', {
+            body: {
+              email: signupEmail,
+              confirmationUrl,
+              full_name: fullName.trim() || undefined
+            }
+          });
+
+          if (emailError) {
+            console.error('Failed to send custom confirmation email:', emailError);
+            // Continue with the flow even if custom email fails
+          } else {
+            console.log('Custom confirmation email sent successfully');
+          }
+        } catch (emailError) {
+          console.error('Failed to send custom confirmation email:', emailError);
+          // Continue with the flow even if custom email fails
+        }
       }
 
       // Show prominent confirmation message
