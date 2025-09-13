@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +19,8 @@ export default function Auth() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -102,6 +104,10 @@ export default function Auth() {
         return;
       }
 
+      // Show prominent confirmation message
+      setRegisteredEmail(signupEmail);
+      setShowEmailConfirmation(true);
+
       toast({
         title: "Account created!",
         description: "Please check your email for a confirmation link.",
@@ -136,6 +142,67 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  // Show email confirmation message
+  if (showEmailConfirmation) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link 
+              to="/"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to BountyBay
+            </Link>
+          </div>
+
+          <Card className="border-2 border-success/20 bg-success/5">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-success/20 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-8 w-8 text-success" />
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-foreground">Check Your Email</h2>
+                  <p className="text-muted-foreground">
+                    We've sent a confirmation link to:
+                  </p>
+                  <p className="font-semibold text-foreground text-lg">{registeredEmail}</p>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2">
+                  <h3 className="font-semibold text-sm text-foreground">What to do next:</h3>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Check your email inbox for a confirmation message</li>
+                    <li>• Look in your spam/junk folder if you don't see it</li>
+                    <li>• Click the confirmation link to activate your account</li>
+                    <li>• Then return here to sign in</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3 pt-4">
+                  <Button 
+                    onClick={() => setShowEmailConfirmation(false)}
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    Back to Sign In
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Didn't receive an email? It may take a few minutes to arrive.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
