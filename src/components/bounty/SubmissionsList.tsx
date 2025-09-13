@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ShippingDetailsDialog } from './ShippingDetailsDialog';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,17 +15,20 @@ import { useToast } from '@/hooks/use-toast';
 
 interface SubmissionsListProps {
   bountyId: string;
+  bountyTitle?: string;
   posterId: string;
   currentUserId?: string;
   onRefresh?: () => void;
 }
 
-export function SubmissionsList({ bountyId, posterId, currentUserId, onRefresh }: SubmissionsListProps) {
+export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId, onRefresh }: SubmissionsListProps) {
   const [submissions, setSubmissions] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [shippingDialogOpen, setShippingDialogOpen] = useState(false);
+  const [acceptedClaim, setAcceptedClaim] = useState<Claim | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,6 +65,13 @@ export function SubmissionsList({ bountyId, posterId, currentUserId, onRefresh }
   const handleAcceptClaim = async (submissionId: string) => {
     const success = await supabaseApi.updateClaimStatus(submissionId, ClaimStatus.ACCEPTED);
     if (success) {
+      // Find the accepted claim to get hunter info
+      const claim = submissions.find(s => s.id === submissionId);
+      if (claim) {
+        setAcceptedClaim(claim);
+        setShippingDialogOpen(true);
+      }
+      
       toast({
         title: "Claim accepted",
         description: "The submission has been accepted.",
@@ -268,6 +279,25 @@ export function SubmissionsList({ bountyId, posterId, currentUserId, onRefresh }
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Shipping Details Dialog */}
+      {acceptedClaim && (
+        <ShippingDetailsDialog
+          bountyId={bountyId}
+          bountyTitle={bountyTitle || 'Bounty'}
+          hunterName={acceptedClaim.hunterName}
+          isOpen={shippingDialogOpen}
+          onClose={() => {
+            setShippingDialogOpen(false);
+            setAcceptedClaim(null);
+          }}
+          onShippingDetailsProvided={() => {
+            setShippingDialogOpen(false);
+            setAcceptedClaim(null);
+            onRefresh?.();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -27,6 +27,10 @@ export type Database = {
           images: string[] | null
           location: string | null
           poster_id: string | null
+          shipping_details: Json | null
+          shipping_status:
+            | Database["public"]["Enums"]["shipping_status_type"]
+            | null
           status: string
           subcategory: string | null
           tags: string[] | null
@@ -48,6 +52,10 @@ export type Database = {
           images?: string[] | null
           location?: string | null
           poster_id?: string | null
+          shipping_details?: Json | null
+          shipping_status?:
+            | Database["public"]["Enums"]["shipping_status_type"]
+            | null
           status?: string
           subcategory?: string | null
           tags?: string[] | null
@@ -69,6 +77,10 @@ export type Database = {
           images?: string[] | null
           location?: string | null
           poster_id?: string | null
+          shipping_details?: Json | null
+          shipping_status?:
+            | Database["public"]["Enums"]["shipping_status_type"]
+            | null
           status?: string
           subcategory?: string | null
           tags?: string[] | null
@@ -727,6 +739,11 @@ export type Database = {
       }
     }
     Enums: {
+      shipping_status_type:
+        | "not_requested"
+        | "requested"
+        | "provided"
+        | "not_provided"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
       support_ticket_status:
         | "open"
@@ -877,6 +894,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      shipping_status_type: [
+        "not_requested",
+        "requested",
+        "provided",
+        "not_provided",
+      ],
       support_ticket_priority: ["low", "medium", "high", "critical"],
       support_ticket_status: [
         "open",

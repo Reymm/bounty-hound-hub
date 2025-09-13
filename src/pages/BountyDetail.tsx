@@ -312,6 +312,7 @@ export default function BountyDetail() {
                 <SubmissionsList 
                   key={refreshKey}
                   bountyId={bounty.id}
+                  bountyTitle={bounty.title}
                   posterId={bounty.posterId}
                   currentUserId={user?.id}
                   onRefresh={() => setRefreshKey(prev => prev + 1)}

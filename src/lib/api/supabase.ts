@@ -262,6 +262,45 @@ export const supabaseApi = {
     }
   },
 
+  async updateBountyShippingDetails(bountyId: string, shippingDetails: any): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('Bounties')
+        .update({ 
+          shipping_details: shippingDetails,
+          shipping_status: 'provided'
+        })
+        .eq('id', bountyId);
+
+      if (error) throw error;
+
+      // Notify hunter via edge function
+      await supabase.functions.invoke('send-shipping-notification', {
+        body: { bountyId, shippingDetails }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating shipping details:', error);
+      return false;
+    }
+  },
+
+  async updateBountyShippingStatus(bountyId: string, status: 'not_requested' | 'requested' | 'provided' | 'not_provided'): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('Bounties')
+        .update({ shipping_status: status })
+        .eq('id', bountyId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error updating shipping status:', error);
+      return false;
+    }
+  },
+
   // Claims/Submissions
   async getClaims(bountyId: string): Promise<Claim[]> {
     try {
