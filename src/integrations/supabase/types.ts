@@ -678,8 +678,10 @@ export type Database = {
         Args: { profile_id: string }
         Returns: {
           avatar_url: string
+          average_rating: number
           id: string
           reputation_score: number
+          total_ratings_received: number
           total_successful_claims: number
           username: string
         }[]
