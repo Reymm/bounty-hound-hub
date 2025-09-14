@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile, deleteFile } from '@/lib/storage';
 import { ImageUpload } from '@/components/ui/image-upload';
+import { LocationPicker } from '@/components/ui/location-picker';
 
 const stripePromise = loadStripe('pk_test_51QfOrlJBfkPjzFmqPq7zLJhSaKnE7Nf7HRdBK9GR0OHfhE6AEHwAJDKt8H0XhHyPzOBGQrj6hVRQNj6YGFmHxC300g4kxUEfr');
 
@@ -675,21 +676,21 @@ function PostBountyForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">
+              <label htmlFor="location" className="text-sm font-medium">
                 Location <span className="text-destructive">*</span>
-              </Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  id="location"
-                  placeholder="City, State or Region"
-                  className={`pl-10 ${errors.location ? 'border-destructive' : ''}`}
-                  {...register('location')}
-                />
-              </div>
+              </label>
+              <LocationPicker
+                value={watch('location')}
+                onChange={(location) => setValue('location', location)}
+                placeholder="Search for a city, state or region..."
+                className={errors.location ? 'border-destructive' : ''}
+              />
               {errors.location && (
                 <p className="text-sm text-destructive">{errors.location.message}</p>
               )}
+              <p className="text-xs text-muted-foreground">
+                Where should hunters look or deliver the item? You can search or click on the map to select a location.
+              </p>
             </div>
 
             {/* Tags */}
