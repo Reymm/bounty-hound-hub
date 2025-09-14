@@ -1,11 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Search } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+
+interface LocationSuggestion {
+  id: string;
+  place_name: string;
+  text: string;
+  center: [number, number];
+}
 
 interface LocationPickerProps {
   value?: string;
@@ -17,16 +21,16 @@ interface LocationPickerProps {
 export const LocationPicker: React.FC<LocationPickerProps> = ({
   value = '',
   onChange,
-  placeholder = 'Search for a location...',
+  placeholder = 'Search for a city, state or region...',
   className = ''
 }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
-  const [showMap, setShowMap] = useState(false);
   const [searchValue, setSearchValue] = useState(value);
+  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Get Mapbox token from Supabase edge function
   useEffect(() => {
@@ -37,159 +41,133 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         setMapboxToken(data.token);
       } catch (error) {
         console.error('Error fetching Mapbox token:', error);
-        // Fallback - you'll need to add your actual token here
-        setMapboxToken('YOUR_MAPBOX_TOKEN_HERE');
       }
     };
     fetchToken();
   }, []);
 
-  const initializeMap = () => {
-    if (!mapContainer.current || map.current || !mapboxToken) return;
+  // Update search value when value prop changes
+  useEffect(() => {
+    setSearchValue(value);
+  }, [value]);
 
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [-98.5795, 39.8283], // Center of USA
-      zoom: 3,
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    // Add click handler for map
-    map.current.on('click', async (e) => {
-      const { lng, lat } = e.lngLat;
-      
-      // Reverse geocoding to get address
-      try {
-        const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}`
-        );
-        const data = await response.json();
-        
-        if (data.features && data.features.length > 0) {
-          const place = data.features[0];
-          const locationName = place.place_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-          
-          // Update marker position
-          if (marker.current) {
-            marker.current.setLngLat([lng, lat]);
-          } else {
-            marker.current = new mapboxgl.Marker()
-              .setLngLat([lng, lat])
-              .addTo(map.current!);
-          }
-          
-          setSearchValue(locationName);
-          onChange?.(locationName, [lng, lat]);
-        }
-      } catch (error) {
-        console.error('Error with reverse geocoding:', error);
-        const locationName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        setSearchValue(locationName);
-        onChange?.(locationName, [lng, lat]);
-      }
-    });
-  };
-
-  const searchLocation = async (query: string) => {
-    if (!query.trim() || !mapboxToken) return;
+  const searchLocations = async (query: string) => {
+    if (!query.trim() || !mapboxToken || query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
     
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=1`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=5&types=place,locality,neighborhood,address,poi`
       );
       const data = await response.json();
       
       if (data.features && data.features.length > 0) {
-        const place = data.features[0];
-        const [lng, lat] = place.center;
-        
-        if (map.current) {
-          map.current.flyTo({
-            center: [lng, lat],
-            zoom: 12,
-            duration: 1000
-          });
-          
-          // Update marker
-          if (marker.current) {
-            marker.current.setLngLat([lng, lat]);
-          } else {
-            marker.current = new mapboxgl.Marker()
-              .setLngLat([lng, lat])
-              .addTo(map.current);
-          }
-        }
-        
-        onChange?.(place.place_name, [lng, lat]);
+        const locationSuggestions: LocationSuggestion[] = data.features.map((feature: any) => ({
+          id: feature.id,
+          place_name: feature.place_name,
+          text: feature.text,
+          center: feature.center
+        }));
+        setSuggestions(locationSuggestions);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
       }
     } catch (error) {
-      console.error('Error searching location:', error);
+      console.error('Error searching locations:', error);
+      setSuggestions([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    searchLocation(searchValue);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchValue(newValue);
+    
+    // Debounce the search
+    const timeoutId = setTimeout(() => {
+      searchLocations(newValue);
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
   };
 
-  const toggleMap = () => {
-    setShowMap(!showMap);
-    if (!showMap && !map.current) {
-      setTimeout(initializeMap, 100); // Allow DOM to update
+  const handleSuggestionClick = (suggestion: LocationSuggestion) => {
+    setSearchValue(suggestion.place_name);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    onChange?.(suggestion.place_name, suggestion.center);
+  };
+
+  const handleInputFocus = () => {
+    if (suggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay hiding suggestions to allow clicking on them
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // If there are suggestions, select the first one
+    if (suggestions.length > 0) {
+      handleSuggestionClick(suggestions[0]);
     }
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-1">
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder={placeholder}
-            className="pl-10"
-          />
-        </div>
-        <Button 
-          type="submit" 
-          variant="outline" 
-          disabled={isLoading}
-          className="px-3"
-        >
-          <Search className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          onClick={toggleMap}
-          variant="outline"
-          className="whitespace-nowrap"
-        >
-          {showMap ? 'Hide Map' : 'Show Map'}
-        </Button>
-      </form>
-      
-      {showMap && (
-        <Card className="p-4">
-          <div className="mb-2">
-            <p className="text-sm text-muted-foreground">
-              Click on the map to select a location, or search above
-            </p>
+    <form onSubmit={handleFormSubmit} className={`relative ${className}`}>
+      <div className="relative">
+        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          ref={inputRef}
+          value={searchValue}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+          placeholder={placeholder}
+          className="pl-10"
+          autoComplete="off"
+        />
+        {isLoading && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
           </div>
-          <div 
-            ref={mapContainer} 
-            className="w-full h-64 rounded-lg border"
-            style={{ minHeight: '256px' }}
-          />
-        </Card>
+        )}
+      </div>
+      
+      {showSuggestions && suggestions.length > 0 && (
+        <div 
+          ref={suggestionsRef}
+          className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+        >
+          {suggestions.map((suggestion) => (
+            <button
+              key={suggestion.id}
+              type="button"
+              onClick={() => handleSuggestionClick(suggestion)}
+              className="w-full px-3 py-2 text-left hover:bg-muted/50 focus:bg-muted/50 focus:outline-none border-none bg-transparent cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div>
+                  <div className="font-medium text-sm">{suggestion.text}</div>
+                  <div className="text-xs text-muted-foreground">{suggestion.place_name}</div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
       )}
-    </div>
+    </form>
   );
 };
