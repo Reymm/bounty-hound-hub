@@ -37,7 +37,7 @@ const createWelcomeEmailHTML = (name: string) => `
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     .header {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
       padding: 40px 30px;
       text-align: center;
       color: white;
@@ -86,7 +86,7 @@ const createWelcomeEmailHTML = (name: string) => `
     .feature-icon {
       width: 20px;
       height: 20px;
-      background-color: #3b82f6;
+      background-color: hsl(214, 84%, 56%);
       border-radius: 50%;
       margin-right: 12px;
       flex-shrink: 0;
@@ -99,7 +99,7 @@ const createWelcomeEmailHTML = (name: string) => `
     }
     .cta-button {
       display: inline-block;
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
       color: white;
       text-decoration: none;
       padding: 14px 28px;
@@ -129,7 +129,7 @@ const createWelcomeEmailHTML = (name: string) => `
     .social-link {
       display: inline-block;
       margin: 0 10px;
-      color: #3b82f6;
+      color: hsl(214, 84%, 56%);
       text-decoration: none;
       font-size: 14px;
     }
