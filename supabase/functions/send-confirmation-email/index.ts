@@ -41,7 +41,7 @@ const createConfirmationEmailHTML = (name: string, confirmationUrl: string) => `
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
             padding: 40px 30px;
             text-align: center;
             color: white;
@@ -62,7 +62,7 @@ const createConfirmationEmailHTML = (name: string, confirmationUrl: string) => `
         .confirmation-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
             border-radius: 50%;
             margin: 0 auto 30px;
             display: flex;
@@ -84,7 +84,7 @@ const createConfirmationEmailHTML = (name: string, confirmationUrl: string) => `
         }
         .confirm-button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
             color: white;
             text-decoration: none;
             padding: 18px 40px;
@@ -93,15 +93,15 @@ const createConfirmationEmailHTML = (name: string, confirmationUrl: string) => `
             font-size: 18px;
             margin: 20px 0;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px hsla(214, 84%, 56%, 0.4);
         }
         .confirm-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 8px 25px hsla(214, 84%, 56%, 0.6);
         }
         .security-note {
             background: #f8fafc;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid hsl(214, 84%, 56%);
             border-radius: 8px;
             padding: 20px;
             margin: 30px 0;
@@ -157,8 +157,8 @@ const createConfirmationEmailHTML = (name: string, confirmationUrl: string) => `
     <div class="container">
         <div class="email-card">
             <div class="header">
-                <div class="logo">🏆 BountyBay</div>
-                <div class="tagline">Where Skills Meet Opportunities</div>
+                <div class="logo">BountyBay</div>
+                <div class="tagline">Help Find the Unfindable</div>
             </div>
             
             <div class="content">
@@ -226,7 +226,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "BountyBay <confirm@resend.dev>",
       to: [email],
-      subject: "🏆 Confirm your BountyBay account - Welcome aboard!",
+      subject: "Confirm your BountyBay account - Welcome aboard!",
       html: createConfirmationEmailHTML(full_name || '', confirmationUrl),
     });
 
