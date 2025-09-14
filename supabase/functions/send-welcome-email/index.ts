@@ -140,44 +140,44 @@ const createWelcomeEmailHTML = (name: string) => `
     <div class="container">
       <div class="header">
         <div class="logo">BountyBay</div>
-        <p class="tagline">Where Opportunities Meet Talent</p>
+        <p class="tagline">Help Find the Unfindable</p>
       </div>
       
       <div class="content">
-        <h1 class="greeting">Welcome to BountyBay, ${name}! 🎉</h1>
+        <h1 class="greeting">Welcome to BountyBay, ${name}! 🎯</h1>
         
         <p class="text">
-          We're thrilled to have you join our community of talented individuals and innovative bounty posters. 
-          BountyBay is where great opportunities meet skilled professionals like you.
+          Ready to discover unique bounties and earn money for your skills? 
+          BountyBay connects talented people like you with those seeking hard-to-find items and specialized services.
         </p>
         
         <div class="features">
           <div class="feature-item">
-            <div class="feature-icon">💰</div>
+            <div class="feature-icon">$</div>
             <div>
-              <strong>Discover High-Value Bounties</strong><br>
-              Find exciting projects with competitive rewards that match your skills.
+              <strong>Earn Real Money</strong><br>
+              Get paid for finding rare items, completing tasks, and using your unique skills.
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon">🚀</div>
+            <div class="feature-icon">🔍</div>
             <div>
-              <strong>Showcase Your Talents</strong><br>
-              Build your reputation and grow your professional network.
+              <strong>Find the Unfindable</strong><br>
+              Help others locate hard-to-find items and rare collectibles worldwide.
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon">🔒</div>
+            <div class="feature-icon">✓</div>
             <div>
-              <strong>Secure Payments</strong><br>
-              Get paid safely with our escrow system and KYC verification.
+              <strong>Secure Transactions</strong><br>
+              Protected payments through our trusted escrow system.
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon">⭐</div>
+            <div class="feature-icon">★</div>
             <div>
-              <strong>Rating System</strong><br>
-              Build trust through our transparent rating and review system.
+              <strong>Build Your Reputation</strong><br>
+              Earn ratings and reviews to unlock higher-value bounties.
             </div>
           </div>
         </div>
