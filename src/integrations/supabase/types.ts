@@ -616,6 +616,15 @@ export type Database = {
         }
         Returns: string
       }
+      admin_update_user_status: {
+        Args: {
+          new_is_support_admin?: boolean
+          new_is_suspended?: boolean
+          new_suspended_until?: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
       can_user_claim_bounty: {
         Args: { bounty_id: string; user_id: string }
         Returns: boolean
