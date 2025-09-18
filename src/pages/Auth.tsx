@@ -99,8 +99,8 @@ export default function Auth() {
       if (error) {
         if (error.message.includes('User already registered')) {
           setError('An account with this email already exists. Please sign in instead.');
-        } else if (error.message.includes('Password should be at least 6 characters')) {
-          setError('Password must be at least 6 characters long.');
+        } else if (error.message.includes('Password should be at least')) {
+          setError('Password must meet all security requirements above.');
         } else {
           setError(error.message);
         }

@@ -240,7 +240,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending welcome email to: ${email}`);
 
     const emailResponse = await resend.emails.send({
-      from: "BountyBay <noreply@resend.dev>",
+      from: "BountyBay <noreply@bountybay.co>",
       to: [email],
       subject: "Welcome to BountyBay - Your Journey Starts Now! 🚀",
       html: createWelcomeEmailHTML(name),
