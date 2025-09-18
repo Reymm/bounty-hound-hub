@@ -726,6 +726,10 @@ export type Database = {
         Args: { bounty_id: string }
         Returns: undefined
       }
+      is_support_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
       mark_message_as_read: {
         Args: { message_id: string }
         Returns: boolean
