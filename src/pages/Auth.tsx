@@ -11,6 +11,7 @@ import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react'
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/auth/PasswordStrengthIndicator';
 
 export default function Auth() {
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
@@ -83,8 +84,9 @@ export default function Auth() {
       return;
     }
 
-    if (signupPassword.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    const passwordValidation = validatePasswordStrength(signupPassword);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message || 'Password does not meet security requirements.');
       setIsLoading(false);
       return;
     }
@@ -441,15 +443,15 @@ export default function Auth() {
                       <Input
                         id="signup-password"
                         type="password"
-                        placeholder="Create a password (min 6 characters)"
+                        placeholder="Create a strong password"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
                         className="pl-10"
                         required
                         disabled={isLoading}
-                        minLength={6}
                       />
                     </div>
+                    <PasswordStrengthIndicator password={signupPassword} />
                   </div>
 
                   <div className="space-y-2">
