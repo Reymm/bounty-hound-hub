@@ -224,7 +224,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Sending confirmation email to:', email);
 
     const emailResponse = await resend.emails.send({
-      from: "BountyBay <confirm@resend.dev>",
+      from: "BountyBay <onboarding@resend.dev>",
       to: [email],
       subject: "Confirm your BountyBay account - Welcome aboard!",
       html: createConfirmationEmailHTML(full_name || '', confirmationUrl),
