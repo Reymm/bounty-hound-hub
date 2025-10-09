@@ -27,7 +27,6 @@ import Privacy from "./pages/legal/Privacy";
 import NotFound from "./pages/NotFound";
 import KycComplete from "./pages/KycComplete";
 import Auth from "./pages/Auth";
-import PitchDeck from "./pages/PitchDeck";
 
 const queryClient = new QueryClient();
 
@@ -42,7 +41,6 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/pitch" element={<PitchDeck />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
               
