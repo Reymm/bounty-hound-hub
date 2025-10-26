@@ -97,7 +97,10 @@ export default function Auth() {
       });
 
       if (error) {
-        if (error.message.includes('User already registered')) {
+        // Check for various duplicate user error messages
+        if (error.message.includes('User already registered') || 
+            error.message.includes('already been registered') ||
+            error.message.includes('already exists')) {
           setError('An account with this email already exists. Please sign in instead.');
         } else if (error.message.includes('Password should be at least')) {
           setError('Password must meet all security requirements above.');
