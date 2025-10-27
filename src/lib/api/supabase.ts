@@ -597,7 +597,7 @@ export const supabaseApi = {
         email: userEmail || '',
         bio: profileData.bio || undefined,
         avatarUrl: profileData.avatar_url || undefined,
-        region: 'Unknown',
+        region: profileData.region || 'Unknown',
         rating: profileData.reputation_score || 5.0,
         ratingCount: (profileData.total_successful_claims || 0) + (profileData.total_failed_claims || 0),
         average_rating: profileData.average_rating || 5.0,
@@ -626,6 +626,7 @@ export const supabaseApi = {
       if (updates.displayName !== undefined) updateData.full_name = updates.displayName;
       if (updates.username !== undefined) updateData.username = updates.username || null;
       if (updates.bio !== undefined) updateData.bio = updates.bio || null;
+      if (updates.region !== undefined) updateData.region = updates.region || null;
       if (updates.avatarUrl !== undefined) updateData.avatar_url = updates.avatarUrl || null;
 
       const { data, error } = await supabase
@@ -644,7 +645,7 @@ export const supabaseApi = {
         email: '',
         bio: data.bio || undefined,
         avatarUrl: data.avatar_url || undefined,
-        region: '',
+        region: data.region || 'Unknown',
         rating: data.reputation_score || 0,
         ratingCount: (data.total_successful_claims || 0) + (data.total_failed_claims || 0),
         average_rating: data.average_rating || 5.0,

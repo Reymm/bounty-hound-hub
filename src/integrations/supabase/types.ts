@@ -280,6 +280,7 @@ export type Database = {
           is_suspended: boolean | null
           kyc_verified: boolean | null
           kyc_verified_at: string | null
+          region: string | null
           reputation_score: number | null
           suspended_until: string | null
           total_failed_claims: number | null
@@ -300,6 +301,7 @@ export type Database = {
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          region?: string | null
           reputation_score?: number | null
           suspended_until?: string | null
           total_failed_claims?: number | null
@@ -320,6 +322,7 @@ export type Database = {
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          region?: string | null
           reputation_score?: number | null
           suspended_until?: string | null
           total_failed_claims?: number | null
