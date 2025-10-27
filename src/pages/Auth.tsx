@@ -29,6 +29,7 @@ export default function Auth() {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -197,8 +198,16 @@ export default function Auth() {
     setIsLoading(true);
     setError(null);
 
+    const emailToReset = resetEmail || loginEmail;
+    
+    if (!emailToReset) {
+      setError('Please enter your email address first.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
         redirectTo: `${window.location.origin}/auth`,
       });
 
@@ -208,6 +217,7 @@ export default function Auth() {
       }
 
       setShowPasswordReset(true);
+      setIsForgotPasswordMode(false);
       toast({
         title: "Check your email",
         description: "We've sent you a password reset link.",
@@ -572,47 +582,78 @@ export default function Auth() {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="signin-password">Password</Label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setResetEmail(loginEmail);
-                          if (!loginEmail) {
-                            setError('Please enter your email address first');
-                            return;
-                          }
-                          handlePasswordReset(new Event('submit') as any);
-                        }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Forgot password?
-                      </button>
+                  {/* Password field - hide when in forgot password mode */}
+                  {!isForgotPasswordMode && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="signin-password">Password</Label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsForgotPasswordMode(true);
+                            setLoginPassword('');
+                            setResetEmail(loginEmail);
+                          }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                          id="signin-password"
+                          type="password"
+                          placeholder="Enter your password"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          className="pl-10"
+                          required={!isForgotPasswordMode}
+                          disabled={isLoading}
+                        />
+                      </div>
                     </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        id="signin-password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </div>
+                  )}
+                  
+                  {/* Show back button when in forgot password mode */}
+                  {isForgotPasswordMode && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsForgotPasswordMode(false);
+                        setResetEmail('');
+                      }}
+                      className="w-full"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back to Sign In
+                    </Button>
+                  )}
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading}
+                    onClick={(e) => {
+                      if (isForgotPasswordMode) {
+                        e.preventDefault();
+                        if (!loginEmail) {
+                          setError('Please enter your email address first');
+                          return;
+                        }
+                        setResetEmail(loginEmail);
+                        handlePasswordReset(e);
+                      }
+                    }}
+                  >
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing In...
+                        {isForgotPasswordMode ? 'Sending Reset Link...' : 'Signing In...'}
                       </>
                     ) : (
-                      'Sign In'
+                      isForgotPasswordMode ? 'Send Reset Link' : 'Sign In'
                     )}
                   </Button>
                 </form>
