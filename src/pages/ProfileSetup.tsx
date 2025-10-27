@@ -379,21 +379,9 @@ const ProfileSetup = () => {
                   <p>Values: username={watch('username')?.length}, displayName={watch('displayName')?.length}, accountType={watch('accountType')}</p>
                 </div>
               )}
-            </form>
+             </form>
           </CardContent>
         </Card>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <button 
-              onClick={() => navigate('/me/profile')}
-              className="text-primary hover:underline"
-            >
-              Go to your profile
-            </button>
-          </p>
-        </div>
       </div>
 
       {/* Chooser Modal for "Both" account type */}
