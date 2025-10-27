@@ -123,33 +123,6 @@ export default function Auth() {
         return;
       }
 
-      // Send custom confirmation email if signup was successful
-      if (data?.user) {
-        try {
-          // We need to wait for Supabase to generate the confirmation URL
-          // For now, we'll create a generic confirmation URL
-          const confirmationUrl = `${window.location.origin}/auth`;
-          
-          const { error: emailError } = await supabase.functions.invoke('send-confirmation-email', {
-            body: {
-              email: signupEmail,
-              confirmationUrl,
-              full_name: fullName.trim() || undefined
-            }
-          });
-
-          if (emailError) {
-            console.error('Failed to send custom confirmation email:', emailError);
-            // Continue with the flow even if custom email fails
-          } else {
-            console.log('Custom confirmation email sent successfully');
-          }
-        } catch (emailError) {
-          console.error('Failed to send custom confirmation email:', emailError);
-          // Continue with the flow even if custom email fails
-        }
-      }
-
       // Show prominent confirmation message
       setRegisteredEmail(signupEmail);
       setShowEmailConfirmation(true);
