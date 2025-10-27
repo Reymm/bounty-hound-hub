@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,21 +12,23 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const profileSetupSchema = z.object({
-  email: z.string()
-    .email('Please enter a valid email address')
-    .min(1, 'Email address is required'),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username must be less than 20 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   displayName: z.string()
     .min(2, 'Display name must be at least 2 characters')
     .max(50, 'Display name must be less than 50 characters'),
   region: z.string()
     .max(100, 'Region must be less than 100 characters')
     .optional(),
-  accountType: z.enum(['poster', 'hunter', 'both'], {
-    required_error: 'Please select an account type',
-  }),
-  emailNotifications: z.boolean().optional(),
+  bio: z.string()
+    .max(500, 'Bio must be less than 500 characters')
+    .optional(),
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -34,6 +36,7 @@ type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
 const ProfileSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showChooserModal, setShowChooserModal] = useState(false);
 
@@ -47,35 +50,77 @@ const ProfileSetup = () => {
     resolver: zodResolver(profileSetupSchema),
     mode: 'onChange',
     defaultValues: {
-      accountType: 'both',
-      emailNotifications: false,
+      username: '',
+      displayName: '',
+      region: '',
+      bio: '',
     },
   });
 
+  // Load existing profile data if any
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, full_name, bio')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile) {
+        if (profile.username) setValue('username', profile.username);
+        if (profile.full_name) setValue('displayName', profile.full_name);
+        if (profile.bio) setValue('bio', profile.bio || '');
+      }
+    };
+    
+    loadProfile();
+  }, [user, setValue]);
+
   const onSubmit = async (data: ProfileSetupFormData) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to complete profile setup.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
-      // TODO: Save profile data to Supabase
-      console.log('Profile setup data:', data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save profile data to Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: data.username,
+          full_name: data.displayName,
+          bio: data.bio || null,
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        if (error.code === '23505') {
+          // Unique constraint violation
+          toast({
+            title: "Username taken",
+            description: "This username is already in use. Please choose another.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
       
       toast({
         title: "Profile setup complete!",
-        description: "Welcome to BountyBay. You can now post your first bounty or start hunting.",
+        description: "Welcome to BountyBay. You can now start posting or hunting bounties.",
       });
       
-      // Route based on account type
-      if (data.accountType === 'poster') {
-        navigate('/post');
-      } else if (data.accountType === 'hunter') {
-        navigate('/bounties');
-      } else {
-        // Both - show chooser modal
-        setShowChooserModal(true);
-      }
+      // Show chooser modal
+      setShowChooserModal(true);
       
     } catch (error) {
       console.error('Error setting up profile:', error);
@@ -123,27 +168,26 @@ const ProfileSetup = () => {
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
+                <Label htmlFor="username">Username *</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  {...register('email')}
-                  className={errors.email ? 'border-destructive' : ''}
+                  id="username"
+                  placeholder="Choose a unique username"
+                  {...register('username')}
+                  className={errors.username ? 'border-destructive' : ''}
                 />
                 <p className="text-sm text-muted-foreground">
-                  We'll send confirmations and important updates here.
+                  This will be your public display name on BountyBay.
                 </p>
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                {errors.username && (
+                  <p className="text-sm text-destructive">{errors.username.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name *</Label>
+                <Label htmlFor="displayName">Full Name *</Label>
                 <Input
                   id="displayName"
-                  placeholder="How should others see you?"
+                  placeholder="Your full name"
                   {...register('displayName')}
                   className={errors.displayName ? 'border-destructive' : ''}
                 />
@@ -153,12 +197,12 @@ const ProfileSetup = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="region">Your Region</Label>
+                <Label htmlFor="region">Your Region (Optional)</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     id="region"
-                    placeholder="e.g., New York, London, Tokyo (optional)"
+                    placeholder="e.g., New York, London, Tokyo"
                     className={`pl-10 ${errors.region ? 'border-destructive' : ''}`}
                     {...register('region')}
                   />
@@ -168,50 +212,20 @@ const ProfileSetup = () => {
                 )}
               </div>
 
-              <div className="space-y-3">
-                <Label>Account Type *</Label>
-                <RadioGroup
-                  value={watch('accountType')}
-                  onValueChange={(value) => setValue('accountType', value as 'poster' | 'hunter' | 'both')}
-                  className="flex flex-col space-y-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="poster" id="poster" />
-                    <Label htmlFor="poster" className="font-normal cursor-pointer">
-                      Poster - I want to post bounties for items I need
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="hunter" id="hunter" />
-                    <Label htmlFor="hunter" className="font-normal cursor-pointer">
-                      Hunter - I want to find items for others
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="both" id="both" />
-                    <Label htmlFor="both" className="font-normal cursor-pointer">
-                      Both - I want to post bounties and hunt for others
-                    </Label>
-                  </div>
-                </RadioGroup>
-                <p className="text-sm text-muted-foreground">
-                  You can change this later in Settings.
-                </p>
-                {errors.accountType && (
-                  <p className="text-sm text-destructive">{errors.accountType.message}</p>
-                )}
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="emailNotifications"
-                  checked={watch('emailNotifications')}
-                  onCheckedChange={(checked) => setValue('emailNotifications', !!checked)}
-                  className="rounded-none"
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio (Optional)</Label>
+                <Input
+                  id="bio"
+                  placeholder="Tell us a bit about yourself"
+                  {...register('bio')}
+                  className={errors.bio ? 'border-destructive' : ''}
                 />
-                <Label htmlFor="emailNotifications" className="text-sm font-normal cursor-pointer">
-                  Email me when someone finds a match or messages me
-                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Max 500 characters
+                </p>
+                {errors.bio && (
+                  <p className="text-sm text-destructive">{errors.bio.message}</p>
+                )}
               </div>
 
               <div className="bg-primary/5 rounded-lg p-4">

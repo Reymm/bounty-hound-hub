@@ -79,10 +79,26 @@ export default function Auth() {
 
   // Redirect if already authenticated (but not during password recovery)
   useEffect(() => {
-    if (user && !isRecoveryMode) {
-      const from = (location.state as any)?.from?.pathname || '/';
-      navigate(from, { replace: true });
-    }
+    const checkProfileAndRedirect = async () => {
+      if (user && !isRecoveryMode) {
+        // Check if user has completed profile setup
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, full_name')
+          .eq('id', user.id)
+          .single();
+        
+        // If no username, redirect to profile setup
+        if (!profile?.username) {
+          navigate('/setup', { replace: true });
+        } else {
+          const from = (location.state as any)?.from?.pathname || '/';
+          navigate(from, { replace: true });
+        }
+      }
+    };
+    
+    checkProfileAndRedirect();
   }, [user, navigate, location, isRecoveryMode]);
 
   const handleSignIn = async (e: React.FormEvent) => {
