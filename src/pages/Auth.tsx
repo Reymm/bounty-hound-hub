@@ -38,11 +38,13 @@ export default function Auth() {
   // Check if user is coming from email confirmation
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
     const type = hashParams.get('type');
+    const confirmed = queryParams.get('confirmed');
     
-    if (type === 'signup' || type === 'email_confirmation' || type === 'recovery') {
+    if (type === 'signup' || type === 'email_confirmation' || type === 'recovery' || confirmed === 'true') {
       setEmailConfirmed(true);
-      // Clear the hash to clean up the URL
+      // Clear the URL parameters to clean up
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
