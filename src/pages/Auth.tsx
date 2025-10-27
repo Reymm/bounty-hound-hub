@@ -23,6 +23,7 @@ export default function Auth() {
   const [error, setError] = useState<string | null>(null);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -33,6 +34,18 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+
+  // Check if user is coming from email confirmation
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    
+    if (type === 'signup' || type === 'email_confirmation' || type === 'recovery') {
+      setEmailConfirmed(true);
+      // Clear the hash to clean up the URL
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -261,11 +274,20 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signup" className="w-full">
+            <Tabs defaultValue={emailConfirmed ? "signin" : "signup"} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
               </TabsList>
+              
+              {emailConfirmed && (
+                <Alert className="mt-4 bg-success/10 text-success border-success/20">
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Email confirmed! You can now sign in to your account.
+                  </AlertDescription>
+                </Alert>
+              )}
               
               {error && (
                 <Alert variant="destructive" className="mt-4">
