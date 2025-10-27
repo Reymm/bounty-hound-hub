@@ -26,6 +26,9 @@ export default function Auth() {
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -38,7 +41,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [activeTab, setActiveTab] = useState('signup');
 
-  // Check if user is coming from email confirmation
+  // Check if user is coming from email confirmation or password reset
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const queryParams = new URLSearchParams(window.location.search);
@@ -46,7 +49,10 @@ export default function Auth() {
     const confirmed = queryParams.get('confirmed');
     const tab = queryParams.get('tab');
     
-    if (type === 'signup' || type === 'email_confirmation' || type === 'recovery' || confirmed === 'true') {
+    if (type === 'recovery') {
+      // Password reset mode
+      setIsRecoveryMode(true);
+    } else if (type === 'signup' || type === 'email_confirmation' || confirmed === 'true') {
       setEmailConfirmed(true);
       setActiveTab('signin'); // Switch to Sign In tab
       // Clear the URL parameters to clean up
@@ -193,7 +199,7 @@ export default function Auth() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+        redirectTo: `${window.location.origin}/auth`,
       });
 
       if (error) {
@@ -212,6 +218,136 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    // Validation
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match.');
+      setIsLoading(false);
+      return;
+    }
+
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message || 'Password does not meet security requirements.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      toast({
+        title: "Password updated!",
+        description: "Your password has been successfully changed.",
+      });
+
+      // Clear the form and redirect
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setIsRecoveryMode(false);
+      window.history.replaceState(null, '', window.location.pathname);
+      navigate('/');
+    } catch (err: any) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Show password reset form
+  if (isRecoveryMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link 
+              to="/"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to BountyBay
+            </Link>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">Reset Your Password</CardTitle>
+              <CardDescription className="text-center">
+                Enter your new password below
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Enter your new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="pl-10"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  {newPassword && <PasswordStrengthIndicator password={newPassword} />}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="confirm-new-password"
+                      type="password"
+                      placeholder="Confirm your new password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="pl-10"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating Password...
+                    </>
+                  ) : (
+                    'Update Password'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Show password reset confirmation message
   if (showPasswordReset) {
