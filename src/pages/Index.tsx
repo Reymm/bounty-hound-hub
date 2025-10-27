@@ -7,6 +7,7 @@ import { SearchFilters } from '@/components/filters/SearchFilters';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,6 +17,7 @@ const Index = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Initialize filters from URL params
   useEffect(() => {
@@ -103,9 +105,9 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground">
-                <Link to="/setup">
+                <Link to={user ? "/post" : "/setup"}>
                   <Plus className="h-5 w-5 mr-2" />
-                  Sign Up Free
+                  {user ? "Post a Bounty" : "Sign Up Free"}
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
