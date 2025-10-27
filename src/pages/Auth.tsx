@@ -63,13 +63,13 @@ export default function Auth() {
     }
   }, []);
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (but not during password recovery)
   useEffect(() => {
-    if (user) {
+    if (user && !isRecoveryMode) {
       const from = (location.state as any)?.from?.pathname || '/';
       navigate(from, { replace: true });
     }
-  }, [user, navigate, location]);
+  }, [user, navigate, location, isRecoveryMode]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
