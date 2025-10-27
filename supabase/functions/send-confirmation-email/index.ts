@@ -26,125 +26,72 @@ const createConfirmationEmailHTML = (name: string, confirmationUrl: string) => `
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f3f4f6;
-            min-height: 100vh;
+            background-color: #f8f9fa;
         }
         .container {
             max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
         .email-card {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
-            padding: 40px 30px;
+            background: white;
+            padding: 40px 40px 20px;
             text-align: center;
-            color: white;
         }
         .logo {
             font-size: 32px;
             font-weight: bold;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            color: white;
-        }
-        .tagline {
-            font-size: 16px;
-            opacity: 0.95;
+            color: #2563eb;
+            margin-bottom: 20px;
         }
         .content {
-            padding: 40px 30px;
+            padding: 20px 40px 40px;
             text-align: center;
         }
-        .confirmation-icon {
-            width: 80px;
-            height: 80px;
-            background: hsl(214, 84%, 56%);
-            border-radius: 50%;
-            margin: 0 auto 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-        }
         .title {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
             color: #1a1a1a;
-            margin-bottom: 15px;
+            margin: 0 0 15px 0;
+            line-height: 1.2;
         }
         .subtitle {
             font-size: 18px;
-            color: #666;
-            margin-bottom: 30px;
+            color: #6b7280;
+            margin: 0 0 30px 0;
             line-height: 1.5;
         }
         .confirm-button {
             display: inline-block;
-            background: hsl(214, 84%, 56%);
+            background: #2563eb;
             color: white;
             text-decoration: none;
-            padding: 18px 40px;
-            border-radius: 8px;
+            padding: 14px 32px;
+            border-radius: 6px;
             font-weight: 600;
-            font-size: 18px;
-            margin: 20px 0;
-        }
-        .security-note {
-            background: #f8fafc;
-            border-left: 4px solid hsl(214, 84%, 56%);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 30px 0;
-            text-align: left;
-        }
-        .security-note h4 {
-            color: #374151;
-            margin: 0 0 10px 0;
             font-size: 16px;
+            margin: 10px 0 30px;
         }
-        .security-note p {
-            color: #6b7280;
-            margin: 0;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .footer {
-            text-align: center;
+        .footer-text {
             color: #9ca3af;
             font-size: 14px;
-            padding: 30px;
-            border-top: 1px solid #e5e7eb;
-            background: #f9fafb;
-        }
-        .footer a {
-            color: hsl(214, 84%, 56%);
-            text-decoration: none;
-        }
-        .link-fallback {
-            background: #f3f4f6;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            font-size: 12px;
-            color: #6b7280;
-            word-break: break-all;
+            line-height: 1.6;
+            margin: 0;
         }
         @media (max-width: 600px) {
             .container {
                 padding: 20px 10px;
             }
-            .content {
+            .header, .content {
                 padding: 30px 20px;
             }
-            .confirm-button {
-                padding: 16px 30px;
-                font-size: 16px;
+            .title {
+                font-size: 24px;
             }
         }
     </style>
@@ -153,44 +100,21 @@ const createConfirmationEmailHTML = (name: string, confirmationUrl: string) => `
     <div class="container">
         <div class="email-card">
             <div class="header">
-                <div class="logo">BOUNTY BAY</div>
-                <div class="tagline">Help Find the Unfindable</div>
+                <div class="logo">BountyBay</div>
             </div>
             
             <div class="content">
-                <div class="confirmation-icon">
-                    ✉️
-                </div>
-                
-                <h1 class="title">Confirm Your Email${name ? `, ${name}` : ''}</h1>
+                <h1 class="title">Helping People Find the Unfindable.</h1>
                 <p class="subtitle">
-                    Click the button below to confirm your email address and activate your BountyBay account.
+                    Become a hunter or post what you're trying to find. Click below to confirm your email and get started.
                 </p>
                 
                 <a href="${confirmationUrl}" class="confirm-button">
-                    Confirm Email Address
+                    Confirm Email
                 </a>
                 
-                <div class="security-note">
-                    <h4>Security Notice</h4>
-                    <p>This confirmation link will expire in 24 hours. If you didn't create a BountyBay account, you can safely ignore this email.</p>
-                </div>
-                
-                <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-                    Once confirmed, you can start using BountyBay to post or hunt for bounties.
-                </p>
-            </div>
-            
-            <div class="footer">
-                <p>Having trouble with the button? Copy and paste this link:</p>
-                <div class="link-fallback">
-                    <a href="${confirmationUrl}" style="color: hsl(214, 84%, 56%);">${confirmationUrl}</a>
-                </div>
-                
-                <p style="margin-top: 20px;">
-                    <a href="#">BountyBay</a> | 
-                    <a href="#">Support</a> | 
-                    <a href="#">Privacy Policy</a>
+                <p class="footer-text">
+                    If you didn't create a BountyBay account, you can ignore this email.
                 </p>
             </div>
         </div>
