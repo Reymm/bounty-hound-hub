@@ -22,42 +22,11 @@ export function ActivityHistory({ userId }: ActivityHistoryProps) {
   const loadActivityHistory = async () => {
     try {
       setLoading(true);
-      // TODO: Implement actual API call
+      // TODO: Implement actual API call to fetch real user activity
       // const activities = await supabaseApi.getUserActivity(userId);
       
-      // Mock data for now
-      const mockActivities: Activity[] = [
-        {
-          id: '1',
-          type: 'bounty_posted',
-          title: 'Posted new bounty',
-          description: 'Looking for vintage Pokemon cards',
-          bountyId: 'bounty-1',
-          bountyTitle: 'Looking for vintage Pokemon cards',
-          amount: 150,
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: '2',
-          type: 'claim_accepted',
-          title: 'Claim accepted',
-          description: 'Your submission was approved',
-          bountyId: 'bounty-2',
-          bountyTitle: 'Find rare vinyl records',
-          amount: 75,
-          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: '3',
-          type: 'rating_received',
-          title: 'Rating received',
-          description: 'Received 5-star rating from bounty poster',
-          rating: 5,
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        }
-      ];
-      
-      setActivities(mockActivities);
+      // For now, show empty state - no mock data
+      setActivities([]);
     } catch (error) {
       console.error('Error loading activity history:', error);
     } finally {
