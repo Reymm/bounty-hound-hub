@@ -109,6 +109,8 @@ const ProfileSetup = () => {
     try {
       setIsSubmitting(true);
       
+      console.log('Starting profile setup...', { username: data.username, accountType: data.accountType });
+      
       // Save profile data to Supabase
       const { error: profileError } = await supabase
         .from('profiles')
@@ -119,6 +121,7 @@ const ProfileSetup = () => {
         .eq('id', user.id);
 
       if (profileError) {
+        console.error('Profile update error:', profileError);
         if (profileError.code === '23505') {
           // Unique constraint violation
           toast({
@@ -131,24 +134,42 @@ const ProfileSetup = () => {
         throw profileError;
       }
 
+      console.log('Profile updated successfully');
+
       // Delete existing roles
-      await supabase
+      const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', user.id);
 
+      if (deleteError) {
+        console.error('Delete roles error:', deleteError);
+      } else {
+        console.log('Existing roles deleted');
+      }
+
       // Insert new roles based on account type
-      const rolesToInsert = data.accountType === 'both' 
-        ? [{ user_id: user.id, role: 'hunter' as const }, { user_id: user.id, role: 'poster' as const }]
-        : [{ user_id: user.id, role: data.accountType as 'hunter' | 'poster' }];
+      type AppRole = 'hunter' | 'poster';
+      const rolesToInsert: Array<{ user_id: string; role: AppRole }> = 
+        data.accountType === 'both' 
+          ? [
+              { user_id: user.id, role: 'hunter' },
+              { user_id: user.id, role: 'poster' }
+            ]
+          : [{ user_id: user.id, role: data.accountType as AppRole }];
+
+      console.log('Inserting roles:', rolesToInsert);
 
       const { error: rolesError } = await supabase
         .from('user_roles')
         .insert(rolesToInsert);
 
       if (rolesError) {
+        console.error('Roles insert error:', rolesError);
         throw rolesError;
       }
+      
+      console.log('Roles inserted successfully');
       
       toast({
         title: "Profile setup complete!",
@@ -164,11 +185,12 @@ const ProfileSetup = () => {
         navigate('/bounties');
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error setting up profile:', error);
+      console.error('Error details:', error?.message, error?.code, error?.details);
       toast({
         title: "Error setting up profile",
-        description: "Please try again later.",
+        description: error?.message || "Please try again later.",
         variant: "destructive",
       });
     } finally {
