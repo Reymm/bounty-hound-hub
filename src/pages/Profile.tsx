@@ -419,7 +419,17 @@ export default function Profile() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Reputation</span>
-                      <span className="font-medium">{profile.reputationScore.toFixed(1)}</span>
+                      {profile.total_ratings_received > 0 ? (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                          <span className="font-medium">{profile.reputationScore.toFixed(1)}</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-end">
+                          <span className="font-medium text-muted-foreground">Not rated yet</span>
+                          <span className="text-xs text-muted-foreground">Earn ⭐ by completing bounties</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between">
