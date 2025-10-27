@@ -370,6 +370,15 @@ const ProfileSetup = () => {
                   </>
                 )}
               </Button>
+              
+              {/* Debug info - remove after testing */}
+              {!isValid && (
+                <div className="text-xs text-muted-foreground">
+                  <p>Form validation:</p>
+                  <pre className="text-xs">{JSON.stringify(errors, null, 2)}</pre>
+                  <p>Values: username={watch('username')?.length}, displayName={watch('displayName')?.length}, accountType={watch('accountType')}</p>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>
