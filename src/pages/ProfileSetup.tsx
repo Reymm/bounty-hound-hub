@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, User, MapPin, CheckCircle, Plus, Search } from 'lucide-react';
+import { ArrowRight, User, CheckCircle, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LocationPicker } from '@/components/ui/location-picker';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,6 +47,7 @@ const ProfileSetup = () => {
     formState: { errors, isValid },
     setValue,
     watch,
+    control,
   } = useForm<ProfileSetupFormData>({
     resolver: zodResolver(profileSetupSchema),
     mode: 'onChange',
@@ -198,15 +200,18 @@ const ProfileSetup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="region">Your Region (Optional)</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="region"
-                    placeholder="e.g., New York, London, Tokyo"
-                    className={`pl-10 ${errors.region ? 'border-destructive' : ''}`}
-                    {...register('region')}
-                  />
-                </div>
+                <Controller
+                  name="region"
+                  control={control}
+                  render={({ field }) => (
+                    <LocationPicker
+                      value={field.value}
+                      onChange={(location) => field.onChange(location)}
+                      placeholder="Search for a city, state or region..."
+                      className={errors.region ? 'border-destructive' : ''}
+                    />
+                  )}
+                />
                 {errors.region && (
                   <p className="text-sm text-destructive">{errors.region.message}</p>
                 )}
