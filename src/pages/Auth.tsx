@@ -42,12 +42,15 @@ export default function Auth() {
     const queryParams = new URLSearchParams(window.location.search);
     const type = hashParams.get('type');
     const confirmed = queryParams.get('confirmed');
+    const tab = queryParams.get('tab');
     
     if (type === 'signup' || type === 'email_confirmation' || type === 'recovery' || confirmed === 'true') {
       setEmailConfirmed(true);
       setActiveTab('signin'); // Switch to Sign In tab
       // Clear the URL parameters to clean up
       window.history.replaceState(null, '', window.location.pathname);
+    } else if (tab === 'signin' || tab === 'signup') {
+      setActiveTab(tab);
     }
   }, []);
 

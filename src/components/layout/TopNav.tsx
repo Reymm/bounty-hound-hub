@@ -160,7 +160,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate('/auth?tab=signin')}
                   className="focus-ring"
                 >
                   Sign In
@@ -169,7 +169,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                   asChild 
                   className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
                 >
-                  <Link to="/auth" aria-label="Sign up for free">
+                  <Link to="/auth?tab=signup" aria-label="Sign up for free">
                     Sign Up Free
                   </Link>
                 </Button>
@@ -275,7 +275,7 @@ export function TopNav({ onSearch }: TopNavProps) {
             ) : (
               <>
                 <Button 
-                  onClick={() => { navigate('/auth'); setIsMobileMenuOpen(false); }}
+                  onClick={() => { navigate('/auth?tab=signin'); setIsMobileMenuOpen(false); }}
                   variant="ghost" 
                   className="w-full justify-start"
                 >
@@ -285,7 +285,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                   asChild 
                   className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground"
                 >
-                  <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link to="/auth?tab=signup" onClick={() => setIsMobileMenuOpen(false)}>
                     Sign Up Free
                   </Link>
                 </Button>
