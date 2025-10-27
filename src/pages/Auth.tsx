@@ -113,6 +113,8 @@ export default function Auth() {
         full_name: fullName.trim() || undefined
       });
 
+      console.log('Signup response:', { data, error, hasUser: !!data?.user });
+
       if (error) {
         // Check for various duplicate user error messages
         if (error.message.includes('User already registered') || 
