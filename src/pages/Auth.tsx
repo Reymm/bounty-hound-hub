@@ -116,7 +116,13 @@ export default function Auth() {
         full_name: fullName.trim() || undefined
       });
 
-      console.log('Signup response:', { data, error, hasUser: !!data?.user });
+      console.log('Signup response:', { 
+        error, 
+        hasUser: !!data?.user,
+        userId: data?.user?.id,
+        userEmail: data?.user?.email,
+        identities: data?.user?.identities?.length 
+      });
 
       if (error) {
         // Check for various duplicate user error messages
