@@ -603,6 +603,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -722,6 +743,13 @@ export type Database = {
           unread_count: number
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_bounty_views: {
         Args: { bounty_id: string }
         Returns: undefined
@@ -750,6 +778,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "hunter" | "poster"
       shipping_status_type:
         | "not_requested"
         | "requested"
@@ -905,6 +934,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["hunter", "poster"],
       shipping_status_type: [
         "not_requested",
         "requested",
