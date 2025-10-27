@@ -58,6 +58,7 @@ function PostBountyForm() {
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [hasDeadline, setHasDeadline] = useState(true);
 
   const {
     register,
@@ -879,23 +880,47 @@ function PostBountyForm() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="deadline">
-                Deadline <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="deadline"
-                type="date"
-                min={new Date().toISOString().split('T')[0]}
-                max={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                className={errors.deadline ? 'border-destructive' : ''}
-                {...register('deadline', { 
-                  valueAsDate: true,
-                  setValueAs: (value) => value ? new Date(value) : undefined
-                })}
-              />
-              {errors.deadline && (
-                <p className="text-sm text-destructive">{errors.deadline.message}</p>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="no-deadline"
+                  checked={!hasDeadline}
+                  onChange={(e) => {
+                    setHasDeadline(!e.target.checked);
+                    if (e.target.checked) {
+                      setValue('deadline', undefined as any);
+                    } else {
+                      setValue('deadline', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-input"
+                />
+                <Label htmlFor="no-deadline" className="text-sm font-normal cursor-pointer">
+                  No deadline - open until found
+                </Label>
+              </div>
+              
+              {hasDeadline && (
+                <div className="space-y-2">
+                  <Label htmlFor="deadline">
+                    Deadline <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    max={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                    className={errors.deadline ? 'border-destructive' : ''}
+                    {...register('deadline', { 
+                      valueAsDate: true,
+                      setValueAs: (value) => value ? new Date(value) : undefined
+                    })}
+                  />
+                  {errors.deadline && (
+                    <p className="text-sm text-destructive">{errors.deadline.message}</p>
+                  )}
+                </div>
               )}
             </div>
 

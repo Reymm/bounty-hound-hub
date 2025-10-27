@@ -40,7 +40,8 @@ export const postBountySchema = z.object({
   
   deadline: z.date()
     .refine(date => date > new Date(), 'Deadline must be in the future')
-    .refine(date => date <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'Deadline cannot be more than 1 year in the future'),
+    .refine(date => date <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'Deadline cannot be more than 1 year in the future')
+    .optional(),
   
   verificationRequirements: z.array(z.string())
     .min(1, 'Add at least one verification requirement')
