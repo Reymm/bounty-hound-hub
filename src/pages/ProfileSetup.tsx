@@ -120,6 +120,7 @@ const ProfileSetup = () => {
         .update({
           username: data.username,
           full_name: data.displayName,
+          bio: data.region || null,
           avatar_url: avatarUrl || null,
         })
         .eq('id', user.id);

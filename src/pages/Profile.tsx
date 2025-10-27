@@ -401,14 +401,18 @@ export default function Profile() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Rating</span>
                       <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <span className="font-medium">
-                          {profile.average_rating ? profile.average_rating.toFixed(1) : 'No ratings'}
-                        </span>
-                        {profile.total_ratings_received > 0 && (
-                          <span className="text-sm text-muted-foreground">
-                            ({profile.total_ratings_received})
-                          </span>
+                        {profile.total_ratings_received > 0 ? (
+                          <>
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                            <span className="font-medium">
+                              {profile.average_rating.toFixed(1)}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              ({profile.total_ratings_received})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="font-medium text-muted-foreground">No ratings yet</span>
                         )}
                       </div>
                     </div>
