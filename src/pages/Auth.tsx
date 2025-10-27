@@ -34,6 +34,7 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [activeTab, setActiveTab] = useState('signup');
 
   // Check if user is coming from email confirmation
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function Auth() {
     
     if (type === 'signup' || type === 'email_confirmation' || type === 'recovery' || confirmed === 'true') {
       setEmailConfirmed(true);
+      setActiveTab('signin'); // Switch to Sign In tab
       // Clear the URL parameters to clean up
       window.history.replaceState(null, '', window.location.pathname);
     }
@@ -249,7 +251,7 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue={emailConfirmed ? "signin" : "signup"} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
