@@ -132,6 +132,13 @@ export default function Auth() {
         return;
       }
 
+      // When email confirmation is enabled, Supabase returns no error but also no user 
+      // for duplicate signups (to prevent email enumeration). Catch this case:
+      if (!data?.user) {
+        setError('An account with this email already exists. Please sign in instead.');
+        return;
+      }
+
       // Show prominent confirmation message
       setRegisteredEmail(signupEmail);
       setShowEmailConfirmation(true);
