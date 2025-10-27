@@ -159,6 +159,7 @@ export function AvatarUpload({
         
         {!disabled && (
           <Button
+            type="button"
             size="sm"
             className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
             onClick={() => fileInputRef.current?.click()}
@@ -173,6 +174,7 @@ export function AvatarUpload({
         {!disabled && (
           <>
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
@@ -184,6 +186,7 @@ export function AvatarUpload({
             
             {(currentAvatarUrl || previewUrl) && (
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={removeAvatar}
