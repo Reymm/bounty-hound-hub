@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LocationPicker } from '@/components/ui/location-picker';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,7 @@ const ProfileSetup = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showChooserModal, setShowChooserModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
 
   const {
     register,
@@ -67,7 +69,7 @@ const ProfileSetup = () => {
       const [profileResult, rolesResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('username, full_name')
+          .select('username, full_name, avatar_url')
           .eq('id', user.id)
           .single(),
         supabase
@@ -79,6 +81,7 @@ const ProfileSetup = () => {
       if (profileResult.data) {
         if (profileResult.data.username) setValue('username', profileResult.data.username);
         if (profileResult.data.full_name) setValue('displayName', profileResult.data.full_name);
+        if (profileResult.data.avatar_url) setAvatarUrl(profileResult.data.avatar_url);
       }
       
       if (rolesResult.data && rolesResult.data.length > 0) {
@@ -117,6 +120,7 @@ const ProfileSetup = () => {
         .update({
           username: data.username,
           full_name: data.displayName,
+          avatar_url: avatarUrl || null,
         })
         .eq('id', user.id);
 
@@ -245,6 +249,18 @@ const ProfileSetup = () => {
                 {errors.username && (
                   <p className="text-sm text-destructive">{errors.username.message}</p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Profile Photo (Optional)</Label>
+                <AvatarUpload
+                  currentAvatarUrl={avatarUrl}
+                  fallbackText={watch('displayName')?.substring(0, 2).toUpperCase() || 'BB'}
+                  onAvatarChange={(url) => setAvatarUrl(url || '')}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Upload a profile picture to help others recognize you
+                </p>
               </div>
 
               <div className="space-y-2">
