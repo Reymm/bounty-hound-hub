@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,18 @@ const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-ESCROW] ${step}${detailsStr}`);
 };
+
+// Input validation schema
+const escrowPaymentSchema = z.object({
+  amount: z.number()
+    .min(5, 'Amount must be at least $5')
+    .max(10000, 'Amount cannot exceed $10,000')
+    .positive('Amount must be positive'),
+  currency: z.string()
+    .length(3, 'Currency must be 3-letter code')
+    .regex(/^[a-z]{3}$/, 'Currency must be lowercase ISO code')
+    .default('usd')
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -41,10 +54,22 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { amount, currency = 'usd' } = await req.json();
-    if (!amount || amount < 5 || amount > 10000) {
-      throw new Error("Amount must be between $5 and $10,000");
+    // Parse and validate input
+    const rawBody = await req.json();
+    const validation = escrowPaymentSchema.safeParse(rawBody);
+    
+    if (!validation.success) {
+      logStep("Validation failed", { errors: validation.error.issues });
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid input',
+          details: validation.error.issues.map(i => i.message)
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    const { amount, currency } = validation.data;
     
     // Calculate platform fee (3.5% of bounty amount)
     const platformFee = Math.round(amount * 0.035 * 100) / 100; // Round to 2 decimal places

@@ -132,12 +132,6 @@ export default function Auth() {
         return;
       }
 
-      // Supabase returns success but no user when email already exists (security feature)
-      if (!error && !data?.user) {
-        setError('An account with this email already exists. Please sign in instead.');
-        return;
-      }
-
       // Show prominent confirmation message
       setRegisteredEmail(signupEmail);
       setShowEmailConfirmation(true);

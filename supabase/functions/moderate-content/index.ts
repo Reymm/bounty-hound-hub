@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -8,11 +9,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ModerationRequest {
-  title: string;
-  description: string;
-  tags?: string[];
-}
+// Input validation schema
+const moderationSchema = z.object({
+  title: z.string()
+    .max(200, 'Title must be less than 200 characters')
+    .optional(),
+  description: z.string()
+    .max(5000, 'Description must be less than 5000 characters')
+    .optional(),
+  tags: z.array(z.string().max(50, 'Each tag must be less than 50 characters'))
+    .max(10, 'Maximum 10 tags allowed')
+    .optional()
+    .default([])
+});
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -21,14 +30,29 @@ serve(async (req) => {
   }
 
   try {
-    const { title, description, tags = [] }: ModerationRequest = await req.json();
+    // Parse and validate input
+    const rawBody = await req.json();
+    const validation = moderationSchema.safeParse(rawBody);
+    
+    if (!validation.success) {
+      console.log('Validation failed:', validation.error.issues);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid input',
+          details: validation.error.issues.map(i => i.message)
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { title = '', description = '', tags = [] } = validation.data;
 
     // Combine all text content for moderation
     const contentToModerate = [
       title,
       description,
       ...tags
-    ].join(' ');
+    ].filter(Boolean).join(' ');
 
     console.log('Moderating content:', contentToModerate.substring(0, 100) + '...');
 
