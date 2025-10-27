@@ -134,15 +134,20 @@ function PostBountyForm() {
   };
 
   const handleImageUpload = async (files: File[]) => {
+    console.log('handleImageUpload called with files:', files);
     try {
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Current user:', user, 'Error:', userError);
+      
       if (!user) {
-        throw new Error('User must be logged in to upload images');
+        throw new Error('You must be logged in to upload images. Please sign in and try again.');
       }
 
+      console.log('Starting upload for', files.length, 'files');
       const uploadPromises = files.map(file => uploadFile(file, 'bounty-images', user.id));
       const uploadResults = await Promise.all(uploadPromises);
+      console.log('Upload results:', uploadResults);
       
       const successfulUploads = uploadResults
         .filter(result => !result.error && result.url)
@@ -151,21 +156,34 @@ function PostBountyForm() {
       const failedUploads = uploadResults.filter(result => result.error);
       
       if (failedUploads.length > 0) {
-        console.error('Some uploads failed:', failedUploads);
+        console.error('Failed uploads:', failedUploads);
+        const errorMessages = failedUploads
+          .map(r => r.error)
+          .filter(Boolean)
+          .join(', ');
+        
+        toast({
+          title: "Some uploads failed",
+          description: errorMessages || "Please try again",
+          variant: "destructive",
+        });
       }
       
-      const newImages = [...uploadedImages, ...successfulUploads];
-      setUploadedImages(newImages);
-      setValue('images', newImages);
-      
-      toast({
-        title: "Images uploaded",
-        description: `${successfulUploads.length} image(s) uploaded successfully.`,
-      });
+      if (successfulUploads.length > 0) {
+        const newImages = [...uploadedImages, ...successfulUploads];
+        setUploadedImages(newImages);
+        setValue('images', newImages);
+        
+        toast({
+          title: "Images uploaded",
+          description: `${successfulUploads.length} image(s) uploaded successfully.`,
+        });
+      }
     } catch (error: any) {
+      console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload images",
+        description: error.message || "Failed to upload images. Please try again.",
         variant: "destructive",
       });
     }
