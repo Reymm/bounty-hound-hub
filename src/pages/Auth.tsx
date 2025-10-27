@@ -24,6 +24,8 @@ export default function Auth() {
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [emailConfirmed, setEmailConfirmed] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -183,6 +185,94 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      setShowPasswordReset(true);
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link.",
+      });
+    } catch (err: any) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Show password reset confirmation message
+  if (showPasswordReset) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link 
+              to="/"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to BountyBay
+            </Link>
+          </div>
+
+          <Card className="border-2 border-success/20 bg-success/5">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-success/20 rounded-full flex items-center justify-center">
+                  <Mail className="h-8 w-8 text-success" />
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-foreground">Check Your Email</h2>
+                  <p className="text-muted-foreground">
+                    We've sent a password reset link to:
+                  </p>
+                  <p className="font-semibold text-foreground text-lg">{resetEmail}</p>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2">
+                  <h3 className="font-semibold text-sm text-foreground">What to do next:</h3>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Check your email inbox for the password reset link</li>
+                    <li>• Look in your spam/junk folder if you don't see it</li>
+                    <li>• Click the link to set a new password</li>
+                    <li>• Then return here to sign in</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3 pt-4">
+                  <Button 
+                    onClick={() => setShowPasswordReset(false)}
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    Back to Sign In
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Didn't receive an email? It may take a few minutes to arrive.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Show email confirmation message
   if (showEmailConfirmation) {
@@ -347,7 +437,23 @@ export default function Auth() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="signin-password">Password</Label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResetEmail(loginEmail);
+                          if (!loginEmail) {
+                            setError('Please enter your email address first');
+                            return;
+                          }
+                          handlePasswordReset(new Event('submit') as any);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
