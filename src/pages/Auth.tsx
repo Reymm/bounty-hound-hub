@@ -123,23 +123,6 @@ export default function Auth() {
         return;
       }
 
-      // Send custom confirmation email
-      if (data?.user) {
-        try {
-          const confirmationUrl = `${window.location.origin}/auth`;
-          
-          await supabase.functions.invoke('send-confirmation-email', {
-            body: {
-              email: signupEmail,
-              confirmationUrl,
-              full_name: fullName.trim() || undefined
-            }
-          });
-        } catch (emailError) {
-          console.error('Failed to send custom confirmation email:', emailError);
-        }
-      }
-
       // Show prominent confirmation message
       setRegisteredEmail(signupEmail);
       setShowEmailConfirmation(true);
