@@ -138,9 +138,9 @@ export default function Auth() {
         return;
       }
 
-      // When email confirmation is enabled, Supabase returns no error but also no user 
+      // When email confirmation is enabled, Supabase returns a user object with empty identities
       // for duplicate signups (to prevent email enumeration). Catch this case:
-      if (!data?.user) {
+      if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
         setError('An account with this email already exists. Please sign in instead.');
         return;
       }
