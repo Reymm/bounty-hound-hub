@@ -50,8 +50,11 @@ export default function Auth() {
     const confirmed = queryParams.get('confirmed');
     const tab = queryParams.get('tab');
     
+    console.log('Auth page load - hash type:', type, 'hash:', window.location.hash);
+    
     if (type === 'recovery') {
       // Password reset mode
+      console.log('Setting recovery mode to true');
       setIsRecoveryMode(true);
     } else if (type === 'signup' || type === 'email_confirmation' || confirmed === 'true') {
       setEmailConfirmed(true);
@@ -61,6 +64,17 @@ export default function Auth() {
     } else if (tab === 'signin' || tab === 'signup') {
       setActiveTab(tab);
     }
+    
+    // Also listen for auth state changes to detect PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change event:', event);
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('PASSWORD_RECOVERY event detected, setting recovery mode');
+        setIsRecoveryMode(true);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
   }, []);
 
   // Redirect if already authenticated (but not during password recovery)
