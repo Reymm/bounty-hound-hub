@@ -629,6 +629,10 @@ export type Database = {
         Args: { bounty_id: string; user_id: string }
         Returns: boolean
       }
+      can_view_shipping_details: {
+        Args: { bounty_id: string }
+        Returns: boolean
+      }
       get_admin_ticket_details: {
         Args: { ticket_id_param: string }
         Returns: {
@@ -653,7 +657,7 @@ export type Database = {
         }[]
       }
       get_admin_ticket_overview: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           assigned_to: string
           bounty_id: string
@@ -677,7 +681,7 @@ export type Database = {
         }[]
       }
       get_admin_user_reports: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           admin_notes: string
           bounty_id: string
@@ -708,7 +712,7 @@ export type Database = {
         }[]
       }
       get_user_conversations: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           bounty_id: string
           last_message: string
@@ -726,14 +730,8 @@ export type Database = {
         Args: { bounty_id: string }
         Returns: undefined
       }
-      is_support_admin: {
-        Args: { user_id?: string }
-        Returns: boolean
-      }
-      mark_message_as_read: {
-        Args: { message_id: string }
-        Returns: boolean
-      }
+      is_support_admin: { Args: { user_id?: string }; Returns: boolean }
+      mark_message_as_read: { Args: { message_id: string }; Returns: boolean }
       recalculate_user_rating: {
         Args: { user_id_param: string }
         Returns: undefined

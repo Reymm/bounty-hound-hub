@@ -159,7 +159,12 @@ export const supabaseApi = {
       );
 
       return {
-        data: data?.map(bounty => transformBountyRow(bounty, profileMap.get(bounty.poster_id))) || [],
+        data: data?.map(bounty => {
+          // Remove shipping_details for unauthorized users
+          const sanitizedBounty = { ...bounty };
+          delete sanitizedBounty.shipping_details;
+          return transformBountyRow(sanitizedBounty, profileMap.get(bounty.poster_id));
+        }) || [],
         total: count || 0,
         page,
         limit,
@@ -185,6 +190,22 @@ export const supabaseApi = {
       if (error) {
         if (error.code === 'PGRST116') return null; // Not found
         throw error;
+      }
+
+      // Check if user can view shipping details
+      const { data: user } = await supabase.auth.getUser();
+      let canViewShipping = false;
+      
+      if (user?.user) {
+        const { data: canView } = await supabase.rpc('can_view_shipping_details', { 
+          bounty_id: id 
+        });
+        canViewShipping = canView || false;
+      }
+
+      // Remove shipping_details if user is not authorized
+      if (!canViewShipping && data) {
+        delete data.shipping_details;
       }
 
       // Fetch profile data using secure function
