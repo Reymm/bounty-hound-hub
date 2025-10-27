@@ -56,10 +56,14 @@ export default function Auth() {
       // Password reset mode
       console.log('Setting recovery mode to true');
       setIsRecoveryMode(true);
-    } else if (type === 'signup' || type === 'email_confirmation' || confirmed === 'true') {
+    } else if (type === 'signup' || type === 'email_confirmation') {
+      // Only show confirmed message if we actually got here from email link with proper token
       setEmailConfirmed(true);
-      setActiveTab('signin'); // Switch to Sign In tab
-      // Clear the URL parameters to clean up
+      setActiveTab('signin');
+      window.history.replaceState(null, '', window.location.pathname);
+    } else if (confirmed === 'true') {
+      // Don't automatically show success - the token might have expired
+      setActiveTab('signin');
       window.history.replaceState(null, '', window.location.pathname);
     } else if (tab === 'signin' || tab === 'signup') {
       setActiveTab(tab);
@@ -113,7 +117,8 @@ export default function Auth() {
         if (error.message.includes('Invalid login credentials')) {
           setError('Invalid email or password. Please check your credentials and try again.');
         } else if (error.message.includes('Email not confirmed')) {
-          setError('Please check your email and click the confirmation link before signing in.');
+          setRegisteredEmail(loginEmail);
+          setError('email_not_confirmed');
         } else {
           setError(error.message);
         }
@@ -550,9 +555,55 @@ export default function Auth() {
                 </Alert>
               )}
               
-              {error && (
+              {error && error !== 'email_not_confirmed' && (
                 <Alert variant="destructive" className="mt-4">
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {error === 'email_not_confirmed' && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertDescription className="space-y-3">
+                    <p className="font-semibold">Email not confirmed</p>
+                    <p className="text-sm">Your confirmation link may have expired. Click below to receive a new one:</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={async () => {
+                        setIsLoading(true);
+                        const { error } = await supabase.auth.resend({
+                          type: 'signup',
+                          email: registeredEmail,
+                        });
+                        setIsLoading(false);
+                        if (!error) {
+                          toast({
+                            title: "Email sent!",
+                            description: "Check your inbox for a new confirmation link.",
+                          });
+                          setError(null);
+                        } else {
+                          toast({
+                            title: "Error",
+                            description: "Failed to resend email. Please try again.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Resend confirmation email'
+                      )}
+                    </Button>
+                  </AlertDescription>
                 </Alert>
               )}
 
