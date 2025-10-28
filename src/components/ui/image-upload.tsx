@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Upload, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploadProps {
   onUpload: (files: File[]) => Promise<void>;
@@ -18,38 +19,49 @@ export function ImageUpload({
   onRemove,
   uploadedImages,
   maxFiles = 5,
-  maxSize = 5 * 1024 * 1024, // 5MB
+  maxSize = 10 * 1024 * 1024, // 10MB
   className,
   disabled = false
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
     const validFiles: File[] = [];
+    const errors: string[] = [];
 
     files.forEach(file => {
       // Check if it's an image
       if (!file.type.startsWith('image/')) {
-        console.error(`File ${file.name} is not an image`);
+        errors.push(`${file.name} is not an image`);
         return;
       }
 
       // Check file size
       if (file.size > maxSize) {
-        console.error(`File ${file.name} is too large. Max size is ${maxSize / 1024 / 1024}MB`);
+        errors.push(`${file.name} is too large (max ${maxSize / 1024 / 1024}MB)`);
         return;
       }
 
       // Check if we're at max files
       if (uploadedImages.length + validFiles.length >= maxFiles) {
-        console.error(`Maximum ${maxFiles} images allowed`);
+        errors.push(`Maximum ${maxFiles} images allowed`);
         return;
       }
 
       validFiles.push(file);
     });
+
+    // Show error toast if there were any errors
+    if (errors.length > 0) {
+      toast({
+        title: "Upload error",
+        description: errors.join('. '),
+        variant: "destructive",
+      });
+    }
 
     if (validFiles.length > 0) {
       setIsUploading(true);
@@ -59,7 +71,7 @@ export function ImageUpload({
         setIsUploading(false);
       }
     }
-  }, [uploadedImages.length, maxFiles, maxSize, onUpload]);
+  }, [uploadedImages.length, maxFiles, maxSize, onUpload, toast]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
