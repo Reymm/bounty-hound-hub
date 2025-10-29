@@ -23,7 +23,7 @@ export const postBountySchema = z.object({
     .max(10, 'Maximum 10 tags allowed'),
   
   bountyAmount: z.number()
-    .min(10, 'Minimum bounty is $10')
+    .min(5, 'Minimum bounty is $5')
     .max(10000, 'Maximum bounty is $10,000'),
   
   targetPriceMin: z.number()
