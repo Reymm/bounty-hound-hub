@@ -796,12 +796,15 @@ function PostBountyForm() {
                   min="5"
                   max="10000"
                   placeholder="500"
-                  className={`pl-10 ${errors.bountyAmount ? 'border-destructive' : ''}`}
+                  className={`pl-10 ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
                   {...register('bountyAmount', { valueAsNumber: true })}
                 />
               </div>
               {errors.bountyAmount && (
                 <p className="text-sm text-destructive">{errors.bountyAmount.message}</p>
+              )}
+              {!errors.bountyAmount && watchedBountyAmount && watchedBountyAmount < 5 && (
+                <p className="text-sm text-destructive">Minimum bounty must be $5</p>
               )}
               <p className="text-xs text-muted-foreground">
                 Amount to reward the successful hunter ($5 - $10,000)
