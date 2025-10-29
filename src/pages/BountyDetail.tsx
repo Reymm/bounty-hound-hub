@@ -214,7 +214,7 @@ export default function BountyDetail() {
                     </Link>
                   </Button>
 
-                  <Button 
+                  <Button
                     className="w-full bg-primary hover:bg-primary-hover"
                     onClick={() => setIsClaimDialogOpen(true)}
                     disabled={!user}
@@ -222,10 +222,6 @@ export default function BountyDetail() {
                     <Flag className="h-4 w-4 mr-2" />
                     Claim This Bounty
                   </Button>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    💡 Identity verification required before messaging or claiming
-                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -350,7 +346,7 @@ export default function BountyDetail() {
                 </Link>
               </Button>
 
-              <Button 
+              <Button
                 className="w-full bg-primary hover:bg-primary-hover"
                 onClick={() => setIsClaimDialogOpen(true)}
                 disabled={!user}
@@ -358,10 +354,6 @@ export default function BountyDetail() {
                 <Flag className="h-4 w-4 mr-2" />
                 Claim This Bounty
               </Button>
-
-              <p className="text-xs text-muted-foreground text-center">
-                💡 Identity verification required before messaging or claiming
-              </p>
             </CardContent>
           </Card>
         </div>
