@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { X, Upload, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +26,8 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentFile, setCurrentFile] = useState<string>('');
   const { toast } = useToast();
 
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
@@ -65,10 +68,17 @@ export function ImageUpload({
 
     if (validFiles.length > 0) {
       setIsUploading(true);
+      setUploadProgress(0);
       try {
-        await onUpload(validFiles);
+        for (let i = 0; i < validFiles.length; i++) {
+          setCurrentFile(validFiles[i].name);
+          setUploadProgress(((i + 1) / validFiles.length) * 100);
+          await onUpload([validFiles[i]]);
+        }
       } finally {
         setIsUploading(false);
+        setUploadProgress(0);
+        setCurrentFile('');
       }
     }
   }, [uploadedImages.length, maxFiles, maxSize, onUpload, toast]);
@@ -131,17 +141,29 @@ export function ImageUpload({
           />
           
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground mb-1">
-            {isUploading 
-              ? "Uploading images..." 
-              : isDragging 
-                ? "Drop images here" 
-                : "Drag & drop images here, or click to browse"
-            }
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Max {maxFiles} images, {formatFileSize(maxSize)} each
-          </p>
+          {isUploading ? (
+            <div className="space-y-2 w-full max-w-xs mx-auto">
+              <p className="text-sm text-muted-foreground">
+                Uploading {currentFile}...
+              </p>
+              <Progress value={uploadProgress} className="h-2" />
+              <p className="text-xs text-muted-foreground">
+                {Math.round(uploadProgress)}% complete
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-1">
+                {isDragging 
+                  ? "Drop images here" 
+                  : "Drag & drop images here, or click to browse"
+                }
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Max {maxFiles} images, {formatFileSize(maxSize)} each
+              </p>
+            </>
+          )}
         </div>
       )}
 
