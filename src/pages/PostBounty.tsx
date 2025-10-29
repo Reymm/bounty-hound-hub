@@ -81,6 +81,36 @@ function PostBountyForm() {
   const watchedTargetMax = watch('targetPriceMax');
   const selectedCategory = watch('category');
 
+  // Load saved form data on mount
+  useEffect(() => {
+    const savedData = sessionStorage.getItem('bounty_draft');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        // Restore form fields
+        Object.keys(parsed.formData).forEach(key => {
+          if (key === 'deadline') {
+            setValue(key as any, new Date(parsed.formData[key]));
+          } else {
+            setValue(key as any, parsed.formData[key]);
+          }
+        });
+        // Restore other state
+        if (parsed.tags) setTags(parsed.tags);
+        if (parsed.verificationRequirements) setVerificationRequirements(parsed.verificationRequirements);
+        if (parsed.uploadedImages) setUploadedImages(parsed.uploadedImages);
+        if (parsed.hasDeadline !== undefined) setHasDeadline(parsed.hasDeadline);
+        
+        toast({
+          title: "Draft restored",
+          description: "Your previous bounty draft has been loaded.",
+        });
+      } catch (error) {
+        console.error('Error loading draft:', error);
+      }
+    }
+  }, []);
+
   // Calculate fees when bounty amount changes
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
@@ -232,6 +262,15 @@ function PostBountyForm() {
       
       // Set flag that user is in bounty posting process
       sessionStorage.setItem('bounty_post_in_progress', 'true');
+      
+      // Save draft to sessionStorage
+      sessionStorage.setItem('bounty_draft', JSON.stringify({
+        formData: data,
+        tags,
+        verificationRequirements,
+        uploadedImages,
+        hasDeadline
+      }));
       
       // Content moderation check
       toast({
@@ -428,8 +467,9 @@ function PostBountyForm() {
           description: "Your bounty is now live with funds secured in escrow.",
         });
 
-        // Clear the bounty posting flag
+        // Clear the bounty posting flag and draft
         sessionStorage.removeItem('bounty_post_in_progress');
+        sessionStorage.removeItem('bounty_draft');
 
         navigate(`/b/${bountyData.bounty_id}`);
       }
