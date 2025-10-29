@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { ClaimDialog } from '@/components/bounty/ClaimDialog';
+import { CancelBountyDialog } from '@/components/bounty/CancelBountyDialog';
 import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
@@ -22,10 +23,14 @@ export default function BountyDetail() {
   const [bounty, setBounty] = useState<Bounty | null>(null);
   const [loading, setLoading] = useState(true);
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [refreshKey, setRefreshKey] = useState(0);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const isOwnBounty = user?.id === bounty?.posterId;
+  const canCancelBounty = isOwnBounty && bounty?.status !== BountyStatus.FULFILLED;
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -207,21 +212,36 @@ export default function BountyDetail() {
                     </div>
                   )}
 
-                  <Button asChild className="w-full" variant="outline">
-                    <Link to="/messages">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Send Message
-                    </Link>
-                  </Button>
+                  {!isOwnBounty && (
+                    <>
+                      <Button asChild className="w-full" variant="outline">
+                        <Link to="/messages">
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Send Message
+                        </Link>
+                      </Button>
 
-                  <Button
-                    className="w-full bg-primary hover:bg-primary-hover"
-                    onClick={() => setIsClaimDialogOpen(true)}
-                    disabled={!user}
-                  >
-                    <Flag className="h-4 w-4 mr-2" />
-                    Claim This Bounty
-                  </Button>
+                      <Button
+                        className="w-full bg-primary hover:bg-primary-hover"
+                        onClick={() => setIsClaimDialogOpen(true)}
+                        disabled={!user}
+                      >
+                        <Flag className="h-4 w-4 mr-2" />
+                        Claim This Bounty
+                      </Button>
+                    </>
+                  )}
+                  
+                  {canCancelBounty && (
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => setIsCancelDialogOpen(true)}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Cancel Bounty
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -339,21 +359,36 @@ export default function BountyDetail() {
                 </div>
               )}
 
-              <Button asChild className="w-full" variant="outline">
-                <Link to="/messages">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Send Message
-                </Link>
-              </Button>
+              {!isOwnBounty && (
+                <>
+                  <Button asChild className="w-full" variant="outline">
+                    <Link to="/messages">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Send Message
+                    </Link>
+                  </Button>
 
-              <Button
-                className="w-full bg-primary hover:bg-primary-hover"
-                onClick={() => setIsClaimDialogOpen(true)}
-                disabled={!user}
-              >
-                <Flag className="h-4 w-4 mr-2" />
-                Claim This Bounty
-              </Button>
+                  <Button
+                    className="w-full bg-primary hover:bg-primary-hover"
+                    onClick={() => setIsClaimDialogOpen(true)}
+                    disabled={!user}
+                  >
+                    <Flag className="h-4 w-4 mr-2" />
+                    Claim This Bounty
+                  </Button>
+                </>
+              )}
+              
+              {canCancelBounty && (
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => setIsCancelDialogOpen(true)}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancel Bounty
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -368,6 +403,17 @@ export default function BountyDetail() {
         onClose={() => setIsClaimDialogOpen(false)}
         onClaimSubmitted={handleClaimSubmitted}
       />
+
+      {/* Cancel Bounty Dialog */}
+      {bounty && (
+        <CancelBountyDialog
+          bountyId={bounty.id}
+          bountyAmount={bounty.bountyAmount}
+          bountyCreatedAt={bounty.createdAt.toISOString()}
+          open={isCancelDialogOpen}
+          onOpenChange={setIsCancelDialogOpen}
+        />
+      )}
     </div>
   );
 }

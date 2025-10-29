@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.confirm-escrow-and-create-bounty]
 verify_jwt = true
 
+[functions.cancel-bounty-with-fee]
+verify_jwt = true
+
 [functions.create-kyc-verification]
 verify_jwt = true
 
@@ -16,6 +19,9 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.send-submission-notification]
+verify_jwt = false
+
+[functions.send-shipping-notification]
 verify_jwt = false
 
 [functions.moderate-content]

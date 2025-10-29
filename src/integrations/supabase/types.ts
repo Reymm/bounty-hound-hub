@@ -131,11 +131,14 @@ export type Database = {
         Row: {
           amount: number
           bounty_id: string | null
+          cancellation_fee_amount: number | null
+          cancelled_at: string | null
           created_at: string
           currency: string
           id: string
           platform_fee_amount: number | null
           poster_id: string
+          refund_amount: number | null
           status: string
           stripe_payment_intent_id: string
           total_charged_amount: number | null
@@ -144,11 +147,14 @@ export type Database = {
         Insert: {
           amount: number
           bounty_id?: string | null
+          cancellation_fee_amount?: number | null
+          cancelled_at?: string | null
           created_at?: string
           currency?: string
           id?: string
           platform_fee_amount?: number | null
           poster_id: string
+          refund_amount?: number | null
           status?: string
           stripe_payment_intent_id: string
           total_charged_amount?: number | null
@@ -157,11 +163,14 @@ export type Database = {
         Update: {
           amount?: number
           bounty_id?: string | null
+          cancellation_fee_amount?: number | null
+          cancelled_at?: string | null
           created_at?: string
           currency?: string
           id?: string
           platform_fee_amount?: number | null
           poster_id?: string
+          refund_amount?: number | null
           status?: string
           stripe_payment_intent_id?: string
           total_charged_amount?: number | null
@@ -648,6 +657,10 @@ export type Database = {
           target_user_id: string
         }
         Returns: undefined
+      }
+      calculate_cancellation_fee: {
+        Args: { bounty_id_param: string; cancellation_time?: string }
+        Returns: number
       }
       can_user_claim_bounty: {
         Args: { bounty_id: string; user_id: string }
