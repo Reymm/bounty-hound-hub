@@ -15,38 +15,55 @@ export const uploadFile = async (
   customPath?: string
 ): Promise<UploadResult> => {
   try {
+    console.log('[STORAGE] Starting upload:', { fileName: file.name, fileSize: file.size, bucket, userId });
+    
     const fileExt = file.name.split('.').pop();
     const fileName = customPath || `${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${userId}/${fileName}`;
 
-    const { error } = await supabase.storage
+    console.log('[STORAGE] Uploading to path:', filePath);
+
+    const { data: uploadData, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
       });
 
-    if (error) throw error;
+    console.log('[STORAGE] Upload response:', { uploadData, error });
+
+    if (error) {
+      console.error('[STORAGE] Upload error:', error);
+      throw error;
+    }
 
     // Get public URL for public buckets, signed URL for private ones
     const isPublicBucket = bucket === 'bounty-images' || bucket === 'avatars';
+    
+    console.log('[STORAGE] Getting URL for public bucket:', isPublicBucket);
     
     if (isPublicBucket) {
       const { data } = supabase.storage
         .from(bucket)
         .getPublicUrl(filePath);
       
+      console.log('[STORAGE] Public URL generated:', data.publicUrl);
       return { url: data.publicUrl, path: filePath };
     } else {
       const { data, error: signError } = await supabase.storage
         .from(bucket)
         .createSignedUrl(filePath, 3600 * 24); // 24 hours
       
-      if (signError) throw signError;
+      if (signError) {
+        console.error('[STORAGE] Signed URL error:', signError);
+        throw signError;
+      }
       
+      console.log('[STORAGE] Signed URL generated');
       return { url: data.signedUrl, path: filePath };
     }
   } catch (error: any) {
+    console.error('[STORAGE] Upload failed:', error);
     return { error: error.message };
   }
 };
