@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { uploadFile, deleteFile } from '@/lib/storage';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { LocationPicker } from '@/components/ui/location-picker';
+import { useAuth } from '@/contexts/AuthContext';
 
 const stripePromise = loadStripe('pk_test_51QfOrlJBfkPjzFmqPq7zLJhSaKnE7Nf7HRdBK9GR0OHfhE6AEHwAJDKt8H0XhHyPzOBGQrj6hVRQNj6YGFmHxC300g4kxUEfr');
 
@@ -41,6 +42,7 @@ export default function PostBounty() {
 function PostBountyForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const stripe = useStripe();
   const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -480,6 +482,22 @@ function PostBountyForm() {
         });
 
         if (bountyError) throw bountyError;
+
+        // Send confirmation email
+        try {
+          await supabase.functions.invoke('send-bounty-confirmation', {
+            body: {
+              email: user?.email,
+              bountyTitle: formData.title,
+              bountyAmount: watchedBountyAmount,
+              bountyId: bountyData.bounty_id,
+              posterName: user?.user_metadata?.full_name || user?.email?.split('@')[0]
+            }
+          });
+        } catch (emailError) {
+          console.error('Failed to send confirmation email:', emailError);
+          // Don't fail the bounty posting if email fails
+        }
 
         toast({
           title: "Bounty posted successfully!",
