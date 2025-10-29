@@ -111,6 +111,25 @@ function PostBountyForm() {
     }
   }, []);
 
+  // Auto-save draft as user types (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const formData = getValues();
+      // Only save if there's actual content
+      if (formData.title || formData.description || tags.length > 0) {
+        sessionStorage.setItem('bounty_draft', JSON.stringify({
+          formData,
+          tags,
+          verificationRequirements,
+          uploadedImages,
+          hasDeadline
+        }));
+      }
+    }, 1000); // Save 1 second after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [watch(), tags, verificationRequirements, uploadedImages, hasDeadline]);
+
   // Calculate fees when bounty amount changes
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
