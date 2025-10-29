@@ -29,6 +29,7 @@ export function ImageUpload({
   const [totalFiles, setTotalFiles] = useState(0);
   const [completedFiles, setCompletedFiles] = useState(0);
   const [currentFile, setCurrentFile] = useState<string>('');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
 
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
@@ -71,20 +72,40 @@ export function ImageUpload({
       setIsUploading(true);
       setTotalFiles(validFiles.length);
       
-      try {
-        // Upload files one at a time to show progress
-        for (let i = 0; i < validFiles.length; i++) {
-          setCompletedFiles(i); // Show current progress
-          setCurrentFile(validFiles[i].name);
+      // Upload files one at a time with individual progress
+      for (let i = 0; i < validFiles.length; i++) {
+        setCompletedFiles(i);
+        setCurrentFile(validFiles[i].name);
+        setUploadProgress(0);
+        
+        try {
+          // Simulate progress for better UX
+          const progressInterval = setInterval(() => {
+            setUploadProgress(prev => Math.min(prev + 10, 90));
+          }, 200);
+          
           await onUpload([validFiles[i]]);
+          
+          clearInterval(progressInterval);
+          setUploadProgress(100);
+          
+          // Brief pause to show completion
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (error) {
+          console.error(`Failed to upload ${validFiles[i].name}:`, error);
+          toast({
+            title: "Upload failed",
+            description: `Failed to upload ${validFiles[i].name}. Please try again.`,
+            variant: "destructive",
+          });
         }
-        setCompletedFiles(validFiles.length); // All done
-      } finally {
-        setIsUploading(false);
-        setTotalFiles(0);
-        setCompletedFiles(0);
-        setCurrentFile('');
       }
+      
+      setIsUploading(false);
+      setTotalFiles(0);
+      setCompletedFiles(0);
+      setCurrentFile('');
+      setUploadProgress(0);
     }
   }, [uploadedImages.length, maxFiles, maxSize, onUpload, toast]);
 
@@ -154,12 +175,12 @@ export function ImageUpload({
                 </p>
                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
                   <div 
-                    className="h-full bg-primary transition-all duration-300" 
-                    style={{ width: `${(completedFiles / totalFiles) * 100}%` }}
+                    className="h-full bg-primary transition-all duration-200 ease-out" 
+                    style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  File {completedFiles + 1} of {totalFiles}
+                  {uploadProgress}% • File {completedFiles + 1} of {totalFiles}
                 </p>
               </div>
             </>
