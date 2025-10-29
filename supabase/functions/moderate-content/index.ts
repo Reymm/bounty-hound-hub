@@ -69,7 +69,9 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error ${response.status}:`, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -109,14 +111,14 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in moderate-content function:', error);
     
-    // On moderation API error, allow content but log the error
+    // CRITICAL: Block content when moderation fails (fail secure, not fail open)
     return new Response(JSON.stringify({
-      allowed: true,
-      flagged: false,
-      error: 'Moderation service temporarily unavailable',
-      message: 'Content posted without moderation check due to service issue.'
+      allowed: false,
+      flagged: true,
+      error: 'Moderation service error',
+      message: 'Unable to verify content safety. Please try again or contact support if the issue persists.'
     }), {
-      status: 200, // Don't block posting on API errors
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
