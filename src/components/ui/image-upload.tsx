@@ -71,7 +71,10 @@ export function ImageUpload({
       setUploadProgress(0);
       try {
         for (let i = 0; i < validFiles.length; i++) {
-          setCurrentFile(`${i + 1} of ${validFiles.length}: ${validFiles[i].name}`);
+          const fileLabel = validFiles.length > 1 
+            ? `file ${i + 1} of ${validFiles.length}: ${validFiles[i].name}`
+            : validFiles[i].name;
+          setCurrentFile(fileLabel);
           setUploadProgress((i / validFiles.length) * 100);
           await onUpload([validFiles[i]]);
           // Update to show completion of this file
