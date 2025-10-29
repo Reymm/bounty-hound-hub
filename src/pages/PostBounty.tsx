@@ -94,7 +94,7 @@ function PostBountyForm() {
           if (key === 'deadline') {
             setValue(key as any, new Date(parsed.formData[key]));
           } else {
-            setValue(key as any, parsed.formData[key]);
+            setValue(key as any, parsed.formData[key], { shouldValidate: true });
           }
         });
         // Restore other state
@@ -280,6 +280,17 @@ function PostBountyForm() {
   const onDetailsSubmit = async (data: PostBountyFormData) => {
     try {
       setIsSubmitting(true);
+      
+      // Validate required fields
+      if (!data.category) {
+        toast({
+          title: "Missing category",
+          description: "Please select a category for your bounty.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
       
       // Set flag that user is in bounty posting process
       sessionStorage.setItem('bounty_post_in_progress', 'true');
