@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,46 +56,64 @@ serve(async (req) => {
 
     console.log('Moderating content:', contentToModerate.substring(0, 100) + '...');
 
-    const response = await fetch('https://api.openai.com/v1/moderations', {
+    // Use Lovable AI Gateway with Claude for content moderation
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        input: contentToModerate,
-        model: 'text-moderation-latest'
+        model: 'anthropic/claude-sonnet-4-5',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a content moderation system. Analyze the following content and determine if it violates these policies:
+- Violence, weapons, or illegal activities
+- Sexual content involving minors
+- Human trafficking or exploitation
+- Hate speech or harassment
+- Illegal drugs or substances
+
+Respond ONLY with a JSON object in this exact format:
+{"flagged": true/false, "categories": ["category1", "category2"], "reason": "brief explanation"}`
+          },
+          {
+            role: 'user',
+            content: contentToModerate
+          }
+        ],
+        max_tokens: 200
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`OpenAI API error ${response.status}:`, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      console.error(`AI Gateway error ${response.status}:`, errorText);
+      throw new Error(`AI Gateway error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const moderation = data.results[0];
+    const content = data.choices[0].message.content;
+    
+    console.log('Raw moderation response:', content);
+    
+    // Parse the JSON response from Claude
+    let moderation;
+    try {
+      moderation = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse moderation response:', parseError);
+      throw new Error('Invalid moderation response format');
+    }
 
     console.log('Moderation result:', JSON.stringify(moderation, null, 2));
 
-    // Check if content violates policies
-    const isViolation = moderation.flagged;
-    const categories = moderation.categories;
-    const categoryScores = moderation.category_scores;
-
-    let violationDetails = null;
-    if (isViolation) {
-      // Find which categories were flagged
-      const flaggedCategories = Object.keys(categories).filter(
-        category => categories[category]
-      );
-      
-      violationDetails = {
-        categories: flaggedCategories,
-        scores: categoryScores
-      };
-    }
+    const isViolation = moderation.flagged === true;
+    const violationDetails = isViolation ? {
+      categories: moderation.categories || [],
+      reason: moderation.reason || 'Content violates community guidelines'
+    } : null;
 
     return new Response(JSON.stringify({
       allowed: !isViolation,
