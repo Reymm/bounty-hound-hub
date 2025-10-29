@@ -71,9 +71,11 @@ export function ImageUpload({
       setUploadProgress(0);
       try {
         for (let i = 0; i < validFiles.length; i++) {
-          setCurrentFile(validFiles[i].name);
-          setUploadProgress(((i + 1) / validFiles.length) * 100);
+          setCurrentFile(`${i + 1} of ${validFiles.length}: ${validFiles[i].name}`);
+          setUploadProgress((i / validFiles.length) * 100);
           await onUpload([validFiles[i]]);
+          // Update to show completion of this file
+          setUploadProgress(((i + 1) / validFiles.length) * 100);
         }
       } finally {
         setIsUploading(false);
@@ -143,12 +145,12 @@ export function ImageUpload({
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           {isUploading ? (
             <div className="space-y-2 w-full max-w-xs mx-auto">
-              <p className="text-sm text-muted-foreground">
-                Uploading {currentFile}...
+              <p className="text-sm text-muted-foreground font-medium">
+                Uploading file {currentFile}
               </p>
               <Progress value={uploadProgress} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {Math.round(uploadProgress)}% complete
+                {Math.round(uploadProgress)}% of all files uploaded
               </p>
             </div>
           ) : (
