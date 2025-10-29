@@ -803,7 +803,7 @@ function PostBountyForm() {
               {errors.bountyAmount && (
                 <p className="text-sm text-destructive">{errors.bountyAmount.message}</p>
               )}
-              {!errors.bountyAmount && watchedBountyAmount && watchedBountyAmount < 5 && (
+              {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount < 5 && (
                 <p className="text-sm text-destructive">Minimum bounty must be $5</p>
               )}
               <p className="text-xs text-muted-foreground">
