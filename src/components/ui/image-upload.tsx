@@ -26,7 +26,8 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [totalFiles, setTotalFiles] = useState(0);
+  const [completedFiles, setCompletedFiles] = useState(0);
   const [currentFile, setCurrentFile] = useState<string>('');
   const { toast } = useToast();
 
@@ -68,21 +69,21 @@ export function ImageUpload({
 
     if (validFiles.length > 0) {
       setIsUploading(true);
-      setUploadProgress(0);
+      setTotalFiles(validFiles.length);
+      setCompletedFiles(0);
       try {
         for (let i = 0; i < validFiles.length; i++) {
           const fileLabel = validFiles.length > 1 
             ? `file ${i + 1} of ${validFiles.length}: ${validFiles[i].name}`
             : validFiles[i].name;
           setCurrentFile(fileLabel);
-          setUploadProgress((i / validFiles.length) * 100);
           await onUpload([validFiles[i]]);
-          // Update to show completion of this file
-          setUploadProgress(((i + 1) / validFiles.length) * 100);
+          setCompletedFiles(i + 1);
         }
       } finally {
         setIsUploading(false);
-        setUploadProgress(0);
+        setTotalFiles(0);
+        setCompletedFiles(0);
         setCurrentFile('');
       }
     }
@@ -149,11 +150,13 @@ export function ImageUpload({
           {isUploading ? (
             <div className="space-y-2 w-full max-w-xs mx-auto">
               <p className="text-sm text-muted-foreground font-medium">
-                Uploading file {currentFile}
+                Uploading {currentFile}
               </p>
-              <Progress value={uploadProgress} className="h-2" />
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+                <div className="h-full w-full bg-primary animate-pulse" />
+              </div>
               <p className="text-xs text-muted-foreground">
-                {Math.round(uploadProgress)}% of all files uploaded
+                {completedFiles} of {totalFiles} files uploaded
               </p>
             </div>
           ) : (
