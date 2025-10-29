@@ -76,10 +76,15 @@ export function ImageUpload({
       setUploadProgress(0);
       
       try {
-        // Simulate progress for better UX
+        // Simulate smooth progress for better UX
         const progressInterval = setInterval(() => {
-          setUploadProgress(prev => Math.min(prev + 10, 90));
-        }, 200);
+          setUploadProgress(prev => {
+            if (prev >= 90) return prev;
+            // Slower increments as we get closer to 90%
+            const increment = prev < 50 ? 5 : prev < 70 ? 3 : 2;
+            return Math.min(prev + increment, 90);
+          });
+        }, 150);
         
         // Upload all files at once to avoid race conditions
         await onUpload(validFiles);

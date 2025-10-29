@@ -171,9 +171,12 @@ function PostBountyForm() {
       }
       
       if (successfulUploads.length > 0) {
-        const newImages = [...uploadedImages, ...successfulUploads];
-        setUploadedImages(newImages);
-        setValue('images', newImages);
+        // Use functional update to avoid race conditions with multiple uploads
+        setUploadedImages(prev => {
+          const newImages = [...prev, ...successfulUploads];
+          setValue('images', newImages);
+          return newImages;
+        });
         
         toast({
           title: "Images uploaded",
