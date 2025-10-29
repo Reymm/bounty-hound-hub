@@ -70,15 +70,15 @@ export function ImageUpload({
     if (validFiles.length > 0) {
       setIsUploading(true);
       setTotalFiles(validFiles.length);
-      setCompletedFiles(0);
       
       try {
         // Upload files one at a time to show progress
         for (let i = 0; i < validFiles.length; i++) {
+          setCompletedFiles(i); // Show current progress
           setCurrentFile(validFiles[i].name);
           await onUpload([validFiles[i]]);
-          setCompletedFiles(i + 1);
         }
+        setCompletedFiles(validFiles.length); // All done
       } finally {
         setIsUploading(false);
         setTotalFiles(0);
@@ -153,10 +153,13 @@ export function ImageUpload({
                   Uploading {currentFile}...
                 </p>
                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
-                  <div className="h-full w-full bg-primary animate-pulse" />
+                  <div 
+                    className="h-full bg-primary transition-all duration-300" 
+                    style={{ width: `${(completedFiles / totalFiles) * 100}%` }}
+                  />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {completedFiles} of {totalFiles} files uploaded
+                  File {completedFiles + 1} of {totalFiles}
                 </p>
               </div>
             </>
