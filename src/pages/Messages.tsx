@@ -186,7 +186,7 @@ export default function Messages() {
                 />
               </div>
             ) : (
-              <div className="divide-y divide-border">
+                <div className="divide-y divide-border">
                 {filteredThreads.map((thread) => (
                   <button
                     key={thread.id}
@@ -196,9 +196,14 @@ export default function Messages() {
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium text-foreground truncate flex-1 pr-2">
-                        {thread.bountyTitle}
-                      </h3>
+                      <div className="flex items-center gap-2 flex-1 pr-2">
+                        <h3 className="font-medium text-foreground truncate">
+                          {thread.bountyTitle}
+                        </h3>
+                        {thread.lastMessage?.attachments && thread.lastMessage.attachments.length > 0 && (
+                          <span className="text-primary" title="Has attachments">📸</span>
+                        )}
+                      </div>
                       {thread.unreadCount > 0 && (
                         <Badge variant="destructive" className="text-xs h-5 w-5 p-0 flex items-center justify-center">
                           {thread.unreadCount}

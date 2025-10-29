@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Plus, MessageCircle, User, Menu, X, LogOut, Settings } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -42,7 +43,37 @@ export function TopNav({ onSearch }: TopNavProps) {
     return email.substring(0, 2).toUpperCase();
   };
 
-  const unreadMessages = 2; // TODO: Get from actual message state
+  // Fetch real unread message count
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadMessages(0);
+      return;
+    }
+
+    const fetchUnreadCount = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('recipient_id', user.id)
+          .eq('is_read', false);
+
+        if (!error && data !== null) {
+          setUnreadMessages(data.length || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Poll for updates every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   return (
     <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm safe-top">

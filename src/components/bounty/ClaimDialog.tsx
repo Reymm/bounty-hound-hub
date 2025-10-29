@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Shield } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,18 +17,54 @@ import { supabase } from '@/integrations/supabase/client';
 interface ClaimDialogProps {
   bountyId: string;
   bountyTitle: string;
+  bountyAmount: number;
   isOpen: boolean;
   onClose: () => void;
   onClaimSubmitted: () => void;
 }
 
-export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSubmitted }: ClaimDialogProps) {
+export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClose, onClaimSubmitted }: ClaimDialogProps) {
   const [message, setMessage] = useState('');
   const [proofUrls, setProofUrls] = useState<string[]>(['']);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [kycRequired, setKycRequired] = useState(false);
+  const [kycChecking, setKycChecking] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Check if KYC is required for high-value bounties
+  useEffect(() => {
+    const checkKycStatus = async () => {
+      // KYC required for claiming bounties over $200
+      if (bountyAmount <= 200) {
+        setKycRequired(false);
+        return;
+      }
+
+      setKycChecking(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('check-kyc-status');
+        
+        if (error) {
+          console.error('Error checking KYC:', error);
+          setKycRequired(true);
+          return;
+        }
+
+        setKycRequired(!data?.verified);
+      } catch (error) {
+        console.error('Error checking KYC:', error);
+        setKycRequired(true);
+      } finally {
+        setKycChecking(false);
+      }
+    };
+
+    if (isOpen && user) {
+      checkKycStatus();
+    }
+  }, [isOpen, user, bountyAmount]);
 
   const handleAddProofUrl = () => {
     setProofUrls([...proofUrls, '']);
@@ -73,11 +110,38 @@ export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSub
     setUploadedImages(newImages);
   };
 
+  const handleStartKyc = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-kyc-verification');
+      
+      if (error) throw error;
+      
+      if (data?.verification_url) {
+        window.location.href = data.verification_url;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Verification error",
+        description: error.message || "Failed to start verification",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       toast({
         title: "Authentication required",
         description: "Please log in to submit a claim.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (kycRequired) {
+      toast({
+        title: "Verification required",
+        description: "Please complete identity verification before claiming this bounty.",
         variant: "destructive",
       });
       return;
@@ -135,6 +199,26 @@ export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSub
         <DialogHeader>
           <DialogTitle>Submit Claim for "{bountyTitle}"</DialogTitle>
         </DialogHeader>
+
+        {kycRequired && (
+          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+            <Shield className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              <div className="space-y-2">
+                <p className="font-semibold">Identity Verification Required</p>
+                <p>Bounties over $200 require identity verification before claiming. This helps protect both hunters and posters.</p>
+                <Button 
+                  onClick={handleStartKyc} 
+                  variant="outline" 
+                  className="mt-2 border-amber-600 text-amber-700 hover:bg-amber-100"
+                  disabled={kycChecking}
+                >
+                  {kycChecking ? 'Checking...' : 'Start Verification'}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-6">
           <div className="space-y-2">
@@ -205,8 +289,11 @@ export function ClaimDialog({ bountyId, bountyTitle, isOpen, onClose, onClaimSub
             <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Claim'}
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting || kycRequired || kycChecking}
+            >
+              {isSubmitting ? 'Submitting...' : kycRequired ? 'Verification Required' : 'Submit Claim'}
             </Button>
           </div>
         </div>

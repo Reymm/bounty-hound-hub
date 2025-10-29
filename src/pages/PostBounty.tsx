@@ -88,7 +88,8 @@ function PostBountyForm() {
       const total = watchedBountyAmount + fee;
       setPlatformFee(fee);
       setTotalCharge(total);
-      setKycRequired(watchedBountyAmount > 50);
+      // KYC required for bounties over $100
+      setKycRequired(watchedBountyAmount > 100);
     } else {
       setPlatformFee(0);
       setTotalCharge(0);
