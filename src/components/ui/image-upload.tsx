@@ -71,34 +71,32 @@ export function ImageUpload({
     if (validFiles.length > 0) {
       setIsUploading(true);
       setTotalFiles(validFiles.length);
+      setCompletedFiles(0);
+      setCurrentFile(`Uploading ${validFiles.length} file${validFiles.length > 1 ? 's' : ''}...`);
+      setUploadProgress(0);
       
-      // Upload files one at a time with individual progress
-      for (let i = 0; i < validFiles.length; i++) {
-        setCompletedFiles(i);
-        setCurrentFile(validFiles[i].name);
-        setUploadProgress(0);
+      try {
+        // Simulate progress for better UX
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => Math.min(prev + 10, 90));
+        }, 200);
         
-        try {
-          // Simulate progress for better UX
-          const progressInterval = setInterval(() => {
-            setUploadProgress(prev => Math.min(prev + 10, 90));
-          }, 200);
-          
-          await onUpload([validFiles[i]]);
-          
-          clearInterval(progressInterval);
-          setUploadProgress(100);
-          
-          // Brief pause to show completion
-          await new Promise(resolve => setTimeout(resolve, 300));
-        } catch (error) {
-          console.error(`Failed to upload ${validFiles[i].name}:`, error);
-          toast({
-            title: "Upload failed",
-            description: `Failed to upload ${validFiles[i].name}. Please try again.`,
-            variant: "destructive",
-          });
-        }
+        // Upload all files at once to avoid race conditions
+        await onUpload(validFiles);
+        
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+        setCompletedFiles(validFiles.length);
+        
+        // Brief pause to show completion
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error('Failed to upload files:', error);
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload files. Please try again.",
+          variant: "destructive",
+        });
       }
       
       setIsUploading(false);
