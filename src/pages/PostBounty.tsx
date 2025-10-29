@@ -83,7 +83,7 @@ function PostBountyForm() {
 
   // Calculate fees when bounty amount changes
   useEffect(() => {
-    if (watchedBountyAmount) {
+    if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
       const fee = Math.round(watchedBountyAmount * 0.035 * 100) / 100;
       const total = watchedBountyAmount + fee;
       setPlatformFee(fee);
