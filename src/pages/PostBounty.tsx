@@ -697,19 +697,19 @@ function PostBountyForm() {
 
             <div className="space-y-2">
               <label htmlFor="location" className="text-sm font-medium">
-                Location <span className="text-destructive">*</span>
+                Your Location <span className="text-destructive">*</span>
               </label>
               <LocationPicker
                 value={watch('location')}
                 onChange={(location) => setValue('location', location)}
-                placeholder="Search for a city, state or region..."
+                placeholder="Search for your city, state or region..."
                 className={errors.location ? 'border-destructive' : ''}
               />
               {errors.location && (
                 <p className="text-sm text-destructive">{errors.location.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Where should hunters look or deliver the item? You can search or click on the map to select a location.
+                Where are you located? Hunters will provide leads on where to find your item, or may source and ship it directly to you.
               </p>
             </div>
 
