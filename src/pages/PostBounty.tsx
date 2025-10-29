@@ -374,13 +374,24 @@ function PostBountyForm() {
       return;
     }
 
+    // Check if CardElement is mounted
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      toast({
+        title: "Payment Error",
+        description: "Payment form not ready. Please refresh the page and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsPaymentProcessing(true);
     setCurrentStep('processing');
 
     try {
       const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: elements.getElement(CardElement)!,
+          card: cardElement,
         }
       });
 
