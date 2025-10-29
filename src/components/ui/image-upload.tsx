@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X, Upload, Image } from 'lucide-react';
+import { X, Upload, Image, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -145,21 +145,24 @@ export function ImageUpload({
             disabled={disabled || isUploading}
           />
           
-          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           {isUploading ? (
-            <div className="space-y-2 w-full max-w-xs mx-auto">
-              <p className="text-sm text-muted-foreground font-medium">
-                Uploading {currentFile}
-              </p>
-              <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
-                <div className="h-full w-full bg-primary animate-pulse" />
+            <>
+              <Loader2 className="h-8 w-8 mx-auto mb-3 text-primary animate-spin" />
+              <div className="space-y-2 w-full max-w-xs mx-auto">
+                <p className="text-sm text-foreground font-medium">
+                  Uploading {currentFile}...
+                </p>
+                <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+                  <div className="h-full w-full bg-primary animate-pulse" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {completedFiles} of {totalFiles} files uploaded
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {completedFiles} of {totalFiles} files uploaded
-              </p>
-            </div>
+            </>
           ) : (
             <>
+              <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground mb-1">
                 {isDragging 
                   ? "Drop images here" 
