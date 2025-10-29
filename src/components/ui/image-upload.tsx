@@ -71,15 +71,14 @@ export function ImageUpload({
       setIsUploading(true);
       setTotalFiles(validFiles.length);
       setCompletedFiles(0);
+      const fileLabel = validFiles.length > 1 
+        ? `${validFiles.length} files`
+        : validFiles[0].name;
+      setCurrentFile(fileLabel);
+      
       try {
-        for (let i = 0; i < validFiles.length; i++) {
-          const fileLabel = validFiles.length > 1 
-            ? `file ${i + 1} of ${validFiles.length}: ${validFiles[i].name}`
-            : validFiles[i].name;
-          setCurrentFile(fileLabel);
-          await onUpload([validFiles[i]]);
-          setCompletedFiles(i + 1);
-        }
+        await onUpload(validFiles);
+        setCompletedFiles(validFiles.length);
       } finally {
         setIsUploading(false);
         setTotalFiles(0);
