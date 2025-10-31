@@ -896,7 +896,10 @@ function PostBountyForm() {
                   max="10000"
                   placeholder="500"
                   className={`pl-10 ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
-                  {...register('bountyAmount', { valueAsNumber: true })}
+                  {...register('bountyAmount', { 
+                    valueAsNumber: true,
+                    setValueAs: (v) => v === '' ? undefined : parseFloat(v)
+                  })}
                 />
               </div>
               {errors.bountyAmount && (

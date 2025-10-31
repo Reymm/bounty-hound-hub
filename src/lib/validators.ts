@@ -22,9 +22,14 @@ export const postBountySchema = z.object({
     .min(1, 'Add at least one tag')
     .max(10, 'Maximum 10 tags allowed'),
   
-  bountyAmount: z.number()
+  bountyAmount: z.number({
+    required_error: 'Bounty amount is required',
+    invalid_type_error: 'Please enter a valid amount'
+  })
     .min(5, 'Minimum bounty is $5')
-    .max(10000, 'Maximum bounty is $10,000'),
+    .max(10000, 'Maximum bounty is $10,000')
+    .optional()
+    .refine(val => val !== undefined, 'Bounty amount is required'),
   
   targetPriceMin: z.number()
     .min(1, 'Minimum price must be at least $1')
