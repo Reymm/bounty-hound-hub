@@ -1133,7 +1133,16 @@ function PostBountyForm() {
           </Button>
           <Button 
             type="submit" 
-            disabled={isSubmitting || !watchedBountyAmount || watchedBountyAmount < 5 || watchedBountyAmount > 10000}
+            disabled={
+              isSubmitting || 
+              !watch('title')?.trim() ||
+              !watch('description')?.trim() ||
+              !watch('category') ||
+              !watchedBountyAmount || 
+              watchedBountyAmount < 5 || 
+              watchedBountyAmount > 10000 ||
+              !watch('location')?.trim()
+            }
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
             {isSubmitting ? 'Creating Payment...' : `Continue to ${kycRequired ? 'Verification' : 'Payment'} ${totalCharge > 0 ? `($${totalCharge} total)` : watchedBountyAmount ? `($${watchedBountyAmount})` : ''}`}
