@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -453,9 +453,9 @@ function PostBountyForm() {
       return;
     }
 
-    // Get CardElement reference BEFORE any state changes
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
+    // Get CardNumberElement reference BEFORE any state changes
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    if (!cardNumberElement) {
       toast({
         title: "Payment Error",
         description: "Payment form not ready. Please refresh the page and try again.",
@@ -468,10 +468,10 @@ function PostBountyForm() {
     setIsPaymentProcessing(true);
 
     try {
-      // Use the cardElement reference we got before state changes
+      // Use the cardNumberElement reference we got before state changes
       const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: cardElement,
+          card: cardNumberElement,
         }
       });
 
@@ -701,7 +701,7 @@ function PostBountyForm() {
             </div>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <Label className="flex items-center justify-between">
                   <span>Payment Method</span>
                   <span className="text-xs text-muted-foreground font-normal">
@@ -713,22 +713,62 @@ function PostBountyForm() {
                     />
                   </span>
                 </Label>
-                <div className="p-4 border rounded-md bg-background">
-                  <CardElement options={{
-                    style: {
-                      base: {
-                        fontSize: '16px',
-                        color: '#424770',
-                        '::placeholder': {
-                          color: '#aab7c4',
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cardNumber">Card Number</Label>
+                  <div className="p-3 border rounded-md bg-background">
+                    <CardNumberElement options={{
+                      style: {
+                        base: {
+                          fontSize: '16px',
+                          color: '#424770',
+                          '::placeholder': {
+                            color: '#aab7c4',
+                          },
                         },
                       },
-                    },
-                    hidePostalCode: false,
-                  }} />
+                    }} />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cardExpiry">Expiry Date</Label>
+                    <div className="p-3 border rounded-md bg-background">
+                      <CardExpiryElement options={{
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: '#424770',
+                            '::placeholder': {
+                              color: '#aab7c4',
+                            },
+                          },
+                        },
+                      }} />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cardCvc">CVC</Label>
+                    <div className="p-3 border rounded-md bg-background">
+                      <CardCvcElement options={{
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: '#424770',
+                            '::placeholder': {
+                              color: '#aab7c4',
+                            },
+                          },
+                        },
+                      }} />
+                    </div>
+                  </div>
+                </div>
+
                 <p className="text-xs text-muted-foreground">
-                  Note: The postal code field accepts all international formats (ZIP codes, postal codes, etc.)
+                  🔒 Your payment information is encrypted and secure. We never store your card details.
                 </p>
               </div>
 
