@@ -155,10 +155,12 @@ export default function BountyDetail() {
                   <MapPin className="h-4 w-4" />
                   {bounty.location}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Deadline: {format(bounty.deadline, 'MMM dd, yyyy')}
-                </div>
+                {bounty.deadline && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Deadline: {format(bounty.deadline, 'MMM dd, yyyy')}
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   Posted {formatDistanceToNow(bounty.createdAt, { addSuffix: true })}
@@ -172,10 +174,14 @@ export default function BountyDetail() {
                   </div>
                   <div>
                     <p className="font-medium">{bounty.posterName}</p>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                      {bounty.posterRating.toFixed(1)} ({bounty.posterRatingCount} reviews)
-                    </div>
+                    {bounty.posterRatingCount > 0 ? (
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                        {bounty.posterRating.toFixed(1)} ({bounty.posterRatingCount} reviews)
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No reviews yet</p>
+                    )}
                   </div>
                 </div>
                 

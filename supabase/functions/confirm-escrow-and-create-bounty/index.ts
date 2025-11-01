@@ -77,7 +77,16 @@ serve(async (req) => {
         poster_id: user.id,
         status: 'open',
         escrow_status: 'secured',
-        escrow_amount: escrowData.amount
+        escrow_amount: escrowData.amount,
+        images: bounty_data.images || [],
+        category: bounty_data.category,
+        subcategory: bounty_data.subcategory,
+        location: bounty_data.location,
+        deadline: bounty_data.deadline,
+        tags: bounty_data.tags || [],
+        verification_requirements: bounty_data.verificationRequirements || [],
+        target_price_min: bounty_data.targetPriceMin,
+        target_price_max: bounty_data.targetPriceMax
       })
       .select()
       .single();

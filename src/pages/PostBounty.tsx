@@ -494,7 +494,7 @@ function PostBountyForm() {
               category: formData.category,
               subcategory: formData.subcategory,  
               location: formData.location,
-              deadline: formData.deadline,
+              deadline: hasDeadline ? formData.deadline : null,
               targetPriceMin: formData.targetPriceMin,
               targetPriceMax: formData.targetPriceMax,
               tags,
