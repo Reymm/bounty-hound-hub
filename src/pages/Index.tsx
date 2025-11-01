@@ -139,19 +139,30 @@ const Index = () => {
               Post a bounty for hard-to-find items and let our community of hunters 
               help you discover exactly what you're looking for.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground">
+            <div className="flex flex-col gap-4 items-center">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground w-full sm:w-auto">
                 <Link to={user ? "/post" : "/setup"}>
                   <Plus className="h-5 w-5 mr-2" />
                   {user ? "Post a Bounty" : "Sign Up Free"}
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/bounties">
-                  <TrendingUp className="h-5 w-5 mr-2" />
-                  Browse Active Bounties
-                </Link>
-              </Button>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {!user && (
+                  <Button asChild variant="outline" size="default">
+                    <Link to="/post">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Post a Bounty
+                    </Link>
+                  </Button>
+                )}
+                <Button asChild variant="outline" size="default">
+                  <Link to="/bounties">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Browse Active Bounties
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
