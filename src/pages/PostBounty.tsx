@@ -724,10 +724,11 @@ function PostBountyForm() {
                         },
                       },
                     },
+                    hidePostalCode: false,
                   }} />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  🔒 Your payment information is encrypted and secure. We never store your card details.
+                  Note: The postal code field accepts all international formats (ZIP codes, postal codes, etc.)
                 </p>
               </div>
 
