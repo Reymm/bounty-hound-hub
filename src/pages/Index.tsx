@@ -192,8 +192,8 @@ const Index = () => {
       {/* Browse Section */}
       <section id="browse" className="py-8 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-            <div>
+          <div className="text-center mb-8">
+            <div className="mb-6">
               <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
                 Active Bounties
               </h2>
