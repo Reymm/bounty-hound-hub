@@ -1144,7 +1144,9 @@ function PostBountyForm() {
               !watchedBountyAmount || 
               watchedBountyAmount < 5 || 
               watchedBountyAmount > 10000 ||
-              !watch('location')?.trim()
+              !watch('location')?.trim() ||
+              (watch('tags') || []).length === 0 ||
+              verificationRequirements.filter(r => r.trim()).length === 0
             }
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
