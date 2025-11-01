@@ -43,7 +43,13 @@ serve(async (req) => {
     if (!payment_intent_id || !bounty_data) {
       throw new Error("Payment intent ID and bounty data are required");
     }
-    logStep("Request data validated", { payment_intent_id, bountyTitle: bounty_data.title });
+    logStep("Request data validated", { 
+      payment_intent_id, 
+      bountyTitle: bounty_data.title,
+      tags: bounty_data.tags,
+      images: bounty_data.images,
+      category: bounty_data.category
+    });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
