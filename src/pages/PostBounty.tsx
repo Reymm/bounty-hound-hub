@@ -465,7 +465,6 @@ function PostBountyForm() {
     }
 
     setIsPaymentProcessing(true);
-    setCurrentStep('processing');
 
     try {
       const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
@@ -477,6 +476,9 @@ function PostBountyForm() {
       if (paymentError) {
         throw new Error(paymentError.message);
       }
+
+      // Only change to processing step after payment is confirmed
+      setCurrentStep('processing');
 
       if (paymentIntent.status === 'requires_capture') {
         // Payment successful, create bounty
