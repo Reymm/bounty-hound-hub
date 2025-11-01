@@ -197,7 +197,7 @@ const Index = () => {
               <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
                 Active Bounties
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-primary">
                 Discover what people are looking for and start earning
               </p>
             </div>

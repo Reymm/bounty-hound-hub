@@ -68,7 +68,7 @@ export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
             Top Categories
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-primary max-w-2xl mx-auto">
             Browse popular bounty categories and start hunting
           </p>
         </div>
