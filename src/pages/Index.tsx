@@ -176,7 +176,7 @@ const Index = () => {
               Featured Bounties
             </h2>
             <p className="text-lg text-primary max-w-2xl">
-              Start hunting these high-value items and earn real money
+              Start hunting these items and earn real money
             </p>
           </div>
           
