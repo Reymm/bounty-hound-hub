@@ -189,12 +189,12 @@ export function ShippingDetailsDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="postalCode">Postal Code *</Label>
+              <Label htmlFor="postalCode">Zip/Postal Code *</Label>
               <Input
                 id="postalCode"
                 value={shippingDetails.postalCode}
                 onChange={(e) => handleInputChange('postalCode', e.target.value)}
-                placeholder="10001"
+                placeholder="e.g., 10001, M5H 2N2, SW1A 1AA"
               />
             </div>
             <div className="space-y-2">
