@@ -22,12 +22,12 @@ const Index = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Load featured bounties (top 4)
+  // Load featured bounties (top 6)
   useEffect(() => {
     const loadFeatured = async () => {
       try {
         setLoadingFeatured(true);
-        const response = await supabaseApi.getBounties(1, 4, {});
+        const response = await supabaseApi.getBounties(1, 6, {});
         setFeaturedBounties(response.data);
       } catch (error) {
         console.error('Error loading featured bounties:', error);
@@ -164,7 +164,7 @@ const Index = () => {
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
               Active Bounties Right Now
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-primary max-w-2xl mx-auto">
               Real money available for finding these items
             </p>
           </div>
