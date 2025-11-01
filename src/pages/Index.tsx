@@ -12,13 +12,31 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [featuredBounties, setFeaturedBounties] = useState<Bounty[]>([]);
   const [bounties, setBounties] = useState<Bounty[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<SearchFiltersType>({});
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Load featured bounties (top 4)
+  useEffect(() => {
+    const loadFeatured = async () => {
+      try {
+        setLoadingFeatured(true);
+        const response = await supabaseApi.getBounties(1, 4, {});
+        setFeaturedBounties(response.data);
+      } catch (error) {
+        console.error('Error loading featured bounties:', error);
+      } finally {
+        setLoadingFeatured(false);
+      }
+    };
+    loadFeatured();
+  }, []);
 
   // Initialize filters from URL params
   useEffect(() => {
@@ -135,6 +153,35 @@ const Index = () => {
                 </Link>
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Active Bounties */}
+      <section className="py-12 lg:py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
+              Active Bounties Right Now
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Real money available for finding these items
+            </p>
+          </div>
+          
+          <BountyGrid 
+            bounties={featuredBounties}
+            loading={loadingFeatured}
+            emptyMessage="No active bounties yet"
+            emptyDescription="Check back soon for new opportunities to earn."
+          />
+
+          <div className="mt-8 text-center">
+            <Button asChild variant="outline" size="lg">
+              <Link to="/bounties">
+                View All Active Bounties
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
