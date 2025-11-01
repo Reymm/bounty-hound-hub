@@ -81,15 +81,15 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader className="sticky top-0 bg-background z-10 pb-4">
           <SheetTitle>Filter Bounties</SheetTitle>
           <SheetDescription>
             Refine your search to find the perfect bounties.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 mt-6">
+        <div className="space-y-6 mt-6 pb-20">
           {/* Category Filter */}
           <div className="space-y-2">
             <Label htmlFor="category-filter">Category</Label>

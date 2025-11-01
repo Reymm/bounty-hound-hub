@@ -96,11 +96,11 @@ export const supabaseApi = {
       }
       
       if (filters.category) {
-        query = query.eq('category', filters.category);
+        query = query.ilike('category', filters.category);
       }
       
       if (filters.subcategory) {
-        query = query.eq('subcategory', filters.subcategory);
+        query = query.ilike('subcategory', filters.subcategory);
       }
       
       if (filters.location) {
