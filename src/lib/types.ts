@@ -194,6 +194,43 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
       'bedding-bath': 'Bedding & Bath'
     }
   },
+  'vehicles': {
+    label: 'Vehicles',
+    subcategories: {
+      'cars': 'Cars & Automobiles',
+      'motorcycles': 'Motorcycles',
+      'trucks': 'Trucks',
+      'classic-cars': 'Classic & Vintage Cars',
+      'boats': 'Boats & Watercraft',
+      'rvs': 'RVs & Campers',
+      'atvs-utvs': 'ATVs & UTVs',
+      'vehicle-parts': 'Vehicle Parts'
+    }
+  },
+  'people-family': {
+    label: 'People & Family',
+    subcategories: {
+      'biological-parents': 'Biological Parents',
+      'family-members': 'Family Members',
+      'old-friends': 'Old Friends',
+      'adoption-search': 'Adoption Search',
+      'genealogy': 'Genealogy Research',
+      'lost-contact': 'Lost Contact',
+      'birth-records': 'Birth Records',
+      'family-history': 'Family History'
+    }
+  },
+  'pets': {
+    label: 'Lost Pets',
+    subcategories: {
+      'dogs': 'Dogs',
+      'cats': 'Cats',
+      'birds': 'Birds',
+      'exotic-pets': 'Exotic Pets',
+      'livestock': 'Livestock',
+      'other-pets': 'Other Pets'
+    }
+  },
   'automotive': {
     label: 'Automotive Parts & Accessories',
     subcategories: {
@@ -282,6 +319,9 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
 
 // Enums for backward compatibility and ease of use
 export enum BountyCategory {
+  VEHICLES = 'vehicles',
+  PEOPLE_FAMILY = 'people-family',
+  PETS = 'pets',
   COLLECTIBLES = 'collectibles',
   ELECTRONICS = 'electronics',
   FASHION_APPAREL = 'fashion-apparel',

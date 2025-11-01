@@ -4,6 +4,7 @@ import { Plus, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
+import { TopCategories } from '@/components/home/TopCategories';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -87,6 +88,23 @@ const Index = () => {
     setFilters(prev => ({ ...prev, keyword: query }));
   };
 
+  const handleCategorySelect = (category: string) => {
+    if (category) {
+      setFilters(prev => ({ ...prev, category: category as any }));
+      
+      // Update URL params
+      const params = new URLSearchParams(searchParams);
+      params.set('category', category);
+      setSearchParams(params);
+    }
+    
+    // Scroll to browse section
+    const browseSection = document.getElementById('browse');
+    if (browseSection) {
+      browseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <>
       {/* Hero Section */}
@@ -120,6 +138,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Top Categories Section */}
+      <TopCategories onCategorySelect={handleCategorySelect} />
 
       {/* Browse Section */}
       <section id="browse" className="py-8 lg:py-12">
