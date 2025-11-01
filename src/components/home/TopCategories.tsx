@@ -64,11 +64,11 @@ export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
   return (
     <section className="py-12 lg:py-16 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
+        <div className="mb-10">
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
             Top Categories
           </h2>
-          <p className="text-lg text-primary max-w-2xl mx-auto">
+          <p className="text-lg text-primary max-w-2xl">
             Browse popular bounty categories and start hunting
           </p>
         </div>
