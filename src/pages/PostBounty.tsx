@@ -453,7 +453,7 @@ function PostBountyForm() {
       return;
     }
 
-    // Check if CardElement is mounted
+    // Get CardElement reference BEFORE any state changes
     const cardElement = elements.getElement(CardElement);
     if (!cardElement) {
       toast({
@@ -464,9 +464,11 @@ function PostBountyForm() {
       return;
     }
 
+    // Disable form inputs but don't unmount anything
     setIsPaymentProcessing(true);
 
     try {
+      // Use the cardElement reference we got before state changes
       const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
