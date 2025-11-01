@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -65,6 +65,7 @@ function PostBountyForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setValue,
     watch,
@@ -74,7 +75,8 @@ function PostBountyForm() {
     defaultValues: {
       tags: [],
       verificationRequirements: [''],
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      category: undefined // Explicitly set to undefined
     }
   });
 
@@ -757,21 +759,30 @@ function PostBountyForm() {
                 <Label htmlFor="category">
                   Category <span className="text-destructive">*</span>
                 </Label>
-                <Select onValueChange={(value) => {
-                  setValue('category', value as BountyCategory);
-                  setValue('subcategory', undefined); // Clear subcategory when category changes
-                }}>
-                  <SelectTrigger id="category" className={errors.category ? 'border-destructive' : ''}>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(CATEGORY_STRUCTURE).map(([key, categoryData]) => (
-                      <SelectItem key={key} value={key}>
-                        {categoryData.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="category"
+                  control={control}
+                  render={({ field }) => (
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setValue('subcategory', undefined); // Clear subcategory when category changes
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger id="category" className={errors.category ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(CATEGORY_STRUCTURE).map(([key, categoryData]) => (
+                          <SelectItem key={key} value={key}>
+                            {categoryData.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.category && (
                   <p className="text-sm text-destructive">{errors.category.message}</p>
                 )}
@@ -781,18 +792,24 @@ function PostBountyForm() {
               {selectedCategory && (
                 <div className="space-y-2">
                   <Label htmlFor="subcategory">Subcategory</Label>
-                  <Select onValueChange={(value) => setValue('subcategory', value)}>
-                    <SelectTrigger id="subcategory">
-                      <SelectValue placeholder="Select a subcategory (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(CATEGORY_STRUCTURE[selectedCategory]?.subcategories || {}).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="subcategory"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger id="subcategory">
+                          <SelectValue placeholder="Select a subcategory (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(CATEGORY_STRUCTURE[selectedCategory]?.subcategories || {}).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
               )}
             </div>
