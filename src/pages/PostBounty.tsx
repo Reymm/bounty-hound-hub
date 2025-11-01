@@ -137,9 +137,15 @@ function PostBountyForm() {
   // Calculate fees when bounty amount changes
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      const fee = Math.round(watchedBountyAmount * 0.035 * 100) / 100;
-      const total = watchedBountyAmount + fee;
-      setPlatformFee(fee);
+      const platformFee = Math.round(watchedBountyAmount * 0.035 * 100) / 100;
+      // Stripe fee: 2.9% + $0.30 on the total charge (bounty + platform fee)
+      // We need to calculate the total that includes Stripe's fee
+      // Formula: total = (bounty + platformFee + 0.30) / (1 - 0.029)
+      const subtotal = watchedBountyAmount + platformFee;
+      const stripeFee = Math.round(((subtotal + 0.30) / (1 - 0.029) - subtotal) * 100) / 100;
+      const total = Math.round((subtotal + stripeFee) * 100) / 100;
+      
+      setPlatformFee(platformFee);
       setTotalCharge(total);
       // KYC required for bounties over $100
       setKycRequired(watchedBountyAmount > 100);
@@ -617,6 +623,8 @@ function PostBountyForm() {
   }
 
   if (currentStep === 'payment') {
+    const stripeFee = totalCharge - watchedBountyAmount - platformFee;
+    
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -630,26 +638,78 @@ function PostBountyForm() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Escrow Payment - ${totalCharge}
-              {platformFee > 0 && (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  (${watchedBountyAmount} bounty + ${platformFee} fee)
-                </span>
-              )}
+              Escrow Payment - ${totalCharge.toFixed(2)}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Escrow Explanation */}
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                Your payment will be held securely in escrow until you approve the successful hunter's claim.
+                <strong>Your funds are protected:</strong> Your payment is held securely in escrow and will ONLY be released when you approve the hunter's submission. If you're not satisfied, you can request a refund.
               </AlertDescription>
             </Alert>
 
+            {/* Payment Breakdown */}
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <h4 className="font-medium text-sm">Payment Breakdown</h4>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Bounty reward to hunter:</span>
+                  <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Platform fee (3.5%):</span>
+                  <span>${platformFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Payment processing:</span>
+                  <span>${stripeFee.toFixed(2)}</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span>Total charge:</span>
+                  <span>${totalCharge.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* How Escrow Works */}
+            <div className="space-y-3 text-sm">
+              <h4 className="font-medium">How it works:</h4>
+              <ol className="space-y-2 text-muted-foreground">
+                <li className="flex gap-2">
+                  <span className="font-bold text-foreground">1.</span>
+                  <span>We charge your card ${totalCharge.toFixed(2)} and hold it in escrow</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-foreground">2.</span>
+                  <span>Hunter finds your item and submits proof</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-foreground">3.</span>
+                  <span>You review and approve (or reject) the submission</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-foreground">4.</span>
+                  <span>Upon approval, ${watchedBountyAmount.toFixed(2)} is released to the hunter</span>
+                </li>
+              </ol>
+            </div>
+
             <form onSubmit={handlePaymentSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label>Payment Method</Label>
-                <div className="p-4 border rounded-md">
+                <Label className="flex items-center justify-between">
+                  <span>Payment Method</span>
+                  <span className="text-xs text-muted-foreground font-normal">
+                    Powered by{' '}
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" 
+                      alt="Stripe" 
+                      className="inline h-3 ml-1"
+                    />
+                  </span>
+                </Label>
+                <div className="p-4 border rounded-md bg-background">
                   <CardElement options={{
                     style: {
                       base: {
@@ -662,6 +722,9 @@ function PostBountyForm() {
                     },
                   }} />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  🔒 Your payment information is encrypted and secure. We never store your card details.
+                </p>
               </div>
 
               <div className="flex gap-4">
@@ -676,14 +739,14 @@ function PostBountyForm() {
                 <Button 
                   type="submit" 
                   disabled={!stripe || !elements || isPaymentProcessing}
-                  className="flex-1"
+                  className="flex-1 bg-primary hover:bg-primary-hover"
                 >
                   {isPaymentProcessing ? (
                     <>Processing...</>
                   ) : (
                     <>
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Secure ${totalCharge} in Escrow
+                      <Shield className="h-4 w-4 mr-2" />
+                      Secure ${totalCharge.toFixed(2)} in Escrow
                     </>
                   )}
                 </Button>
@@ -691,6 +754,13 @@ function PostBountyForm() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Additional Info */}
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <p>
+            No Stripe account needed for posters. Hunters will set up their own accounts to receive payments.
+          </p>
+        </div>
       </div>
     );
   }
@@ -932,28 +1002,35 @@ function PostBountyForm() {
 
             {/* Fee Breakdown */}
             {platformFee > 0 && (
-              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                 <h4 className="font-medium">Payment Breakdown</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Bounty Amount:</span>
-                    <span>${watchedBountyAmount}</span>
+                    <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Platform Fee (3.5%):</span>
-                    <span>${platformFee}</span>
+                    <span>${platformFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Payment Processing (Stripe):</span>
+                    <span>${(totalCharge - watchedBountyAmount - platformFee).toFixed(2)}</span>
                   </div>
                   {kycRequired && (
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>KYC Required:</span>
-                      <span>Bounty {'>'}$50</span>
+                    <div className="flex justify-between text-xs text-muted-foreground mt-2 pt-2 border-t">
+                      <span>⚠️ Identity Verification Required:</span>
+                      <span>Bounty {'>'} $100</span>
                     </div>
                   )}
-                  <div className="border-t pt-1 flex justify-between font-medium">
+                  <div className="border-t pt-2 flex justify-between font-semibold text-base">
                     <span>Total Charge:</span>
-                    <span>${totalCharge}</span>
+                    <span>${totalCharge.toFixed(2)}</span>
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground pt-2 border-t">
+                  💰 Funds will be held in escrow until you approve the hunter's submission
+                </p>
               </div>
             )}
 
