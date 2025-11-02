@@ -9,7 +9,7 @@ export const postBountySchema = z.object({
     .max(100, 'Title must be less than 100 characters'),
   
   description: z.string()
-    .min(50, 'Description must be at least 50 characters')
+    .min(20, 'Description must be at least 20 characters')
     .max(2000, 'Description must be less than 2000 characters'),
   
   category: z.nativeEnum(BountyCategory, {
