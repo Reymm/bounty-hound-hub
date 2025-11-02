@@ -120,7 +120,7 @@ export function CancelBountyDialog({
                 </div>
                 {totalPaid && totalPaid > bountyAmount && (
                   <div className="mt-1 text-xs text-muted-foreground">
-                    Includes refund of all platform and payment processing fees
+                    Includes platform fee refund (Stripe processing fee is non-refundable)
                   </div>
                 )}
               </AlertDescription>
@@ -145,7 +145,7 @@ export function CancelBountyDialog({
                   </div>
                   {totalPaid && totalPaid > bountyAmount && (
                     <div className="mt-1 text-xs text-muted-foreground">
-                      Platform and payment processing fees will be refunded
+                      Platform fee refunded, Stripe processing fee is non-refundable
                     </div>
                   )}
                 </div>
