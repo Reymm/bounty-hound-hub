@@ -191,17 +191,8 @@ export default function PublicProfile() {
         </Card>
       </div>
 
-      {/* Ratings Summary */}
-      {profile.total_ratings_received > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Ratings & Reviews</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RatingSummary userId={profile.id} />
-          </CardContent>
-        </Card>
-      )}
+      {/* Ratings Summary - Always show, even for new users */}
+      <RatingSummary userId={profile.id} />
 
       {/* Additional Info */}
       <Card>
