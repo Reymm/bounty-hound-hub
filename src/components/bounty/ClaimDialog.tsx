@@ -36,8 +36,8 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   // Check if KYC is required for high-value bounties
   useEffect(() => {
     const checkKycStatus = async () => {
-      // KYC required for claiming bounties over $200
-      if (bountyAmount <= 200) {
+      // KYC required for claiming bounties over $500
+      if (bountyAmount <= 500) {
         setKycRequired(false);
         return;
       }
