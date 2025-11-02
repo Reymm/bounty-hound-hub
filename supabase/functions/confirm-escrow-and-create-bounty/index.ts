@@ -39,7 +39,10 @@ serve(async (req) => {
     if (!user) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    const { payment_intent_id, bounty_data } = await req.json();
+    const requestBody = await req.json();
+    logStep("Raw request received", { body: requestBody });
+    
+    const { payment_intent_id, bounty_data } = requestBody;
     if (!payment_intent_id || !bounty_data) {
       throw new Error("Payment intent ID and bounty data are required");
     }
@@ -48,7 +51,9 @@ serve(async (req) => {
       bountyTitle: bounty_data.title,
       tags: bounty_data.tags,
       images: bounty_data.images,
-      category: bounty_data.category
+      verificationRequirements: bounty_data.verificationRequirements,
+      category: bounty_data.category,
+      location: bounty_data.location
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -74,26 +79,30 @@ serve(async (req) => {
     logStep("Escrow transaction found", { escrowId: escrowData.id });
 
     // Create bounty with escrow information
+    const bountyInsertData = {
+      title: bounty_data.title,
+      description: bounty_data.description,
+      amount: escrowData.amount,
+      poster_id: user.id,
+      status: 'open',
+      escrow_status: 'secured',
+      escrow_amount: escrowData.amount,
+      images: bounty_data.images || [],
+      category: bounty_data.category,
+      subcategory: bounty_data.subcategory,
+      location: bounty_data.location,
+      deadline: bounty_data.deadline,
+      tags: bounty_data.tags || [],
+      verification_requirements: bounty_data.verificationRequirements || [],
+      target_price_min: bounty_data.targetPriceMin,
+      target_price_max: bounty_data.targetPriceMax
+    };
+    
+    logStep("About to insert bounty", { insertData: bountyInsertData });
+    
     const { data: bountyData, error: bountyError } = await supabaseClient
       .from('Bounties')
-      .insert({
-        title: bounty_data.title,
-        description: bounty_data.description,
-        amount: escrowData.amount,
-        poster_id: user.id,
-        status: 'open',
-        escrow_status: 'secured',
-        escrow_amount: escrowData.amount,
-        images: bounty_data.images || [],
-        category: bounty_data.category,
-        subcategory: bounty_data.subcategory,
-        location: bounty_data.location,
-        deadline: bounty_data.deadline,
-        tags: bounty_data.tags || [],
-        verification_requirements: bounty_data.verificationRequirements || [],
-        target_price_min: bounty_data.targetPriceMin,
-        target_price_max: bounty_data.targetPriceMax
-      })
+      .insert(bountyInsertData)
       .select()
       .single();
 
@@ -101,7 +110,12 @@ serve(async (req) => {
       logStep("Bounty creation error", { error: bountyError });
       throw new Error(`Failed to create bounty: ${bountyError.message}`);
     }
-    logStep("Bounty created", { bountyId: bountyData.id });
+    logStep("Bounty created successfully", { 
+      bountyId: bountyData.id,
+      savedImages: bountyData.images,
+      savedLocation: bountyData.location,
+      savedCategory: bountyData.category
+    });
 
     // Update escrow transaction with bounty ID
     const { error: updateError } = await supabaseClient
