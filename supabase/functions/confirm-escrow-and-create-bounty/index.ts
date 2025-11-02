@@ -118,26 +118,6 @@ serve(async (req) => {
     }
     logStep("Escrow transaction updated");
 
-    // Send notification email
-    try {
-      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-      if (userError || !userData.user) throw new Error('Failed to get user data for email');
-
-      await supabaseClient.functions.invoke('send-notification-email', {
-        body: {
-          type: 'bounty_posted',
-          recipientEmail: userData.user.email,
-          recipientName: userData.user.email?.split('@')[0] || 'User',
-          bountyTitle: bounty_data.title,
-          bountyId: bountyData.id,
-          amount: escrowData.amount,
-        }
-      });
-    } catch (emailError) {
-      logStep('Email notification failed', { error: emailError });
-      // Don't fail the whole request if email fails
-    }
-
     return new Response(JSON.stringify({
       bounty_id: bountyData.id,
       escrow_status: 'secured',
