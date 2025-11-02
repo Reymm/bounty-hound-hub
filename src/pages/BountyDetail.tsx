@@ -337,14 +337,20 @@ export default function BountyDetail() {
                   <CardTitle>Verification Requirements</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {bounty.verificationRequirements.map((requirement, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-foreground">{requirement}</p>
-                      </div>
-                    ))}
-                  </div>
+                  {bounty.verificationRequirements && bounty.verificationRequirements.length > 0 ? (
+                    <div className="space-y-3">
+                      {bounty.verificationRequirements.map((requirement, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <p className="text-foreground">{requirement}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No verification requirements specified</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
