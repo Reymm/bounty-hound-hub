@@ -20,6 +20,7 @@ interface CancelBountyDialogProps {
   bountyCreatedAt: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  totalPaid?: number; // Total amount user paid including fees
 }
 
 export function CancelBountyDialog({
@@ -28,11 +29,12 @@ export function CancelBountyDialog({
   bountyCreatedAt,
   open,
   onOpenChange,
+  totalPaid,
 }: CancelBountyDialogProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [cancellationFee, setCancellationFee] = useState(0);
-  const [refundAmount, setRefundAmount] = useState(bountyAmount);
+  const [refundAmount, setRefundAmount] = useState(totalPaid || bountyAmount);
   const [hoursElapsed, setHoursElapsed] = useState(0);
 
   useEffect(() => {
@@ -43,17 +45,18 @@ export function CancelBountyDialog({
       const hours = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
       setHoursElapsed(Math.floor(hours));
 
-      // Calculate fee (2% after 24 hours)
+      // Calculate fee (2% of bounty amount only, after 24 hours)
+      const amountPaid = totalPaid || bountyAmount;
       if (hours > 24) {
         const fee = Math.round(bountyAmount * 0.02 * 100) / 100;
         setCancellationFee(fee);
-        setRefundAmount(bountyAmount - fee);
+        setRefundAmount(amountPaid - fee); // Refund total paid minus only the 2% fee
       } else {
         setCancellationFee(0);
-        setRefundAmount(bountyAmount);
+        setRefundAmount(amountPaid); // Full refund of everything paid
       }
     }
-  }, [open, bountyAmount, bountyCreatedAt]);
+  }, [open, bountyAmount, bountyCreatedAt, totalPaid]);
 
   const handleCancel = async () => {
     setIsLoading(true);
@@ -113,8 +116,13 @@ export function CancelBountyDialog({
               <AlertDescription>
                 <strong>Free cancellation</strong> - Posted within 24 hours
                 <div className="mt-2 text-lg font-semibold">
-                  Refund: ${refundAmount.toFixed(2)}
+                  Full Refund: ${refundAmount.toFixed(2)}
                 </div>
+                {totalPaid && totalPaid > bountyAmount && (
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Includes refund of all platform and payment processing fees
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           ) : (
@@ -124,17 +132,22 @@ export function CancelBountyDialog({
                 <strong>2% cancellation fee applies</strong> - Posted over 24 hours ago
                 <div className="mt-2 space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span>Bounty Amount:</span>
-                    <span className="font-medium">${bountyAmount.toFixed(2)}</span>
+                    <span>Total Paid:</span>
+                    <span className="font-medium">${(totalPaid || bountyAmount).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Cancellation Fee (2%):</span>
+                    <span>Cancellation Fee (2% of bounty):</span>
                     <span className="font-medium text-destructive">-${cancellationFee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between border-t pt-1 font-semibold">
                     <span>Refund Amount:</span>
                     <span>${refundAmount.toFixed(2)}</span>
                   </div>
+                  {totalPaid && totalPaid > bountyAmount && (
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Platform and payment processing fees will be refunded
+                    </div>
+                  )}
                 </div>
               </AlertDescription>
             </Alert>

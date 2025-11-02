@@ -72,24 +72,7 @@ serve(async (req) => {
       throw new Error("Cannot cancel bounty with accepted submissions. Escrow is non-refundable after hunter acceptance.");
     }
 
-    // Calculate cancellation fee
-    const { data: feeData, error: feeError } = await supabaseClient
-      .rpc('calculate_cancellation_fee', { 
-        bounty_id_param: bountyId 
-      });
-
-    if (feeError) throw new Error(`Failed to calculate fee: ${feeError.message}`);
-    
-    const cancellationFee = feeData || 0;
-    const refundAmount = bounty.amount - cancellationFee;
-    
-    logStep("Cancellation fee calculated", { 
-      bountyAmount: bounty.amount, 
-      cancellationFee, 
-      refundAmount 
-    });
-
-    // Get escrow transaction
+    // Get escrow transaction first (need total_charged_amount)
     const { data: escrowData, error: escrowError } = await supabaseClient
       .from('escrow_transactions')
       .select('*')
@@ -99,6 +82,25 @@ serve(async (req) => {
     if (escrowError || !escrowData) {
       throw new Error("Escrow transaction not found");
     }
+
+    // Calculate cancellation fee (2% of bounty amount only, not the total charged)
+    const { data: feeData, error: feeError } = await supabaseClient
+      .rpc('calculate_cancellation_fee', { 
+        bounty_id_param: bountyId 
+      });
+
+    if (feeError) throw new Error(`Failed to calculate fee: ${feeError.message}`);
+    
+    const cancellationFee = feeData || 0;
+    // Refund the total amount they paid (including platform and Stripe fees) minus only the cancellation fee
+    const refundAmount = escrowData.total_charged_amount - cancellationFee;
+    
+    logStep("Cancellation fee calculated", { 
+      bountyAmount: bounty.amount,
+      totalCharged: escrowData.total_charged_amount,
+      cancellationFee, 
+      refundAmount 
+    });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 

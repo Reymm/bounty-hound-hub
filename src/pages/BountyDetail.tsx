@@ -26,6 +26,7 @@ export default function BountyDetail() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [totalPaid, setTotalPaid] = useState<number | undefined>(undefined);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -50,6 +51,25 @@ export default function BountyDetail() {
       setLoading(true);
       const bountyData = await supabaseApi.getBounty(id);
       setBounty(bountyData);
+      
+      // If user owns the bounty, fetch escrow data to show correct refund amount
+      if (user?.id === bountyData.posterId) {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: escrowData } = await supabase
+            .from('escrow_transactions')
+            .select('total_charged_amount')
+            .eq('bounty_id', id)
+            .single();
+          
+          if (escrowData?.total_charged_amount) {
+            setTotalPaid(escrowData.total_charged_amount);
+          }
+        } catch (escrowError) {
+          console.log('Could not fetch escrow data:', escrowError);
+          // Not critical, will fall back to bounty amount
+        }
+      }
     } catch (error) {
       console.error('Error loading bounty:', error);
       toast({
@@ -418,6 +438,7 @@ export default function BountyDetail() {
           bountyCreatedAt={bounty.createdAt.toISOString()}
           open={isCancelDialogOpen}
           onOpenChange={setIsCancelDialogOpen}
+          totalPaid={totalPaid}
         />
       )}
     </div>
