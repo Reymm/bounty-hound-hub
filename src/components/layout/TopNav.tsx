@@ -91,7 +91,13 @@ export function TopNav({ onSearch }: TopNavProps) {
           {/* Desktop Search Bar */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg mx-8">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <button
+                type="submit"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer z-10"
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5" />
+              </button>
               <Input
                 type="search"
                 placeholder="Search bounties, categories, locations..."
@@ -224,7 +230,13 @@ export function TopNav({ onSearch }: TopNavProps) {
         {/* Mobile Search Bar */}
         <form onSubmit={handleSearch} className="md:hidden pb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <button
+              type="submit"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer z-10"
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+            </button>
             <Input
               type="search"
               placeholder="Search bounties..."
