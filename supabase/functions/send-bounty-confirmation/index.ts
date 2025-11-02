@@ -86,7 +86,7 @@ const createBountyConfirmationHTML = (posterName: string, bountyTitle: string, b
       Hunters will start working to help you find what you're looking for.
     </p>
     
-    <a href="https://bountybay.co/b/${bountyId}" class="cta-button">
+    <a href="https://bountybay.co/b/${bountyId}" class="cta-button" style="color: white !important; text-decoration: none;">
       View Your Bounty
     </a>
     
