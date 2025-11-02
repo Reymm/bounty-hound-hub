@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AdminTicketList } from '@/components/admin/AdminTicketList';
+import { AdminUserReportsList } from '@/components/admin/AdminUserReportsList';
 import { adminSupportApi } from '@/lib/api/admin-support';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -87,14 +88,18 @@ export function AdminSupport() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Dashboard
           </TabsTrigger>
           <TabsTrigger value="tickets" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
-            All Tickets
+            Support Tickets
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            User Reports
           </TabsTrigger>
         </TabsList>
 
@@ -104,6 +109,10 @@ export function AdminSupport() {
 
         <TabsContent value="tickets" className="space-y-6">
           <AdminTicketList />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-6">
+          <AdminUserReportsList />
         </TabsContent>
       </Tabs>
     </div>
