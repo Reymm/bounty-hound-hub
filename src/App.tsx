@@ -21,6 +21,7 @@ import BountyDetail from "./pages/BountyDetail";
 import Messages from "./pages/Messages";
 import MyBounties from "./pages/MyBounties";
 import Profile from "./pages/Profile";
+import PublicProfile from "./pages/PublicProfile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Checkout from "./pages/Checkout";
 import Terms from "./pages/legal/Terms";
@@ -78,6 +79,7 @@ const App = () => (
                           <Profile />
                         </ProtectedRoute>
                       } />
+                      <Route path="/u/:userId" element={<PublicProfile />} />
                       <Route path="/setup" element={
                         <ProtectedRoute>
                           <ProfileSetup />

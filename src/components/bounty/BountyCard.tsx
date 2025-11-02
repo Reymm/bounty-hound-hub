@@ -140,7 +140,12 @@ export function BountyCard({ bounty }: BountyCardProps) {
             {getDeadlineBadge()}
             
             <div className="text-xs text-muted-foreground">
-              by <span className="font-medium text-foreground">{bounty.posterName}</span>
+              by <Link 
+                to={`/u/${bounty.posterId}`}
+                className="font-medium text-foreground hover:text-primary transition-colors hover:underline"
+              >
+                {bounty.posterName}
+              </Link>
             </div>
           </div>
         </div>
