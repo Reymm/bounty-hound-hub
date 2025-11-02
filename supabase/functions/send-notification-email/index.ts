@@ -14,15 +14,19 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'bounty_posted' | 'bounty_claimed' | 'submission_received' | 'submission_accepted' | 'submission_rejected' | 'shipping_details_provided' | 'bounty_completed';
+  type: 'bounty_posted' | 'bounty_claimed' | 'submission_received' | 'submission_accepted' | 'submission_rejected' | 'shipping_details_provided' | 'bounty_completed' | 'support_ticket_created';
   recipientEmail: string;
   recipientName: string;
-  bountyTitle: string;
-  bountyId: string;
+  bountyTitle?: string;
+  bountyId?: string;
   senderName?: string;
   amount?: number;
   rejectionReason?: string;
   shippingAddress?: string;
+  ticketId?: string;
+  ticketTitle?: string;
+  ticketDescription?: string;
+  ticketType?: string;
 }
 
 const generateEmailContent = (data: EmailRequest) => {
@@ -249,6 +253,40 @@ const generateEmailContent = (data: EmailRequest) => {
         `
       };
 
+    case 'support_ticket_created':
+      const ticketUrl = `${baseUrl}/admin/support/${data.ticketId}`;
+      return {
+        subject: `🚨 New Support Ticket: ${data.ticketTitle}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
+              <h1 style="color: white; margin: 0;">BountyBay Admin</h1>
+            </div>
+            <div style="padding: 30px 20px; background: #f8f9fa;">
+              <h2 style="color: #dc3545; margin-bottom: 20px;">🚨 New Support Ticket</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                A new support ticket has been created by ${data.senderName || data.recipientName}:
+              </p>
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0;">
+                <h3 style="color: #333; margin: 0 0 10px 0;">${data.ticketTitle}</h3>
+                <p style="color: #999; font-size: 12px; margin: 0 0 10px 0;">Type: ${data.ticketType || 'General'}</p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 15px;">
+                  <p style="margin: 0; color: #666; white-space: pre-wrap;">${data.ticketDescription}</p>
+                </div>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${ticketUrl}" style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Ticket</a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Respond quickly to maintain user satisfaction!<br><br>
+                Best regards,<br>
+                The BountyBay System
+              </p>
+            </div>
+          </div>
+        `
+      };
+
     default:
       throw new Error(`Unknown email type: ${data.type}`);
   }
@@ -266,8 +304,17 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Email data:', emailData);
 
     // Validate required fields
-    if (!emailData.type || !emailData.recipientEmail || !emailData.bountyTitle) {
-      throw new Error('Missing required fields: type, recipientEmail, and bountyTitle are required');
+    if (!emailData.type || !emailData.recipientEmail) {
+      throw new Error('Missing required fields: type and recipientEmail are required');
+    }
+    
+    // Validate type-specific fields
+    if (emailData.type !== 'support_ticket_created' && !emailData.bountyTitle) {
+      throw new Error('bountyTitle is required for bounty-related emails');
+    }
+    
+    if (emailData.type === 'support_ticket_created' && !emailData.ticketTitle) {
+      throw new Error('ticketTitle is required for support ticket emails');
     }
 
     // Generate email content based on type
