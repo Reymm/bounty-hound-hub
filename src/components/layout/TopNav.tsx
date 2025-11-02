@@ -25,6 +25,18 @@ export function TopNav({ onSearch }: TopNavProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
+  // Debounced auto-search
+  useEffect(() => {
+    if (!searchQuery.trim()) return;
+    
+    const timer = setTimeout(() => {
+      onSearch?.(searchQuery.trim());
+      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {

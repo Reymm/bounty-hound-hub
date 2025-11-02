@@ -35,6 +35,18 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
     setLocalFilters(filters);
   }, [filters]);
 
+  // Debounced auto-apply filters
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Only auto-apply if filters have actually changed
+      if (JSON.stringify(localFilters) !== JSON.stringify(filters)) {
+        onFiltersChange(localFilters);
+      }
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [localFilters]);
+
   const handleFilterChange = (key: keyof SearchFiltersType, value: any) => {
     const newFilters = { ...localFilters, [key]: value || undefined };
     setLocalFilters(newFilters);
