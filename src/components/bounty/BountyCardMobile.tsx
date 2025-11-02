@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Eye, Clock, DollarSign } from 'lucide-react';
+import { Calendar, MapPin, Eye, Clock, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,28 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 bg-card border-border">
+      {/* Image Thumbnail */}
+      {bounty.images && bounty.images.length > 0 ? (
+        <Link to={`/b/${bounty.id}`} className="block">
+          <div className="relative aspect-video w-full overflow-hidden bg-muted">
+            <img
+              src={bounty.images[0]}
+              alt={bounty.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </Link>
+      ) : (
+        <Link to={`/b/${bounty.id}`} className="block">
+          <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p className="text-xs">No image</p>
+            </div>
+          </div>
+        </Link>
+      )}
+      
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3">
           <div className="flex items-start justify-between">
