@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X, LogOut, Settings } from 'lucide-react';
+import { Search, Plus, MessageCircle, User, Menu, X, LogOut, Settings, Bug } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,6 +177,12 @@ export function TopNav({ onSearch }: TopNavProps) {
                         Support
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/support">
+                        <Bug className="mr-2 h-4 w-4" />
+                        Report Bug
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/legal/terms">Terms of Service</Link>
@@ -289,6 +295,12 @@ export function TopNav({ onSearch }: TopNavProps) {
                     <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Support
+                    </Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Bug className="h-4 w-4 mr-2" />
+                      Report Bug
                     </Link>
                   </Button>
                 </div>

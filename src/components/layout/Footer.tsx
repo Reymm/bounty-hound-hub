@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Bug } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -15,6 +16,14 @@ export function Footer() {
 
           {/* Links */}
           <nav className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            <Link 
+              to="/support" 
+              className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1 flex items-center gap-1.5"
+              aria-label="Report a bug or give feedback"
+            >
+              <Bug className="h-4 w-4" />
+              Report Bug
+            </Link>
             <Link 
               to="/legal/terms" 
               className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
