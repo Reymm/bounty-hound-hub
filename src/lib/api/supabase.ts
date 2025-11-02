@@ -92,8 +92,15 @@ export const supabaseApi = {
 
       // Apply filters
       if (filters.keyword) {
-        // Search across title, description, location, category, subcategory, and tags
-        query = query.or(`title.ilike.%${filters.keyword}%,description.ilike.%${filters.keyword}%,location.ilike.%${filters.keyword}%,category.ilike.%${filters.keyword}%,subcategory.ilike.%${filters.keyword}%`);
+        // Search across title, description, location, category, and subcategory
+        const searchTerm = filters.keyword;
+        query = query.or(
+          `title.ilike.%${searchTerm}%,` +
+          `description.ilike.%${searchTerm}%,` +
+          `location.ilike.%${searchTerm}%,` +
+          `category.ilike.%${searchTerm}%,` +
+          `subcategory.ilike.%${searchTerm}%`
+        );
       }
       
       if (filters.category) {
