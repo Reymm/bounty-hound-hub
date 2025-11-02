@@ -138,7 +138,7 @@ const ActiveBounties = () => {
             <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
               Active Bounties
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-foreground">
               Discover high-value opportunities and find exactly what people are looking for
             </p>
           </div>
