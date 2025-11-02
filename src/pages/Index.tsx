@@ -123,6 +123,9 @@ const Index = () => {
     }
   };
 
+  // Check if any filters are active
+  const hasActiveFilters = Object.keys(filters).length > 0;
+
   return (
     <>
       {/* Hero Section */}
@@ -168,8 +171,9 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Active Bounties */}
-      <section className="py-12 lg:py-16 bg-background">
+      {/* Featured Active Bounties - Hidden when filters active */}
+      {!hasActiveFilters && (
+        <section className="py-12 lg:py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
@@ -196,9 +200,12 @@ const Index = () => {
           </div>
         </div>
       </section>
+      )}
 
-      {/* Top Categories Section */}
-      <TopCategories onCategorySelect={handleCategorySelect} />
+      {/* Top Categories Section - Hidden when filters active */}
+      {!hasActiveFilters && (
+        <TopCategories onCategorySelect={handleCategorySelect} />
+      )}
 
       {/* Browse Section */}
       <section id="browse" className="py-8 lg:py-12">
