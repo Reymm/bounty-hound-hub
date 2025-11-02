@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { ClaimDialog } from '@/components/bounty/ClaimDialog';
 import { CancelBountyDialog } from '@/components/bounty/CancelBountyDialog';
@@ -27,6 +28,7 @@ export default function BountyDetail() {
   const [activeTab, setActiveTab] = useState('details');
   const [refreshKey, setRefreshKey] = useState(0);
   const [totalPaid, setTotalPaid] = useState<number | undefined>(undefined);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -311,7 +313,8 @@ export default function BountyDetail() {
                           key={index}
                           src={image}
                           alt={`Bounty image ${index + 1}`}
-                          className="rounded-lg object-cover w-full h-32"
+                          className="rounded-lg object-cover w-full h-32 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setSelectedImageIndex(index)}
                         />
                       ))}
                     </div>
@@ -447,6 +450,59 @@ export default function BountyDetail() {
           totalPaid={totalPaid}
         />
       )}
+
+      {/* Image Lightbox Dialog */}
+      <Dialog open={selectedImageIndex !== null} onOpenChange={() => setSelectedImageIndex(null)}>
+        <DialogContent className="max-w-5xl w-full p-0 overflow-hidden bg-black/95">
+          <button
+            onClick={() => setSelectedImageIndex(null)}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          
+          {selectedImageIndex !== null && bounty?.images && (
+            <div className="relative flex items-center justify-center min-h-[60vh] max-h-[90vh]">
+              {/* Previous Button */}
+              {bounty.images.length > 1 && selectedImageIndex > 0 && (
+                <button
+                  onClick={() => setSelectedImageIndex(selectedImageIndex - 1)}
+                  className="absolute left-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+              )}
+              
+              {/* Image */}
+              <img
+                src={bounty.images[selectedImageIndex]}
+                alt={`Bounty image ${selectedImageIndex + 1}`}
+                className="max-w-full max-h-[90vh] w-auto h-auto object-contain"
+              />
+              
+              {/* Next Button */}
+              {bounty.images.length > 1 && selectedImageIndex < bounty.images.length - 1 && (
+                <button
+                  onClick={() => setSelectedImageIndex(selectedImageIndex + 1)}
+                  className="absolute right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
+              )}
+              
+              {/* Image Counter */}
+              {bounty.images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 text-white text-sm">
+                  {selectedImageIndex + 1} / {bounty.images.length}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
