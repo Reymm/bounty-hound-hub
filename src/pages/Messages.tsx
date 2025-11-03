@@ -135,7 +135,7 @@ export default function Messages() {
         setOtherParticipantName('User');
         setOtherParticipantAvatar('');
       } else if (profileData) {
-        const displayName = profileData.full_name || profileData.username || 'User';
+        const displayName = profileData.username || profileData.full_name || 'User';
         setOtherParticipantName(displayName);
         setOtherParticipantAvatar(profileData.avatar_url || '');
       } else {
