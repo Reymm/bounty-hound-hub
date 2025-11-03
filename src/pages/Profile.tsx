@@ -153,7 +153,6 @@ export default function Profile() {
   const handleStartVerification = async () => {
     try {
       setVerificationLoading(true);
-      setPayoutLoading(false); // Ensure other loading state is off
       
       const result = await supabaseApi.createKycVerification();
       
@@ -183,27 +182,14 @@ export default function Profile() {
   const handleSetupPayout = async () => {
     try {
       setPayoutLoading(true);
-      setVerificationLoading(false);
       
       const result = await supabaseApi.createConnectAccount();
       
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Create temporary link and click it - works best in iframe
-        const link = document.createElement('a');
-        link.href = result.onboarding_url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
+        window.open(result.onboarding_url, '_blank');
         setPayoutLoading(false);
-        toast({
-          title: "Stripe Connect opened",
-          description: "Complete setup in the new tab",
-        });
       } else {
         throw new Error('No onboarding URL received');
       }
