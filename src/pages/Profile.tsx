@@ -152,6 +152,7 @@ export default function Profile() {
 
   const handleStartVerification = async () => {
     try {
+      setPayoutLoading(false);
       setVerificationLoading(true);
       
       const result = await supabaseApi.createKycVerification();
@@ -181,6 +182,7 @@ export default function Profile() {
 
   const handleSetupPayout = async () => {
     try {
+      setVerificationLoading(false);
       setPayoutLoading(true);
       
       const result = await supabaseApi.createConnectAccount();
