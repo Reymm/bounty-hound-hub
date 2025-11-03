@@ -105,12 +105,12 @@ const generateEmailContent = (data: EmailRequest) => {
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 ${data.senderName} has submitted work for your bounty:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Submitted by: ${data.senderName}</p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #ffc107; color: #333; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Submission</a>
+                <a href="${bountyUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Submission</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
