@@ -20,7 +20,16 @@ export default function KycComplete() {
     if (returnToPost) {
       setIsReturnToPost(true);
     }
-  }, []);
+    
+    // Auto-refresh status every 3 seconds while pending
+    const interval = setInterval(() => {
+      if (status === 'pending' || status === 'checking') {
+        checkVerificationStatus();
+      }
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [status]);
 
   const checkVerificationStatus = async () => {
     try {
@@ -123,11 +132,20 @@ export default function KycComplete() {
             </div>
           </div>
 
+          {status === 'checking' && (
+            <Alert>
+              <Clock className="h-4 w-4" />
+              <AlertDescription>
+                Checking your verification status with Stripe... This page will update automatically.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {status === 'pending' && (
             <Alert>
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Identity verification can take a few minutes to complete. You can close this window and we'll notify you when it's ready.
+                Identity verification can take a few minutes to complete. This page will auto-refresh every 3 seconds to check your status.
               </AlertDescription>
             </Alert>
           )}
@@ -142,9 +160,9 @@ export default function KycComplete() {
           )}
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {status === 'pending' && (
-              <Button onClick={checkVerificationStatus} variant="outline">
-                Check Status Again
+            {(status === 'checking' || status === 'pending') && (
+              <Button onClick={checkVerificationStatus} variant="outline" disabled={status === 'checking'}>
+                {status === 'checking' ? 'Checking...' : 'Check Status Now'}
               </Button>
             )}
             
@@ -154,9 +172,15 @@ export default function KycComplete() {
               </Button>
             )}
             
+            {status === 'verified' && !isReturnToPost && (
+              <Button onClick={() => navigate('/me/profile')} className="bg-primary hover:bg-primary-hover">
+                View Profile
+              </Button>
+            )}
+            
             {status === 'failed' && (
-              <Button onClick={() => navigate('/post-bounty')} variant="outline">
-                Try Verification Again
+              <Button onClick={() => navigate('/me/profile')} variant="outline">
+                Return to Profile
               </Button>
             )}
             
