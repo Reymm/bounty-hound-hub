@@ -286,17 +286,17 @@ export default function Messages() {
                       <div
                         key={message.id}
                         className={`flex ${
-                          message.senderId === 'current-user' ? 'justify-end' : 'justify-start'
+                          message.senderId === user?.id ? 'justify-end' : 'justify-start'
                         }`}
                       >
                         <div
                           className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.senderId === 'current-user'
+                            message.senderId === user?.id
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted text-foreground'
                           }`}
                         >
-                          {message.senderId !== 'current-user' && (
+                          {message.senderId !== user?.id && (
                             <p className="text-xs font-medium mb-1 opacity-70">
                               {message.senderName}
                             </p>
@@ -304,7 +304,7 @@ export default function Messages() {
                           <p className="text-sm break-words">{message.body}</p>
                           <p
                             className={`text-xs mt-1 ${
-                              message.senderId === 'current-user'
+                              message.senderId === user?.id
                                 ? 'text-primary-foreground/70'
                                 : 'text-muted-foreground'
                             }`}
