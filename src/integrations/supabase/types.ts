@@ -291,6 +291,11 @@ export type Database = {
           kyc_verified_at: string | null
           region: string | null
           reputation_score: number | null
+          stripe_connect_account_id: string | null
+          stripe_connect_charges_enabled: boolean | null
+          stripe_connect_details_submitted: boolean | null
+          stripe_connect_onboarding_complete: boolean | null
+          stripe_connect_payouts_enabled: boolean | null
           suspended_until: string | null
           total_failed_claims: number | null
           total_ratings_given: number | null
@@ -312,6 +317,11 @@ export type Database = {
           kyc_verified_at?: string | null
           region?: string | null
           reputation_score?: number | null
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
+          stripe_connect_details_submitted?: boolean | null
+          stripe_connect_onboarding_complete?: boolean | null
+          stripe_connect_payouts_enabled?: boolean | null
           suspended_until?: string | null
           total_failed_claims?: number | null
           total_ratings_given?: number | null
@@ -333,6 +343,11 @@ export type Database = {
           kyc_verified_at?: string | null
           region?: string | null
           reputation_score?: number | null
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
+          stripe_connect_details_submitted?: boolean | null
+          stripe_connect_onboarding_complete?: boolean | null
+          stripe_connect_payouts_enabled?: boolean | null
           suspended_until?: string | null
           total_failed_claims?: number | null
           total_ratings_given?: number | null

@@ -28,6 +28,7 @@ import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
 import NotFound from "./pages/NotFound";
 import KycComplete from "./pages/KycComplete";
+import ConnectComplete from "./pages/ConnectComplete";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -93,6 +94,11 @@ const App = () => (
                       <Route path="/kyc-complete" element={
                         <ProtectedRoute>
                           <KycComplete />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/connect-complete" element={
+                        <ProtectedRoute>
+                          <ConnectComplete />
                         </ProtectedRoute>
                       } />
                       <Route path="/support" element={

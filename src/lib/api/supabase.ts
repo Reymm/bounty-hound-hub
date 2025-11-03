@@ -615,14 +615,15 @@ export const supabaseApi = {
         total_ratings_given: profileData.total_ratings_given || 0,
         joinedAt: profileData.created_at ? new Date(profileData.created_at) : new Date(),
         idvStatus: profileData.kyc_verified ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
-        hasPayoutMethod: false,
+        hasPayoutMethod: profileData.stripe_connect_onboarding_complete || false,
         completedBounties: profileData.total_successful_claims || 0,
         postedBounties: userBounties || 0,
         reputationScore: profileData.reputation_score || 5.0,
         totalSuccessfulClaims: profileData.total_successful_claims || 0,
         totalFailedClaims: profileData.total_failed_claims || 0,
         isSuspended: profileData.is_suspended || false,
-        suspendedUntil: profileData.suspended_until ? new Date(profileData.suspended_until) : undefined
+        suspendedUntil: profileData.suspended_until ? new Date(profileData.suspended_until) : undefined,
+        stripeConnectOnboardingComplete: profileData.stripe_connect_onboarding_complete || false
       };
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -663,14 +664,15 @@ export const supabaseApi = {
         total_ratings_given: data.total_ratings_given || 0,
         joinedAt: new Date(data.created_at || Date.now()),
         idvStatus: data.kyc_verified ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
-        hasPayoutMethod: false,
+        hasPayoutMethod: data.stripe_connect_onboarding_complete || false,
         completedBounties: data.total_successful_claims || 0,
         postedBounties: 0,
         reputationScore: data.reputation_score || 0,
         totalSuccessfulClaims: data.total_successful_claims || 0,
         totalFailedClaims: data.total_failed_claims || 0,
         isSuspended: data.is_suspended || false,
-        suspendedUntil: data.suspended_until ? new Date(data.suspended_until) : undefined
+        suspendedUntil: data.suspended_until ? new Date(data.suspended_until) : undefined,
+        stripeConnectOnboardingComplete: data.stripe_connect_onboarding_complete || false
       };
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -818,6 +820,82 @@ export const supabaseApi = {
     } catch (error) {
       console.error('Error fetching user activity:', error);
       return [];
+    }
+  },
+
+  // Stripe Connect methods
+  async createConnectAccount(): Promise<{ onboarding_url: string; account_id: string; status: string } | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User must be authenticated');
+
+      const { data, error } = await supabase.functions.invoke('create-connect-account', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      
+      return {
+        onboarding_url: data.onboarding_url,
+        account_id: data.account_id,
+        status: data.status
+      };
+    } catch (error) {
+      console.error('Error creating Connect account:', error);
+      throw error;
+    }
+  },
+
+  async checkConnectStatus(): Promise<{
+    has_account: boolean;
+    onboarding_complete: boolean;
+    charges_enabled: boolean;
+    payouts_enabled: boolean;
+    details_submitted: boolean;
+  } | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User must be authenticated');
+
+      const { data, error } = await supabase.functions.invoke('check-connect-status', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error checking Connect status:', error);
+      throw error;
+    }
+  },
+
+  async processPayout(submissionId: string): Promise<{
+    success: boolean;
+    transfer_id?: string;
+    amount?: number;
+    platform_fee?: number;
+    error?: string;
+  }> {
+    try {
+      const { data, error } = await supabase.functions.invoke('process-payout', {
+        body: { submissionId },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error processing payout:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to process payout'
+      };
     }
   },
 

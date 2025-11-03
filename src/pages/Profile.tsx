@@ -141,18 +141,27 @@ export default function Profile() {
 
   const handleSetupPayout = async () => {
     try {
-      toast({
-        title: "Payout setup",
-        description: "Stripe Connect integration coming soon. You'll be able to connect your bank account or debit card.",
-      });
+      setVerificationLoading(true);
+      
+      const result = await supabaseApi.createConnectAccount();
+      
+      if (!result) throw new Error('Failed to create Connect account');
+      
+      if (result.onboarding_url) {
+        // Redirect to Stripe Connect onboarding
+        window.location.href = result.onboarding_url;
+      } else {
+        throw new Error('No onboarding URL received');
+      }
       
     } catch (error) {
       console.error('Error setting up payout:', error);
       toast({
         title: "Error setting up payout",
-        description: "Please try again later.",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       });
+      setVerificationLoading(false);
     }
   };
 

@@ -85,6 +85,7 @@ export interface Profile {
   totalFailedClaims: number;
   isSuspended: boolean;
   suspendedUntil?: Date;
+  stripeConnectOnboardingComplete?: boolean;
 }
 
 export interface Activity {
