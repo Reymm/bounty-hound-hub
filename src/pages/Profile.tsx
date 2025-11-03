@@ -153,14 +153,16 @@ export default function Profile() {
   const handleStartVerification = async () => {
     try {
       setVerificationLoading(true);
+      setPayoutLoading(false); // Ensure other loading state is off
       
       const result = await supabaseApi.createKycVerification();
       
       if (!result) throw new Error('Failed to create verification session');
       
       if (result.verification_url) {
-        // Save scroll position before navigating
+        // Save scroll position and tab before navigating
         sessionStorage.setItem('profile_scroll_position', window.scrollY.toString());
+        sessionStorage.setItem('profile_active_tab', activeTab);
         // Redirect to Stripe Identity verification
         window.location.href = result.verification_url;
       } else {
@@ -181,21 +183,15 @@ export default function Profile() {
   const handleSetupPayout = async () => {
     try {
       setPayoutLoading(true);
+      setVerificationLoading(false); // Ensure other loading state is off
       
       const result = await supabaseApi.createConnectAccount();
       
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Open in new window - most reliable
-        window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
-        
-        toast({
-          title: "Opening Stripe",
-          description: "Complete setup in the new tab.",
-        });
-        
-        setPayoutLoading(false);
+        // Direct navigation - most reliable in iframe
+        window.location.assign(result.onboarding_url);
       } else {
         throw new Error('No onboarding URL received');
       }
