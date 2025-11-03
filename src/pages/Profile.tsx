@@ -170,8 +170,15 @@ export default function Profile() {
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Redirect to Stripe Connect onboarding
-        window.location.href = result.onboarding_url;
+        // Open Stripe Connect onboarding in new tab
+        window.open(result.onboarding_url, '_blank');
+        
+        toast({
+          title: "Opening Stripe Connect",
+          description: "Complete your payout setup in the new tab, then return here.",
+        });
+        
+        setVerificationLoading(false);
       } else {
         throw new Error('No onboarding URL received');
       }
