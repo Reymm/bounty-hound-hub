@@ -159,12 +159,21 @@ export default function Messages() {
   const loadMessages = async (threadId: string) => {
     if (!user) return;
     
+    console.log('Loading messages for thread:', threadId);
+    
     try {
       setMessagesLoading(true);
       // Extract participant IDs from threadId (format: participant1___participant2)
       const participants = threadId.split('___');
+      console.log('Thread participants:', participants);
+      
       const otherParticipant = participants.find(p => p !== user.id);
-      if (!otherParticipant) return;
+      console.log('Other participant:', otherParticipant);
+      
+      if (!otherParticipant) {
+        console.error('Could not find other participant');
+        return;
+      }
       
       // Fetch the other participant's profile info
       const { data: profileData, error: profileError } = await supabase
@@ -187,6 +196,7 @@ export default function Messages() {
       }
       
       const messagesData = await supabaseApi.getMessages(user.id, otherParticipant);
+      console.log('Loaded messages:', messagesData.length);
       setMessages(messagesData);
     } catch (error) {
       console.error('Error loading messages:', error);

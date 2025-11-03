@@ -55,7 +55,7 @@ export function TopNav({ onSearch }: TopNavProps) {
     return email.substring(0, 2).toUpperCase();
   };
 
-  // Fetch real unread message count
+  // Fetch real unread message count with real-time updates
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
@@ -66,14 +66,14 @@ export function TopNav({ onSearch }: TopNavProps) {
 
     const fetchUnreadCount = async () => {
       try {
-        const { data, error } = await supabase
+        const { count, error } = await supabase
           .from('messages')
-          .select('id', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true })
           .eq('recipient_id', user.id)
           .eq('is_read', false);
 
-        if (!error && data !== null) {
-          setUnreadMessages(data.length || 0);
+        if (!error) {
+          setUnreadMessages(count || 0);
         }
       } catch (error) {
         console.error('Error fetching unread count:', error);
@@ -82,9 +82,26 @@ export function TopNav({ onSearch }: TopNavProps) {
 
     fetchUnreadCount();
 
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('unread-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_id=eq.${user.id}`
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return (
