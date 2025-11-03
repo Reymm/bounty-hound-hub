@@ -12,7 +12,8 @@ import {
   SearchFilters,
   PaginatedResponse,
   PostBountyForm,
-  ClaimForm
+  ClaimForm,
+  Activity
 } from '../types';
 
 // Type helpers for database rows
@@ -592,11 +593,12 @@ export const supabaseApi = {
       // Get user email from auth.users (only for own profile)
       const userEmail = (user && user.id === userId) ? user.email : '';
 
-      // Get user's bounty count
+      // Get user's active bounty count (excluding cancelled/expired)
       const { count: userBounties } = await supabase
         .from('Bounties')
         .select('*', { count: 'exact', head: true })
-        .eq('poster_id', userId);
+        .eq('poster_id', userId)
+        .in('status', ['open', 'closed', 'completed']);
 
       return {
         id: profileData.id,
@@ -697,6 +699,125 @@ export const supabaseApi = {
     } catch (error) {
       console.error('Error creating KYC verification:', error);
       throw error;
+    }
+  },
+
+  // Get user activity history
+  async getUserActivity(userId: string): Promise<Activity[]> {
+    try {
+      const activities: Activity[] = [];
+
+      // Get bounties posted
+      const { data: bounties } = await supabase
+        .from('Bounties')
+        .select('id, title, amount, created_at, status')
+        .eq('poster_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (bounties) {
+        bounties.forEach(bounty => {
+          activities.push({
+            id: `bounty-${bounty.id}`,
+            type: 'bounty_posted',
+            title: 'Bounty Posted',
+            description: `Posted a bounty`,
+            bountyId: bounty.id,
+            bountyTitle: bounty.title,
+            amount: bounty.amount,
+            createdAt: new Date(bounty.created_at)
+          });
+        });
+      }
+
+      // Get submissions (claims)
+      const { data: submissions } = await supabase
+        .from('Submissions')
+        .select(`
+          id,
+          bounty_id,
+          status,
+          created_at,
+          rejection_reason,
+          Bounties!inner(title, amount)
+        `)
+        .eq('hunter_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (submissions) {
+        submissions.forEach((submission: any) => {
+          if (submission.status === 'submitted') {
+            activities.push({
+              id: `submission-${submission.id}`,
+              type: 'claim_submitted',
+              title: 'Claim Submitted',
+              description: 'Submitted a claim for review',
+              bountyId: submission.bounty_id,
+              bountyTitle: submission.Bounties?.title,
+              amount: submission.Bounties?.amount,
+              createdAt: new Date(submission.created_at)
+            });
+          } else if (submission.status === 'accepted') {
+            activities.push({
+              id: `submission-accepted-${submission.id}`,
+              type: 'claim_accepted',
+              title: 'Claim Accepted',
+              description: 'Your claim was accepted!',
+              bountyId: submission.bounty_id,
+              bountyTitle: submission.Bounties?.title,
+              amount: submission.Bounties?.amount,
+              createdAt: new Date(submission.created_at)
+            });
+          } else if (submission.status === 'rejected') {
+            activities.push({
+              id: `submission-rejected-${submission.id}`,
+              type: 'claim_rejected',
+              title: 'Claim Rejected',
+              description: submission.rejection_reason || 'Your claim was not accepted',
+              bountyId: submission.bounty_id,
+              bountyTitle: submission.Bounties?.title,
+              createdAt: new Date(submission.created_at)
+            });
+          }
+        });
+      }
+
+      // Get ratings received
+      const { data: ratings } = await supabase
+        .from('user_ratings')
+        .select(`
+          id,
+          rating,
+          review_text,
+          created_at,
+          bounty_id,
+          Bounties!inner(title)
+        `)
+        .eq('rated_user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (ratings) {
+        ratings.forEach((rating: any) => {
+          activities.push({
+            id: `rating-${rating.id}`,
+            type: 'rating_received',
+            title: 'Rating Received',
+            description: rating.review_text || 'Received a rating',
+            bountyId: rating.bounty_id,
+            bountyTitle: rating.Bounties?.title,
+            rating: rating.rating,
+            createdAt: new Date(rating.created_at)
+          });
+        });
+      }
+
+      // Sort all activities by date
+      return activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 20);
+    } catch (error) {
+      console.error('Error fetching user activity:', error);
+      return [];
     }
   },
 

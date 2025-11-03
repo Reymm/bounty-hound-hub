@@ -22,13 +22,12 @@ export function ActivityHistory({ userId }: ActivityHistoryProps) {
   const loadActivityHistory = async () => {
     try {
       setLoading(true);
-      // TODO: Implement actual API call to fetch real user activity
-      // const activities = await supabaseApi.getUserActivity(userId);
-      
-      // For now, show empty state - no mock data
-      setActivities([]);
+      const { supabaseApi } = await import('@/lib/api/supabase');
+      const activities = await supabaseApi.getUserActivity(userId);
+      setActivities(activities);
     } catch (error) {
       console.error('Error loading activity history:', error);
+      setActivities([]);
     } finally {
       setLoading(false);
     }
