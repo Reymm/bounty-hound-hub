@@ -39,7 +39,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `New Bounty Posted: ${data.bountyTitle}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
@@ -47,12 +47,12 @@ const generateEmailContent = (data: EmailRequest) => {
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 A new bounty has been posted that might interest you:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 ${data.amount ? `<p style="color: #28a745; font-weight: bold; font-size: 18px; margin: 0;">$${data.amount}</p>` : ''}
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty</a>
+                <a href="${bountyUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -68,7 +68,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `Your Bounty "${data.bountyTitle}" Has Been Claimed`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
@@ -97,7 +97,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `New Submission for "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
@@ -105,12 +105,12 @@ const generateEmailContent = (data: EmailRequest) => {
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 ${data.senderName} has submitted work for your bounty:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Submitted by: ${data.senderName}</p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Submission</a>
+                <a href="${bountyUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Submission</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -126,7 +126,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `Bounty Completed: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
@@ -155,7 +155,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `🎉 Your Submission Was Accepted: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
@@ -184,7 +184,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `Submission Update Required: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
@@ -214,7 +214,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `📦 Shipping Details for: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
@@ -259,7 +259,7 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `🚨 New Support Ticket: ${data.ticketTitle}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 20px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay Admin</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
