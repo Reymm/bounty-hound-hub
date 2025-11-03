@@ -122,7 +122,7 @@ export function ActivityHistory({ userId }: ActivityHistoryProps) {
                       
                       {activity.bountyTitle && (
                         <Link 
-                          to={`/bounty/${activity.bountyId}`}
+                          to={`/b/${activity.bountyId}`}
                           className="text-sm text-primary hover:underline block mt-1"
                         >
                           {activity.bountyTitle}
