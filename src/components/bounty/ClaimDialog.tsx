@@ -195,7 +195,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Submit Claim for "{bountyTitle}"</DialogTitle>
         </DialogHeader>

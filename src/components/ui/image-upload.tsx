@@ -4,7 +4,6 @@ import { Progress } from '@/components/ui/progress';
 import { X, Upload, Image, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 
 interface ImageUploadProps {
   onUpload: (files: File[]) => Promise<void>;
@@ -27,107 +26,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [totalFiles, setTotalFiles] = useState(0);
-  const [completedFiles, setCompletedFiles] = useState(0);
-  const [currentFile, setCurrentFile] = useState<string>('');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [cropDialogOpen, setCropDialogOpen] = useState(false);
-  const [currentImageSrc, setCurrentImageSrc] = useState<string>('');
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const { toast } = useToast();
-
-  const startCroppingProcess = useCallback((files: File[]) => {
-    if (files.length === 0) return;
-    
-    setPendingFiles(files);
-    setCurrentFileIndex(0);
-    setTotalFiles(files.length);
-    
-    // Show first image in crop dialog
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setCurrentImageSrc(e.target.result as string);
-        setCropDialogOpen(true);
-      }
-    };
-    reader.readAsDataURL(files[0]);
-  }, []);
-
-  const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
-    // Convert blob back to File
-    const croppedFile = new File(
-      [croppedBlob],
-      pendingFiles[currentFileIndex].name,
-      { type: 'image/jpeg' }
-    );
-
-    // Check if there are more files to crop
-    if (currentFileIndex < pendingFiles.length - 1) {
-      // Upload current cropped file
-      setIsUploading(true);
-      setCurrentFile(`Processing ${currentFileIndex + 1} of ${totalFiles}...`);
-      
-      try {
-        await onUpload([croppedFile]);
-        setCompletedFiles(currentFileIndex + 1);
-      } catch (error) {
-        console.error('Failed to upload cropped file:', error);
-        toast({
-          title: "Upload failed",
-          description: "Failed to upload image. Please try again.",
-          variant: "destructive",
-        });
-        setIsUploading(false);
-        setPendingFiles([]);
-        return;
-      }
-
-      // Show next image
-      const nextIndex = currentFileIndex + 1;
-      setCurrentFileIndex(nextIndex);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setCurrentImageSrc(e.target.result as string);
-          setCropDialogOpen(true);
-          setIsUploading(false);
-        }
-      };
-      reader.readAsDataURL(pendingFiles[nextIndex]);
-    } else {
-      // Last file - upload it
-      setIsUploading(true);
-      setCurrentFile(`Processing ${currentFileIndex + 1} of ${totalFiles}...`);
-      
-      try {
-        await onUpload([croppedFile]);
-        setCompletedFiles(totalFiles);
-        
-        toast({
-          title: "Upload complete",
-          description: `Successfully uploaded ${totalFiles} image${totalFiles > 1 ? 's' : ''}`,
-        });
-      } catch (error) {
-        console.error('Failed to upload cropped file:', error);
-        toast({
-          title: "Upload failed",
-          description: "Failed to upload image. Please try again.",
-          variant: "destructive",
-        });
-      }
-      
-      // Reset state
-      setIsUploading(false);
-      setPendingFiles([]);
-      setCurrentFileIndex(0);
-      setTotalFiles(0);
-      setCompletedFiles(0);
-      setCurrentFile('');
-    }
-  }, [pendingFiles, currentFileIndex, totalFiles, onUpload, toast]);
 
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
@@ -166,9 +65,25 @@ export function ImageUpload({
     }
 
     if (validFiles.length > 0) {
-      startCroppingProcess(validFiles);
+      setIsUploading(true);
+      try {
+        await onUpload(validFiles);
+        toast({
+          title: "Upload complete",
+          description: `Successfully uploaded ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
+        });
+      } catch (error) {
+        console.error('Failed to upload files:', error);
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload images. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsUploading(false);
+      }
     }
-  }, [uploadedImages.length, maxFiles, maxSize, toast, startCroppingProcess]);
+  }, [uploadedImages.length, maxFiles, maxSize, toast, onUpload]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -205,13 +120,6 @@ export function ImageUpload({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <ImageCropDialog
-        open={cropDialogOpen}
-        onOpenChange={setCropDialogOpen}
-        imageSrc={currentImageSrc}
-        onCropComplete={handleCropComplete}
-      />
-      
       {canUploadMore && (
         <div
           className={cn(
@@ -237,20 +145,9 @@ export function ImageUpload({
           {isUploading ? (
             <>
               <Loader2 className="h-8 w-8 mx-auto mb-3 text-primary animate-spin" />
-              <div className="space-y-2 w-full max-w-xs mx-auto">
-                <p className="text-sm text-foreground font-medium">
-                  Uploading {currentFile}...
-                </p>
-                <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
-                  <div 
-                    className="h-full bg-primary transition-all duration-200 ease-out" 
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {uploadProgress}% • File {completedFiles + 1} of {totalFiles}
-                </p>
-              </div>
+              <p className="text-sm text-foreground font-medium">
+                Uploading images...
+              </p>
             </>
           ) : (
             <>
