@@ -72,10 +72,28 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         setShippingDialogOpen(true);
       }
       
-      toast({
-        title: "Claim accepted",
-        description: "The submission has been accepted.",
-      });
+      // Process payout to hunter
+      try {
+        const payoutResult = await supabaseApi.processPayout(submissionId);
+        if (payoutResult.success) {
+          toast({
+            title: "Claim accepted & payout sent",
+            description: `Payment of $${payoutResult.amount?.toFixed(2)} sent to hunter (Platform fee: $${payoutResult.platform_fee?.toFixed(2)})`,
+          });
+        } else {
+          toast({
+            title: "Claim accepted",
+            description: "Claim accepted but payout processing pending. Hunter will receive payment shortly.",
+          });
+        }
+      } catch (payoutError) {
+        console.error('Payout error:', payoutError);
+        toast({
+          title: "Claim accepted",
+          description: "Claim accepted successfully. Payout will be processed automatically.",
+        });
+      }
+      
       await loadSubmissions();
       onRefresh?.();
     } else {

@@ -46,7 +46,7 @@ serve(async (req) => {
       .from('profiles')
       .select('stripe_connect_account_id, stripe_connect_onboarding_complete, full_name')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     let accountId = profile?.stripe_connect_account_id;
 

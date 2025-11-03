@@ -44,7 +44,7 @@ serve(async (req) => {
       .from('profiles')
       .select('stripe_connect_account_id')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!profile?.stripe_connect_account_id) {
       logStep("No Connect account found");

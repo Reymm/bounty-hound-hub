@@ -48,7 +48,7 @@ serve(async (req) => {
         )
       `)
       .eq('id', submissionId)
-      .single();
+      .maybeSingle();
 
     if (submissionError || !submission) {
       throw new Error(`Submission not found: ${submissionError?.message}`);
@@ -69,7 +69,7 @@ serve(async (req) => {
       .from('profiles')
       .select('stripe_connect_account_id, stripe_connect_payouts_enabled, full_name')
       .eq('id', submission.hunter_id)
-      .single();
+      .maybeSingle();
 
     if (!hunterProfile?.stripe_connect_account_id) {
       throw new Error('Hunter does not have a Stripe Connect account');
