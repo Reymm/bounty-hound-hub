@@ -27,6 +27,7 @@ export default function Messages() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [otherParticipantName, setOtherParticipantName] = useState<string>('');
+  const [otherParticipantAvatar, setOtherParticipantAvatar] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -125,12 +126,16 @@ export default function Messages() {
       // Fetch the other participant's profile info
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('full_name, username')
+        .select('full_name, username, avatar_url')
         .eq('id', otherParticipant)
         .single();
       
       if (profileData) {
         setOtherParticipantName(profileData.full_name || profileData.username || 'Unknown User');
+        setOtherParticipantAvatar(profileData.avatar_url || '');
+      } else {
+        setOtherParticipantName('Unknown User');
+        setOtherParticipantAvatar('');
       }
       
       const messagesData = await supabaseApi.getMessages(user.id, otherParticipant);
@@ -290,13 +295,26 @@ export default function Messages() {
               {/* Chat Header */}
               <div className="p-4 border-b border-border bg-background">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="font-semibold text-foreground">
-                      {otherParticipantName || 'Loading...'}
-                    </h2>
-                    <p className="text-sm text-muted-foreground truncate max-w-xs">
-                      About: {selectedThread.bountyTitle}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                        {otherParticipantAvatar ? (
+                          <img src={otherParticipantAvatar} alt={otherParticipantName} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-lg font-semibold text-muted-foreground">
+                            {otherParticipantName ? otherParticipantName[0]?.toUpperCase() : '?'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="font-semibold text-foreground">
+                        {otherParticipantName || 'Loading user...'}
+                      </h2>
+                      <p className="text-xs text-muted-foreground truncate max-w-xs">
+                        Re: {selectedThread.bountyTitle}
+                      </p>
+                    </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
