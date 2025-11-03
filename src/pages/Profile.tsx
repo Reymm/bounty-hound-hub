@@ -46,6 +46,10 @@ export default function Profile() {
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    // Restore tab from sessionStorage
+    return sessionStorage.getItem('profile_active_tab') || 'profile';
+  });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -76,12 +80,21 @@ export default function Profile() {
       }, 100);
     }
     
+    // Save active tab when navigating away
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('profile_active_tab', activeTab);
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     return () => {
       if (history.scrollRestoration) {
         history.scrollRestoration = 'auto';
       }
+      sessionStorage.setItem('profile_active_tab', activeTab);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [loading]);
+  }, [loading, activeTab]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -175,39 +188,8 @@ export default function Profile() {
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Show clickable link immediately - more reliable than popup
-        toast({
-          title: "Stripe Connect Setup Ready",
-          description: "Click the button to continue to Stripe.",
-          duration: 10000,
-        });
-
-        // Create a visible button/link on the page
-        const linkButton = document.createElement('a');
-        linkButton.href = result.onboarding_url;
-        linkButton.target = '_blank';
-        linkButton.rel = 'noopener noreferrer';
-        linkButton.textContent = 'Continue to Stripe Connect →';
-        linkButton.style.cssText = `
-          display: block;
-          margin: 1rem auto;
-          padding: 0.75rem 2rem;
-          background: #635BFF;
-          color: white;
-          text-align: center;
-          border-radius: 0.5rem;
-          text-decoration: none;
-          font-weight: 500;
-          max-width: 300px;
-        `;
-        
-        // Insert after the payout button
-        const payoutCard = document.querySelector('[data-payout-card]');
-        if (payoutCard) {
-          payoutCard.appendChild(linkButton);
-        }
-
-        setPayoutLoading(false);
+        // Direct redirect - most reliable approach
+        window.location.href = result.onboarding_url;
       } else {
         throw new Error('No onboarding URL received');
       }
@@ -326,7 +308,7 @@ export default function Profile() {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="ratings">Ratings</TabsTrigger>
