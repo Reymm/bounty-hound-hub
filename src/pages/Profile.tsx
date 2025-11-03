@@ -117,34 +117,33 @@ export default function Profile() {
     try {
       setVerificationLoading(true);
       
-      // TODO: Replace with actual Stripe Identity verification
-      console.log('TODO: Start Stripe Identity verification');
+      const result = await supabaseApi.createKycVerification();
       
-      toast({
-        title: "Verification started",
-        description: "TODO: This will redirect to Stripe Identity verification.",
-      });
+      if (!result) throw new Error('Failed to create verification session');
+      
+      if (result.verification_url) {
+        // Redirect to Stripe Identity verification
+        window.location.href = result.verification_url;
+      } else {
+        throw new Error('No verification URL received');
+      }
       
     } catch (error) {
       console.error('Error starting verification:', error);
       toast({
         title: "Error starting verification",
-        description: "Please try again later.",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       });
-    } finally {
       setVerificationLoading(false);
     }
   };
 
   const handleSetupPayout = async () => {
     try {
-      // TODO: Replace with actual Stripe Connect setup
-      console.log('TODO: Setup Stripe Connect Express account');
-      
       toast({
-        title: "Payout setup started",
-        description: "TODO: This will redirect to Stripe Connect onboarding.",
+        title: "Payout setup",
+        description: "Stripe Connect integration coming soon. You'll be able to connect your bank account or debit card.",
       });
       
     } catch (error) {
@@ -573,7 +572,7 @@ export default function Profile() {
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Payments processed via Stripe</li>
                   <li>• Funds released when bounty poster approves</li>
-                  <li>• Platform fee: 5% of bounty amount</li>
+                  <li>• Platform fee: 3.5% of bounty amount</li>
                   <li>• Payouts typically arrive in 2-7 business days</li>
                 </ul>
               </div>

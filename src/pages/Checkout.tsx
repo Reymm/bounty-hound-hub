@@ -201,7 +201,7 @@ export default function Checkout() {
                   <div>
                     <h3 className="font-semibold mb-1">Approval & Release</h3>
                     <p className="text-sm text-muted-foreground">
-                      Poster reviews and approves the delivery. Funds are released to hunter minus platform fee (5%).
+                      Poster reviews and approves the delivery. Funds are released to hunter minus platform fee (3.5%).
                     </p>
                   </div>
                 </div>

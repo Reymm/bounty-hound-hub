@@ -676,6 +676,30 @@ export const supabaseApi = {
     }
   },
 
+  // KYC Verification
+  async createKycVerification(): Promise<{ verification_url: string; verification_session_id: string } | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User must be authenticated');
+
+      const { data, error } = await supabase.functions.invoke('create-kyc-verification', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      
+      return {
+        verification_url: data.verification_url,
+        verification_session_id: data.verification_session_id
+      };
+    } catch (error) {
+      console.error('Error creating KYC verification:', error);
+      throw error;
+    }
+  },
+
   // User's bounties
   async getUserBounties(userId: string): Promise<Bounty[]> {
     try {
