@@ -201,7 +201,7 @@ export default function Checkout() {
                   <div>
                     <h3 className="font-semibold mb-1">Approval & Release</h3>
                     <p className="text-sm text-muted-foreground">
-                      Poster reviews and approves the delivery. Funds are released to hunter minus platform fee (3.5%).
+                      Poster reviews and approves the delivery. Funds are released to hunter minus platform fee (2.3%).
                     </p>
                   </div>
                 </div>
@@ -388,7 +388,7 @@ export default function Checkout() {
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Platform Fee</span>
-                <span className="font-medium">5%</span>
+                <span className="font-medium">4.6% (2.3% each side)</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Payment Processing</span>

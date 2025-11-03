@@ -137,7 +137,7 @@ function PostBountyForm() {
   // Calculate fees when bounty amount changes
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      const platformFee = Math.round(watchedBountyAmount * 0.035 * 100) / 100;
+      const platformFee = Math.round(watchedBountyAmount * 0.023 * 100) / 100;
       // Stripe fee: 2.9% + $0.30 on the total charge (bounty + platform fee)
       // We need to calculate the total that includes Stripe's fee
       // Formula: total = (bounty + platformFee + 0.30) / (1 - 0.029)
@@ -663,7 +663,7 @@ function PostBountyForm() {
                   <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Platform fee (3.5%):</span>
+                  <span className="text-muted-foreground">Platform fee (2.3%):</span>
                   <span>${platformFee.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -1055,7 +1055,7 @@ function PostBountyForm() {
                     <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Platform Fee (3.5%):</span>
+                    <span>Platform Fee (2.3%):</span>
                     <span>${platformFee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
