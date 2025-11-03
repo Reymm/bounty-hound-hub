@@ -71,23 +71,66 @@ export default function Messages() {
     if (selectedThread) {
       loadMessages(selectedThread.id);
     }
-  }, [selectedThread]);
+  }, [selectedThread?.id]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Mock real-time updates every 10 seconds
+  // Real-time message subscriptions
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (selectedThread) {
-        // TODO: Replace with Supabase Realtime subscription
-        console.log('TODO: Mock real-time message updates');
-      }
-    }, 10000);
+    if (!user) return;
 
-    return () => clearInterval(interval);
-  }, [selectedThread]);
+    const channel = supabase
+      .channel('messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_id=eq.${user.id}`
+        },
+        async (payload) => {
+          console.log('New message received:', payload);
+          
+          // Reload threads to update the sidebar
+          await loadThreads();
+          
+          // If this message is for the current thread, add it to messages
+          if (selectedThread) {
+            const participants = selectedThread.id.split('___');
+            const newMessage = payload.new as any;
+            
+            if (participants.includes(newMessage.sender_id)) {
+              // Fetch sender profile
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('full_name, username')
+                .eq('id', newMessage.sender_id)
+                .maybeSingle();
+              
+              setMessages(prev => [...prev, {
+                id: newMessage.id,
+                threadId: selectedThread.id,
+                bountyId: newMessage.bounty_id,
+                senderId: newMessage.sender_id,
+                senderName: profileData?.username || profileData?.full_name || 'Unknown',
+                body: newMessage.content,
+                attachments: newMessage.attachment_url ? [newMessage.attachment_url] : [],
+                timestamp: new Date(newMessage.created_at),
+                isRead: newMessage.is_read
+              }]);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, selectedThread]);
 
   const loadThreads = async () => {
     if (!user) return;
