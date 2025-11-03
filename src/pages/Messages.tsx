@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, Send, Paperclip, MoreVertical, Phone, Video } from 'lucide-react';
+import { Search, Send, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -124,17 +124,22 @@ export default function Messages() {
       if (!otherParticipant) return;
       
       // Fetch the other participant's profile info
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('full_name, username, avatar_url')
         .eq('id', otherParticipant)
-        .single();
+        .maybeSingle();
       
-      if (profileData) {
-        setOtherParticipantName(profileData.full_name || profileData.username || 'Unknown User');
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        setOtherParticipantName('User');
+        setOtherParticipantAvatar('');
+      } else if (profileData) {
+        const displayName = profileData.full_name || profileData.username || 'User';
+        setOtherParticipantName(displayName);
         setOtherParticipantAvatar(profileData.avatar_url || '');
       } else {
-        setOtherParticipantName('Unknown User');
+        setOtherParticipantName('User');
         setOtherParticipantAvatar('');
       }
       
@@ -315,18 +320,6 @@ export default function Messages() {
                         Re: {selectedThread.bountyTitle}
                       </p>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" disabled>
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" disabled>
-                      <Video className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" disabled>
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
               </div>
