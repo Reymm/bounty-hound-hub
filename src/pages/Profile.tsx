@@ -479,7 +479,7 @@ export default function Profile() {
                   <div>
                     <p className="font-medium">Identity Verification</p>
                     <p className="text-sm text-muted-foreground">
-                      Required to message bounty posters and submit claims
+                      Required for bounties over $500
                     </p>
                   </div>
                 </div>
@@ -502,8 +502,7 @@ export default function Profile() {
                 <div className="bg-muted/50 rounded-lg p-4">
                   <h4 className="font-medium mb-2">Why verify your identity?</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Message bounty posters directly</li>
-                    <li>• Submit claims and earn bounties</li>
+                    <li>• Submit claims on high-value bounties (over $500)</li>
                     <li>• Build trust with the community</li>
                     <li>• Access premium features</li>
                   </ul>
