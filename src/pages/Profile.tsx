@@ -183,15 +183,27 @@ export default function Profile() {
   const handleSetupPayout = async () => {
     try {
       setPayoutLoading(true);
-      setVerificationLoading(false); // Ensure other loading state is off
+      setVerificationLoading(false);
       
       const result = await supabaseApi.createConnectAccount();
       
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Direct navigation - most reliable in iframe
-        window.location.assign(result.onboarding_url);
+        // Create temporary link and click it - works best in iframe
+        const link = document.createElement('a');
+        link.href = result.onboarding_url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setPayoutLoading(false);
+        toast({
+          title: "Stripe Connect opened",
+          description: "Complete setup in the new tab",
+        });
       } else {
         throw new Error('No onboarding URL received');
       }
