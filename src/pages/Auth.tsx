@@ -94,10 +94,10 @@ export default function Auth() {
         
         // If no username, redirect to profile setup
         if (!profile?.username) {
-          navigate('/setup', { replace: true });
+          navigate('/setup');
         } else {
           const from = (location.state as any)?.from?.pathname || '/';
-          navigate(from, { replace: true });
+          navigate(from);
         }
       }
     };
