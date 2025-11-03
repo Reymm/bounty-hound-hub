@@ -47,10 +47,8 @@ export default function Profile() {
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(() => {
-    // Restore tab from sessionStorage
     return sessionStorage.getItem('profile_active_tab') || 'profile';
   });
-  const [stripeConnectUrl, setStripeConnectUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -189,8 +187,14 @@ export default function Profile() {
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Store URL and show in dialog
-        setStripeConnectUrl(result.onboarding_url);
+        // Open in new window - most reliable
+        window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
+        
+        toast({
+          title: "Opening Stripe",
+          description: "Complete setup in the new tab.",
+        });
+        
         setPayoutLoading(false);
       } else {
         throw new Error('No onboarding URL received');
@@ -739,31 +743,6 @@ export default function Profile() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Stripe Connect URL Dialog */}
-      <AlertDialog open={!!stripeConnectUrl} onOpenChange={() => setStripeConnectUrl(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Complete Stripe Connect Setup</AlertDialogTitle>
-            <AlertDialogDescription>
-              Click the button below to set up your payout method with Stripe. You'll be taken to Stripe's secure platform to complete the setup.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <a 
-                href={stripeConnectUrl || '#'} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex"
-              >
-                Continue to Stripe
-              </a>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
