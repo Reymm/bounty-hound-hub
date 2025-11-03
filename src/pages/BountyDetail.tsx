@@ -247,8 +247,19 @@ export default function BountyDetail() {
 
                   {!isOwnBounty && (
                     <>
-                      <Button asChild className="w-full" variant="outline">
-                        <Link to="/messages">
+                      <Button 
+                        asChild 
+                        className="w-full" 
+                        variant="outline"
+                      >
+                        <Link 
+                          to="/messages" 
+                          state={{ 
+                            recipientId: bounty.posterId,
+                            bountyId: bounty.id,
+                            bountyTitle: bounty.title
+                          }}
+                        >
                           <MessageCircle className="h-4 w-4 mr-2" />
                           Send Message
                         </Link>
@@ -401,8 +412,19 @@ export default function BountyDetail() {
 
               {!isOwnBounty && (
                 <>
-                  <Button asChild className="w-full" variant="outline">
-                    <Link to="/messages">
+                  <Button 
+                    asChild 
+                    className="w-full" 
+                    variant="outline"
+                  >
+                    <Link 
+                      to="/messages" 
+                      state={{ 
+                        recipientId: bounty.posterId,
+                        bountyId: bounty.id,
+                        bountyTitle: bounty.title
+                      }}
+                    >
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Send Message
                     </Link>

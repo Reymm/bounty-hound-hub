@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search, Send, Paperclip, MoreVertical, Phone, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +10,14 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MessageThread, Message } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 
 export default function Messages() {
+  const location = useLocation();
+  const stateData = location.state as { recipientId?: string; bountyId?: string; bountyTitle?: string } | null;
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,6 +26,7 @@ export default function Messages() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [otherParticipantName, setOtherParticipantName] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -29,6 +34,37 @@ export default function Messages() {
   useEffect(() => {
     loadThreads();
   }, []);
+
+  // Handle incoming state from bounty detail page
+  useEffect(() => {
+    if (stateData?.recipientId && stateData?.bountyId && user) {
+      // Create a synthetic thread for the new conversation
+      const threadId = [user.id, stateData.recipientId].sort().join('-');
+      
+      const existingThread = threads.find(t => t.id === threadId);
+      
+      if (!existingThread) {
+        // Create new thread object
+        const newThread: MessageThread = {
+          id: threadId,
+          bountyId: stateData.bountyId,
+          bountyTitle: stateData.bountyTitle || 'New Conversation',
+          participants: [user.id, stateData.recipientId],
+          lastMessage: null,
+          unreadCount: 0,
+          updatedAt: new Date()
+        };
+        
+        setThreads(prev => [newThread, ...prev]);
+        setSelectedThread(newThread);
+      } else {
+        setSelectedThread(existingThread);
+      }
+      
+      // Clear the state after handling it
+      window.history.replaceState({}, document.title);
+    }
+  }, [stateData, user, threads]);
 
   useEffect(() => {
     if (selectedThread) {
@@ -85,6 +121,17 @@ export default function Messages() {
       const participants = threadId.split('-');
       const otherParticipant = participants.find(p => p !== user.id);
       if (!otherParticipant) return;
+      
+      // Fetch the other participant's profile info
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name, username')
+        .eq('id', otherParticipant)
+        .single();
+      
+      if (profileData) {
+        setOtherParticipantName(profileData.full_name || profileData.username || 'Unknown User');
+      }
       
       const messagesData = await supabaseApi.getMessages(user.id, otherParticipant);
       setMessages(messagesData);
@@ -244,11 +291,11 @@ export default function Messages() {
               <div className="p-4 border-b border-border bg-background">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-semibold text-foreground truncate">
-                      {selectedThread.bountyTitle}
+                    <h2 className="font-semibold text-foreground">
+                      {otherParticipantName || 'Loading...'}
                     </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedThread.participants.length} participants
+                    <p className="text-sm text-muted-foreground truncate max-w-xs">
+                      About: {selectedThread.bountyTitle}
                     </p>
                   </div>
                   
