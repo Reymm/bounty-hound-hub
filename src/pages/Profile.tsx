@@ -56,6 +56,28 @@ export default function Profile() {
 
   useEffect(() => {
     loadProfile();
+    
+    // Restore scroll position when returning to profile
+    const savedScrollPosition = sessionStorage.getItem('profile_scroll_position');
+    if (savedScrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition));
+        sessionStorage.removeItem('profile_scroll_position');
+      }, 100);
+    }
+    
+    // Save scroll position before leaving
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('profile_scroll_position', window.scrollY.toString());
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      // Save scroll position when component unmounts (navigating away)
+      sessionStorage.setItem('profile_scroll_position', window.scrollY.toString());
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   const loadProfile = async () => {
