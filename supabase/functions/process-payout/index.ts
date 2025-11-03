@@ -85,18 +85,21 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Hunter receives the FULL bounty amount
-    // Platform fee was already collected from the poster during escrow creation
+    // Deduct 2.3% platform fee from hunter's payout
+    // Poster also pays 2.3% (collected during escrow creation)
     const bountyAmount = parseFloat(submission.Bounties.amount);
-    const payoutAmount = Math.round(bountyAmount * 100); // in cents (full amount)
+    const platformFeePercent = 0.023; // 2.3%
+    const platformFee = Math.round(bountyAmount * platformFeePercent * 100); // in cents
+    const payoutAmount = Math.round(bountyAmount * 100) - platformFee; // in cents
 
     logStep("Calculated payout amounts", {
       bountyAmount: bountyAmount,
+      platformFee: platformFee / 100,
       payoutAmount: payoutAmount / 100,
-      note: 'Platform fee already collected from poster'
+      note: 'Both poster and hunter pay 2.3% platform fee'
     });
 
-    // Create transfer to Connect account (full bounty amount)
+    // Create transfer to Connect account (bounty amount minus 2.3% platform fee)
     const transfer = await stripe.transfers.create({
       amount: payoutAmount,
       currency: 'usd',
@@ -106,7 +109,8 @@ serve(async (req) => {
         submission_id: submission.id,
         bounty_id: submission.bounty_id,
         hunter_id: submission.hunter_id,
-        bounty_amount: bountyAmount.toString()
+        bounty_amount: bountyAmount.toString(),
+        platform_fee: (platformFee / 100).toString()
       }
     });
 
@@ -122,6 +126,7 @@ serve(async (req) => {
       success: true,
       transfer_id: transfer.id,
       amount: payoutAmount / 100,
+      platform_fee: platformFee / 100,
       hunter_account: hunterProfile.stripe_connect_account_id
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

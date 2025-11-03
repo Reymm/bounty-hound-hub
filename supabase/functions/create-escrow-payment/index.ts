@@ -71,8 +71,8 @@ serve(async (req) => {
 
     const { amount, currency } = validation.data;
     
-    // Calculate platform fee (3.5% of bounty amount)
-    const platformFee = Math.round(amount * 0.035 * 100) / 100;
+    // Calculate platform fee (2.3% of bounty amount - poster's share)
+    const platformFee = Math.round(amount * 0.023 * 100) / 100;
     
     // Calculate Stripe fee: 2.9% + $0.30 on the total charge
     // Formula: total = (bounty + platformFee + 0.30) / (1 - 0.029)

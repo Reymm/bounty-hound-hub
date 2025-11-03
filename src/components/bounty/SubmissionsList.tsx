@@ -78,7 +78,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         if (payoutResult.success) {
           toast({
             title: "Claim accepted & payout sent",
-            description: `Payment of $${payoutResult.amount?.toFixed(2)} sent to hunter.`,
+            description: `Payment of $${payoutResult.amount?.toFixed(2)} sent to hunter (2.3% platform fee: $${payoutResult.platform_fee?.toFixed(2)})`,
           });
         } else {
           toast({

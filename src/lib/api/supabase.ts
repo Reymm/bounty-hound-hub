@@ -877,6 +877,7 @@ export const supabaseApi = {
     success: boolean;
     transfer_id?: string;
     amount?: number;
+    platform_fee?: number;
     error?: string;
   }> {
     try {
