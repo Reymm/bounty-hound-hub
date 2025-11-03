@@ -44,6 +44,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
+  const [payoutLoading, setPayoutLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -167,7 +168,7 @@ export default function Profile() {
 
   const handleSetupPayout = async () => {
     try {
-      setVerificationLoading(true);
+      setPayoutLoading(true);
       
       const result = await supabaseApi.createConnectAccount();
       
@@ -181,8 +182,8 @@ export default function Profile() {
           title: "Opening Stripe Connect",
           description: "Complete your payout setup in the new tab, then return here.",
         });
-        
-        setVerificationLoading(false);
+
+        setPayoutLoading(false);
       } else {
         throw new Error('No onboarding URL received');
       }
@@ -194,7 +195,7 @@ export default function Profile() {
         description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       });
-      setVerificationLoading(false);
+      setPayoutLoading(false);
     }
   };
 
@@ -600,11 +601,12 @@ export default function Profile() {
                   )}
                   <Button 
                     onClick={handleSetupPayout}
+                    disabled={payoutLoading}
                     size="sm"
                     variant={profile.hasPayoutMethod ? "outline" : "default"}
                     className={!profile.hasPayoutMethod ? "bg-primary hover:bg-primary-hover text-primary-foreground" : ""}
                   >
-                    {profile.hasPayoutMethod ? 'Manage' : 'Set Up Payout'}
+                    {payoutLoading ? 'Opening...' : (profile.hasPayoutMethod ? 'Manage' : 'Set Up Payout')}
                   </Button>
                 </div>
               </div>
