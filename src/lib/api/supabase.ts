@@ -450,7 +450,7 @@ export const supabaseApi = {
       if (error) throw error;
 
       return (data || []).map((row: any) => ({
-        id: `${row.participant_1}-${row.participant_2}-${row.bounty_id}`,
+        id: [row.participant_1, row.participant_2].sort().join('___'),
         bountyId: row.bounty_id,
         bountyTitle: 'Bounty Discussion', // TODO: Get actual bounty title
         participants: [row.participant_1, row.participant_2],

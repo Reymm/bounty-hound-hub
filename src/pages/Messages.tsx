@@ -39,8 +39,8 @@ export default function Messages() {
   // Handle incoming state from bounty detail page
   useEffect(() => {
     if (stateData?.recipientId && stateData?.bountyId && user) {
-      // Create a synthetic thread for the new conversation
-      const threadId = [user.id, stateData.recipientId].sort().join('-');
+      // Create a synthetic thread for the new conversation using ___ separator to avoid UUID dash conflicts
+      const threadId = [user.id, stateData.recipientId].sort().join('___');
       
       const existingThread = threads.find(t => t.id === threadId);
       
@@ -118,8 +118,8 @@ export default function Messages() {
     
     try {
       setMessagesLoading(true);
-      // Extract participant IDs from threadId (format: participant1-participant2)
-      const participants = threadId.split('-');
+      // Extract participant IDs from threadId (format: participant1___participant2)
+      const participants = threadId.split('___');
       const otherParticipant = participants.find(p => p !== user.id);
       if (!otherParticipant) return;
       
@@ -164,7 +164,7 @@ export default function Messages() {
       setSendingMessage(true);
       
       // Extract participant IDs from threadId
-      const participants = selectedThread.id.split('-');
+      const participants = selectedThread.id.split('___');
       const recipientId = participants.find(p => p !== user.id);
       if (!recipientId) return;
       
