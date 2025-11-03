@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
@@ -37,6 +38,8 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 export default function Profile() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -56,29 +59,28 @@ export default function Profile() {
 
   useEffect(() => {
     loadProfile();
+  }, []);
+
+  // Handle scroll restoration when navigating back
+  useEffect(() => {
+    if (history.scrollRestoration) {
+      history.scrollRestoration = 'manual';
+    }
     
-    // Restore scroll position when returning to profile
     const savedScrollPosition = sessionStorage.getItem('profile_scroll_position');
-    if (savedScrollPosition) {
+    if (savedScrollPosition && !loading) {
       setTimeout(() => {
         window.scrollTo(0, parseInt(savedScrollPosition));
         sessionStorage.removeItem('profile_scroll_position');
       }, 100);
     }
     
-    // Save scroll position before leaving
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem('profile_scroll_position', window.scrollY.toString());
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
     return () => {
-      // Save scroll position when component unmounts (navigating away)
-      sessionStorage.setItem('profile_scroll_position', window.scrollY.toString());
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (history.scrollRestoration) {
+        history.scrollRestoration = 'auto';
+      }
     };
-  }, []);
+  }, [loading]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -144,6 +146,8 @@ export default function Profile() {
       if (!result) throw new Error('Failed to create verification session');
       
       if (result.verification_url) {
+        // Save scroll position before navigating
+        sessionStorage.setItem('profile_scroll_position', window.scrollY.toString());
         // Redirect to Stripe Identity verification
         window.location.href = result.verification_url;
       } else {
