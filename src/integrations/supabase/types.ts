@@ -786,7 +786,7 @@ export type Database = {
         Returns: undefined
       }
       increment_bounty_views_secure: {
-        Args: { bounty_id: string }
+        Args: { p_bounty_id: string }
         Returns: undefined
       }
       is_support_admin: { Args: { user_id?: string }; Returns: boolean }
