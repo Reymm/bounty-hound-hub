@@ -198,6 +198,31 @@ export default function Messages() {
       const messagesData = await supabaseApi.getMessages(user.id, otherParticipant);
       console.log('Loaded messages:', messagesData.length);
       setMessages(messagesData);
+      
+      // Mark all unread messages from this participant as read
+      const unreadMessageIds = messagesData
+        .filter(msg => msg.senderId === otherParticipant && !msg.isRead)
+        .map(msg => msg.id);
+      
+      if (unreadMessageIds.length > 0 && selectedThread) {
+        const { error: markReadError } = await supabase
+          .from('messages')
+          .update({ is_read: true })
+          .in('id', unreadMessageIds);
+        
+        if (markReadError) {
+          console.error('Error marking messages as read:', markReadError);
+        } else {
+          console.log('Marked', unreadMessageIds.length, 'messages as read');
+          
+          // Update thread list to clear unread count
+          setThreads(prev => prev.map(thread => 
+            thread.id === threadId 
+              ? { ...thread, unreadCount: 0 }
+              : thread
+          ));
+        }
+      }
     } catch (error) {
       console.error('Error loading messages:', error);
       toast({
