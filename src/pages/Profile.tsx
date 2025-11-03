@@ -175,13 +175,37 @@ export default function Profile() {
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Open Stripe Connect onboarding in new tab
-        window.open(result.onboarding_url, '_blank');
+        // Try to open in new tab
+        const newWindow = window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
         
-        toast({
-          title: "Opening Stripe Connect",
-          description: "Complete your payout setup in the new tab, then return here.",
-        });
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          // Popup was blocked, create a clickable link instead
+          const linkContainer = document.createElement('div');
+          linkContainer.innerHTML = `
+            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                        background: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+                        z-index: 9999; max-width: 500px; text-align: center;">
+              <h3 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 600;">Complete Payout Setup</h3>
+              <p style="margin-bottom: 1.5rem; color: #666;">Please click the button below to complete your Stripe Connect setup:</p>
+              <a href="${result.onboarding_url}" target="_blank" rel="noopener noreferrer"
+                 style="display: inline-block; background: #635BFF; color: white; padding: 0.75rem 2rem; 
+                        border-radius: 0.375rem; text-decoration: none; font-weight: 500;">
+                Open Stripe Connect
+              </a>
+              <button onclick="this.parentElement.remove()" 
+                      style="display: block; margin: 1rem auto 0; background: transparent; border: none; 
+                             color: #666; cursor: pointer; text-decoration: underline;">
+                Close
+              </button>
+            </div>
+          `;
+          document.body.appendChild(linkContainer);
+        } else {
+          toast({
+            title: "Opening Stripe Connect",
+            description: "Complete your payout setup in the new tab, then return here.",
+          });
+        }
 
         setPayoutLoading(false);
       } else {
