@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield, Package } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield, Package, Target } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,8 @@ import { uploadFile, deleteFile } from '@/lib/storage';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { useAuth } from '@/contexts/AuthContext';
+import { MilestoneCreator } from '@/components/bounty/MilestoneCreator';
+import { Switch } from '@/components/ui/switch';
 
 const stripePromise = loadStripe('pk_test_51JXDu0HQ9JaJlRZTdf0Wq0nc9nu5J0JIAOybThyevrFElUBRyoK8wxE9Ew3a36wg4q1BmZj6eHGhiA2llvhi77lh00xgJCfwH9');
 
@@ -63,6 +65,8 @@ function PostBountyForm() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(true);
   const [requiresShipping, setRequiresShipping] = useState(false);
+  const [useMilestones, setUseMilestones] = useState(false);
+  const [milestones, setMilestones] = useState<Array<{id: string, title: string, description: string, amount: number}>>([]);
 
   const {
     register,
@@ -502,7 +506,9 @@ function PostBountyForm() {
               tags,
               verificationRequirements: verificationRequirements.filter(req => req.trim()),
               images: uploadedImages,
-              requires_shipping: requiresShipping
+              requires_shipping: requiresShipping,
+              has_milestones: useMilestones,
+              milestone_data: useMilestones ? milestones : null
             }
           }
         });
@@ -1155,6 +1161,34 @@ function PostBountyForm() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* Milestone Support */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="useMilestones" className="flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    <span>Split into Milestones</span>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Break the bounty into phases with separate payments
+                  </p>
+                </div>
+                <Switch
+                  id="useMilestones"
+                  checked={useMilestones}
+                  onCheckedChange={setUseMilestones}
+                />
+              </div>
+
+              {useMilestones && (
+                <MilestoneCreator
+                  totalBountyAmount={watchedBountyAmount || 0}
+                  milestones={milestones}
+                  onChange={setMilestones}
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
 

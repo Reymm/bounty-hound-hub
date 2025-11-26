@@ -14,7 +14,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'bounty_posted' | 'bounty_claimed' | 'submission_received' | 'submission_accepted' | 'submission_rejected' | 'shipping_details_provided' | 'bounty_completed' | 'support_ticket_created';
+  type: 'bounty_posted' | 'bounty_claimed' | 'submission_received' | 'submission_accepted' | 'submission_rejected' | 'shipping_details_provided' | 'bounty_completed' | 'support_ticket_created' | 'revision_requested' | 'dispute_opened' | 'item_shipped' | 'item_delivered';
   recipientEmail: string;
   recipientName: string;
   bountyTitle?: string;
@@ -22,6 +22,9 @@ interface EmailRequest {
   senderName?: string;
   amount?: number;
   rejectionReason?: string;
+  revisionNotes?: string;
+  disputeReason?: string;
+  trackingNumber?: string;
   shippingAddress?: string;
   ticketId?: string;
   ticketTitle?: string;
@@ -281,6 +284,145 @@ const generateEmailContent = (data: EmailRequest) => {
                 Respond quickly to maintain user satisfaction!<br><br>
                 Best regards,<br>
                 The BountyBay System
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+    case 'revision_requested':
+      return {
+        subject: `📝 Revision Requested: "${data.bountyTitle}"`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+              <h1 style="color: white; margin: 0;">BountyBay</h1>
+            </div>
+            <div style="padding: 30px 20px; background: #f8f9fa;">
+              <h2 style="color: #ff9800; margin-bottom: 20px;">📝 Revision Requested</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                ${data.senderName} has requested some changes to your submission for:
+              </p>
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #ff9800; margin: 20px 0;">
+                <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
+                ${data.revisionNotes ? `<div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 4px; border-left: 3px solid #ff9800;"><strong>Requested Changes:</strong><br><br>${data.revisionNotes}</div>` : ''}
+              </div>
+              <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0; color: #1976d2; font-size: 14px;">
+                  <strong>💡 Next Steps:</strong><br>
+                  • Review the feedback carefully<br>
+                  • Make the requested improvements<br>
+                  • Submit an updated version
+                </p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${bountyUrl}" style="background: #ff9800; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View & Update Submission</a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Best regards,<br>
+                The BountyBay Team
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+    case 'dispute_opened':
+      return {
+        subject: `⚠️ Dispute Opened: "${data.bountyTitle}"`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+              <h1 style="color: white; margin: 0;">BountyBay</h1>
+            </div>
+            <div style="padding: 30px 20px; background: #f8f9fa;">
+              <h2 style="color: #dc3545; margin-bottom: 20px;">⚠️ Dispute Opened</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                A dispute has been opened for your submission on:
+              </p>
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0;">
+                <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
+                ${data.disputeReason ? `<div style="margin-top: 15px; padding: 15px; background: #ffebee; border-radius: 4px; border-left: 3px solid #dc3545;"><strong>Dispute Reason:</strong><br><br>${data.disputeReason}</div>` : ''}
+              </div>
+              <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0; color: #f57c00; font-size: 14px;">
+                  <strong>🛡️ What Happens Next:</strong><br>
+                  • Our support team has been notified<br>
+                  • We'll review both sides within 24-48 hours<br>
+                  • The bounty is frozen until resolved<br>
+                  • You may be contacted for additional information
+                </p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${bountyUrl}" style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Details</a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Best regards,<br>
+                The BountyBay Team
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+    case 'item_shipped':
+      return {
+        subject: `📦 Item Shipped: "${data.bountyTitle}"`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+              <h1 style="color: white; margin: 0;">BountyBay</h1>
+            </div>
+            <div style="padding: 30px 20px; background: #f8f9fa;">
+              <h2 style="color: #28a745; margin-bottom: 20px;">📦 Your Item is On the Way!</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                Great news! ${data.senderName} has shipped your item for:
+              </p>
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+                <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
+                ${data.trackingNumber ? `
+                  <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 4px;">
+                    <strong style="color: #1976d2;">📍 Tracking Number:</strong><br>
+                    <code style="font-size: 16px; color: #333; background: white; padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 8px;">${data.trackingNumber}</code>
+                  </div>
+                ` : '<p style="margin-top: 10px; color: #999; font-size: 14px;">No tracking number provided</p>'}
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty Details</a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Best regards,<br>
+                The BountyBay Team
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+    case 'item_delivered':
+      return {
+        subject: `✅ Item Delivered: "${data.bountyTitle}"`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+              <h1 style="color: white; margin: 0;">BountyBay</h1>
+            </div>
+            <div style="padding: 30px 20px; background: #f8f9fa;">
+              <h2 style="color: #28a745; margin-bottom: 20px;">✅ Delivery Confirmed!</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                The bounty poster has confirmed delivery for:
+              </p>
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+                <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
+                <p style="color: #28a745; font-weight: bold; margin-top: 10px;">✓ Transaction Complete</p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty</a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Congratulations on a successful transaction!<br><br>
+                Best regards,<br>
+                The BountyBay Team
               </p>
             </div>
           </div>
