@@ -72,6 +72,7 @@ const transformSubmissionRow = (row: any): Claim => ({
   hunterId: row.hunter_id,
   hunterName: 'Anonymous', // Will be overridden with actual profile data
   hunterRating: 5, // Will be overridden with actual profile data
+  hunterRatingCount: 0, // Will be overridden with actual profile data
   type: 'found' as any, // Default to 'found' - adjust based on your needs
   message: row.message || '',
   proofUrls: row.proof_urls || [],
@@ -367,7 +368,8 @@ export const supabaseApi = {
         hunterName: profileMap.get(submission.hunter_id)?.full_name || 
                    profileMap.get(submission.hunter_id)?.username || 
                    'Anonymous',
-        hunterRating: profileMap.get(submission.hunter_id)?.reputation_score || 5
+        hunterRating: profileMap.get(submission.hunter_id)?.reputation_score || 5,
+        hunterRatingCount: profileMap.get(submission.hunter_id)?.total_ratings_received || 0
       }));
     } catch (error) {
       console.error('Error fetching claims:', error);
@@ -417,7 +419,8 @@ export const supabaseApi = {
       return {
         ...transformSubmissionRow(data),
         hunterName: profile?.username || 'You',
-        hunterRating: profile?.reputation_score || 5
+        hunterRating: profile?.reputation_score || 5,
+        hunterRatingCount: profile?.total_ratings_received || 0
       };
     } catch (error) {
       console.error('Error creating claim:', error);
