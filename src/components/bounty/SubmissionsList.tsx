@@ -11,6 +11,7 @@ import { RequestRevisionDialog } from './RequestRevisionDialog';
 import { OpenDisputeDialog } from './OpenDisputeDialog';
 import { TrackingDialog } from './TrackingDialog';
 import { supabaseApi } from '@/lib/api/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageCircle, ExternalLink, FileText, AlertTriangle, RefreshCw, Package } from 'lucide-react';
@@ -36,6 +37,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [revisionDialogOpen, setRevisionDialogOpen] = useState(false);
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
   const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
+  const [confirmingDelivery, setConfirmingDelivery] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -140,6 +142,56 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         description: "Failed to reject the claim. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleConfirmDelivery = async (submissionId: string) => {
+    setConfirmingDelivery(true);
+    try {
+      const submission = submissions.find(s => s.id === submissionId);
+      if (!submission) return;
+
+      const { error } = await supabase
+        .from('Submissions')
+        .update({ 
+          status: 'delivered',
+          delivered_at: new Date().toISOString()
+        })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      // Get hunter email for notification
+      const { data: hunterAuth } = await supabase.auth.admin.getUserById(submission.hunterId);
+      
+      if (hunterAuth?.user) {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            type: 'item_delivered',
+            recipientEmail: hunterAuth.user.email!,
+            recipientName: hunterAuth.user.email?.split('@')[0] || 'Hunter',
+            bountyTitle: bountyTitle,
+            bountyId: bountyId
+          }
+        });
+      }
+
+      toast({
+        title: "Delivery confirmed",
+        description: "The hunter will be notified and payment will be processed.",
+      });
+
+      await loadSubmissions();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error confirming delivery:', error);
+      toast({
+        title: "Error",
+        description: "Failed to confirm delivery. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setConfirmingDelivery(false);
     }
   };
 
@@ -292,6 +344,17 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                     >
                       <Package className="h-3 w-3 mr-1" />
                       Mark Shipped
+                    </Button>
+                  )}
+                  {submission.status === 'shipped' as ClaimStatus && isOwner && requiresShipping && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleConfirmDelivery(submission.id)}
+                      disabled={confirmingDelivery}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      Confirm Delivery
                     </Button>
                   )}
                   <Button size="sm" variant="outline" disabled>

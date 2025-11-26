@@ -64,7 +64,11 @@ export default function AdminDisputes() {
 
   const handleResolveDispute = async (submissionId: string, resolution: 'accept' | 'reject') => {
     try {
-      const { error } = await supabase
+      const dispute = disputes.find(d => d.id === submissionId);
+      if (!dispute) return;
+
+      // Update submission status
+      const { error: updateError } = await supabase
         .from('Submissions')
         .update({
           status: resolution === 'accept' ? 'accepted' : 'rejected',
@@ -73,18 +77,56 @@ export default function AdminDisputes() {
         })
         .eq('id', submissionId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
+      // Update bounty status if accepting
       if (resolution === 'accept') {
+        await supabase
+          .from('Bounties')
+          .update({ status: 'completed' })
+          .eq('id', dispute.bounty_id);
+
         // Process payout
         await supabase.functions.invoke('process-payout', {
           body: { submissionId }
         });
       }
 
+      // Send notification emails to both parties
+      const { data: hunterAuth } = await supabase.auth.admin.getUserById(dispute.hunter_id);
+      const { data: posterAuth } = await supabase.auth.admin.getUserById((dispute.Bounties as any).poster_id);
+
+      if (hunterAuth?.user) {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            type: 'dispute_resolved',
+            recipientEmail: hunterAuth.user.email!,
+            recipientName: hunterAuth.user.email?.split('@')[0] || 'Hunter',
+            bountyTitle: (dispute.Bounties as any).title,
+            bountyId: dispute.bounty_id,
+            resolution: resolution,
+            resolutionNotes: resolutionNotes || undefined
+          }
+        });
+      }
+
+      if (posterAuth?.user) {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            type: 'dispute_resolved',
+            recipientEmail: posterAuth.user.email!,
+            recipientName: posterAuth.user.email?.split('@')[0] || 'Poster',
+            bountyTitle: (dispute.Bounties as any).title,
+            bountyId: dispute.bounty_id,
+            resolution: resolution,
+            resolutionNotes: resolutionNotes || undefined
+          }
+        });
+      }
+
       toast({
         title: "Dispute resolved",
-        description: `Submission ${resolution === 'accept' ? 'accepted' : 'rejected'} by admin.`,
+        description: `Submission ${resolution === 'accept' ? 'accepted and payout processed' : 'rejected'}.`,
       });
 
       setSelectedDispute(null);

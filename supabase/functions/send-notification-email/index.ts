@@ -14,7 +14,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'bounty_posted' | 'bounty_claimed' | 'submission_received' | 'submission_accepted' | 'submission_rejected' | 'shipping_details_provided' | 'bounty_completed' | 'support_ticket_created' | 'revision_requested' | 'dispute_opened' | 'item_shipped' | 'item_delivered';
+  type: 'bounty_posted' | 'bounty_claimed' | 'submission_received' | 'submission_accepted' | 'submission_rejected' | 'shipping_details_provided' | 'bounty_completed' | 'support_ticket_created' | 'revision_requested' | 'dispute_opened' | 'dispute_resolved' | 'item_shipped' | 'item_delivered';
   recipientEmail: string;
   recipientName: string;
   bountyTitle?: string;
@@ -30,6 +30,8 @@ interface EmailRequest {
   ticketTitle?: string;
   ticketDescription?: string;
   ticketType?: string;
+  resolution?: string;
+  resolutionNotes?: string;
 }
 
 const generateEmailContent = (data: EmailRequest) => {
@@ -421,6 +423,39 @@ const generateEmailContent = (data: EmailRequest) => {
               </div>
               <p style="color: #666; font-size: 14px;">
                 Congratulations on a successful transaction!<br><br>
+                Best regards,<br>
+                The BountyBay Team
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+    case 'dispute_resolved':
+      return {
+        subject: `Dispute Resolved: "${data.bountyTitle}"`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+              <h1 style="color: white; margin: 0;">BountyBay</h1>
+            </div>
+            <div style="padding: 30px 20px; background: #f8f9fa;">
+              <h2 style="color: hsl(214, 84%, 56%); margin-bottom: 20px;">🛡️ Dispute Resolved</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                An admin has resolved the dispute for:
+              </p>
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${data.resolution === 'accept' ? '#28a745' : '#dc3545'}; margin: 20px 0;">
+                <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
+                <p style="color: ${data.resolution === 'accept' ? '#28a745' : '#dc3545'}; font-weight: bold; margin-top: 10px;">
+                  ${data.resolution === 'accept' ? '✓ Submission Accepted' : '✗ Submission Rejected'}
+                </p>
+                ${data.resolutionNotes ? `<div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #999;"><strong>Admin Notes:</strong><br><br>${data.resolutionNotes}</div>` : ''}
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${bountyUrl}" style="background: hsl(214, 84%, 56%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty Details</a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                ${data.resolution === 'accept' ? 'Payment has been processed to the hunter.' : 'No payment will be processed for this submission.'}<br><br>
                 Best regards,<br>
                 The BountyBay Team
               </p>
