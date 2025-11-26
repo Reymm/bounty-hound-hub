@@ -34,20 +34,28 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (posterError) throw posterError;
 
-    // Get hunter details
-    const { data: hunterUser, error: hunterError } = await supabase.auth.admin.getUserById(hunterId);
-    
-    if (hunterError) throw hunterError;
+    // Get hunter and poster profiles for usernames
+    const { data: hunterProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', hunterId)
+      .single();
+
+    const { data: posterProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', bountyData.poster_id)
+      .single();
 
     // Send notification email to bounty poster
     const { error: emailError } = await supabase.functions.invoke('send-notification-email', {
       body: {
         type: 'submission_received',
         recipientEmail: posterUser.user.email,
-        recipientName: posterUser.user.email?.split('@')[0] || 'User',
+        recipientName: posterProfile?.username || posterUser.user.email?.split('@')[0] || 'User',
         bountyTitle: bountyData.title,
         bountyId: bountyId,
-        senderName: hunterUser.user.email?.split('@')[0] || 'Hunter',
+        senderName: hunterProfile?.username || 'Hunter',
       }
     });
 
