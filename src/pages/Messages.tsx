@@ -106,7 +106,7 @@ export default function Messages() {
               // Fetch sender profile
               const { data: profileData } = await supabase
                 .from('profiles')
-                .select('full_name, username')
+                .select('username')
                 .eq('id', newMessage.sender_id)
                 .maybeSingle();
               
@@ -115,7 +115,7 @@ export default function Messages() {
                 threadId: selectedThread.id,
                 bountyId: newMessage.bounty_id,
                 senderId: newMessage.sender_id,
-                senderName: profileData?.username || profileData?.full_name || 'Unknown',
+                senderName: profileData?.username || 'Unknown',
                 body: newMessage.content,
                 attachments: newMessage.attachment_url ? [newMessage.attachment_url] : [],
                 timestamp: new Date(newMessage.created_at),
@@ -178,7 +178,7 @@ export default function Messages() {
       // Fetch the other participant's profile info
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('full_name, username, avatar_url')
+        .select('username, avatar_url')
         .eq('id', otherParticipant)
         .maybeSingle();
       
@@ -187,7 +187,7 @@ export default function Messages() {
         setOtherParticipantName('User');
         setOtherParticipantAvatar('');
       } else if (profileData) {
-        const displayName = profileData.username || profileData.full_name || 'User';
+        const displayName = profileData.username || 'User';
         setOtherParticipantName(displayName);
         setOtherParticipantAvatar(profileData.avatar_url || '');
       } else {

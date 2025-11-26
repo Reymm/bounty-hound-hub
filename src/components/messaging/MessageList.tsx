@@ -181,7 +181,7 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={message.sender_profile?.avatar_url} />
                     <AvatarFallback>
-                      {(message.sender_profile?.username || message.sender_profile?.full_name)?.charAt(0) || 'U'}
+                      {message.sender_profile?.username?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   
