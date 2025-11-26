@@ -27,15 +27,42 @@ export function TrackingDialog({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Get submission and poster details
+      const { data: submissionData } = await supabase
+        .from('Submissions')
+        .select('bounty_id, Bounties!bounty_id(title, poster_id)')
+        .eq('id', submissionId)
+        .single();
+
       const { error } = await supabase
         .from('Submissions')
         .update({ 
           tracking_number: trackingNumber.trim() || null,
-          shipped_at: trackingNumber.trim() ? new Date().toISOString() : null
+          shipped_at: new Date().toISOString()
         })
         .eq('id', submissionId);
 
       if (error) throw error;
+
+      // Send email notification to poster
+      if (submissionData) {
+        const { data: posterAuth } = await supabase.auth.admin.getUserById((submissionData.Bounties as any).poster_id);
+        const { data: hunterData } = await supabase.auth.getUser();
+        
+        if (posterAuth?.user && hunterData?.user) {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'item_shipped',
+              recipientEmail: posterAuth.user.email!,
+              recipientName: posterAuth.user.email?.split('@')[0] || 'Poster',
+              bountyTitle: (submissionData.Bounties as any).title,
+              bountyId: submissionData.bounty_id,
+              senderName: hunterData.user.email?.split('@')[0] || 'Hunter',
+              trackingNumber: trackingNumber.trim() || undefined
+            }
+          });
+        }
+      }
 
       toast({
         title: trackingNumber.trim() ? "Tracking added" : "Marked as shipped",

@@ -88,7 +88,7 @@ export function AdminSupport() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Dashboard
@@ -96,6 +96,10 @@ export function AdminSupport() {
           <TabsTrigger value="tickets" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Support Tickets
+          </TabsTrigger>
+          <TabsTrigger value="disputes" className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            Disputes
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
@@ -109,6 +113,12 @@ export function AdminSupport() {
 
         <TabsContent value="tickets" className="space-y-6">
           <AdminTicketList />
+        </TabsContent>
+
+        <TabsContent value="disputes" className="space-y-6">
+          <Button onClick={() => navigate('/admin/disputes')} className="w-full">
+            View All Disputed Submissions
+          </Button>
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-6">

@@ -36,6 +36,13 @@ export function RequestRevisionDialog({
 
     setIsSubmitting(true);
     try {
+      // Get submission and hunter details
+      const { data: submissionData } = await supabase
+        .from('Submissions')
+        .select('hunter_id, bounty_id, Bounties!bounty_id(title)')
+        .eq('id', submissionId)
+        .single();
+
       const { error } = await supabase
         .from('Submissions')
         .update({ 
@@ -45,6 +52,26 @@ export function RequestRevisionDialog({
         .eq('id', submissionId);
 
       if (error) throw error;
+
+      // Send email notification to hunter
+      if (submissionData) {
+        const { data: hunterAuth } = await supabase.auth.admin.getUserById(submissionData.hunter_id);
+        const { data: posterData } = await supabase.auth.getUser();
+        
+        if (hunterAuth?.user && posterData?.user) {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'revision_requested',
+              recipientEmail: hunterAuth.user.email!,
+              recipientName: hunterAuth.user.email?.split('@')[0] || 'Hunter',
+              bountyTitle: (submissionData.Bounties as any).title,
+              bountyId: submissionData.bounty_id,
+              senderName: posterData.user.email?.split('@')[0] || 'Poster',
+              revisionNotes: revisionNotes.trim()
+            }
+          });
+        }
+      }
 
       toast({
         title: "Revision requested",

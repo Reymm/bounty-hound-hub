@@ -12,6 +12,7 @@ import { ScrollToTop } from "@/components/layout/ScrollToTop";
 // Pages
 import { AdminSupport } from "./pages/admin/AdminSupport";
 import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
+import AdminDisputes from "./pages/admin/AdminDisputes";
 import { SupportTicket } from "./pages/SupportTicket";
 import { Support } from "./pages/Support";
 import Index from "./pages/Index";
@@ -119,6 +120,11 @@ const App = () => (
                       <Route path="/admin/support/:ticketId" element={
                         <ProtectedRoute>
                           <AdminSupportTicket />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/disputes" element={
+                        <ProtectedRoute>
+                          <AdminDisputes />
                         </ProtectedRoute>
                       } />
                       

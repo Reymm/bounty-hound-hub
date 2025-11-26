@@ -39,6 +39,13 @@ export function OpenDisputeDialog({
 
     setIsSubmitting(true);
     try {
+      // Get submission and hunter details
+      const { data: submissionData } = await supabase
+        .from('Submissions')
+        .select('hunter_id, bounty_id, Bounties!bounty_id(title)')
+        .eq('id', submissionId)
+        .single();
+
       // Update submission with dispute info
       const { error: submissionError } = await supabase
         .from('Submissions')
@@ -66,6 +73,25 @@ export function OpenDisputeDialog({
             bounty_id: bountyId,
             submission_id: submissionId
           });
+
+        // Send email notification to hunter
+        if (submissionData) {
+          const { data: hunterAuth } = await supabase.auth.admin.getUserById(submissionData.hunter_id);
+          
+          if (hunterAuth?.user) {
+            await supabase.functions.invoke('send-notification-email', {
+              body: {
+                type: 'dispute_opened',
+                recipientEmail: hunterAuth.user.email!,
+                recipientName: hunterAuth.user.email?.split('@')[0] || 'Hunter',
+                bountyTitle: (submissionData.Bounties as any).title,
+                bountyId: submissionData.bounty_id,
+                senderName: userData.user.email?.split('@')[0] || 'Poster',
+                disputeReason: disputeReason.trim()
+              }
+            });
+          }
+        }
       }
 
       toast({
