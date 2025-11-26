@@ -430,11 +430,18 @@ export const supabaseApi = {
 
   async updateClaimStatus(submissionId: string, status: ClaimStatus, rejectionReason?: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('update_submission_status', {
-        submission_id: submissionId,
-        new_status: status,
-        rejection_reason: rejectionReason
-      });
+      const updates: TablesUpdate<'Submissions'> = {
+        status,
+        // Only store a rejection reason when status is rejected
+        rejection_reason: status === ClaimStatus.REJECTED ? (rejectionReason || null) : null
+      };
+
+      const { data, error } = await supabase
+        .from('Submissions')
+        .update(updates)
+        .eq('id', submissionId)
+        .select('id')
+        .maybeSingle();
 
       if (error) throw error;
       return !!data;
