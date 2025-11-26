@@ -288,8 +288,8 @@ export default function Messages() {
   );
 
   return (
-    <div className="h-[calc(100vh-4rem)] max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-12 h-full">
+    <div className="container mx-auto px-4 py-8 max-h-[calc(100vh-12rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 h-[600px] max-h-full border rounded-lg overflow-hidden bg-background shadow-sm">
         {/* Thread List */}
         <div className="lg:col-span-4 xl:col-span-3 bg-muted/30 border-r border-border">
           <div className="p-4 border-b border-border">
