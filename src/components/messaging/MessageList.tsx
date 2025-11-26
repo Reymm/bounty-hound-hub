@@ -19,6 +19,7 @@ interface Message {
   is_read: boolean;
   created_at: string;
   sender_profile?: {
+    username?: string;
     full_name?: string;
     avatar_url?: string;
   };
@@ -74,7 +75,7 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
         .from('messages')
         .select(`
           *,
-          sender_profile:profiles!sender_id(full_name, avatar_url)
+          sender_profile:profiles!sender_id(username, full_name, avatar_url)
         `)
         .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
         .order('created_at', { ascending: true });
@@ -180,7 +181,7 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={message.sender_profile?.avatar_url} />
                     <AvatarFallback>
-                      {message.sender_profile?.full_name?.charAt(0) || 'U'}
+                      {(message.sender_profile?.username || message.sender_profile?.full_name)?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   

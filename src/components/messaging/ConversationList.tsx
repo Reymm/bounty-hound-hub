@@ -14,9 +14,10 @@ interface Conversation {
   last_message_at: string;
   unread_count: number;
   other_user?: {
-    id: string;
-    full_name?: string;
-    avatar_url?: string;
+  id: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
   };
   bounty?: {
     title: string;
@@ -117,7 +118,7 @@ export function ConversationList({
       const [usersData, bountiesData] = await Promise.all([
         userIds.length > 0 ? supabase
           .from('profiles')
-          .select('id, full_name, avatar_url')
+          .select('id, username, full_name, avatar_url')
           .in('id', userIds) : { data: [] },
         bountyIds.length > 0 ? supabase
           .from('Bounties')
@@ -194,14 +195,14 @@ export function ConversationList({
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={conversation.other_user?.avatar_url} />
                       <AvatarFallback>
-                        {conversation.other_user?.full_name?.charAt(0) || 'U'}
+                        {(conversation.other_user?.username || conversation.other_user?.full_name)?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium truncate">
-                          {conversation.other_user?.full_name || 'Unknown User'}
+                          {conversation.other_user?.username || conversation.other_user?.full_name || 'Unknown User'}
                         </h4>
                         {conversation.unread_count > 0 && (
                           <Badge variant="default" className="ml-2">
