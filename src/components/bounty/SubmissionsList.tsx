@@ -240,9 +240,15 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                 <div className="flex items-center gap-3">
                   <div>
                     <CardTitle className="text-base">{submission.hunterName}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      ⭐ {submission.hunterRating.toFixed(1)} rating
-                    </p>
+                    {submission.hunterRatingCount && submission.hunterRatingCount > 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        ⭐ {submission.hunterRating.toFixed(1)} rating ({submission.hunterRatingCount} reviews)
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No ratings yet
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

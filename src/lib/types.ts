@@ -32,6 +32,7 @@ export interface Claim {
   hunterId: string;
   hunterName: string;
   hunterRating: number;
+  hunterRatingCount?: number;
   type: ClaimType;
   message: string;
   proofUrls: string[];
