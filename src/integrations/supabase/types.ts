@@ -23,10 +23,13 @@ export type Database = {
           description: string | null
           escrow_amount: number | null
           escrow_status: string | null
+          has_milestones: boolean | null
           id: string
           images: string[] | null
           location: string | null
+          milestone_data: Json | null
           poster_id: string | null
+          requires_shipping: boolean | null
           shipping_details: Json | null
           shipping_status:
             | Database["public"]["Enums"]["shipping_status_type"]
@@ -48,10 +51,13 @@ export type Database = {
           description?: string | null
           escrow_amount?: number | null
           escrow_status?: string | null
+          has_milestones?: boolean | null
           id?: string
           images?: string[] | null
           location?: string | null
+          milestone_data?: Json | null
           poster_id?: string | null
+          requires_shipping?: boolean | null
           shipping_details?: Json | null
           shipping_status?:
             | Database["public"]["Enums"]["shipping_status_type"]
@@ -73,10 +79,13 @@ export type Database = {
           description?: string | null
           escrow_amount?: number | null
           escrow_status?: string | null
+          has_milestones?: boolean | null
           id?: string
           images?: string[] | null
           location?: string | null
+          milestone_data?: Json | null
           poster_id?: string | null
+          requires_shipping?: boolean | null
           shipping_details?: Json | null
           shipping_status?:
             | Database["public"]["Enums"]["shipping_status_type"]
@@ -91,6 +100,60 @@ export type Database = {
           view_count?: number | null
         }
         Relationships: []
+      }
+      bounty_milestones: {
+        Row: {
+          amount: number
+          bounty_id: string
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          order_index: number
+          status: string
+          submission_id: string | null
+          title: string
+        }
+        Insert: {
+          amount: number
+          bounty_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index: number
+          status?: string
+          submission_id?: string | null
+          title: string
+        }
+        Update: {
+          amount?: number
+          bounty_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          status?: string
+          submission_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_milestones_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_milestones_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "Submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       claim_reports: {
         Row: {
@@ -395,6 +458,10 @@ export type Database = {
         Row: {
           bounty_id: string
           created_at: string | null
+          delivered_at: string | null
+          dispute_opened: boolean | null
+          dispute_opened_at: string | null
+          dispute_reason: string | null
           hunter_id: string
           id: string
           image_url: string | null
@@ -403,11 +470,19 @@ export type Database = {
           rejection_reason: string | null
           reported_as_spam: boolean | null
           requires_approval: boolean | null
+          revision_notes: string | null
+          revision_requested: boolean | null
+          shipped_at: string | null
           status: string | null
+          tracking_number: string | null
         }
         Insert: {
           bounty_id: string
           created_at?: string | null
+          delivered_at?: string | null
+          dispute_opened?: boolean | null
+          dispute_opened_at?: string | null
+          dispute_reason?: string | null
           hunter_id: string
           id?: string
           image_url?: string | null
@@ -416,11 +491,19 @@ export type Database = {
           rejection_reason?: string | null
           reported_as_spam?: boolean | null
           requires_approval?: boolean | null
+          revision_notes?: string | null
+          revision_requested?: boolean | null
+          shipped_at?: string | null
           status?: string | null
+          tracking_number?: string | null
         }
         Update: {
           bounty_id?: string
           created_at?: string | null
+          delivered_at?: string | null
+          dispute_opened?: boolean | null
+          dispute_opened_at?: string | null
+          dispute_reason?: string | null
           hunter_id?: string
           id?: string
           image_url?: string | null
@@ -429,7 +512,11 @@ export type Database = {
           rejection_reason?: string | null
           reported_as_spam?: boolean | null
           requires_approval?: boolean | null
+          revision_notes?: string | null
+          revision_requested?: boolean | null
+          shipped_at?: string | null
           status?: string | null
+          tracking_number?: string | null
         }
         Relationships: [
           {

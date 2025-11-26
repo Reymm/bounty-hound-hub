@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield, Package } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -61,6 +62,7 @@ function PostBountyForm() {
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(true);
+  const [requiresShipping, setRequiresShipping] = useState(false);
 
   const {
     register,
@@ -499,7 +501,8 @@ function PostBountyForm() {
               targetPriceMax: formData.targetPriceMax,
               tags,
               verificationRequirements: verificationRequirements.filter(req => req.trim()),
-              images: uploadedImages
+              images: uploadedImages,
+              requires_shipping: requiresShipping
             }
           }
         });
@@ -994,6 +997,24 @@ function PostBountyForm() {
               <p className="text-xs text-muted-foreground">
                 Add up to 10 relevant tags to help hunters find your bounty
               </p>
+            </div>
+
+            {/* Physical Item Checkbox */}
+            <div className="flex items-start space-x-3 p-4 bg-muted/30 rounded-lg">
+              <Checkbox 
+                id="requiresShipping"
+                checked={requiresShipping}
+                onCheckedChange={(checked) => setRequiresShipping(checked as boolean)}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="requiresShipping" className="flex items-center gap-2 cursor-pointer">
+                  <Package className="h-4 w-4" />
+                  <span>This is a physical item that requires shipping</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Check this if the hunter will need to ship the item to you. You'll provide your shipping address after accepting a submission.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
