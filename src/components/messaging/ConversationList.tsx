@@ -195,14 +195,14 @@ export function ConversationList({
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={conversation.other_user?.avatar_url} />
                       <AvatarFallback>
-                        {(conversation.other_user?.username || conversation.other_user?.full_name)?.charAt(0) || 'U'}
+                        {conversation.other_user?.username?.charAt(0)?.toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium truncate">
-                          {conversation.other_user?.username || conversation.other_user?.full_name || 'Unknown User'}
+                          {conversation.other_user?.username || 'Unknown User'}
                         </h4>
                         {conversation.unread_count > 0 && (
                           <Badge variant="default" className="ml-2">
