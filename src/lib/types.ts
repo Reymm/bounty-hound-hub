@@ -23,6 +23,7 @@ export interface Bounty {
   updatedAt: Date;
   claimsCount: number;
   viewsCount: number;
+  requires_shipping?: boolean;
 }
 
 export interface Claim {

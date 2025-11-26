@@ -7,10 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ShippingDetailsDialog } from './ShippingDetailsDialog';
+import { RequestRevisionDialog } from './RequestRevisionDialog';
+import { OpenDisputeDialog } from './OpenDisputeDialog';
+import { TrackingDialog } from './TrackingDialog';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, ExternalLink, FileText } from 'lucide-react';
+import { MessageCircle, ExternalLink, FileText, AlertTriangle, RefreshCw, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SubmissionsListProps {
@@ -18,10 +21,11 @@ interface SubmissionsListProps {
   bountyTitle?: string;
   posterId: string;
   currentUserId?: string;
+  requiresShipping?: boolean;
   onRefresh?: () => void;
 }
 
-export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId, onRefresh }: SubmissionsListProps) {
+export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId, requiresShipping = false, onRefresh }: SubmissionsListProps) {
   const [submissions, setSubmissions] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
@@ -29,6 +33,9 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [rejectionReason, setRejectionReason] = useState('');
   const [shippingDialogOpen, setShippingDialogOpen] = useState(false);
   const [acceptedClaim, setAcceptedClaim] = useState<Claim | null>(null);
+  const [revisionDialogOpen, setRevisionDialogOpen] = useState(false);
+  const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
+  const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,7 +76,10 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       const claim = submissions.find(s => s.id === submissionId);
       if (claim) {
         setAcceptedClaim(claim);
-        setShippingDialogOpen(true);
+        // Only show shipping dialog if bounty requires shipping
+        if (requiresShipping) {
+          setShippingDialogOpen(true);
+        }
       }
       
       // Process payout to hunter
@@ -240,6 +250,29 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                         variant="outline"
                         onClick={() => {
                           setSelectedSubmission(submission.id);
+                          setRevisionDialogOpen(true);
+                        }}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Request Revision
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedSubmission(submission.id);
+                          setDisputeDialogOpen(true);
+                        }}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Dispute
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedSubmission(submission.id);
                           setRejectionDialogOpen(true);
                         }}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -247,6 +280,19 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                         Reject
                       </Button>
                     </>
+                  )}
+                  {submission.status === ClaimStatus.ACCEPTED && currentUserId === submission.hunterId && requiresShipping && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSubmission(submission.id);
+                        setTrackingDialogOpen(true);
+                      }}
+                    >
+                      <Package className="h-3 w-3 mr-1" />
+                      Mark Shipped
+                    </Button>
                   )}
                   <Button size="sm" variant="outline" disabled>
                     <MessageCircle className="h-3 w-3 mr-1" />
@@ -299,7 +345,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       </Dialog>
 
       {/* Shipping Details Dialog */}
-      {acceptedClaim && (
+      {acceptedClaim && requiresShipping && (
         <ShippingDetailsDialog
           bountyId={bountyId}
           bountyTitle={bountyTitle || 'Bounty'}
@@ -312,6 +358,55 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           onShippingDetailsProvided={() => {
             setShippingDialogOpen(false);
             setAcceptedClaim(null);
+            onRefresh?.();
+          }}
+        />
+      )}
+
+      {/* Request Revision Dialog */}
+      {selectedSubmission && (
+        <RequestRevisionDialog
+          submissionId={selectedSubmission}
+          isOpen={revisionDialogOpen}
+          onClose={() => {
+            setRevisionDialogOpen(false);
+            setSelectedSubmission(null);
+          }}
+          onRevisionRequested={() => {
+            loadSubmissions();
+            onRefresh?.();
+          }}
+        />
+      )}
+
+      {/* Open Dispute Dialog */}
+      {selectedSubmission && (
+        <OpenDisputeDialog
+          submissionId={selectedSubmission}
+          bountyId={bountyId}
+          isOpen={disputeDialogOpen}
+          onClose={() => {
+            setDisputeDialogOpen(false);
+            setSelectedSubmission(null);
+          }}
+          onDisputeOpened={() => {
+            loadSubmissions();
+            onRefresh?.();
+          }}
+        />
+      )}
+
+      {/* Tracking Dialog */}
+      {selectedSubmission && (
+        <TrackingDialog
+          submissionId={selectedSubmission}
+          isOpen={trackingDialogOpen}
+          onClose={() => {
+            setTrackingDialogOpen(false);
+            setSelectedSubmission(null);
+          }}
+          onTrackingAdded={() => {
+            loadSubmissions();
             onRefresh?.();
           }}
         />

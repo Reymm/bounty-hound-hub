@@ -382,6 +382,7 @@ export default function BountyDetail() {
                   bountyTitle={bounty.title}
                   posterId={bounty.posterId}
                   currentUserId={user?.id}
+                  requiresShipping={bounty.requires_shipping}
                   onRefresh={() => setRefreshKey(prev => prev + 1)}
                 />
                 
