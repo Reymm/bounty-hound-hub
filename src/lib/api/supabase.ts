@@ -7,7 +7,8 @@ import {
   MessageThread, 
   Profile, 
   BountyStatus, 
-  ClaimStatus, 
+  ClaimStatus,
+  ClaimType,
   IdvStatus,
   SearchFilters,
   PaginatedResponse,
@@ -949,6 +950,69 @@ export const supabaseApi = {
       return (data || []).map(bounty => transformBountyRow(bounty, profile));
     } catch (error) {
       console.error('Error fetching user bounties:', error);
+      return [];
+    }
+  },
+
+  // User's submissions (applied bounties)
+  async getUserSubmissions(userId: string): Promise<(Bounty & { claim: Claim })[]> {
+    try {
+      // Get all submissions for this user
+      const { data: submissions, error: submissionsError } = await supabase
+        .from('Submissions')
+        .select(`
+          *,
+          bounty:Bounties(*)
+        `)
+        .eq('hunter_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (submissionsError) throw submissionsError;
+
+      if (!submissions || submissions.length === 0) return [];
+
+      // Transform the data
+      const result = await Promise.all(
+        submissions.map(async (submission: any) => {
+          const bountyData = submission.bounty;
+          
+          // Get poster profile
+          const { data: posterProfile } = await supabase.rpc('get_public_profile_data', {
+            profile_id: bountyData.poster_id
+          });
+
+          const profile = posterProfile?.[0] || null;
+
+          // Transform bounty
+          const bounty = transformBountyRow(bountyData, profile);
+
+          // Transform claim
+          const claim: Claim = {
+            id: submission.id,
+            bountyId: submission.bounty_id,
+            hunterId: submission.hunter_id,
+            hunterName: 'You',
+            hunterRating: 5,
+            hunterRatingCount: 0,
+            type: 'found' as ClaimType,
+            message: submission.message || '',
+            proofUrls: submission.proof_urls || [],
+            proofImages: [],
+            status: submission.status as ClaimStatus,
+            submittedAt: new Date(submission.created_at),
+            updatedAt: new Date(submission.updated_at || submission.created_at)
+          };
+
+          return {
+            ...bounty,
+            claim
+          };
+        })
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error fetching user submissions:', error);
       return [];
     }
   }

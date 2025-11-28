@@ -33,8 +33,9 @@ export default function MyBounties() {
       const userBountiesData = await supabaseApi.getUserBounties(user.id);
       setPostedBounties(userBountiesData);
 
-      // For now, appliedBounties will be empty until we implement claims/submissions properly
-      setAppliedBounties([]);
+      // Load user's submissions (applied bounties)
+      const userSubmissions = await supabaseApi.getUserSubmissions(user.id);
+      setAppliedBounties(userSubmissions);
 
     } catch (error) {
       console.error('Error loading bounties:', error);
