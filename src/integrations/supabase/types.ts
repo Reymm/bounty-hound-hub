@@ -475,6 +475,7 @@ export type Database = {
           shipped_at: string | null
           status: string | null
           tracking_number: string | null
+          updated_at: string
         }
         Insert: {
           bounty_id: string
@@ -496,6 +497,7 @@ export type Database = {
           shipped_at?: string | null
           status?: string | null
           tracking_number?: string | null
+          updated_at?: string
         }
         Update: {
           bounty_id?: string
@@ -517,6 +519,7 @@ export type Database = {
           shipped_at?: string | null
           status?: string | null
           tracking_number?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
