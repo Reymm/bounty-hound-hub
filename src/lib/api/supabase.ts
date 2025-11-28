@@ -430,7 +430,7 @@ export const supabaseApi = {
 
   async updateClaimStatus(submissionId: string, status: ClaimStatus, rejectionReason?: string): Promise<boolean> {
     try {
-      const updates: TablesUpdate<'Submissions'> = {
+      const updates: Partial<SubmissionRow> = {
         status,
         // Only store a rejection reason when status is rejected
         rejection_reason: status === ClaimStatus.REJECTED ? (rejectionReason || null) : null
