@@ -40,6 +40,7 @@ export type Database = {
           target_price_max: number | null
           target_price_min: number | null
           title: string
+          updated_at: string
           verification_requirements: string[] | null
           view_count: number | null
         }
@@ -68,6 +69,7 @@ export type Database = {
           target_price_max?: number | null
           target_price_min?: number | null
           title: string
+          updated_at?: string
           verification_requirements?: string[] | null
           view_count?: number | null
         }
@@ -96,6 +98,7 @@ export type Database = {
           target_price_max?: number | null
           target_price_min?: number | null
           title?: string
+          updated_at?: string
           verification_requirements?: string[] | null
           view_count?: number | null
         }
@@ -772,7 +775,7 @@ export type Database = {
         Returns: boolean
       }
       can_view_shipping_details: {
-        Args: { bounty_id: string }
+        Args: { p_bounty_id: string }
         Returns: boolean
       }
       get_admin_ticket_details: {
