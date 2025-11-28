@@ -960,21 +960,31 @@ export const supabaseApi = {
       // Get all submissions for this user
       const { data: submissions, error: submissionsError } = await supabase
         .from('Submissions')
-        .select(`
-          *,
-          bounty:Bounties(*)
-        `)
+        .select('*')
         .eq('hunter_id', userId)
         .order('created_at', { ascending: false });
 
       if (submissionsError) throw submissionsError;
-
       if (!submissions || submissions.length === 0) return [];
+
+      // Fetch all related bounties in a separate query to avoid join issues
+      const bountyIds = Array.from(new Set(submissions.map((s: any) => s.bounty_id)));
+
+      const { data: bounties, error: bountiesError } = await supabase
+        .from('Bounties')
+        .select('*')
+        .in('id', bountyIds);
+
+      if (bountiesError) throw bountiesError;
+
+      const bountyById = new Map<string, any>();
+      (bounties || []).forEach((b: any) => bountyById.set(b.id, b));
 
       // Transform the data
       const result = await Promise.all(
         submissions.map(async (submission: any) => {
-          const bountyData = submission.bounty;
+          const bountyData = bountyById.get(submission.bounty_id);
+          if (!bountyData) return null;
           
           // Get poster profile
           const { data: posterProfile } = await supabase.rpc('get_public_profile_data', {
@@ -1010,7 +1020,8 @@ export const supabaseApi = {
         })
       );
 
-      return result;
+      // Filter out any nulls (in case a bounty wasn't found due to RLS)
+      return result.filter((item): item is Bounty & { claim: Claim } => item !== null);
     } catch (error) {
       console.error('Error fetching user submissions:', error);
       return [];
