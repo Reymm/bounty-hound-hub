@@ -440,11 +440,10 @@ export const supabaseApi = {
         .from('Submissions')
         .update(updates)
         .eq('id', submissionId)
-        .select('id')
-        .maybeSingle();
+        .select('id');
 
       if (error) throw error;
-      return !!data;
+      return Array.isArray(data) && data.length > 0;
     } catch (error) {
       console.error('Error updating claim status:', error);
       return false;
