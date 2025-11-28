@@ -443,6 +443,22 @@ export const supabaseApi = {
         .select('id');
 
       if (error) throw error;
+      
+      // Send notification to hunter when status changes to accepted or rejected
+      if ((status === ClaimStatus.ACCEPTED || status === ClaimStatus.REJECTED) && data && data.length > 0) {
+        try {
+          await supabase.functions.invoke('send-submission-status-notification', {
+            body: {
+              submissionId,
+              newStatus: status,
+              rejectionReason: status === ClaimStatus.REJECTED ? rejectionReason : undefined
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to send notification, but submission status updated:', notifError);
+        }
+      }
+      
       return Array.isArray(data) && data.length > 0;
     } catch (error) {
       console.error('Error updating claim status:', error);
