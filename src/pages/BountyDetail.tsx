@@ -185,7 +185,7 @@ export default function BountyDetail() {
                 )}
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  Posted {formatDistanceToNow(bounty.createdAt, { addSuffix: true })}
+                  Posted {formatDistanceToNow(new Date(bounty.createdAt), { addSuffix: true })}
                 </div>
               </div>
 
