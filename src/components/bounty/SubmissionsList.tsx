@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -41,6 +42,8 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [trackingNumber, setTrackingNumber] = useState('');
   const [confirmingDelivery, setConfirmingDelivery] = useState(false);
   const [rejectingClaim, setRejectingClaim] = useState(false);
+  const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
+  const [submissionToAccept, setSubmissionToAccept] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -342,7 +345,10 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => handleAcceptClaim(submission.id)}
+                        onClick={() => {
+                          setSubmissionToAccept(submission.id);
+                          setAcceptDialogOpen(true);
+                        }}
                         className="text-green-600 hover:text-green-700 hover:bg-green-50"
                       >
                         Accept
@@ -536,6 +542,40 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           }}
         />
       )}
+
+      {/* Accept Confirmation Dialog */}
+      <AlertDialog open={acceptDialogOpen} onOpenChange={setAcceptDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Accept this submission?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will accept the submission and immediately process the payout to the hunter. 
+              The bounty reward will be transferred to the hunter's account (minus the 2.3% platform fee).
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setAcceptDialogOpen(false);
+              setSubmissionToAccept(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (submissionToAccept) {
+                  handleAcceptClaim(submissionToAccept);
+                }
+                setAcceptDialogOpen(false);
+                setSubmissionToAccept(null);
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Accept & Process Payout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
