@@ -422,7 +422,8 @@ export const supabaseApi = {
         await supabase.functions.invoke('send-submission-notification', {
           body: {
             bountyId,
-            hunterId: user.id
+            hunterId: user.id,
+            submissionId: data.id
           }
         });
       } catch (emailError) {
