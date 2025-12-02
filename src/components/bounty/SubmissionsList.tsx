@@ -290,6 +290,10 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                                 src={url}
                                 alt={`Proof ${index + 1}`}
                                 className="w-full h-32 object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer"
+                                onError={(e) => {
+                                  console.error('Image failed to load:', url);
+                                  e.currentTarget.style.display = 'none';
+                                }}
                               />
                             </a>
                           ))}

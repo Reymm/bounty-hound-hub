@@ -38,14 +38,20 @@ export default function Messages() {
 
   // Handle incoming state from bounty detail page
   useEffect(() => {
-    if (stateData?.recipientId && stateData?.bountyId && user) {
-      // Create a synthetic thread for the new conversation using ___ separator to avoid UUID dash conflicts
-      const threadId = [user.id, stateData.recipientId].sort().join('___');
+    if (stateData?.recipientId && stateData?.bountyId && user && threads.length > 0) {
+      // Find existing conversation with this user for this bounty
+      const existingThread = threads.find(t => 
+        t.bountyId === stateData.bountyId &&
+        t.participants.includes(stateData.recipientId) &&
+        t.participants.includes(user.id)
+      );
       
-      const existingThread = threads.find(t => t.id === threadId);
-      
-      if (!existingThread) {
-        // Create new thread object
+      if (existingThread) {
+        // Use existing conversation
+        setSelectedThread(existingThread);
+      } else {
+        // Create new thread object using same format as getMessageThreads
+        const threadId = [user.id, stateData.recipientId].sort().join('___');
         const newThread: MessageThread = {
           id: threadId,
           bountyId: stateData.bountyId,
@@ -58,14 +64,12 @@ export default function Messages() {
         
         setThreads(prev => [newThread, ...prev]);
         setSelectedThread(newThread);
-      } else {
-        setSelectedThread(existingThread);
       }
       
       // Clear the state after handling it
       window.history.replaceState({}, document.title);
     }
-  }, [stateData, user, threads]);
+  }, [stateData, user, threads.length]); // Depend on threads.length instead of threads array
 
   useEffect(() => {
     if (selectedThread) {
