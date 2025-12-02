@@ -116,9 +116,15 @@ export function BountyCard({ bounty }: BountyCardProps) {
               </div>
               
               <div className="flex items-center gap-1">
-                <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                <span>{bounty.posterRating.toFixed(1)}</span>
-                <span className="text-muted-foreground/60">({bounty.posterRatingCount})</span>
+                {bounty.posterRatingCount > 0 ? (
+                  <>
+                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                    <span>{bounty.posterRating.toFixed(1)}</span>
+                    <span className="text-muted-foreground/60">({bounty.posterRatingCount})</span>
+                  </>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">New</Badge>
+                )}
               </div>
             </div>
 
