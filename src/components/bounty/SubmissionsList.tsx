@@ -16,6 +16,7 @@ import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageCircle, ExternalLink, FileText, AlertTriangle, RefreshCw, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface SubmissionsListProps {
   bountyId: string;
@@ -39,6 +40,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
   const [confirmingDelivery, setConfirmingDelivery] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadSubmissions();
@@ -396,7 +398,19 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       Confirm Delivery
                     </Button>
                   )}
-                  <Button size="sm" variant="outline" disabled>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      navigate('/messages', {
+                        state: {
+                          recipientId: submission.hunterId,
+                          bountyId: bountyId,
+                          bountyTitle: bountyTitle
+                        }
+                      });
+                    }}
+                  >
                     <MessageCircle className="h-3 w-3 mr-1" />
                     Message
                   </Button>
