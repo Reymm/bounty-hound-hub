@@ -63,7 +63,7 @@ function PostBountyForm() {
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const [hasDeadline, setHasDeadline] = useState(true);
+  const [hasDeadline, setHasDeadline] = useState(false);
   const [requiresShipping, setRequiresShipping] = useState(false);
   const [hunterPurchasesItem, setHunterPurchasesItem] = useState(false);
   const [useMilestones, setUseMilestones] = useState(false);
@@ -82,7 +82,7 @@ function PostBountyForm() {
     defaultValues: {
       tags: [],
       verificationRequirements: [''],
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      deadline: undefined,
       category: undefined // Explicitly set to undefined
     }
   });
@@ -1236,11 +1236,11 @@ function PostBountyForm() {
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="no-deadline"
-                  checked={!hasDeadline}
+                  id="has-deadline"
+                  checked={hasDeadline}
                   onChange={(e) => {
-                    setHasDeadline(!e.target.checked);
-                    if (e.target.checked) {
+                    setHasDeadline(e.target.checked);
+                    if (!e.target.checked) {
                       setValue('deadline', undefined as any);
                     } else {
                       setValue('deadline', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
@@ -1248,8 +1248,8 @@ function PostBountyForm() {
                   }}
                   className="h-4 w-4 rounded border-input"
                 />
-                <Label htmlFor="no-deadline" className="text-sm font-normal cursor-pointer">
-                  No deadline - open until found
+                <Label htmlFor="has-deadline" className="text-sm font-normal cursor-pointer">
+                  Set a deadline for this bounty
                 </Label>
               </div>
               
