@@ -31,52 +31,63 @@ export const uploadFile = async (
 
     console.log('[STORAGE] Uploading to path:', filePath);
 
-    // Simulate progress since Supabase doesn't provide upload progress
-    // Report progress at different stages
-    onProgress?.(20);
-
-    const { data: uploadData, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-
-    onProgress?.(80);
-
-    console.log('[STORAGE] Upload response:', { uploadData, error });
-
-    if (error) {
-      console.error('[STORAGE] Upload error:', error);
-      throw error;
-    }
-
-    // Get public URL for public buckets, signed URL for private ones
-    const isPublicBucket = bucket === 'bounty-images' || bucket === 'avatars';
-    
-    console.log('[STORAGE] Getting URL for public bucket:', isPublicBucket);
-    
-    if (isPublicBucket) {
-      const { data } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-      
-      console.log('[STORAGE] Public URL generated:', data.publicUrl);
-      onProgress?.(100);
-      return { url: data.publicUrl, path: filePath };
-    } else {
-      const { data, error: signError } = await supabase.storage
-        .from(bucket)
-        .createSignedUrl(filePath, 3600 * 24); // 24 hours
-      
-      if (signError) {
-        console.error('[STORAGE] Signed URL error:', signError);
-        throw signError;
+    // Simulate gradual progress since Supabase doesn't provide real upload progress
+    let currentProgress = 0;
+    const progressInterval = setInterval(() => {
+      if (currentProgress < 90) {
+        currentProgress += 10;
+        onProgress?.(currentProgress);
       }
+    }, 200); // Update every 200ms
+
+    try {
+      const { data: uploadData, error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      clearInterval(progressInterval);
+      onProgress?.(95);
+
+      console.log('[STORAGE] Upload response:', { uploadData, error });
+
+      if (error) {
+        console.error('[STORAGE] Upload error:', error);
+        throw error;
+      }
+
+      // Get public URL for public buckets, signed URL for private ones
+      const isPublicBucket = bucket === 'bounty-images' || bucket === 'avatars';
       
-      console.log('[STORAGE] Signed URL generated');
-      onProgress?.(100);
-      return { url: data.signedUrl, path: filePath };
+      console.log('[STORAGE] Getting URL for public bucket:', isPublicBucket);
+      
+      if (isPublicBucket) {
+        const { data } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(filePath);
+        
+        console.log('[STORAGE] Public URL generated:', data.publicUrl);
+        onProgress?.(100);
+        return { url: data.publicUrl, path: filePath };
+      } else {
+        const { data, error: signError } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(filePath, 3600 * 24); // 24 hours
+        
+        if (signError) {
+          console.error('[STORAGE] Signed URL error:', signError);
+          throw signError;
+        }
+        
+        console.log('[STORAGE] Signed URL generated');
+        onProgress?.(100);
+        return { url: data.signedUrl, path: filePath };
+      }
+    } catch (uploadError) {
+      clearInterval(progressInterval);
+      throw uploadError;
     }
   } catch (error: any) {
     console.error('[STORAGE] Upload failed:', error);
