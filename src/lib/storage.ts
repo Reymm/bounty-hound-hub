@@ -8,11 +8,19 @@ export interface UploadResult {
   error?: string;
 }
 
+export interface UploadProgress {
+  fileName: string;
+  progress: number;
+  completed: boolean;
+  error?: string;
+}
+
 export const uploadFile = async (
   file: File,
   bucket: StorageBucket,
   userId: string,
-  customPath?: string
+  customPath?: string,
+  onProgress?: (progress: number) => void
 ): Promise<UploadResult> => {
   try {
     console.log('[STORAGE] Starting upload:', { fileName: file.name, fileSize: file.size, bucket, userId });
@@ -23,12 +31,18 @@ export const uploadFile = async (
 
     console.log('[STORAGE] Uploading to path:', filePath);
 
+    // Simulate progress since Supabase doesn't provide upload progress
+    // Report progress at different stages
+    onProgress?.(20);
+
     const { data: uploadData, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
       });
+
+    onProgress?.(80);
 
     console.log('[STORAGE] Upload response:', { uploadData, error });
 
@@ -48,6 +62,7 @@ export const uploadFile = async (
         .getPublicUrl(filePath);
       
       console.log('[STORAGE] Public URL generated:', data.publicUrl);
+      onProgress?.(100);
       return { url: data.publicUrl, path: filePath };
     } else {
       const { data, error: signError } = await supabase.storage
@@ -60,6 +75,7 @@ export const uploadFile = async (
       }
       
       console.log('[STORAGE] Signed URL generated');
+      onProgress?.(100);
       return { url: data.signedUrl, path: filePath };
     }
   } catch (error: any) {

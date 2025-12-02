@@ -200,7 +200,7 @@ function PostBountyForm() {
     }
   };
 
-  const handleImageUpload = async (files: File[]) => {
+  const handleImageUpload = async (files: File[], onProgress?: (fileName: string, progress: number) => void) => {
     console.log('handleImageUpload called with files:', files);
     try {
       // Get current user
@@ -212,7 +212,11 @@ function PostBountyForm() {
       }
 
       console.log('Starting upload for', files.length, 'files');
-      const uploadPromises = files.map(file => uploadFile(file, 'bounty-images', user.id));
+      const uploadPromises = files.map(file => 
+        uploadFile(file, 'bounty-images', user.id, undefined, (progress) => {
+          onProgress?.(file.name, progress);
+        })
+      );
       const uploadResults = await Promise.all(uploadPromises);
       console.log('Upload results:', uploadResults);
       
