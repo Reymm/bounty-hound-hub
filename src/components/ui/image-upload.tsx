@@ -1,12 +1,19 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X, Upload, Image, Loader2 } from 'lucide-react';
+import { X, Upload, Image, Loader2, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
+interface FileProgress {
+  name: string;
+  progress: number;
+  completed: boolean;
+  error?: string;
+}
+
 interface ImageUploadProps {
-  onUpload: (files: File[]) => Promise<void>;
+  onUpload: (files: File[], onProgress?: (fileName: string, progress: number) => void) => Promise<void>;
   onRemove: (imageUrl: string) => Promise<void>;
   uploadedImages: string[];
   maxFiles?: number;
@@ -26,6 +33,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
   const { toast } = useToast();
 
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
@@ -66,8 +74,26 @@ export function ImageUpload({
 
     if (validFiles.length > 0) {
       setIsUploading(true);
+      
+      // Initialize progress for each file
+      const initialProgress: FileProgress[] = validFiles.map(file => ({
+        name: file.name,
+        progress: 0,
+        completed: false
+      }));
+      setFileProgress(initialProgress);
+
       try {
-        await onUpload(validFiles);
+        await onUpload(validFiles, (fileName: string, progress: number) => {
+          setFileProgress(prev => 
+            prev.map(fp => 
+              fp.name === fileName 
+                ? { ...fp, progress, completed: progress === 100 }
+                : fp
+            )
+          );
+        });
+        
         toast({
           title: "Upload complete",
           description: `Successfully uploaded ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
@@ -81,6 +107,7 @@ export function ImageUpload({
         });
       } finally {
         setIsUploading(false);
+        setFileProgress([]);
       }
     }
   }, [uploadedImages.length, maxFiles, maxSize, toast, onUpload]);
@@ -143,12 +170,31 @@ export function ImageUpload({
           />
           
           {isUploading ? (
-            <>
-              <Loader2 className="h-8 w-8 mx-auto mb-3 text-primary animate-spin" />
-              <p className="text-sm text-foreground font-medium">
-                Uploading images...
+            <div className="space-y-3 w-full">
+              <Loader2 className="h-8 w-8 mx-auto text-primary animate-spin" />
+              <p className="text-sm text-foreground font-medium text-center">
+                Uploading {fileProgress.length} image{fileProgress.length > 1 ? 's' : ''}...
               </p>
-            </>
+              <div className="space-y-2 max-w-md mx-auto">
+                {fileProgress.map((fp, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground truncate max-w-[200px]">
+                        {fp.name}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {fp.completed ? (
+                          <CheckCircle2 className="h-3 w-3 text-green-500" />
+                        ) : (
+                          `${fp.progress}%`
+                        )}
+                      </span>
+                    </div>
+                    <Progress value={fp.progress} className="h-1" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <>
               <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
