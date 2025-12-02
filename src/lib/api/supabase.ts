@@ -93,7 +93,8 @@ const transformSubmissionRow = (row: any): Claim => ({
   proofImages: [], // TODO: Handle image attachments
   status: row.status as ClaimStatus,
   submittedAt: parseDbTimestamp(row.created_at as any),
-  updatedAt: parseDbTimestamp((row as any).updated_at || row.created_at as any)
+  updatedAt: parseDbTimestamp((row as any).updated_at || row.created_at as any),
+  rejectionReason: row.rejection_reason || undefined
 });
 
 // Supabase API functions
@@ -1027,7 +1028,8 @@ export const supabaseApi = {
             proofImages: [],
             status: submission.status as ClaimStatus,
             submittedAt: new Date(submission.created_at),
-            updatedAt: new Date(submission.updated_at || submission.created_at)
+            updatedAt: new Date(submission.updated_at || submission.created_at),
+            rejectionReason: submission.rejection_reason || undefined
           };
 
           return {
