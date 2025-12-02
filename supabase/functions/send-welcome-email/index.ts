@@ -13,217 +13,57 @@ interface WelcomeEmailRequest {
   full_name?: string;
 }
 
-const createWelcomeEmailHTML = (name: string) => `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to BountyBay!</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f8fafc;
-      color: #334155;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    .header {
-      background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
-      padding: 40px 30px;
-      text-align: center;
-      color: white;
-    }
-    .logo {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      text-decoration: none;
-      color: white;
-    }
-    .tagline {
-      font-size: 16px;
-      opacity: 0.9;
-      margin: 0;
-    }
-    .content {
-      padding: 40px 30px;
-    }
-    .greeting {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: #1e293b;
-    }
-    .text {
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 20px;
-      color: #475569;
-    }
-    .features {
-      background-color: #f1f5f9;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 30px 0;
-    }
-    .feature-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    .feature-item:last-child {
-      margin-bottom: 0;
-    }
-    .feature-icon {
-      width: 20px;
-      height: 20px;
-      background-color: hsl(214, 84%, 56%);
-      border-radius: 50%;
-      margin-right: 12px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .cta-button {
-      display: inline-block;
-      background: linear-gradient(135deg, hsl(214, 84%, 56%) 0%, hsl(214, 84%, 46%) 100%);
-      color: white;
-      text-decoration: none;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 16px;
-      margin: 20px 0;
-      transition: transform 0.2s;
-    }
-    .cta-button:hover {
-      transform: translateY(-1px);
-    }
-    .footer {
-      background-color: #f8fafc;
-      padding: 30px;
-      text-align: center;
-      border-top: 1px solid #e2e8f0;
-    }
-    .footer-text {
-      font-size: 14px;
-      color: #64748b;
-      margin: 0;
-    }
-    .social-links {
-      margin-top: 20px;
-    }
-    .social-link {
-      display: inline-block;
-      margin: 0 10px;
-      color: hsl(214, 84%, 56%);
-      text-decoration: none;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div style="padding: 20px;">
-    <div class="container">
-      <div class="header">
-        <div class="logo">BountyBay</div>
-        <p class="tagline">Help Find the Unfindable</p>
+const createWelcomeEmailHTML = (name: string) => {
+  const logoUrl = 'https://lenyuvobgktgdearflim.supabase.co/storage/v1/object/public/email-assets/bountybay-logo.png';
+  const primaryBlue = '#1E88E5';
+  
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+      <div style="background: white; padding: 30px 20px; text-align: center; border-bottom: 3px solid ${primaryBlue};">
+        <img src="${logoUrl}" alt="BountyBay" style="height: 45px; width: auto; max-width: 300px;" />
       </div>
-      
-      <div class="content">
-        <h1 class="greeting">Welcome to BountyBay, ${name}! 🎯</h1>
-        
-        <p class="text">
+      <div style="padding: 30px 20px; background: #f8f9fa;">
+        <h2 style="color: #333; margin-bottom: 20px;">Welcome to BountyBay, ${name}!</h2>
+        <p style="color: #666; font-size: 16px; line-height: 1.6;">
           Ready to discover unique bounties and earn money for your skills? 
           BountyBay connects talented people like you with those seeking hard-to-find items and specialized services.
         </p>
         
-        <div class="features">
-          <div class="feature-item">
-            <div class="feature-icon">$</div>
-            <div>
-              <strong>Earn Real Money</strong><br>
-              Get paid for finding rare items, completing tasks, and using your unique skills.
-            </div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">🔍</div>
-            <div>
-              <strong>Find the Unfindable</strong><br>
-              Help others locate hard-to-find items and rare collectibles worldwide.
-            </div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">✓</div>
-            <div>
-              <strong>Secure Transactions</strong><br>
-              Protected payments through our trusted escrow system.
-            </div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">★</div>
-            <div>
-              <strong>Build Your Reputation</strong><br>
-              Earn ratings and reviews to unlock higher-value bounties.
-            </div>
-          </div>
+        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
+          <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">Get Started</h3>
+          <ul style="color: #666; line-height: 1.8; margin: 0; padding-left: 20px;">
+            <li><strong>Earn Real Money</strong> - Get paid for finding rare items and completing tasks</li>
+            <li><strong>Find the Unfindable</strong> - Help others locate hard-to-find items worldwide</li>
+            <li><strong>Secure Transactions</strong> - Protected payments through our escrow system</li>
+            <li><strong>Build Your Reputation</strong> - Earn ratings to unlock higher-value bounties</li>
+          </ul>
         </div>
         
-        <p class="text">
-          Ready to dive in? Explore available bounties and start building your success story today!
-        </p>
-        
-        <div style="text-align: center;">
-          <a href="https://bountybay.co/active-bounties" class="cta-button">
-            Browse Active Bounties
-          </a>
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #1976d2; font-size: 14px;">
+            <strong>Quick Tips:</strong><br>
+            • Complete your profile to increase your chances<br>
+            • Start with smaller bounties to build reputation<br>
+            • Read requirements carefully before claiming<br>
+            • Communicate clearly with bounty posters
+          </p>
         </div>
         
-        <p class="text" style="margin-top: 30px;">
-          <strong>Quick Tips to Get Started:</strong>
-        </p>
-        <ul style="color: #475569; line-height: 1.6;">
-          <li>Complete your profile to increase your chances of being selected</li>
-          <li>Start with smaller bounties to build your reputation</li>
-          <li>Read bounty requirements carefully before claiming</li>
-          <li>Communicate clearly with bounty posters</li>
-        </ul>
-      </div>
-      
-      <div class="footer">
-        <p class="footer-text">
-          Have questions? We're here to help! Contact our support team anytime.
-        </p>
-        <div class="social-links">
-          <a href="https://bountybay.co/support" class="social-link">Support</a>
-          <a href="https://bountybay.co/legal/terms" class="social-link">Terms</a>
-          <a href="https://bountybay.co/legal/privacy" class="social-link">Privacy</a>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://www.bountybay.co" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Browse Active Bounties</a>
         </div>
-        <p class="footer-text" style="margin-top: 20px; font-size: 12px;">
-          © 2024 BountyBay. All rights reserved.
+        
+        <p style="color: #666; font-size: 14px;">
+          Have questions? We're here to help! Contact our support team anytime.<br><br>
+          Best regards,<br>
+          The BountyBay Team
         </p>
       </div>
     </div>
-  </div>
-</body>
-</html>
-`;
+  `;
+};
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -240,9 +80,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending welcome email to: ${email}`);
 
     const emailResponse = await resend.emails.send({
-      from: "BountyBay <noreply@bountybay.co>",
+      from: "BountyBay <notifications@bountybay.co>",
       to: [email],
-      subject: "Welcome to BountyBay - Your Journey Starts Now! 🚀",
+      subject: "Welcome to BountyBay - Your Journey Starts Now!",
       html: createWelcomeEmailHTML(name),
     });
 

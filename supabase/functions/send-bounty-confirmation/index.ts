@@ -16,90 +16,40 @@ interface BountyConfirmationRequest {
   posterName?: string;
 }
 
-const createBountyConfirmationHTML = (posterName: string, bountyTitle: string, bountyAmount: number, bountyId: string) => `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Bounty is Live!</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f8fafc;
-      color: #334155;
-    }
-    .container {
-      max-width: 600px;
-      margin: 40px auto;
-      background-color: #ffffff;
-      padding: 40px;
-      text-align: center;
-    }
-    .logo {
-      font-size: 32px;
-      font-weight: bold;
-      color: hsl(214, 84%, 56%);
-      margin-bottom: 30px;
-    }
-    .heading {
-      font-size: 32px;
-      font-weight: 600;
-      color: #1e293b;
-      margin: 30px 0 20px;
-      line-height: 1.3;
-    }
-    .subtext {
-      font-size: 16px;
-      line-height: 1.6;
-      color: #64748b;
-      margin-bottom: 30px;
-    }
-    .cta-button {
-      display: inline-block;
-      background: hsl(214, 84%, 56%);
-      color: white;
-      text-decoration: none;
-      padding: 14px 32px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 16px;
-      margin: 20px 0;
-    }
-    .footer-text {
-      font-size: 14px;
-      color: #94a3b8;
-      margin-top: 40px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="logo">BountyBay</div>
-    
-    <h1 class="heading">Your Bounty is Live!</h1>
-    
-    <p class="subtext">
-      Congratulations, ${posterName}! Your bounty "${bountyTitle}" for $${bountyAmount.toFixed(2)} has been successfully posted. 
-      Hunters will start working to help you find what you're looking for.
-    </p>
-    
-    <a href="https://bountybay.co/b/${bountyId}" class="cta-button" style="color: white !important; text-decoration: none;">
-      View Your Bounty
-    </a>
-    
-    <p class="footer-text">
-      If you didn't post this bounty, you can safely ignore this email.
-    </p>
-  </div>
-</body>
-</html>
-`;
+const createBountyConfirmationHTML = (posterName: string, bountyTitle: string, bountyAmount: number, bountyId: string) => {
+  const logoUrl = 'https://lenyuvobgktgdearflim.supabase.co/storage/v1/object/public/email-assets/bountybay-logo.png';
+  const primaryBlue = '#1E88E5';
+  const bountyUrl = `https://www.bountybay.co/b/${bountyId}`;
+  
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+      <div style="background: white; padding: 30px 20px; text-align: center; border-bottom: 3px solid ${primaryBlue};">
+        <img src="${logoUrl}" alt="BountyBay" style="height: 45px; width: auto; max-width: 300px;" />
+      </div>
+      <div style="padding: 30px 20px; background: #f8f9fa;">
+        <h2 style="color: #333; margin-bottom: 20px;">Your Bounty is Live!</h2>
+        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+          Congratulations, ${posterName}! Your bounty has been successfully posted. 
+          Hunters will start working to help you find what you're looking for.
+        </p>
+        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
+          <h3 style="color: #333; margin: 0 0 10px 0;">${bountyTitle}</h3>
+          <p style="color: ${primaryBlue}; font-weight: bold; font-size: 18px; margin: 0;">$${bountyAmount.toFixed(2)}</p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Your Bounty</a>
+        </div>
+        <p style="color: #666; font-size: 14px;">
+          If you didn't post this bounty, you can safely ignore this email.<br><br>
+          Best regards,<br>
+          The BountyBay Team
+        </p>
+      </div>
+    </div>
+  `;
+};
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -116,9 +66,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending bounty confirmation email to: ${email} for bounty: ${bountyId}`);
 
     const emailResponse = await resend.emails.send({
-      from: "BountyBay <noreply@bountybay.co>",
+      from: "BountyBay <notifications@bountybay.co>",
       to: [email],
-      subject: `Your Bounty "${bountyTitle}" is Now Live! 🎯`,
+      subject: `Your Bounty "${bountyTitle}" is Now Live!`,
       html: createBountyConfirmationHTML(name, bountyTitle, bountyAmount, bountyId),
     });
 
