@@ -346,6 +346,57 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          bounty_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          submission_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          bounty_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          submission_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          bounty_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          submission_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_bounty"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_submission"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "Submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

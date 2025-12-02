@@ -18,7 +18,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { bountyId, hunterId } = await req.json();
+    const { bountyId, hunterId, submissionId } = await req.json();
 
     // Get bounty and poster details
     const { data: bountyData, error: bountyError } = await supabase
@@ -46,6 +46,23 @@ const handler = async (req: Request): Promise<Response> => {
       .select('username')
       .eq('id', bountyData.poster_id)
       .single();
+
+    // Create in-app notification for bounty poster
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: bountyData.poster_id,
+        type: 'submission_received',
+        title: 'New Claim Submitted',
+        message: `${hunterProfile?.username || 'A hunter'} submitted a claim for "${bountyData.title}"`,
+        bounty_id: bountyId,
+        submission_id: submissionId,
+        is_read: false
+      });
+
+    if (notificationError) {
+      console.error('Failed to create in-app notification:', notificationError);
+    }
 
     // Send notification email to bounty poster
     const { error: emailError } = await supabase.functions.invoke('send-notification-email', {
