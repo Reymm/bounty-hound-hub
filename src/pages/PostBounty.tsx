@@ -1057,14 +1057,13 @@ function PostBountyForm() {
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                To ensure trust and security, bounty funds must be deposited in escrow before posting. 
-                This guarantees payment to successful hunters and protects both parties.
+                <strong>How pricing works:</strong> The bounty reward is your finder's fee for locating the item. The target price is what you'll pay for the item itself. Only the finder's fee is held in escrow - you'll handle item payment separately.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
               <Label htmlFor="bountyAmount">
-                Bounty Amount <span className="text-destructive">*</span>
+                Bounty Reward (Finder's Fee) <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -1088,17 +1087,17 @@ function PostBountyForm() {
                 <p className="text-sm text-destructive">Minimum bounty must be $5</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Amount to reward the successful hunter ($5 - $10,000)
+                💰 This is your reward to the hunter for <strong>finding</strong> the item - not the item's purchase price ($5 - $10,000)
               </p>
             </div>
 
             {/* Fee Breakdown */}
             {platformFee > 0 && (
               <div className="bg-muted/50 p-4 rounded-lg space-y-3">
-                <h4 className="font-medium">Payment Breakdown</h4>
+                <h4 className="font-medium">Finder's Fee Payment Breakdown</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span>Bounty Amount:</span>
+                    <span>Bounty Reward (Finder's Fee):</span>
                     <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
@@ -1121,7 +1120,7 @@ function PostBountyForm() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2 border-t">
-                  💰 Funds will be held in escrow until you approve the hunter's submission
+                  💰 This covers only the finder's fee - item purchase costs are separate
                 </p>
               </div>
             )}
@@ -1169,7 +1168,7 @@ function PostBountyForm() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                This is what you're willing to pay for the item you're looking for (separate from the bounty reward)
+                🏷️ This is what you're willing to pay for the <strong>item itself</strong> (separate from the finder's fee above)
               </p>
             </div>
 
