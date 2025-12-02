@@ -168,9 +168,11 @@ export default function MyBounties() {
                             <MessageCircle className="h-4 w-4" />
                             {bounty.claimsCount} claims
                           </div>
-                          <div>
-                            Deadline: {format(bounty.deadline, 'MMM dd, yyyy')}
-                          </div>
+                          {bounty.deadline && (
+                            <div>
+                              Deadline: {format(bounty.deadline, 'MMM dd, yyyy')}
+                            </div>
+                          )}
                           <div>
                             Posted {formatDistanceToNow(bounty.createdAt, { addSuffix: true })}
                           </div>
