@@ -23,6 +23,19 @@ type SubmissionRow = Database['public']['Tables']['Submissions']['Row'];
 type MessageRow = Database['public']['Tables']['messages']['Row'];
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
+// Helper to parse Supabase timestamps (treat naive ones as UTC)
+const parseDbTimestamp = (value: string | null | undefined): Date => {
+  if (!value) return new Date();
+  if (
+    value.endsWith('Z') ||
+    value.endsWith('z') ||
+    /[+-]\d{2}:\d{2}$/.test(value)
+  ) {
+    return new Date(value);
+  }
+  return new Date(`${value}Z`);
+};
+
 // API-specific types (after form processing)
 interface CreateBountyData {
   title: string;
@@ -53,15 +66,15 @@ function transformBountyRow(row: BountyRow, profile?: any): Bounty {
     targetPriceMin: row.target_price_min || undefined,
     targetPriceMax: row.target_price_max || undefined,
     location: row.location || '',
-    deadline: row.deadline ? new Date(row.deadline) : undefined,
+    deadline: row.deadline ? parseDbTimestamp(row.deadline as any) : undefined,
     status: row.status as BountyStatus,
     posterId: row.poster_id || '',
     posterName: profile?.full_name || profile?.username || 'Anonymous',
     posterRating: Number(profile?.reputation_score || 5),
     posterRatingCount: (profile?.total_successful_claims || 0) + (profile?.total_failed_claims || 0),
     verificationRequirements: row.verification_requirements || [],
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at || row.created_at),
+    createdAt: parseDbTimestamp(row.created_at as any),
+    updatedAt: parseDbTimestamp((row as any).updated_at || row.created_at as any),
     claimsCount: 0, // Will be populated separately if needed
     viewsCount: row.view_count || 0
   };
@@ -79,8 +92,8 @@ const transformSubmissionRow = (row: any): Claim => ({
   proofUrls: row.proof_urls || [],
   proofImages: [], // TODO: Handle image attachments
   status: row.status as ClaimStatus,
-  submittedAt: new Date(row.created_at || Date.now()),
-  updatedAt: new Date(row.created_at || Date.now())
+  submittedAt: parseDbTimestamp(row.created_at as any),
+  updatedAt: parseDbTimestamp((row as any).updated_at || row.created_at as any)
 });
 
 // Supabase API functions
