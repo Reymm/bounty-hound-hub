@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 interface Notification {
   id: string;
@@ -31,6 +32,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -90,20 +92,37 @@ export function NotificationBell() {
   };
 
   const handleNotificationClick = async (notification: Notification) => {
-    await markAsRead(notification.id);
-    setOpen(false);
-
-    // For submission status notifications (hunter's perspective), go to My Bounties applied tab
-    if (notification.type === 'submission_accepted' || notification.type === 'submission_rejected') {
-      navigate('/me/bounties?tab=applied');
-    } 
-    // For new claim notifications (poster's perspective), go to bounty claims tab
-    else if (notification.type === 'submission_received' && notification.bounty_id) {
-      navigate(`/b/${notification.bounty_id}?tab=claims`);
-    } 
-    // Default: go to bounty detail page
-    else if (notification.bounty_id) {
-      navigate(`/b/${notification.bounty_id}`);
+    try {
+      await markAsRead(notification.id);
+      
+      // For submission status notifications (hunter's perspective), go to My Bounties applied tab
+      if (notification.type === 'submission_accepted' || notification.type === 'submission_rejected') {
+        setOpen(false);
+        navigate('/me/bounties?tab=applied');
+      } 
+      // For new claim notifications (poster's perspective), go to bounty claims tab
+      else if (notification.type === 'submission_received' && notification.bounty_id) {
+        setOpen(false);
+        navigate(`/b/${notification.bounty_id}?tab=claims`);
+      } 
+      // Default: go to bounty detail page
+      else if (notification.bounty_id) {
+        setOpen(false);
+        navigate(`/b/${notification.bounty_id}`);
+      } else {
+        setOpen(false);
+        toast({
+          title: "Notification opened",
+          description: "This notification doesn't have a linked page.",
+        });
+      }
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process notification",
+        variant: "destructive",
+      });
     }
   };
 
