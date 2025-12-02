@@ -233,7 +233,7 @@ export default function BountyDetail() {
             </div>
 
             {/* Action Panel - Desktop */}
-            <div className="lg:w-80">
+            <div className="hidden lg:block lg:w-80">
               <Card>
                 <CardContent className="p-4 space-y-4">
                   {bounty.targetPriceMin && bounty.targetPriceMax && (
