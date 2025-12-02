@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
 import { TopCategories } from '@/components/home/TopCategories';
+import { CompletedBounties } from '@/components/home/CompletedBounties';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -205,6 +206,11 @@ const Index = () => {
       {/* Top Categories Section - Hidden when filters active */}
       {!hasActiveFilters && (
         <TopCategories onCategorySelect={handleCategorySelect} />
+      )}
+
+      {/* Completed Bounties Section - Hidden when filters active */}
+      {!hasActiveFilters && (
+        <CompletedBounties />
       )}
 
       {/* Browse Section */}

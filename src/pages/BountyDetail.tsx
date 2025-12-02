@@ -46,6 +46,37 @@ export default function BountyDetail() {
     loadBountyDetail();
   }, [id]);
 
+  // Realtime subscription for bounty status changes
+  useEffect(() => {
+    if (!id) return;
+    
+    const { supabase } = require('@/integrations/supabase/client');
+    const channel = supabase
+      .channel('bounty-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'Bounties',
+          filter: `id=eq.${id}`,
+        },
+        (payload: any) => {
+          // Reload bounty when status changes
+          loadBountyDetail();
+          toast({
+            title: "Bounty Updated",
+            description: "This bounty has been updated.",
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
   const loadBountyDetail = async () => {
     if (!id) return;
     
