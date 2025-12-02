@@ -38,7 +38,9 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [revisionDialogOpen, setRevisionDialogOpen] = useState(false);
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
   const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState('');
   const [confirmingDelivery, setConfirmingDelivery] = useState(false);
+  const [rejectingClaim, setRejectingClaim] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -120,8 +122,9 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   };
 
   const handleRejectClaim = async () => {
-    if (!selectedSubmission) return;
+    if (!selectedSubmission || rejectingClaim) return;
     
+    setRejectingClaim(true);
     const success = await supabaseApi.updateClaimStatus(
       selectedSubmission, 
       ClaimStatus.REJECTED, 
@@ -138,12 +141,14 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       setRejectionDialogOpen(false);
       setSelectedSubmission(null);
       setRejectionReason('');
+      setRejectingClaim(false);
     } else {
       toast({
         title: "Error",
         description: "Failed to reject the claim. Please try again.",
         variant: "destructive",
       });
+      setRejectingClaim(false);
     }
   };
 
@@ -456,9 +461,9 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
             <Button 
               variant="destructive" 
               onClick={handleRejectClaim}
-              disabled={!rejectionReason.trim()}
+              disabled={!rejectionReason.trim() || rejectingClaim}
             >
-              Reject Submission
+              {rejectingClaim ? 'Rejecting...' : 'Reject Submission'}
             </Button>
           </DialogFooter>
         </DialogContent>
