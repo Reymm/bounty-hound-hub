@@ -52,6 +52,29 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('id', bounty.poster_id)
       .single();
 
+    // Create in-app notification for hunter
+    const title = newStatus === 'accepted' ? 'Submission Accepted' : 'Submission Rejected';
+    const message =
+      newStatus === 'accepted'
+        ? `Your submission for "${bounty.title}" was accepted.`
+        : `Your submission for "${bounty.title}" was rejected.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`;
+
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: submission.hunter_id,
+        type: newStatus === 'accepted' ? 'submission_accepted' : 'submission_rejected',
+        title,
+        message,
+        bounty_id: submission.bounty_id,
+        submission_id: submissionId,
+        is_read: false,
+      });
+
+    if (notificationError) {
+      console.error('Failed to create in-app notification for hunter:', notificationError);
+    }
+
     // Send notification email to hunter
     const { error: emailError } = await supabase.functions.invoke('send-notification-email', {
       body: {
