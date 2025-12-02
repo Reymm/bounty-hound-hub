@@ -300,6 +300,14 @@ function PostBountyForm() {
     try {
       setIsSubmitting(true);
       
+      // If we already have a payment intent (user went back to edit), 
+      // just go back to payment without creating a new one
+      if (clientSecret && paymentIntentId) {
+        setCurrentStep('payment');
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Validate required fields
       if (!data.category) {
         toast({
