@@ -95,7 +95,11 @@ serve(async (req) => {
       tags: bounty_data.tags || [],
       verification_requirements: bounty_data.verificationRequirements || [],
       target_price_min: bounty_data.targetPriceMin,
-      target_price_max: bounty_data.targetPriceMax
+      target_price_max: bounty_data.targetPriceMax,
+      requires_shipping: bounty_data.requires_shipping || false,
+      hunter_purchases_item: bounty_data.hunter_purchases_item || false,
+      has_milestones: bounty_data.has_milestones || false,
+      milestone_data: bounty_data.milestone_data || null
     };
     
     logStep("About to insert bounty", { insertData: bountyInsertData });

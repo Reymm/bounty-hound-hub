@@ -209,7 +209,7 @@ export const supabaseApi = {
       
       if (user?.user) {
         const { data: canView } = await supabase.rpc('can_view_shipping_details', { 
-          bounty_id: id 
+          p_bounty_id: id 
         });
         canViewShipping = canView || false;
       }

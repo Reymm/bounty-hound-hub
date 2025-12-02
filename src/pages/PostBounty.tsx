@@ -65,6 +65,7 @@ function PostBountyForm() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(true);
   const [requiresShipping, setRequiresShipping] = useState(false);
+  const [hunterPurchasesItem, setHunterPurchasesItem] = useState(false);
   const [useMilestones, setUseMilestones] = useState(false);
   const [milestones, setMilestones] = useState<Array<{id: string, title: string, description: string, amount: number}>>([]);
 
@@ -507,6 +508,7 @@ function PostBountyForm() {
               verificationRequirements: verificationRequirements.filter(req => req.trim()),
               images: uploadedImages,
               requires_shipping: requiresShipping,
+              hunter_purchases_item: hunterPurchasesItem,
               has_milestones: useMilestones,
               milestone_data: useMilestones ? milestones : null
             }
@@ -1019,6 +1021,24 @@ function PostBountyForm() {
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   Check this if the hunter will need to ship the item to you. You'll provide your shipping address after accepting a submission.
+                </p>
+              </div>
+            </div>
+
+            {/* Hunter Purchases Item Checkbox */}
+            <div className="flex items-start space-x-3 p-4 bg-muted/30 rounded-lg border-2 border-primary/20">
+              <Checkbox 
+                id="hunterPurchasesItem"
+                checked={hunterPurchasesItem}
+                onCheckedChange={(checked) => setHunterPurchasesItem(checked as boolean)}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="hunterPurchasesItem" className="flex items-center gap-2 cursor-pointer">
+                  <DollarSign className="h-4 w-4" />
+                  <span>Hunter will purchase the item</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Check this if you want the hunter to buy the item for you. You'll send purchase funds after approving their submission, then they'll buy and deliver it. Leave unchecked if you just want leads/information.
                 </p>
               </div>
             </div>

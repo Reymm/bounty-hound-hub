@@ -24,6 +24,7 @@ export type Database = {
           escrow_amount: number | null
           escrow_status: string | null
           has_milestones: boolean | null
+          hunter_purchases_item: boolean | null
           id: string
           images: string[] | null
           location: string | null
@@ -53,6 +54,7 @@ export type Database = {
           escrow_amount?: number | null
           escrow_status?: string | null
           has_milestones?: boolean | null
+          hunter_purchases_item?: boolean | null
           id?: string
           images?: string[] | null
           location?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           escrow_amount?: number | null
           escrow_status?: string | null
           has_milestones?: boolean | null
+          hunter_purchases_item?: boolean | null
           id?: string
           images?: string[] | null
           location?: string | null
