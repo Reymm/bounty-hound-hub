@@ -93,10 +93,16 @@ export function NotificationBell() {
     await markAsRead(notification.id);
     setOpen(false);
 
-    // For submission-related notifications, go to My Bounties applied tab
+    // For submission status notifications (hunter's perspective), go to My Bounties applied tab
     if (notification.type === 'submission_accepted' || notification.type === 'submission_rejected') {
       navigate('/me/bounties?tab=applied');
-    } else if (notification.bounty_id) {
+    } 
+    // For new claim notifications (poster's perspective), go to bounty claims tab
+    else if (notification.type === 'submission_received' && notification.bounty_id) {
+      navigate(`/b/${notification.bounty_id}?tab=claims`);
+    } 
+    // Default: go to bounty detail page
+    else if (notification.bounty_id) {
       navigate(`/b/${notification.bounty_id}`);
     }
   };
