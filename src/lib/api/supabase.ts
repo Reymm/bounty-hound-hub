@@ -53,7 +53,7 @@ interface CreateBountyData {
 }
 
 // Helper functions to transform database rows to app types
-function transformBountyRow(row: BountyRow, profile?: any): Bounty {
+function transformBountyRow(row: BountyRow, profile?: any, claimsCount?: number): Bounty {
   return {
     id: row.id,
     title: row.title,
@@ -75,7 +75,7 @@ function transformBountyRow(row: BountyRow, profile?: any): Bounty {
     verificationRequirements: row.verification_requirements || [],
     createdAt: parseDbTimestamp(row.created_at as any),
     updatedAt: parseDbTimestamp((row as any).updated_at || row.created_at as any),
-    claimsCount: 0, // Will be populated separately if needed
+    claimsCount: claimsCount || 0,
     viewsCount: row.view_count || 0
   };
 }
@@ -217,6 +217,12 @@ export const supabaseApi = {
         throw error;
       }
 
+      // Get count of submissions for this bounty
+      const { count: submissionsCount } = await supabase
+        .from('Submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('bounty_id', id);
+
       // Check if user can view shipping details
       const { data: user } = await supabase.auth.getUser();
       let canViewShipping = false;
@@ -244,7 +250,7 @@ export const supabaseApi = {
         total_failed_claims: 0 // Default for public access
       } : null;
 
-      return transformBountyRow(data, profile);
+      return transformBountyRow(data, profile, submissionsCount || 0);
     } catch (error) {
       console.error('Error fetching bounty:', error);
       return null;
