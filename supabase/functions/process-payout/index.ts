@@ -32,7 +32,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get submission details
+    // Get submission details - explicitly reference the bounty_id foreign key
     const { data: submission, error: submissionError } = await supabaseClient
       .from('Submissions')
       .select(`
@@ -40,7 +40,7 @@ serve(async (req) => {
         hunter_id,
         bounty_id,
         status,
-        Bounties!inner(
+        Bounties!Submissions_bounty_id_fkey(
           id,
           amount,
           poster_id,
