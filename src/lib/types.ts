@@ -40,6 +40,7 @@ export interface Claim {
   status: ClaimStatus;
   submittedAt: Date;
   updatedAt: Date;
+  rejectionReason?: string;
 }
 
 export interface Message {

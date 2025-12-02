@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, MessageCircle, Settings, Plus, Package, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,11 +14,20 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
 
 export default function MyBounties() {
+  const [searchParams] = useSearchParams();
   const [postedBounties, setPostedBounties] = useState<Bounty[]>([]);
   const [appliedBounties, setAppliedBounties] = useState<(Bounty & { claim: Claim })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('posted');
   const { toast } = useToast();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'applied') {
+      setActiveTab('applied');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadMyBounties();
@@ -99,7 +108,7 @@ export default function MyBounties() {
         </Button>
       </div>
 
-      <Tabs defaultValue="posted" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="posted" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="posted">
             Posted ({postedBounties.length})
@@ -290,6 +299,13 @@ export default function MyBounties() {
                                 {url}
                               </a>
                             ))}
+                          </div>
+                        )}
+                        
+                        {item.claim.status === ClaimStatus.REJECTED && item.claim.rejectionReason && (
+                          <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                            <p className="text-xs font-semibold text-destructive mb-1">Rejection Reason:</p>
+                            <p className="text-sm text-destructive/90">{item.claim.rejectionReason}</p>
                           </div>
                         )}
                       </div>

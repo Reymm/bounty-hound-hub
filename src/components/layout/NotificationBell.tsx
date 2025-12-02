@@ -93,7 +93,10 @@ export function NotificationBell() {
     await markAsRead(notification.id);
     setOpen(false);
 
-    if (notification.bounty_id) {
+    // For submission-related notifications, go to My Bounties applied tab
+    if (notification.type === 'submission_accepted' || notification.type === 'submission_rejected') {
+      navigate('/me/bounties?tab=applied');
+    } else if (notification.bounty_id) {
       navigate(`/b/${notification.bounty_id}`);
     }
   };
