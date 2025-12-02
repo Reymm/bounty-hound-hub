@@ -94,27 +94,66 @@ export function NotificationBell() {
   const handleNotificationClick = async (notification: Notification) => {
     try {
       await markAsRead(notification.id);
+      setOpen(false);
       
-      // For submission status notifications (hunter's perspective), go to My Bounties applied tab
-      if (notification.type === 'submission_accepted' || notification.type === 'submission_rejected') {
-        setOpen(false);
-        navigate('/me/bounties?tab=applied');
-      } 
-      // For new claim notifications (poster's perspective), go to bounty claims tab
-      else if (notification.type === 'submission_received' && notification.bounty_id) {
-        setOpen(false);
-        navigate(`/b/${notification.bounty_id}?tab=claims`);
-      } 
-      // Default: go to bounty detail page
-      else if (notification.bounty_id) {
-        setOpen(false);
-        navigate(`/b/${notification.bounty_id}`);
-      } else {
-        setOpen(false);
-        toast({
-          title: "Notification opened",
-          description: "This notification doesn't have a linked page.",
-        });
+      // Route based on notification type
+      switch (notification.type) {
+        // Hunter receives these - go to their applied bounties
+        case 'submission_accepted':
+        case 'submission_rejected':
+        case 'revision_requested':
+          navigate('/me/bounties?tab=applied');
+          break;
+          
+        // Poster receives these - go to bounty claims tab
+        case 'submission_received':
+          if (notification.bounty_id) {
+            navigate(`/b/${notification.bounty_id}?tab=claims`);
+          } else {
+            navigate('/me/bounties?tab=posted');
+          }
+          break;
+          
+        // Shipping/delivery notifications - go to applied bounties
+        case 'shipping_details_provided':
+        case 'item_shipped':
+        case 'delivery_confirmed':
+          navigate('/me/bounties?tab=applied');
+          break;
+          
+        // Dispute notifications - go to the bounty detail
+        case 'dispute_opened':
+        case 'dispute_resolved':
+          if (notification.bounty_id) {
+            navigate(`/b/${notification.bounty_id}`);
+          } else {
+            navigate('/me/bounties');
+          }
+          break;
+          
+        // Bounty status notifications
+        case 'bounty_posted':
+        case 'bounty_cancelled':
+        case 'bounty_completed':
+          if (notification.bounty_id) {
+            navigate(`/b/${notification.bounty_id}`);
+          } else {
+            navigate('/me/bounties?tab=posted');
+          }
+          break;
+          
+        // Default: go to bounty detail if available
+        default:
+          if (notification.bounty_id) {
+            navigate(`/b/${notification.bounty_id}`);
+          } else if (notification.submission_id) {
+            navigate('/me/bounties?tab=applied');
+          } else {
+            toast({
+              title: "Notification opened",
+              description: "This notification doesn't have a linked page.",
+            });
+          }
       }
     } catch (error) {
       console.error('Error handling notification click:', error);
