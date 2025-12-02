@@ -275,8 +275,12 @@ export default function BountyDetail() {
                       </Button>
                     </>
                   )}
-                  
-                  {canCancelBounty && (
+                </CardContent>
+              </Card>
+              
+              {canCancelBounty && (
+                <Card className="mt-4">
+                  <CardContent className="p-4">
                     <Button
                       variant="destructive"
                       className="w-full"
@@ -285,9 +289,9 @@ export default function BountyDetail() {
                       <XCircle className="h-4 w-4 mr-2" />
                       Cancel Bounty
                     </Button>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </CardContent>
@@ -441,8 +445,12 @@ export default function BountyDetail() {
                   </Button>
                 </>
               )}
-              
-              {canCancelBounty && (
+            </CardContent>
+          </Card>
+          
+          {canCancelBounty && (
+            <Card className="mt-4 sticky top-20">
+              <CardContent className="p-4">
                 <Button
                   variant="destructive"
                   className="w-full"
@@ -451,9 +459,9 @@ export default function BountyDetail() {
                   <XCircle className="h-4 w-4 mr-2" />
                   Cancel Bounty
                 </Button>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
