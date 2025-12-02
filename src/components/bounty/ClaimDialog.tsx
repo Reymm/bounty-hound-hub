@@ -80,22 +80,43 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     setProofUrls(updated);
   };
 
-  const handleImageUpload = async (files: File[]) => {
+  const handleImageUpload = async (files: File[], onProgress?: (fileName: string, progress: number) => void) => {
     try {
-      const uploadPromises = files.map(file => uploadFile(file, 'submission-files', user!.id));
+      const uploadPromises = files.map(file => 
+        uploadFile(file, 'submission-files', user!.id, undefined, (progress) => {
+          onProgress?.(file.name, progress);
+        })
+      );
       const uploadResults = await Promise.all(uploadPromises);
       
       const successfulUploads = uploadResults
         .filter(result => !result.error && result.url)
         .map(result => result.url!);
       
-      const newImages = [...uploadedImages, ...successfulUploads];
-      setUploadedImages(newImages);
+      const failedUploads = uploadResults.filter(result => result.error);
       
-      toast({
-        title: "Images uploaded",
-        description: `${successfulUploads.length} image(s) uploaded successfully.`,
-      });
+      if (failedUploads.length > 0) {
+        const errorMessages = failedUploads
+          .map(r => r.error)
+          .filter(Boolean)
+          .join(', ');
+        
+        toast({
+          title: "Some uploads failed",
+          description: errorMessages || "Please try again",
+          variant: "destructive",
+        });
+      }
+      
+      if (successfulUploads.length > 0) {
+        const newImages = [...uploadedImages, ...successfulUploads];
+        setUploadedImages(newImages);
+        
+        toast({
+          title: "Images uploaded",
+          description: `${successfulUploads.length} image(s) uploaded successfully.`,
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Upload failed",
