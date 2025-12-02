@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { NotificationBell } from './NotificationBell';
 
 interface TopNavProps {
   onSearch?: (query: string) => void;
@@ -166,6 +167,8 @@ export function TopNav({ onSearch }: TopNavProps) {
                     )}
                   </Link>
                 </Button>
+
+                <NotificationBell />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
