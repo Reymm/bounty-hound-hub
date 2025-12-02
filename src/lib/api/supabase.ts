@@ -53,7 +53,7 @@ function transformBountyRow(row: BountyRow, profile?: any): Bounty {
     targetPriceMin: row.target_price_min || undefined,
     targetPriceMax: row.target_price_max || undefined,
     location: row.location || '',
-    deadline: row.deadline ? new Date(row.deadline) : new Date(),
+    deadline: row.deadline ? new Date(row.deadline) : undefined,
     status: row.status as BountyStatus,
     posterId: row.poster_id || '',
     posterName: profile?.full_name || profile?.username || 'Anonymous',
@@ -61,7 +61,7 @@ function transformBountyRow(row: BountyRow, profile?: any): Bounty {
     posterRatingCount: (profile?.total_successful_claims || 0) + (profile?.total_failed_claims || 0),
     verificationRequirements: row.verification_requirements || [],
     createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at || row.created_at),
     claimsCount: 0, // Will be populated separately if needed
     viewsCount: row.view_count || 0
   };
