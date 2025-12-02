@@ -38,18 +38,27 @@ const generateEmailContent = (data: EmailRequest) => {
   const baseUrl = 'https://www.bountybay.co';
   const bountyUrl = `${baseUrl}/b/${data.bountyId}`;
   
-  // Standard blue color for consistency
-  const primaryBlue = 'hsl(214, 84%, 56%)';
+  // Use the actual BountyBay logo - upload this logo to your Supabase storage bucket
+  // For now using a placeholder - you'll need to upload bountybay-text-logo.png to public storage
+  const logoUrl = 'https://lenyuvobgktgdearflim.supabase.co/storage/v1/object/public/email-assets/bountybay-logo.png';
+  
+  // Standard blue color matching your brand
+  const primaryBlue = '#1E88E5'; // This matches hsl(214, 84%, 56%)
+  
+  // Standard email header with logo
+  const emailHeader = `
+    <div style="background: white; padding: 30px 20px; text-align: center; border-bottom: 3px solid ${primaryBlue};">
+      <img src="${logoUrl}" alt="BountyBay" style="height: 45px; width: auto; max-width: 300px;" />
+    </div>
+  `;
   
   switch (data.type) {
     case 'bounty_posted':
       return {
         subject: `New Bounty Posted: ${data.bountyTitle}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: #333; margin-bottom: 20px;">New Bounty Available</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -75,10 +84,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Your Bounty "${data.bountyTitle}" Has Been Claimed`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: #333; margin-bottom: 20px;">Bounty Claimed</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -104,10 +111,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `New Submission for "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: #333; margin-bottom: 20px;">New Submission Received</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -133,10 +138,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Bounty Completed: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: #333; margin-bottom: 20px;">Bounty Completed</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -162,10 +165,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Your Submission Was Accepted: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Submission Accepted</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -191,10 +192,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Submission Update Required: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: #333; margin-bottom: 20px;">Submission Needs Updates</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -221,10 +220,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Shipping Details for: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Ready to Ship</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -266,10 +263,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `New Support Ticket: ${data.ticketTitle}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay Admin</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">New Support Ticket</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -299,10 +294,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Revision Requested: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Revision Requested</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -336,10 +329,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Dispute Opened: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Dispute Opened</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -374,10 +365,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Item Shipped: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Your Item is On the Way</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -408,10 +397,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Item Delivered: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Delivery Confirmed</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
@@ -438,10 +425,8 @@ const generateEmailContent = (data: EmailRequest) => {
       return {
         subject: `Dispute Resolved: "${data.bountyTitle}"`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">BountyBay</h1>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
+            ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
               <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Dispute Resolved</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
