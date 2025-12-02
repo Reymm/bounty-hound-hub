@@ -230,6 +230,17 @@ export default function BountyDetail() {
                   ))}
                 </div>
               )}
+              
+              {canCancelBounty && (
+                <Button
+                  variant="destructive"
+                  onClick={() => setIsCancelDialogOpen(true)}
+                  className="mt-4"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancel Bounty
+                </Button>
+              )}
             </div>
 
             {/* Action Panel - Desktop */}
@@ -277,21 +288,6 @@ export default function BountyDetail() {
                   )}
                 </CardContent>
               </Card>
-              
-              {canCancelBounty && (
-                <Card className="mt-4">
-                  <CardContent className="p-4">
-                    <Button
-                      variant="destructive"
-                      className="w-full"
-                      onClick={() => setIsCancelDialogOpen(true)}
-                    >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Cancel Bounty
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </div>
         </CardContent>
@@ -447,21 +443,6 @@ export default function BountyDetail() {
               )}
             </CardContent>
           </Card>
-          
-          {canCancelBounty && (
-            <Card className="mt-4 sticky top-20">
-              <CardContent className="p-4">
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={() => setIsCancelDialogOpen(true)}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Cancel Bounty
-                </Button>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
 
