@@ -1038,7 +1038,7 @@ function PostBountyForm() {
                   <span>Hunter will purchase the item</span>
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Check this if you want the hunter to buy the item for you. You'll send purchase funds after approving their submission, then they'll buy and deliver it. Leave unchecked if you just want leads/information.
+                  Check this if you want the hunter to buy the item for you. You'll send purchase funds securely through our platform after approving their submission, then they'll buy and deliver it. Leave unchecked if you just want leads/information.
                 </p>
               </div>
             </div>
@@ -1057,7 +1057,7 @@ function PostBountyForm() {
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>How pricing works:</strong> The bounty reward is your finder's fee for locating the item. The target price is what you'll pay for the item itself. Only the finder's fee is held in escrow - you'll handle item payment separately.
+                <strong>How pricing works:</strong> The bounty reward is your finder's fee for locating the item. The target price is what you'll pay for the item itself. The finder's fee is held in escrow now. If the hunter purchases the item for you, you'll send those funds securely through our platform after approving their submission.
               </AlertDescription>
             </Alert>
 
@@ -1120,7 +1120,7 @@ function PostBountyForm() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2 border-t">
-                  💰 This covers only the finder's fee - item purchase costs are separate
+                  💰 This covers only the finder's fee. If hunter purchases the item, you'll send those funds securely after approval.
                 </p>
               </div>
             )}
