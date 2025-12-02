@@ -13,6 +13,7 @@ import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
 import { supabaseApi } from '@/lib/api/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Bounty, BountyStatus } from '@/lib/types';
@@ -50,7 +51,6 @@ export default function BountyDetail() {
   useEffect(() => {
     if (!id) return;
     
-    const { supabase } = require('@/integrations/supabase/client');
     const channel = supabase
       .channel('bounty-changes')
       .on(
