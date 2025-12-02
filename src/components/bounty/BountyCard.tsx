@@ -10,8 +10,8 @@ interface BountyCardProps {
 }
 
 export function BountyCard({ bounty }: BountyCardProps) {
-  const isUrgent = isAfter(new Date(), subDays(bounty.deadline, 3));
-  const isSoon = isAfter(new Date(), subDays(bounty.deadline, 7)) && !isUrgent;
+  const isUrgent = bounty.deadline ? isAfter(new Date(), subDays(bounty.deadline, 3)) : false;
+  const isSoon = bounty.deadline ? isAfter(new Date(), subDays(bounty.deadline, 7)) && !isUrgent : false;
   
   const getStatusBadge = () => {
     switch (bounty.status) {
@@ -27,6 +27,15 @@ export function BountyCard({ bounty }: BountyCardProps) {
   };
 
   const getDeadlineBadge = () => {
+    if (!bounty.deadline) {
+      return (
+        <Badge variant="outline" className="text-xs deadline-normal">
+          <Calendar className="h-3 w-3 mr-1" />
+          No deadline
+        </Badge>
+      );
+    }
+    
     const timeLeft = formatDistanceToNow(bounty.deadline, { addSuffix: true });
     const className = isUrgent ? 'deadline-urgent' : isSoon ? 'deadline-soon' : 'deadline-normal';
     
