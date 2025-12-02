@@ -24,7 +24,7 @@ const createBountyConfirmationHTML = (posterName: string, bountyTitle: string, b
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
       <div style="background: white; padding: 30px 20px; text-align: center; border-bottom: 3px solid ${primaryBlue};">
-        <img src="${logoUrl}" alt="BountyBay" style="height: 45px; width: auto; max-width: 300px;" />
+        <div style="font-size: 28px; font-weight: 700; color: ${primaryBlue};">BountyBay</div>
       </div>
       <div style="padding: 30px 20px; background: #f8f9fa;">
         <h2 style="color: #333; margin-bottom: 20px;">Your Bounty is Live!</h2>

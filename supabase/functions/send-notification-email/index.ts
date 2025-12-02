@@ -45,10 +45,12 @@ const generateEmailContent = (data: EmailRequest) => {
   // Standard blue color matching your brand
   const primaryBlue = '#1E88E5'; // This matches hsl(214, 84%, 56%)
   
-  // Standard email header with logo
+  // Standard email header with text logo matching site nav
   const emailHeader = `
     <div style="background: white; padding: 30px 20px; text-align: center; border-bottom: 3px solid ${primaryBlue};">
-      <img src="${logoUrl}" alt="BountyBay" style="height: 45px; width: auto; max-width: 300px;" />
+      <div style="font-size: 28px; font-weight: 700; color: ${primaryBlue}; font-family: Arial, sans-serif;">
+        BountyBay
+      </div>
     </div>
   `;
   
