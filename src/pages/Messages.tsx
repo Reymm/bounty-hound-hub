@@ -288,8 +288,8 @@ export default function Messages() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 max-h-[calc(100vh-12rem)]">
-      <div className="grid grid-cols-1 lg:grid-cols-12 h-[600px] max-h-full border rounded-lg overflow-hidden bg-background shadow-sm">
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 h-[calc(100vh-10rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
         {/* Thread List */}
         <div className="lg:col-span-4 xl:col-span-3 bg-muted/30 border-r border-border">
           <div className="p-4 border-b border-border">
@@ -305,7 +305,7 @@ export default function Messages() {
             </div>
           </div>
 
-          <div className="overflow-y-auto h-[calc(100%-8rem)]">
+          <div className="overflow-y-auto" style={{ height: 'calc(100% - 8rem)' }}>
             {threadsLoading ? (
               <div className="p-4 space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -403,7 +403,7 @@ export default function Messages() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                 {messagesLoading ? (
                   <div className="space-y-4">
                     {Array.from({ length: 3 }).map((_, i) => (
