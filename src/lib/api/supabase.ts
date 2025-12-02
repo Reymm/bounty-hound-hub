@@ -396,13 +396,16 @@ export const supabaseApi = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User must be authenticated');
 
+      // Combine proof URLs and uploaded images into one array
+      const allProofUrls = [...form.proofUrls, ...form.proofImages];
+
       const { data, error } = await supabase
         .from('Submissions')
         .insert({
           bounty_id: bountyId,
           hunter_id: user.id,
           message: form.message,
-          proof_urls: form.proofUrls,
+          proof_urls: allProofUrls,
           status: 'submitted'
         })
         .select('*')

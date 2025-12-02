@@ -268,22 +268,55 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
               </div>
 
               {submission.proofUrls.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-foreground mb-2">Proof URLs:</p>
-                  <div className="space-y-1">
-                    {submission.proofUrls.map((url, index) => (
-                      <a
-                        key={index}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-xs text-primary hover:underline"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        {url.length > 50 ? `${url.substring(0, 50)}...` : url}
-                      </a>
-                    ))}
-                  </div>
+                <div className="space-y-3">
+                  {/* Display images */}
+                  {submission.proofUrls.some(url => /\.(jpg|jpeg|png|gif|webp)$/i.test(url)) && (
+                    <div>
+                      <p className="text-xs font-medium text-foreground mb-2">Proof Images:</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {submission.proofUrls
+                          .filter(url => /\.(jpg|jpeg|png|gif|webp)$/i.test(url))
+                          .map((url, index) => (
+                            <a
+                              key={index}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block"
+                            >
+                              <img
+                                src={url}
+                                alt={`Proof ${index + 1}`}
+                                className="w-full h-32 object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer"
+                              />
+                            </a>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Display other URLs */}
+                  {submission.proofUrls.some(url => !/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) && (
+                    <div>
+                      <p className="text-xs font-medium text-foreground mb-2">Proof URLs:</p>
+                      <div className="space-y-1">
+                        {submission.proofUrls
+                          .filter(url => !/\.(jpg|jpeg|png|gif|webp)$/i.test(url))
+                          .map((url, index) => (
+                            <a
+                              key={index}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-xs text-primary hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              {url.length > 50 ? `${url.substring(0, 50)}...` : url}
+                            </a>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
