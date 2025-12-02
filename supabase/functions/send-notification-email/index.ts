@@ -38,26 +38,29 @@ const generateEmailContent = (data: EmailRequest) => {
   const baseUrl = 'https://www.bountybay.co';
   const bountyUrl = `${baseUrl}/b/${data.bountyId}`;
   
+  // Standard blue color for consistency
+  const primaryBlue = 'hsl(214, 84%, 56%)';
+  
   switch (data.type) {
     case 'bounty_posted':
       return {
         subject: `New Bounty Posted: ${data.bountyTitle}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #333; margin-bottom: 20px;">New Bounty Available!</h2>
+              <h2 style="color: #333; margin-bottom: 20px;">New Bounty Available</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 A new bounty has been posted that might interest you:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid hsl(214, 84%, 56%); margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
-                ${data.amount ? `<p style="color: #28a745; font-weight: bold; font-size: 18px; margin: 0;">$${data.amount}</p>` : ''}
+                ${data.amount ? `<p style="color: ${primaryBlue}; font-weight: bold; font-size: 18px; margin: 0;">$${data.amount}</p>` : ''}
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: hsl(214, 84%, 56%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Bounty</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -73,20 +76,20 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `Your Bounty "${data.bountyTitle}" Has Been Claimed`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #333; margin-bottom: 20px;">Bounty Claimed!</h2>
+              <h2 style="color: #333; margin-bottom: 20px;">Bounty Claimed</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 Great news! ${data.senderName} has claimed your bounty:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Claimed by: ${data.senderName}</p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Details</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Details</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -102,20 +105,20 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `New Submission for "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #333; margin-bottom: 20px;">New Submission Received!</h2>
+              <h2 style="color: #333; margin-bottom: 20px;">New Submission Received</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 ${data.senderName} has submitted work for your bounty:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid hsl(214, 84%, 56%); margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Submitted by: ${data.senderName}</p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: hsl(214, 84%, 56%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Submission</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Review Submission</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -131,20 +134,20 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `Bounty Completed: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #333; margin-bottom: 20px;">🎉 Bounty Completed!</h2>
+              <h2 style="color: #333; margin-bottom: 20px;">Bounty Completed</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 Congratulations! Your bounty has been successfully completed:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
-                ${data.amount ? `<p style="color: #28a745; font-weight: bold; font-size: 18px; margin: 0;">Payment: $${data.amount}</p>` : ''}
+                ${data.amount ? `<p style="color: ${primaryBlue}; font-weight: bold; font-size: 18px; margin: 0;">Payment: $${data.amount}</p>` : ''}
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Details</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Details</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -157,23 +160,23 @@ const generateEmailContent = (data: EmailRequest) => {
 
     case 'submission_accepted':
       return {
-        subject: `🎉 Your Submission Was Accepted: "${data.bountyTitle}"`,
+        subject: `Your Submission Was Accepted: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #28a745; margin-bottom: 20px;">🎉 Submission Accepted!</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Submission Accepted</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 Congratulations! Your submission has been accepted for:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Accepted by: ${data.senderName}</p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Details</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Details</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -189,21 +192,21 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `Submission Update Required: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #dc3545; margin-bottom: 20px;">Submission Needs Updates</h2>
+              <h2 style="color: #333; margin-bottom: 20px;">Submission Needs Updates</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 Your submission needs some updates for:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Feedback from: ${data.senderName}</p>
-                ${data.rejectionReason ? `<div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #dc3545;"><strong>Feedback:</strong><br>${data.rejectionReason}</div>` : ''}
+                ${data.rejectionReason ? `<div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid ${primaryBlue};"><strong>Feedback:</strong><br>${data.rejectionReason}</div>` : ''}
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Update Submission</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Update Submission</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -216,30 +219,30 @@ const generateEmailContent = (data: EmailRequest) => {
 
     case 'shipping_details_provided':
       return {
-        subject: `📦 Shipping Details for: "${data.bountyTitle}"`,
+        subject: `Shipping Details for: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #28a745; margin-bottom: 20px;">📦 Ready to Ship!</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Ready to Ship</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 Great news! The bounty poster has provided shipping details for:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Bounty ID: ${data.bountyId}</p>
               </div>
               
               <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;">
-                <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">📍 Shipping Address:</h4>
+                <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">Shipping Address:</h4>
                 <pre style="margin: 0; white-space: pre-wrap; font-family: 'Courier New', monospace; color: #555; line-height: 1.6; background: #f8f9fa; padding: 15px; border-radius: 4px;">${data.shippingAddress}</pre>
               </div>
               
               <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0; color: #1976d2; font-size: 14px;">
-                  <strong>📋 Next Steps:</strong><br>
+                  <strong>Next Steps:</strong><br>
                   • Package the item securely<br>
                   • Consider using tracking services<br>
                   • Keep shipping receipts for records
@@ -247,7 +250,7 @@ const generateEmailContent = (data: EmailRequest) => {
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty Details</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Bounty Details</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -261,18 +264,18 @@ const generateEmailContent = (data: EmailRequest) => {
     case 'support_ticket_created':
       const ticketUrl = `${baseUrl}/admin/support/${data.ticketId}`;
       return {
-        subject: `🚨 New Support Ticket: ${data.ticketTitle}`,
+        subject: `New Support Ticket: ${data.ticketTitle}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay Admin</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #dc3545; margin-bottom: 20px;">🚨 New Support Ticket</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">New Support Ticket</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 A new support ticket has been created by ${data.senderName || data.recipientName}:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.ticketTitle}</h3>
                 <p style="color: #999; font-size: 12px; margin: 0 0 10px 0;">Type: ${data.ticketType || 'General'}</p>
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 15px;">
@@ -280,7 +283,7 @@ const generateEmailContent = (data: EmailRequest) => {
                 </div>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${ticketUrl}" style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Ticket</a>
+                <a href="${ticketUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Ticket</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Respond quickly to maintain user satisfaction!<br><br>
@@ -294,31 +297,31 @@ const generateEmailContent = (data: EmailRequest) => {
 
     case 'revision_requested':
       return {
-        subject: `📝 Revision Requested: "${data.bountyTitle}"`,
+        subject: `Revision Requested: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #ff9800; margin-bottom: 20px;">📝 Revision Requested</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Revision Requested</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 ${data.senderName} has requested some changes to your submission for:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #ff9800; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
-                ${data.revisionNotes ? `<div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 4px; border-left: 3px solid #ff9800;"><strong>Requested Changes:</strong><br><br>${data.revisionNotes}</div>` : ''}
+                ${data.revisionNotes ? `<div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 4px; border-left: 3px solid ${primaryBlue};"><strong>Requested Changes:</strong><br><br>${data.revisionNotes}</div>` : ''}
               </div>
               <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0; color: #1976d2; font-size: 14px;">
-                  <strong>💡 Next Steps:</strong><br>
+                  <strong>Next Steps:</strong><br>
                   • Review the feedback carefully<br>
                   • Make the requested improvements<br>
                   • Submit an updated version
                 </p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #ff9800; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View & Update Submission</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View & Update Submission</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -331,24 +334,24 @@ const generateEmailContent = (data: EmailRequest) => {
 
     case 'dispute_opened':
       return {
-        subject: `⚠️ Dispute Opened: "${data.bountyTitle}"`,
+        subject: `Dispute Opened: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #dc3545; margin-bottom: 20px;">⚠️ Dispute Opened</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Dispute Opened</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 A dispute has been opened for your submission on:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
-                ${data.disputeReason ? `<div style="margin-top: 15px; padding: 15px; background: #ffebee; border-radius: 4px; border-left: 3px solid #dc3545;"><strong>Dispute Reason:</strong><br><br>${data.disputeReason}</div>` : ''}
+                ${data.disputeReason ? `<div style="margin-top: 15px; padding: 15px; background: #ffebee; border-radius: 4px; border-left: 3px solid ${primaryBlue};"><strong>Dispute Reason:</strong><br><br>${data.disputeReason}</div>` : ''}
               </div>
               <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0; color: #f57c00; font-size: 14px;">
-                  <strong>🛡️ What Happens Next:</strong><br>
+                  <strong>What Happens Next:</strong><br>
                   • Our support team has been notified<br>
                   • We'll review both sides within 24-48 hours<br>
                   • The bounty is frozen until resolved<br>
@@ -356,7 +359,7 @@ const generateEmailContent = (data: EmailRequest) => {
                 </p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Details</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Details</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -369,28 +372,28 @@ const generateEmailContent = (data: EmailRequest) => {
 
     case 'item_shipped':
       return {
-        subject: `📦 Item Shipped: "${data.bountyTitle}"`,
+        subject: `Item Shipped: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #28a745; margin-bottom: 20px;">📦 Your Item is On the Way!</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Your Item is On the Way</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 Great news! ${data.senderName} has shipped your item for:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 ${data.trackingNumber ? `
                   <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 4px;">
-                    <strong style="color: #1976d2;">📍 Tracking Number:</strong><br>
+                    <strong style="color: #1976d2;">Tracking Number:</strong><br>
                     <code style="font-size: 16px; color: #333; background: white; padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 8px;">${data.trackingNumber}</code>
                   </div>
                 ` : '<p style="margin-top: 10px; color: #999; font-size: 14px;">No tracking number provided</p>'}
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty Details</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Bounty Details</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Best regards,<br>
@@ -403,23 +406,23 @@ const generateEmailContent = (data: EmailRequest) => {
 
     case 'item_delivered':
       return {
-        subject: `✅ Item Delivered: "${data.bountyTitle}"`,
+        subject: `Item Delivered: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: #28a745; margin-bottom: 20px;">✅ Delivery Confirmed!</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Delivery Confirmed</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 The bounty poster has confirmed delivery for:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
-                <p style="color: #28a745; font-weight: bold; margin-top: 10px;">✓ Transaction Complete</p>
+                <p style="color: ${primaryBlue}; font-weight: bold; margin-top: 10px;">Transaction Complete</p>
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Bounty</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 Congratulations on a successful transaction!<br><br>
@@ -436,23 +439,23 @@ const generateEmailContent = (data: EmailRequest) => {
         subject: `Dispute Resolved: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: hsl(214, 84%, 56%); padding: 20px; text-align: center;">
+            <div style="background: ${primaryBlue}; padding: 20px; text-align: center;">
               <h1 style="color: white; margin: 0;">BountyBay</h1>
             </div>
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: hsl(214, 84%, 56%); margin-bottom: 20px;">🛡️ Dispute Resolved</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Dispute Resolved</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 An admin has resolved the dispute for:
               </p>
-              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${data.resolution === 'accept' ? '#28a745' : '#dc3545'}; margin: 20px 0;">
+              <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid ${primaryBlue}; margin: 20px 0;">
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
-                <p style="color: ${data.resolution === 'accept' ? '#28a745' : '#dc3545'}; font-weight: bold; margin-top: 10px;">
-                  ${data.resolution === 'accept' ? '✓ Submission Accepted' : '✗ Submission Rejected'}
+                <p style="color: ${primaryBlue}; font-weight: bold; margin-top: 10px;">
+                  ${data.resolution === 'accept' ? 'Submission Accepted' : 'Submission Rejected'}
                 </p>
                 ${data.resolutionNotes ? `<div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #999;"><strong>Admin Notes:</strong><br><br>${data.resolutionNotes}</div>` : ''}
               </div>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${bountyUrl}" style="background: hsl(214, 84%, 56%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bounty Details</a>
+                <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Bounty Details</a>
               </div>
               <p style="color: #666; font-size: 14px;">
                 ${data.resolution === 'accept' ? 'Payment has been processed to the hunter.' : 'No payment will be processed for this submission.'}<br><br>
