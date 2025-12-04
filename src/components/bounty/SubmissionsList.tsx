@@ -91,24 +91,27 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         }
       }
       
+      // Update bounty status to completed
+      await supabaseApi.updateBountyStatus(bountyId, 'completed' as any);
+      
       // Process payout to hunter
       try {
         const payoutResult = await supabaseApi.processPayout(submissionId);
         if (payoutResult.success) {
           toast({
-            title: "Claim accepted & payout sent",
+            title: "Bounty completed & payout sent!",
             description: `Payment of $${payoutResult.amount?.toFixed(2)} sent to hunter (2.3% platform fee: $${payoutResult.platform_fee?.toFixed(2)})`,
           });
         } else {
           toast({
-            title: "Claim accepted",
-            description: "Claim accepted but payout processing pending. Hunter will receive payment shortly.",
+            title: "Bounty completed",
+            description: "Claim accepted. Payout processing pending - hunter will receive payment shortly.",
           });
         }
       } catch (payoutError) {
         console.error('Payout error:', payoutError);
         toast({
-          title: "Claim accepted",
+          title: "Bounty completed",
           description: "Claim accepted successfully. Payout will be processed automatically.",
         });
       }
