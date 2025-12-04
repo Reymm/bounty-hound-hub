@@ -34,7 +34,7 @@ export function BountyRatingSection({
   const [allRatings, setAllRatings] = useState<UserRating[]>([]);
 
   useEffect(() => {
-    if (user && bountyStatus === 'completed') {
+    if (user && (bountyStatus === 'fulfilled' || bountyStatus === 'completed')) {
       loadRatingData();
     }
   }, [user, bountyId, bountyStatus]);
@@ -96,8 +96,8 @@ export function BountyRatingSection({
     }
   };
 
-  // Only show if bounty is completed
-  if (bountyStatus !== 'completed') {
+  // Only show if bounty is completed/fulfilled
+  if (bountyStatus !== 'completed' && bountyStatus !== 'fulfilled') {
     return null;
   }
 

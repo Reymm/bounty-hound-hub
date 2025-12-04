@@ -91,8 +91,8 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         }
       }
       
-      // Update bounty status to completed
-      await supabaseApi.updateBountyStatus(bountyId, 'completed' as any);
+      // Update bounty status to fulfilled (completed)
+      await supabaseApi.updateBountyStatus(bountyId, 'fulfilled' as any);
       
       // Process payout to hunter
       try {

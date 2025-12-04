@@ -32,7 +32,9 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get submission details - explicitly reference the bounty_id foreign key
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+
+    // Get submission details with bounty info
     const { data: submission, error: submissionError } = await supabaseClient
       .from('Submissions')
       .select(`
@@ -61,8 +63,48 @@ serve(async (req) => {
     logStep("Retrieved submission", { 
       submissionId: submission.id,
       hunterId: submission.hunter_id,
+      bountyId: submission.bounty_id,
       bountyAmount: submission.Bounties.amount
     });
+
+    // Get the escrow transaction for this bounty
+    const { data: escrowTx, error: escrowError } = await supabaseClient
+      .from('escrow_transactions')
+      .select('*')
+      .eq('bounty_id', submission.bounty_id)
+      .maybeSingle();
+
+    if (escrowError || !escrowTx) {
+      throw new Error(`Escrow transaction not found: ${escrowError?.message}`);
+    }
+
+    logStep("Found escrow transaction", {
+      escrowId: escrowTx.id,
+      paymentIntentId: escrowTx.stripe_payment_intent_id,
+      status: escrowTx.status,
+      amount: escrowTx.amount
+    });
+
+    // First, capture the PaymentIntent if it's in requires_capture status
+    if (escrowTx.status === 'requires_capture') {
+      logStep("Capturing PaymentIntent...");
+      
+      try {
+        const capturedIntent = await stripe.paymentIntents.capture(escrowTx.stripe_payment_intent_id);
+        logStep("PaymentIntent captured", { status: capturedIntent.status });
+
+        // Update escrow status
+        await supabaseClient
+          .from('escrow_transactions')
+          .update({ status: 'captured' })
+          .eq('id', escrowTx.id);
+      } catch (captureError: any) {
+        logStep("Capture error", { message: captureError.message });
+        throw new Error(`Failed to capture payment: ${captureError.message}`);
+      }
+    } else if (escrowTx.status !== 'captured' && escrowTx.status !== 'succeeded') {
+      throw new Error(`Escrow is in invalid state for payout: ${escrowTx.status}`);
+    }
 
     // Get hunter's Connect account
     const { data: hunterProfile } = await supabaseClient
@@ -72,21 +114,38 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!hunterProfile?.stripe_connect_account_id) {
-      throw new Error('Hunter does not have a Stripe Connect account');
+      logStep("Hunter missing Connect account", { hunterId: submission.hunter_id });
+      // Still return success since escrow was captured - funds are secured
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Payment captured. Hunter needs to set up Stripe Connect to receive payout.',
+        escrow_captured: true,
+        transfer_pending: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     if (!hunterProfile.stripe_connect_payouts_enabled) {
-      throw new Error('Hunter has not completed Connect onboarding');
+      logStep("Hunter Connect not ready for payouts");
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Payment captured. Hunter needs to complete Connect onboarding to receive payout.',
+        escrow_captured: true,
+        transfer_pending: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     logStep("Hunter has valid Connect account", { 
       accountId: hunterProfile.stripe_connect_account_id 
     });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-
+    // Calculate payout amounts
     // Deduct 2.3% platform fee from hunter's payout
-    // Poster also pays 2.3% (collected during escrow creation)
     const bountyAmount = parseFloat(submission.Bounties.amount);
     const platformFeePercent = 0.023; // 2.3%
     const platformFee = Math.round(bountyAmount * platformFeePercent * 100); // in cents
@@ -95,11 +154,10 @@ serve(async (req) => {
     logStep("Calculated payout amounts", {
       bountyAmount: bountyAmount,
       platformFee: platformFee / 100,
-      payoutAmount: payoutAmount / 100,
-      note: 'Both poster and hunter pay 2.3% platform fee'
+      payoutAmount: payoutAmount / 100
     });
 
-    // Create transfer to Connect account (bounty amount minus 2.3% platform fee)
+    // Create transfer to Connect account
     const transfer = await stripe.transfers.create({
       amount: payoutAmount,
       currency: 'usd',
@@ -119,8 +177,11 @@ serve(async (req) => {
       amount: transfer.amount / 100
     });
 
-    // TODO: Store payout record in database for tracking
-    // You might want to create a payouts table to track all payouts
+    // Update escrow status to completed
+    await supabaseClient
+      .from('escrow_transactions')
+      .update({ status: 'completed' })
+      .eq('id', escrowTx.id);
 
     return new Response(JSON.stringify({
       success: true,
