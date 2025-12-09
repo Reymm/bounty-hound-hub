@@ -32,7 +32,7 @@ export const postBountySchema = z.object({
     .refine(val => val !== undefined, 'Bounty amount is required'),
   
   targetPriceMin: z.number()
-    .min(1, 'Minimum price must be at least $1')
+    .min(0, 'Minimum price cannot be negative')
     .optional(),
   
   targetPriceMax: z.number()
