@@ -868,6 +868,7 @@ function PostBountyForm() {
               <Input
                 id="title"
                 placeholder="What are you looking for? Be specific..."
+                spellCheck={true}
                 {...register('title')}
                 className={errors.title ? 'border-destructive' : ''}
               />
@@ -884,6 +885,7 @@ function PostBountyForm() {
                 id="description"
                 placeholder="Provide detailed information about what you're looking for, including specifications, condition requirements, and any other important details..."
                 rows={6}
+                spellCheck={true}
                 {...register('description')}
                 className={errors.description ? 'border-destructive' : ''}
               />
