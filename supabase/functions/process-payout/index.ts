@@ -12,6 +12,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[PROCESS-PAYOUT] ${step}${detailsStr}`);
 };
 
+// Platform fee: 7% from hunter's payout
+const PLATFORM_FEE_PERCENT = 0.07;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -113,11 +116,17 @@ serve(async (req) => {
       .eq('id', submission.hunter_id)
       .maybeSingle();
 
-    // Calculate payout amounts upfront (needed for all responses)
+    // Calculate payout amounts - 7% platform fee from hunter
     const bountyAmount = parseFloat(submission.Bounties.amount);
-    const platformFeePercent = 0.023; // 2.3%
-    const platformFee = Math.round(bountyAmount * platformFeePercent * 100); // in cents
+    const platformFee = Math.round(bountyAmount * PLATFORM_FEE_PERCENT * 100); // in cents
     const payoutAmount = Math.round(bountyAmount * 100) - platformFee; // in cents
+
+    logStep("Calculated payout amounts", {
+      bountyAmount: bountyAmount,
+      platformFeePercent: `${PLATFORM_FEE_PERCENT * 100}%`,
+      platformFee: platformFee / 100,
+      payoutAmount: payoutAmount / 100
+    });
 
     if (!hunterProfile?.stripe_connect_account_id) {
       logStep("Hunter missing Connect account", { hunterId: submission.hunter_id });
@@ -127,8 +136,10 @@ serve(async (req) => {
         message: 'Payment captured. Hunter needs to set up Stripe Connect to receive payout.',
         escrow_captured: true,
         transfer_pending: true,
+        bounty_amount: bountyAmount,
         amount: payoutAmount / 100,
-        platform_fee: platformFee / 100
+        platform_fee: platformFee / 100,
+        platform_fee_percent: PLATFORM_FEE_PERCENT * 100
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -142,8 +153,10 @@ serve(async (req) => {
         message: 'Payment captured. Hunter needs to complete Connect onboarding to receive payout.',
         escrow_captured: true,
         transfer_pending: true,
+        bounty_amount: bountyAmount,
         amount: payoutAmount / 100,
-        platform_fee: platformFee / 100
+        platform_fee: platformFee / 100,
+        platform_fee_percent: PLATFORM_FEE_PERCENT * 100
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -152,12 +165,6 @@ serve(async (req) => {
 
     logStep("Hunter has valid Connect account", { 
       accountId: hunterProfile.stripe_connect_account_id 
-    });
-
-    logStep("Calculated payout amounts", {
-      bountyAmount: bountyAmount,
-      platformFee: platformFee / 100,
-      payoutAmount: payoutAmount / 100
     });
 
     // Create transfer to Connect account
@@ -171,7 +178,8 @@ serve(async (req) => {
         bounty_id: submission.bounty_id,
         hunter_id: submission.hunter_id,
         bounty_amount: bountyAmount.toString(),
-        platform_fee: (platformFee / 100).toString()
+        platform_fee: (platformFee / 100).toString(),
+        platform_fee_percent: (PLATFORM_FEE_PERCENT * 100).toString()
       }
     });
 
@@ -180,17 +188,22 @@ serve(async (req) => {
       amount: transfer.amount / 100
     });
 
-    // Update escrow status to completed
+    // Update escrow status to completed and record the platform fee
     await supabaseClient
       .from('escrow_transactions')
-      .update({ status: 'completed' })
+      .update({ 
+        status: 'completed',
+        platform_fee_amount: platformFee / 100 // Store the actual fee taken
+      })
       .eq('id', escrowTx.id);
 
     return new Response(JSON.stringify({
       success: true,
       transfer_id: transfer.id,
+      bounty_amount: bountyAmount,
       amount: payoutAmount / 100,
       platform_fee: platformFee / 100,
+      platform_fee_percent: PLATFORM_FEE_PERCENT * 100,
       hunter_account: hunterProfile.stripe_connect_account_id
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
