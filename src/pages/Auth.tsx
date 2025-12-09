@@ -49,13 +49,15 @@ export default function Auth() {
     const type = hashParams.get('type');
     const confirmed = queryParams.get('confirmed');
     const tab = queryParams.get('tab');
+    const accessToken = hashParams.get('access_token');
     
-    console.log('Auth page load - hash type:', type, 'hash:', window.location.hash);
+    console.log('Auth page load - hash type:', type, 'hash:', window.location.hash, 'hasAccessToken:', !!accessToken);
     
+    // Check for recovery type in hash params first
     if (type === 'recovery') {
-      // Password reset mode
-      console.log('Setting recovery mode to true');
+      console.log('Setting recovery mode to true from hash params');
       setIsRecoveryMode(true);
+      return; // Don't process other logic if in recovery mode
     } else if (type === 'signup' || type === 'email_confirmation') {
       // Only show confirmed message if we actually got here from email link with proper token
       setEmailConfirmed(true);
@@ -68,8 +70,10 @@ export default function Auth() {
     } else if (tab === 'signin' || tab === 'signup') {
       setActiveTab(tab);
     }
-    
-    // Also listen for auth state changes to detect PASSWORD_RECOVERY event
+  }, []);
+  
+  // Separate effect to listen for auth state changes - this catches PASSWORD_RECOVERY event
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state change event:', event);
       if (event === 'PASSWORD_RECOVERY') {
@@ -84,7 +88,11 @@ export default function Auth() {
   // Redirect if already authenticated (but not during password recovery)
   useEffect(() => {
     const checkProfileAndRedirect = async () => {
-      if (user && !isRecoveryMode) {
+      // Don't redirect if we're in recovery mode OR if we have hash params that might indicate recovery
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const hasRecoveryHash = hashParams.get('type') === 'recovery' || hashParams.get('access_token');
+      
+      if (user && !isRecoveryMode && !hasRecoveryHash) {
         // Check if user has completed profile setup
         const { data: profile } = await supabase
           .from('profiles')
@@ -243,7 +251,7 @@ export default function Auth() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth#`,
       });
 
       if (error) {
