@@ -201,7 +201,7 @@ export default function Checkout() {
                   <div>
                     <h3 className="font-semibold mb-1">Approval & Release</h3>
                     <p className="text-sm text-muted-foreground">
-                      Poster reviews and approves the delivery. Funds are released to hunter minus platform fee (2.3%).
+                      Poster reviews and approves the delivery. Funds are released to hunter minus 7% platform fee.
                     </p>
                   </div>
                 </div>
@@ -387,17 +387,21 @@ export default function Checkout() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Platform Fee</span>
-                <span className="font-medium">4.6% (2.3% each side)</span>
+                <span className="text-muted-foreground">Poster Pays</span>
+                <span className="font-medium">Bounty + Stripe fees</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Payment Processing</span>
+                <span className="text-muted-foreground">Hunter Fee</span>
+                <span className="font-medium">7% of bounty</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Stripe Processing</span>
                 <span className="font-medium">2.9% + $0.30</span>
               </div>
               <Separator />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Example: $500 bounty</span>
-                <span className="font-medium">Hunter receives $451.20</span>
+                <span className="font-medium">Hunter receives $465</span>
               </div>
             </CardContent>
           </Card>
