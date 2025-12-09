@@ -13,9 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [featuredBounties, setFeaturedBounties] = useState<Bounty[]>([]);
   const [bounties, setBounties] = useState<Bounty[]>([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<SearchFiltersType>({});
   const [page, setPage] = useState(1);
@@ -23,21 +21,6 @@ const Index = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Load featured bounties (top 6)
-  useEffect(() => {
-    const loadFeatured = async () => {
-      try {
-        setLoadingFeatured(true);
-        const response = await supabaseApi.getBounties(1, 6, {});
-        setFeaturedBounties(response.data);
-      } catch (error) {
-        console.error('Error loading featured bounties:', error);
-      } finally {
-        setLoadingFeatured(false);
-      }
-    };
-    loadFeatured();
-  }, []);
 
   // Initialize filters from URL params
   useEffect(() => {
@@ -172,43 +155,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Active Bounties - Hidden when filters active */}
-      {!hasActiveFilters && (
-        <section className="py-12 lg:py-16 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-10">
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
-              Featured Bounties
-            </h2>
-            <p className="text-lg text-primary max-w-2xl">
-              Start hunting these items and earn real money
-            </p>
-          </div>
-          
-          <BountyGrid 
-            bounties={featuredBounties}
-            loading={loadingFeatured}
-            emptyMessage="No active bounties yet"
-            emptyDescription="Check back soon for new opportunities to earn."
-          />
-
-          <div className="mt-8 text-center">
-            <Button asChild variant="outline" size="lg">
-              <Link to="/bounties">
-                View All Active Bounties
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-      )}
-
       {/* Top Categories Section - Hidden when filters active */}
       {!hasActiveFilters && (
         <TopCategories onCategorySelect={handleCategorySelect} />
       )}
 
-      {/* Completed Bounties Section - Hidden when filters active */}
+      {/* Success Stories Section - Hidden when filters active */}
       {!hasActiveFilters && (
         <CompletedBounties />
       )}
