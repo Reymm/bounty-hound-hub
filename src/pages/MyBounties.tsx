@@ -62,7 +62,7 @@ export default function MyBounties() {
   const getStatusBadge = (status: BountyStatus) => {
     switch (status) {
       case BountyStatus.OPEN:
-        return <Badge className="status-active">Active</Badge>;
+        return <Badge className="bg-green-500 text-white hover:bg-green-600">Open</Badge>;
       case BountyStatus.CLAIMED:
         return <Badge className="status-pending">Claimed</Badge>;
       case BountyStatus.FULFILLED:
