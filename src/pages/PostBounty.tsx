@@ -64,8 +64,11 @@ function PostBountyForm() {
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
-  const [requiresShipping, setRequiresShipping] = useState(false);
-  const [hunterPurchasesItem, setHunterPurchasesItem] = useState(false);
+  const [bountyType, setBountyType] = useState<'lead-only' | 'item-delivery' | 'purchase-delivery'>('lead-only');
+
+  // Derive requiresShipping and hunterPurchasesItem from bountyType
+  const requiresShipping = bountyType === 'item-delivery' || bountyType === 'purchase-delivery';
+  const hunterPurchasesItem = bountyType === 'purchase-delivery';
   const [useMilestones, setUseMilestones] = useState(false);
   const [milestones, setMilestones] = useState<Array<{id: string, title: string, description: string, amount: number}>>([]);
 
@@ -1021,39 +1024,83 @@ function PostBountyForm() {
               </p>
             </div>
 
-            {/* Physical Item Checkbox */}
-            <div className="flex items-start space-x-3 p-4 bg-muted/30 rounded-lg">
-              <Checkbox 
-                id="requiresShipping"
-                checked={requiresShipping}
-                onCheckedChange={(checked) => setRequiresShipping(checked as boolean)}
-              />
-              <div className="space-y-1">
-                <Label htmlFor="requiresShipping" className="flex items-center gap-2 cursor-pointer">
-                  <Package className="h-4 w-4" />
-                  <span>This is a physical item that requires shipping</span>
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Check this if the hunter will need to ship the item to you. You'll provide your shipping address after accepting a submission.
-                </p>
+            {/* Bounty Type Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-medium">What do you need from the hunter?</Label>
+              
+              {/* Option 1: Lead Only */}
+              <div 
+                className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  bountyType === 'lead-only' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border bg-muted/30 hover:border-muted-foreground/50'
+                }`}
+                onClick={() => setBountyType('lead-only')}
+              >
+                <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                  bountyType === 'lead-only' ? 'border-primary' : 'border-muted-foreground'
+                }`}>
+                  {bountyType === 'lead-only' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                </div>
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Target className="h-4 w-4" />
+                    <span>Lead Only</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Hunter tells you where to find the item (e.g., "Found it at a thrift shop in Cincinnati"). You'll handle getting it yourself.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Hunter Purchases Item Checkbox */}
-            <div className="flex items-start space-x-3 p-4 bg-muted/30 rounded-lg border-2 border-primary/20">
-              <Checkbox 
-                id="hunterPurchasesItem"
-                checked={hunterPurchasesItem}
-                onCheckedChange={(checked) => setHunterPurchasesItem(checked as boolean)}
-              />
-              <div className="space-y-1">
-                <Label htmlFor="hunterPurchasesItem" className="flex items-center gap-2 cursor-pointer">
-                  <DollarSign className="h-4 w-4" />
-                  <span>Hunter will purchase the item</span>
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Check this if you want the hunter to buy the item for you. You'll send purchase funds securely through our platform after approving their submission, then they'll buy and deliver it. Leave unchecked if you just want leads/information.
-                </p>
+              {/* Option 2: Item Delivery */}
+              <div 
+                className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  bountyType === 'item-delivery' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border bg-muted/30 hover:border-muted-foreground/50'
+                }`}
+                onClick={() => setBountyType('item-delivery')}
+              >
+                <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                  bountyType === 'item-delivery' ? 'border-primary' : 'border-muted-foreground'
+                }`}>
+                  {bountyType === 'item-delivery' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                </div>
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Package className="h-4 w-4" />
+                    <span>Item Delivery</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Hunter already has the item and will ship it directly to you. You'll provide your shipping address after accepting their submission.
+                  </p>
+                </div>
+              </div>
+
+              {/* Option 3: Purchase & Delivery */}
+              <div 
+                className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  bountyType === 'purchase-delivery' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border bg-muted/30 hover:border-muted-foreground/50'
+                }`}
+                onClick={() => setBountyType('purchase-delivery')}
+              >
+                <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                  bountyType === 'purchase-delivery' ? 'border-primary' : 'border-muted-foreground'
+                }`}>
+                  {bountyType === 'purchase-delivery' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                </div>
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2 font-medium">
+                    <DollarSign className="h-4 w-4" />
+                    <span>Purchase & Delivery</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Hunter finds, purchases, and ships the item to you. After approving their submission, you'll send purchase funds securely through our platform.
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
