@@ -103,7 +103,14 @@ export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
 
         <div className="mt-8 text-center">
           <button
-            onClick={() => onCategorySelect('')}
+            onClick={() => {
+              // Clear any category filter and scroll to bounties section
+              onCategorySelect('');
+              const browseSection = document.getElementById('browse');
+              if (browseSection) {
+                browseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }}
             className="text-primary hover:text-primary-hover font-medium transition-colors inline-flex items-center gap-2 group"
           >
             View all categories
