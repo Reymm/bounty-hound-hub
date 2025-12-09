@@ -1,4 +1,4 @@
-import { Car, Users, Heart, Package, Sparkles, Wrench } from 'lucide-react';
+import { Car, Users, Heart, Package, Sparkles, Shirt } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BountyCategory } from '@/lib/types';
@@ -17,32 +17,25 @@ interface CategoryCard {
 
 const topCategories: CategoryCard[] = [
   {
-    id: BountyCategory.VEHICLES,
-    label: 'Vehicles',
-    icon: <Car className="h-6 w-6" />,
-    description: 'Lost cars, family heirlooms, classic vehicles',
-    gradient: 'from-blue-500/10 to-blue-600/5'
-  },
-  {
-    id: BountyCategory.PEOPLE_FAMILY,
-    label: 'People & Family',
-    icon: <Users className="h-6 w-6" />,
-    description: 'Biological parents, family members, old friends',
-    gradient: 'from-pink-500/10 to-pink-600/5'
-  },
-  {
-    id: BountyCategory.PETS,
-    label: 'Lost Pets',
-    icon: <Heart className="h-6 w-6" />,
-    description: 'Dogs, cats, and other beloved companions',
-    gradient: 'from-rose-500/10 to-rose-600/5'
-  },
-  {
     id: BountyCategory.COLLECTIBLES,
     label: 'Collectibles',
     icon: <Sparkles className="h-6 w-6" />,
     description: 'Rare coins, vintage toys, sports memorabilia',
     gradient: 'from-amber-500/10 to-amber-600/5'
+  },
+  {
+    id: BountyCategory.FASHION_APPAREL,
+    label: 'Fashion & Clothing',
+    icon: <Shirt className="h-6 w-6" />,
+    description: 'Vintage fashion, designer items, rare apparel',
+    gradient: 'from-pink-500/10 to-pink-600/5'
+  },
+  {
+    id: BountyCategory.VEHICLES,
+    label: 'Vehicles',
+    icon: <Car className="h-6 w-6" />,
+    description: 'Lost cars, family heirlooms, classic vehicles',
+    gradient: 'from-blue-500/10 to-blue-600/5'
   },
   {
     id: BountyCategory.ELECTRONICS,
@@ -52,11 +45,18 @@ const topCategories: CategoryCard[] = [
     gradient: 'from-purple-500/10 to-purple-600/5'
   },
   {
-    id: BountyCategory.AUTOMOTIVE,
-    label: 'Auto Parts',
-    icon: <Wrench className="h-6 w-6" />,
-    description: 'Car parts, motorcycle parts, tools',
-    gradient: 'from-green-500/10 to-green-600/5'
+    id: BountyCategory.PEOPLE_FAMILY,
+    label: 'People & Family',
+    icon: <Users className="h-6 w-6" />,
+    description: 'Biological parents, family members, old friends',
+    gradient: 'from-teal-500/10 to-teal-600/5'
+  },
+  {
+    id: BountyCategory.PETS,
+    label: 'Lost Pets',
+    icon: <Heart className="h-6 w-6" />,
+    description: 'Dogs, cats, and other beloved companions',
+    gradient: 'from-rose-500/10 to-rose-600/5'
   }
 ];
 
