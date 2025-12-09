@@ -954,6 +954,14 @@ export type Database = {
         Args: { bounty_amount: number; rating: number; user_id: string }
         Returns: undefined
       }
+      user_has_submission_for_bounty: {
+        Args: { p_bounty_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      user_is_bounty_poster: {
+        Args: { p_bounty_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "hunter" | "poster"
