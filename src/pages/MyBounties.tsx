@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Eye, MessageCircle, Settings, Plus, Package, Users } from 'lucide-react';
+import { Eye, MessageCircle, Settings, Plus, Package, Users, CheckCircle, DollarSign, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Bounty, Claim, BountyStatus, ClaimStatus, ClaimType } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -273,7 +274,31 @@ export default function MyBounties() {
                       </div>
 
                       {/* Claim Details */}
-                      <div className="bg-muted/50 rounded-lg p-4">
+                      <div className={`rounded-lg p-4 ${
+                        item.claim.status === ClaimStatus.ACCEPTED 
+                          ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800' 
+                          : 'bg-muted/50'
+                      }`}>
+                        {/* Accepted claim success banner */}
+                        {item.claim.status === ClaimStatus.ACCEPTED && (
+                          <Alert className="mb-4 bg-green-100 dark:bg-green-900/40 border-green-300 dark:border-green-700">
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <AlertTitle className="text-green-800 dark:text-green-200">Congratulations! Your claim was accepted</AlertTitle>
+                            <AlertDescription className="text-green-700 dark:text-green-300">
+                              <div className="flex items-center gap-2 mt-1">
+                                <DollarSign className="h-4 w-4" />
+                                <span>Payout of ${(item.bountyAmount * 0.977).toFixed(2)} is being processed to your Stripe Connect account.</span>
+                              </div>
+                              {item.requires_shipping && (
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Truck className="h-4 w-4" />
+                                  <span>Check the bounty page for shipping details from the poster.</span>
+                                </div>
+                              )}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-foreground">Your Claim</h4>
                           <span className="text-xs text-muted-foreground">
