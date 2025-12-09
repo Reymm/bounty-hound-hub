@@ -97,10 +97,18 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       // Process payout to hunter
       try {
         const payoutResult = await supabaseApi.processPayout(submissionId);
-        if (payoutResult.success) {
+        if (payoutResult.success && payoutResult.amount !== undefined) {
+          const amountDisplay = payoutResult.amount.toFixed(2);
+          const feeDisplay = payoutResult.platform_fee?.toFixed(2) || '0.00';
+          
           toast({
             title: "Bounty completed & payout sent!",
-            description: `Payment of $${payoutResult.amount?.toFixed(2)} sent to hunter (2.3% platform fee: $${payoutResult.platform_fee?.toFixed(2)})`,
+            description: `Payment of $${amountDisplay} sent to hunter (2.3% platform fee: $${feeDisplay})`,
+          });
+        } else if (payoutResult.success) {
+          toast({
+            title: "Bounty completed",
+            description: "Claim accepted. Hunter will receive payout once they complete Stripe Connect setup.",
           });
         } else {
           toast({

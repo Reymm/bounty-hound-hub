@@ -113,6 +113,12 @@ serve(async (req) => {
       .eq('id', submission.hunter_id)
       .maybeSingle();
 
+    // Calculate payout amounts upfront (needed for all responses)
+    const bountyAmount = parseFloat(submission.Bounties.amount);
+    const platformFeePercent = 0.023; // 2.3%
+    const platformFee = Math.round(bountyAmount * platformFeePercent * 100); // in cents
+    const payoutAmount = Math.round(bountyAmount * 100) - platformFee; // in cents
+
     if (!hunterProfile?.stripe_connect_account_id) {
       logStep("Hunter missing Connect account", { hunterId: submission.hunter_id });
       // Still return success since escrow was captured - funds are secured
@@ -120,7 +126,9 @@ serve(async (req) => {
         success: true,
         message: 'Payment captured. Hunter needs to set up Stripe Connect to receive payout.',
         escrow_captured: true,
-        transfer_pending: true
+        transfer_pending: true,
+        amount: payoutAmount / 100,
+        platform_fee: platformFee / 100
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -133,7 +141,9 @@ serve(async (req) => {
         success: true,
         message: 'Payment captured. Hunter needs to complete Connect onboarding to receive payout.',
         escrow_captured: true,
-        transfer_pending: true
+        transfer_pending: true,
+        amount: payoutAmount / 100,
+        platform_fee: platformFee / 100
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -143,13 +153,6 @@ serve(async (req) => {
     logStep("Hunter has valid Connect account", { 
       accountId: hunterProfile.stripe_connect_account_id 
     });
-
-    // Calculate payout amounts
-    // Deduct 2.3% platform fee from hunter's payout
-    const bountyAmount = parseFloat(submission.Bounties.amount);
-    const platformFeePercent = 0.023; // 2.3%
-    const platformFee = Math.round(bountyAmount * platformFeePercent * 100); // in cents
-    const payoutAmount = Math.round(bountyAmount * 100) - platformFee; // in cents
 
     logStep("Calculated payout amounts", {
       bountyAmount: bountyAmount,
