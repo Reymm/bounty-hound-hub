@@ -147,15 +147,13 @@ function PostBountyForm() {
   // Calculate fees when bounty amount changes
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      const platformFee = Math.round(watchedBountyAmount * 0.023 * 100) / 100;
-      // Stripe fee: 2.9% + $0.30 on the total charge (bounty + platform fee)
-      // We need to calculate the total that includes Stripe's fee
-      // Formula: total = (bounty + platformFee + 0.30) / (1 - 0.029)
-      const subtotal = watchedBountyAmount + platformFee;
-      const stripeFee = Math.round(((subtotal + 0.30) / (1 - 0.029) - subtotal) * 100) / 100;
-      const total = Math.round((subtotal + stripeFee) * 100) / 100;
+      // No platform fee for poster - only Stripe processing fees
+      // Stripe fee: 2.9% + $0.30 on the total charge
+      // Formula: total = (bounty + 0.30) / (1 - 0.029)
+      const stripeFee = Math.round(((watchedBountyAmount + 0.30) / (1 - 0.029) - watchedBountyAmount) * 100) / 100;
+      const total = Math.round((watchedBountyAmount + stripeFee) * 100) / 100;
       
-      setPlatformFee(platformFee);
+      setPlatformFee(0); // No platform fee for poster
       setTotalCharge(total);
       // KYC required for bounties over $1000
       setKycRequired(watchedBountyAmount > 1000);
@@ -689,18 +687,17 @@ function PostBountyForm() {
                   <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Platform fee (2.3%):</span>
-                  <span>${platformFee.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Payment processing:</span>
-                  <span>${stripeFee.toFixed(2)}</span>
+                  <span className="text-muted-foreground">Payment processing (Stripe):</span>
+                  <span>${(totalCharge - watchedBountyAmount).toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
                   <span>Total charge:</span>
                   <span>${totalCharge.toFixed(2)}</span>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground">
+                No platform fees for posters. Hunters pay a 7% fee when paid out.
+              </p>
             </div>
 
             {/* How Escrow Works */}
@@ -1153,7 +1150,7 @@ function PostBountyForm() {
             </div>
 
             {/* Fee Breakdown */}
-            {platformFee > 0 && (
+            {watchedBountyAmount > 0 && (
               <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                 <h4 className="font-medium">Finder's Fee Payment Breakdown</h4>
                 <div className="space-y-1 text-sm">
@@ -1161,18 +1158,14 @@ function PostBountyForm() {
                     <span>Bounty Reward (Finder's Fee):</span>
                     <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Platform Fee (2.3%):</span>
-                    <span>${platformFee.toFixed(2)}</span>
-                  </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Payment Processing (Stripe):</span>
-                    <span>${(totalCharge - watchedBountyAmount - platformFee).toFixed(2)}</span>
+                    <span>${(totalCharge - watchedBountyAmount).toFixed(2)}</span>
                   </div>
                   {kycRequired && (
                     <div className="flex justify-between text-xs text-muted-foreground mt-2 pt-2 border-t">
                       <span>⚠️ Identity Verification Required:</span>
-                      <span>Bounty {'>'} $100</span>
+                      <span>Bounty {'>'} $1,000</span>
                     </div>
                   )}
                   <div className="border-t pt-2 flex justify-between font-semibold text-base">
@@ -1181,7 +1174,7 @@ function PostBountyForm() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2 border-t">
-                  💰 This covers only the finder's fee. If hunter purchases the item, you'll send those funds securely after approval.
+                  💰 No platform fees for posters. Hunters pay 7% when paid out. If hunter purchases the item, you'll send those funds securely after approval.
                 </p>
               </div>
             )}
