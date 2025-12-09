@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
+import { CompletedBounties } from '@/components/home/CompletedBounties';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -166,6 +167,9 @@ const ActiveBounties = () => {
           />
         </div>
       </section>
+
+      {/* Success Stories Section */}
+      <CompletedBounties />
 
       <Separator className="my-0" />
 
