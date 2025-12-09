@@ -198,19 +198,19 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
 
       if (error) throw error;
 
-      // Get hunter email for notification
-      const { data: hunterAuth } = await supabase.auth.admin.getUserById(submission.hunterId);
-      
-      if (hunterAuth?.user) {
+      // Notify hunter via edge function (handles email internally)
+      try {
         await supabase.functions.invoke('send-notification-email', {
           body: {
             type: 'item_delivered',
-            recipientEmail: hunterAuth.user.email!,
-            recipientName: hunterAuth.user.email?.split('@')[0] || 'Hunter',
+            submissionId: submissionId,
             bountyTitle: bountyTitle,
             bountyId: bountyId
           }
         });
+      } catch (emailError) {
+        console.error('Failed to send delivery notification:', emailError);
+        // Don't fail if email fails
       }
 
       toast({

@@ -44,23 +44,19 @@ export function TrackingDialog({
 
       if (error) throw error;
 
-      // Send email notification to poster
+      // Send email notification to poster via edge function
       if (submissionData) {
-        const { data: posterAuth } = await supabase.auth.admin.getUserById((submissionData.Bounties as any).poster_id);
-        const { data: hunterData } = await supabase.auth.getUser();
-        
-        if (posterAuth?.user && hunterData?.user) {
-          await supabase.functions.invoke('send-notification-email', {
-            body: {
-              type: 'item_shipped',
-              recipientEmail: posterAuth.user.email!,
-              recipientName: posterAuth.user.email?.split('@')[0] || 'Poster',
-              bountyTitle: (submissionData.Bounties as any).title,
+        try {
+          await supabase.functions.invoke('send-shipping-notification', {
+            body: { 
               bountyId: submissionData.bounty_id,
-              senderName: hunterData.user.email?.split('@')[0] || 'Hunter',
-              trackingNumber: trackingNumber.trim() || undefined
+              type: 'item_shipped',
+              trackingNumber: trackingNumber.trim() || null
             }
           });
+        } catch (emailError) {
+          console.error('Failed to send shipping notification email:', emailError);
+          // Don't fail the whole operation if email fails
         }
       }
 
