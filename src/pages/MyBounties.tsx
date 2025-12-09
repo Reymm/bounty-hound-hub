@@ -310,43 +310,62 @@ export default function MyBounties() {
                           {item.claim.message}
                         </p>
 
-                        {item.claim.proofUrls.length > 0 && (
-                          <div>
-                            <p className="text-xs font-medium text-foreground mb-2">Proof:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {item.claim.proofUrls.map((url, index) => {
-                                const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url) || 
-                                  url.includes('supabase.co/storage');
-                                
-                                return isImage ? (
-                                  <a
-                                    key={index}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block"
-                                  >
-                                    <img
-                                      src={url}
-                                      alt={`Proof ${index + 1}`}
-                                      className="h-20 w-20 object-cover rounded-md border border-border hover:opacity-80 transition-opacity"
-                                    />
-                                  </a>
-                                ) : (
-                                  <a
-                                    key={index}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-primary hover:underline"
-                                  >
-                                    {url}
-                                  </a>
-                                );
-                              })}
+                        {item.claim.proofUrls.length > 0 && (() => {
+                          const proofLinks = item.claim.proofUrls.filter(url => 
+                            !/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url) && 
+                            !url.includes('supabase.co/storage')
+                          );
+                          const proofImages = item.claim.proofUrls.filter(url => 
+                            /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url) || 
+                            url.includes('supabase.co/storage')
+                          );
+                          
+                          return (
+                            <div className="space-y-3">
+                              {proofLinks.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-foreground mb-1">Proof URLs:</p>
+                                  <div className="space-y-1">
+                                    {proofLinks.map((url, index) => (
+                                      <a
+                                        key={index}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-primary hover:underline block"
+                                      >
+                                        {url}
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {proofImages.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-foreground mb-2">Proof Images:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {proofImages.map((url, index) => (
+                                      <a
+                                        key={index}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block"
+                                      >
+                                        <img
+                                          src={url}
+                                          alt={`Proof ${index + 1}`}
+                                          className="h-20 w-20 object-cover rounded-md border border-border hover:opacity-80 transition-opacity"
+                                        />
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                         
                         {item.claim.status === ClaimStatus.REJECTED && item.claim.rejectionReason && (
                           <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
