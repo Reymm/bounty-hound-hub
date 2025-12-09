@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RatingDialog } from './RatingDialog';
+import { RatingPromptDialog } from './RatingPromptDialog';
 import { StarRating } from './StarRating';
 import { getMyRating, getBountyRatings, canUserRate, UserRating } from '@/lib/api/ratings';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +33,8 @@ export function BountyRatingSection({
   const [myRatingToHunter, setMyRatingToHunter] = useState<UserRating | null>(null);
   const [myRatingToPoster, setMyRatingToPoster] = useState<UserRating | null>(null);
   const [allRatings, setAllRatings] = useState<UserRating[]>([]);
+  const [showHunterRatingPrompt, setShowHunterRatingPrompt] = useState(false);
+  const [hasShownPrompt, setHasShownPrompt] = useState(false);
 
   useEffect(() => {
     if (user && (bountyStatus === 'fulfilled' || bountyStatus === 'completed')) {
@@ -89,6 +92,14 @@ export function BountyRatingSection({
       setMyRatingToHunter(myHunterRating);
       setMyRatingToPoster(myPosterRating);
       setAllRatings(bountyRatings);
+      
+      // Auto-prompt hunter to rate poster if they haven't rated yet
+      if (canRatePosterResult && !myPosterRating && !hasShownPrompt) {
+        setTimeout(() => {
+          setShowHunterRatingPrompt(true);
+          setHasShownPrompt(true);
+        }, 500);
+      }
     } catch (error) {
       console.error('Error loading rating data:', error);
     } finally {
@@ -212,6 +223,19 @@ export function BountyRatingSection({
           </div>
         )}
       </CardContent>
+
+      {/* Hunter Rating Prompt Dialog */}
+      <RatingPromptDialog
+        open={showHunterRatingPrompt}
+        onOpenChange={setShowHunterRatingPrompt}
+        bountyId={bountyId}
+        ratedUserId={posterId}
+        ratedUserName={posterName}
+        ratingType="hunter_to_poster"
+        onComplete={() => {
+          loadRatingData();
+        }}
+      />
     </Card>
   );
 }

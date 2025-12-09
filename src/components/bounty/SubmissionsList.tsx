@@ -11,6 +11,7 @@ import { ShippingDetailsDialog } from './ShippingDetailsDialog';
 import { RequestRevisionDialog } from './RequestRevisionDialog';
 import { OpenDisputeDialog } from './OpenDisputeDialog';
 import { TrackingDialog } from './TrackingDialog';
+import { RatingPromptDialog } from '@/components/ratings/RatingPromptDialog';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Claim, ClaimStatus } from '@/lib/types';
@@ -44,6 +45,8 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [rejectingClaim, setRejectingClaim] = useState(false);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
   const [submissionToAccept, setSubmissionToAccept] = useState<string | null>(null);
+  const [ratingPromptOpen, setRatingPromptOpen] = useState(false);
+  const [ratingPromptData, setRatingPromptData] = useState<{ hunterId: string; hunterName: string } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -89,6 +92,12 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         if (requiresShipping) {
           setShippingDialogOpen(true);
         }
+        
+        // Set up rating prompt data for after shipping dialog or immediately
+        setRatingPromptData({
+          hunterId: claim.hunterId,
+          hunterName: claim.hunterName,
+        });
       }
       
       // Update bounty status to fulfilled (completed)
@@ -126,6 +135,13 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       
       await loadSubmissions();
       onRefresh?.();
+      
+      // Show rating prompt after a short delay if not showing shipping dialog
+      if (!requiresShipping && claim) {
+        setTimeout(() => {
+          setRatingPromptOpen(true);
+        }, 500);
+      }
     } else {
       toast({
         title: "Error",
@@ -515,11 +531,19 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           onClose={() => {
             setShippingDialogOpen(false);
             setAcceptedClaim(null);
+            // Show rating prompt after shipping dialog closes
+            setTimeout(() => {
+              setRatingPromptOpen(true);
+            }, 300);
           }}
           onShippingDetailsProvided={() => {
             setShippingDialogOpen(false);
             setAcceptedClaim(null);
             onRefresh?.();
+            // Show rating prompt after shipping details provided
+            setTimeout(() => {
+              setRatingPromptOpen(true);
+            }, 300);
           }}
         />
       )}
@@ -606,6 +630,21 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Rating Prompt Dialog - shown after accepting a claim */}
+      {ratingPromptData && (
+        <RatingPromptDialog
+          open={ratingPromptOpen}
+          onOpenChange={setRatingPromptOpen}
+          bountyId={bountyId}
+          ratedUserId={ratingPromptData.hunterId}
+          ratedUserName={ratingPromptData.hunterName}
+          ratingType="poster_to_hunter"
+          onComplete={() => {
+            setRatingPromptData(null);
+          }}
+        />
+      )}
     </div>
   );
 }
