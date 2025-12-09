@@ -312,18 +312,39 @@ export default function MyBounties() {
 
                         {item.claim.proofUrls.length > 0 && (
                           <div>
-                            <p className="text-xs font-medium text-foreground mb-1">Proof URLs:</p>
-                            {item.claim.proofUrls.map((url, index) => (
-                              <a
-                                key={index}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-primary hover:underline block"
-                              >
-                                {url}
-                              </a>
-                            ))}
+                            <p className="text-xs font-medium text-foreground mb-2">Proof:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {item.claim.proofUrls.map((url, index) => {
+                                const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url) || 
+                                  url.includes('supabase.co/storage');
+                                
+                                return isImage ? (
+                                  <a
+                                    key={index}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block"
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`Proof ${index + 1}`}
+                                      className="h-20 w-20 object-cover rounded-md border border-border hover:opacity-80 transition-opacity"
+                                    />
+                                  </a>
+                                ) : (
+                                  <a
+                                    key={index}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary hover:underline"
+                                  >
+                                    {url}
+                                  </a>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                         
