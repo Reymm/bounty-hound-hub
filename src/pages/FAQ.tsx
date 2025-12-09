@@ -173,7 +173,7 @@ export default function FAQ() {
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Everything you need to know about using BountyBay. Can't find what you're looking for? 
-              <a href="mailto:contact@bountybay.com" className="text-primary hover:underline ml-1">
+              <a href="mailto:contact@bountybay.co" className="text-primary hover:underline ml-1">
                 Contact us
               </a>.
             </p>

@@ -225,8 +225,8 @@ export default function Privacy() {
                 If you have questions about this Privacy Policy or wish to exercise your privacy rights, please contact us:
               </p>
               <div className="text-muted-foreground">
-                <p>Email: privacy@bountybay.com</p>
-                <p>Data Protection Officer: dpo@bountybay.com</p>
+                <p>Email: privacy@bountybay.co</p>
+                <p>Data Protection Officer: dpo@bountybay.co</p>
                 <p>Address: [Company Address]</p>
               </div>
             </section>

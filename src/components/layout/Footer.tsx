@@ -46,7 +46,7 @@ export function Footer() {
               Privacy
             </Link>
             <a 
-              href="mailto:contact@bountybay.com" 
+              href="mailto:contact@bountybay.co" 
               className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
               aria-label="Contact us via email"
             >
