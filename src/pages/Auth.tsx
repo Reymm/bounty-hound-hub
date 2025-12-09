@@ -55,9 +55,12 @@ export default function Auth() {
       
       console.log('Auth page load - hash type:', type, 'hasAccessToken:', !!accessToken);
       
-      // If we have access_token in the hash, we need to set the session from it
+      // If we have access_token in the hash with recovery type, process it
       if (accessToken && type === 'recovery') {
         console.log('Processing recovery token from hash');
+        // Set recovery mode FIRST before setting session to prevent redirect race condition
+        setIsRecoveryMode(true);
+        
         try {
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -67,13 +70,14 @@ export default function Auth() {
           if (error) {
             console.error('Error setting session from recovery token:', error);
             setError('Password reset link has expired. Please request a new one.');
+            setIsRecoveryMode(false);
           } else {
             console.log('Session set successfully from recovery token');
-            setIsRecoveryMode(true);
           }
         } catch (err) {
           console.error('Error processing recovery token:', err);
           setError('Password reset link is invalid. Please request a new one.');
+          setIsRecoveryMode(false);
         }
         return; // Don't process other logic if in recovery mode
       }
@@ -116,11 +120,21 @@ export default function Auth() {
   // Redirect if already authenticated (but not during password recovery)
   useEffect(() => {
     const checkProfileAndRedirect = async () => {
-      // Don't redirect if we're in recovery mode OR if we have hash params that might indicate recovery
+      // Check for recovery indicators in URL - don't redirect if present
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const hasRecoveryHash = hashParams.get('type') === 'recovery' || hashParams.get('access_token');
+      const hashType = hashParams.get('type');
+      const hasAccessToken = hashParams.has('access_token');
       
-      if (user && !isRecoveryMode && !hasRecoveryHash) {
+      // Don't redirect if:
+      // 1. We're in recovery mode
+      // 2. URL hash contains recovery type
+      // 3. URL hash contains access_token (could be any auth flow)
+      if (isRecoveryMode || hashType === 'recovery' || hasAccessToken) {
+        console.log('Skipping redirect - recovery flow detected');
+        return;
+      }
+      
+      if (user) {
         // Check if user has completed profile setup
         const { data: profile } = await supabase
           .from('profiles')
