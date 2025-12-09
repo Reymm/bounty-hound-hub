@@ -42,82 +42,74 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [activeTab, setActiveTab] = useState('signup');
 
-  // State to track if we're processing a recovery flow
-  const [isProcessingRecovery, setIsProcessingRecovery] = useState(false);
-
-  // Check if user is coming from email confirmation or password reset
+  // Single effect to handle all auth state - prevents race conditions
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    // Check URL params for non-recovery flows
     const queryParams = new URLSearchParams(window.location.search);
-    const type = hashParams.get('type');
     const confirmed = queryParams.get('confirmed');
     const tab = queryParams.get('tab');
-    const accessToken = hashParams.get('access_token');
     
-    console.log('Auth page load - hash type:', type, 'hasAccessToken:', !!accessToken, 'hash:', window.location.hash);
-    
-    // If this is a recovery flow, set recovery mode immediately
-    if (type === 'recovery') {
-      console.log('Recovery flow detected from hash type');
-      setIsRecoveryMode(true);
-      setIsProcessingRecovery(true);
-      
-      // Give Supabase time to process the tokens, then check for session
-      setTimeout(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('After timeout - session exists:', !!session);
-        setIsProcessingRecovery(false);
-        if (!session) {
-          setError('Password reset link has expired. Please request a new one.');
-        }
-      }, 500);
-      return;
-    }
-    
-    if (type === 'signup' || type === 'email_confirmation') {
-      setEmailConfirmed(true);
+    if (confirmed === 'true') {
       setActiveTab('signin');
-      window.history.replaceState(null, '', window.location.pathname);
-    } else if (confirmed === 'true') {
-      setActiveTab('signin');
-      window.history.replaceState(null, '', window.location.pathname);
     } else if (tab === 'signin' || tab === 'signup') {
       setActiveTab(tab);
     }
-  }, []);
-  
-  // Listen for auth state changes - PASSWORD_RECOVERY event confirms we should show reset form
-  useEffect(() => {
+    
+    // Set up auth state listener - this is the OFFICIAL way to detect password recovery
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change event:', event, 'hasSession:', !!session);
+      console.log('Auth state change:', event, 'session:', !!session);
+      
       if (event === 'PASSWORD_RECOVERY') {
-        console.log('PASSWORD_RECOVERY event detected');
+        // This is the official Supabase event for password recovery
+        console.log('PASSWORD_RECOVERY event - showing reset form');
         setIsRecoveryMode(true);
-        setIsProcessingRecovery(false);
+        setError(null);
+      } else if (event === 'SIGNED_IN' && !isRecoveryMode) {
+        // User signed in normally (not via recovery) - redirect
+        console.log('SIGNED_IN event - will redirect');
+      } else if (event === 'USER_UPDATED') {
+        // Password was successfully updated
+        console.log('USER_UPDATED event - password changed');
       }
     });
+    
+    // Also check the URL hash for recovery type as a fallback
+    // (in case the PASSWORD_RECOVERY event fires before our listener is set up)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    
+    if (type === 'recovery') {
+      console.log('Recovery type detected in URL hash');
+      setIsRecoveryMode(true);
+    } else if (type === 'signup' || type === 'email_confirmation') {
+      setEmailConfirmed(true);
+      setActiveTab('signin');
+    }
     
     return () => subscription.unsubscribe();
   }, []);
 
-  // Redirect if already authenticated (but not during password recovery)
+  // Separate effect for redirect logic - only runs when user state changes
   useEffect(() => {
-    const checkProfileAndRedirect = async () => {
-      // Check for recovery indicators in URL - don't redirect if present
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const hashType = hashParams.get('type');
-      const hasAccessToken = hashParams.has('access_token');
-      
-      // Don't redirect during recovery flow
-      if (isRecoveryMode || isProcessingRecovery || hashType === 'recovery' || hasAccessToken) {
-        console.log('Skipping redirect - recovery flow detected');
-        return;
-      }
-      
-      if (user) {
+    // Don't redirect if in recovery mode
+    if (isRecoveryMode) {
+      console.log('In recovery mode - not redirecting');
+      return;
+    }
+    
+    // Check URL for recovery indicators
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (hashParams.get('type') === 'recovery' || hashParams.has('access_token')) {
+      console.log('Recovery hash detected - not redirecting');
+      return;
+    }
+    
+    // Redirect authenticated users
+    if (user) {
+      const checkAndRedirect = async () => {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, full_name')
+          .select('username')
           .eq('id', user.id)
           .single();
         
@@ -127,11 +119,10 @@ export default function Auth() {
           const from = (location.state as any)?.from?.pathname || '/';
           navigate(from);
         }
-      }
-    };
-    
-    checkProfileAndRedirect();
-  }, [user, navigate, location, isRecoveryMode, isProcessingRecovery]);
+      };
+      checkAndRedirect();
+    }
+  }, [user, isRecoveryMode, navigate, location]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,22 +303,16 @@ export default function Auth() {
     }
 
     try {
-      // First verify we have an active session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError('Auth session missing! The password reset link may have expired. Please request a new one.');
-        setIsLoading(false);
-        return;
-      }
-
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) {
-        if (error.message.includes('session')) {
-          setError('Session expired. Please request a new password reset link.');
+        // Handle specific error cases
+        if (error.message.toLowerCase().includes('session') || 
+            error.message.toLowerCase().includes('not authenticated') ||
+            error.message.toLowerCase().includes('jwt')) {
+          setError('Your password reset link has expired. Please request a new one.');
         } else {
           setError(error.message);
         }
@@ -346,6 +331,7 @@ export default function Auth() {
       window.history.replaceState(null, '', window.location.pathname);
       navigate('/');
     } catch (err: any) {
+      console.error('Password update error:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
