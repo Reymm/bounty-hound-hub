@@ -44,32 +44,60 @@ export default function Auth() {
 
   // Check if user is coming from email confirmation or password reset
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const queryParams = new URLSearchParams(window.location.search);
-    const type = hashParams.get('type');
-    const confirmed = queryParams.get('confirmed');
-    const tab = queryParams.get('tab');
-    const accessToken = hashParams.get('access_token');
+    const processAuthHash = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const queryParams = new URLSearchParams(window.location.search);
+      const type = hashParams.get('type');
+      const confirmed = queryParams.get('confirmed');
+      const tab = queryParams.get('tab');
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      console.log('Auth page load - hash type:', type, 'hasAccessToken:', !!accessToken);
+      
+      // If we have access_token in the hash, we need to set the session from it
+      if (accessToken && type === 'recovery') {
+        console.log('Processing recovery token from hash');
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || ''
+          });
+          
+          if (error) {
+            console.error('Error setting session from recovery token:', error);
+            setError('Password reset link has expired. Please request a new one.');
+          } else {
+            console.log('Session set successfully from recovery token');
+            setIsRecoveryMode(true);
+          }
+        } catch (err) {
+          console.error('Error processing recovery token:', err);
+          setError('Password reset link is invalid. Please request a new one.');
+        }
+        return; // Don't process other logic if in recovery mode
+      }
+      
+      // Check for recovery type in hash params (without token - shouldn't happen but handle it)
+      if (type === 'recovery') {
+        console.log('Setting recovery mode to true from hash params');
+        setIsRecoveryMode(true);
+        return;
+      } else if (type === 'signup' || type === 'email_confirmation') {
+        // Only show confirmed message if we actually got here from email link with proper token
+        setEmailConfirmed(true);
+        setActiveTab('signin');
+        window.history.replaceState(null, '', window.location.pathname);
+      } else if (confirmed === 'true') {
+        // Don't automatically show success - the token might have expired
+        setActiveTab('signin');
+        window.history.replaceState(null, '', window.location.pathname);
+      } else if (tab === 'signin' || tab === 'signup') {
+        setActiveTab(tab);
+      }
+    };
     
-    console.log('Auth page load - hash type:', type, 'hash:', window.location.hash, 'hasAccessToken:', !!accessToken);
-    
-    // Check for recovery type in hash params first
-    if (type === 'recovery') {
-      console.log('Setting recovery mode to true from hash params');
-      setIsRecoveryMode(true);
-      return; // Don't process other logic if in recovery mode
-    } else if (type === 'signup' || type === 'email_confirmation') {
-      // Only show confirmed message if we actually got here from email link with proper token
-      setEmailConfirmed(true);
-      setActiveTab('signin');
-      window.history.replaceState(null, '', window.location.pathname);
-    } else if (confirmed === 'true') {
-      // Don't automatically show success - the token might have expired
-      setActiveTab('signin');
-      window.history.replaceState(null, '', window.location.pathname);
-    } else if (tab === 'signin' || tab === 'signup') {
-      setActiveTab(tab);
-    }
+    processAuthHash();
   }, []);
   
   // Separate effect to listen for auth state changes - this catches PASSWORD_RECOVERY event
@@ -292,12 +320,25 @@ export default function Auth() {
     }
 
     try {
+      // First verify we have an active session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setError('Auth session missing! The password reset link may have expired. Please request a new one.');
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) {
-        setError(error.message);
+        if (error.message.includes('session')) {
+          setError('Session expired. Please request a new password reset link.');
+        } else {
+          setError(error.message);
+        }
         return;
       }
 
