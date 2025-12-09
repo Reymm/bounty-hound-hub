@@ -17,6 +17,13 @@ export function Footer() {
           {/* Links */}
           <nav className="flex flex-wrap items-center justify-center gap-6 text-sm">
             <Link 
+              to="/faq" 
+              className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
+              aria-label="Frequently Asked Questions"
+            >
+              FAQ
+            </Link>
+            <Link 
               to="/support" 
               className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1 flex items-center gap-1.5"
               aria-label="Report a bug or give feedback"

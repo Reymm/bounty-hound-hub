@@ -27,6 +27,7 @@ import ProfileSetup from "./pages/ProfileSetup";
 import Checkout from "./pages/Checkout";
 import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 import KycComplete from "./pages/KycComplete";
 import ConnectComplete from "./pages/ConnectComplete";
@@ -59,6 +60,7 @@ const App = () => (
                       <Route path="/" element={<Index />} />
                       <Route path="/bounties" element={<ActiveBounties />} />
                       <Route path="/b/:id" element={<BountyDetail />} />
+                      <Route path="/faq" element={<FAQ />} />
                       
                       {/* Protected routes */}
                       <Route path="/post" element={
