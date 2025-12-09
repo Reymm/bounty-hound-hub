@@ -19,6 +19,19 @@ export default function Auth() {
   const location = useLocation();
   const { toast } = useToast();
   
+  // CRITICAL: Capture hash IMMEDIATELY before Supabase can clear it
+  // This must be at the top level, not in a useEffect
+  const [initialHashType] = useState(() => {
+    const hash = window.location.hash;
+    const hashParams = new URLSearchParams(hash.substring(1));
+    const type = hashParams.get('type');
+    console.log('Initial hash captured:', type, 'full hash:', hash);
+    return type;
+  });
+  
+  // If we detected recovery in the initial hash, start in recovery mode
+  const [isRecoveryMode, setIsRecoveryMode] = useState(() => initialHashType === 'recovery');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
@@ -26,7 +39,6 @@ export default function Auth() {
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
@@ -91,20 +103,14 @@ export default function Auth() {
 
   // Separate effect for redirect logic - only runs when user state changes
   useEffect(() => {
-    // Don't redirect if in recovery mode
-    if (isRecoveryMode) {
-      console.log('In recovery mode - not redirecting');
+    // CRITICAL: Use the initially captured hash type to prevent redirect during recovery
+    // This is checked BEFORE Supabase can clear the hash from the URL
+    if (isRecoveryMode || initialHashType === 'recovery') {
+      console.log('Recovery mode active - blocking redirect');
       return;
     }
     
-    // Check URL for recovery indicators
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (hashParams.get('type') === 'recovery' || hashParams.has('access_token')) {
-      console.log('Recovery hash detected - not redirecting');
-      return;
-    }
-    
-    // Redirect authenticated users
+    // Redirect authenticated users (only for non-recovery flows)
     if (user) {
       const checkAndRedirect = async () => {
         const { data: profile } = await supabase
@@ -122,7 +128,7 @@ export default function Auth() {
       };
       checkAndRedirect();
     }
-  }, [user, isRecoveryMode, navigate, location]);
+  }, [user, isRecoveryMode, initialHashType, navigate, location]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
