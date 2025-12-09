@@ -190,6 +190,7 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
     subcategories: {
       'furniture': 'Furniture',
       'decor': 'Home Decor',
+      'blankets-throws': 'Blankets & Throws',
       'garden-tools': 'Garden Tools & Equipment',
       'plants-seeds': 'Plants & Seeds',
       'outdoor-living': 'Outdoor Living',
