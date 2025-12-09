@@ -39,7 +39,7 @@ export function CompletedBounties() {
           updated_at,
           poster_id
         `)
-        .eq('status', 'completed')
+        .eq('status', 'fulfilled')
         .order('updated_at', { ascending: false })
         .limit(6);
 
