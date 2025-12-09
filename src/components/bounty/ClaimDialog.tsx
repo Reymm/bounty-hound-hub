@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X, Shield } from 'lucide-react';
+import { Plus, X, Shield, CreditCard, Loader2 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,41 +30,85 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [kycRequired, setKycRequired] = useState(false);
   const [kycChecking, setKycChecking] = useState(false);
+  const [stripeConnectRequired, setStripeConnectRequired] = useState(false);
+  const [stripeConnectChecking, setStripeConnectChecking] = useState(false);
+  const [startingStripeOnboarding, setStartingStripeOnboarding] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Check if KYC is required for high-value bounties
+  // Check if Stripe Connect and KYC are required
   useEffect(() => {
-    const checkKycStatus = async () => {
-      // KYC required for claiming bounties over $500
-      if (bountyAmount <= 500) {
-        setKycRequired(false);
-        return;
-      }
+    const checkRequirements = async () => {
+      if (!isOpen || !user) return;
 
-      setKycChecking(true);
+      // Check Stripe Connect status first
+      setStripeConnectChecking(true);
       try {
-        const { data, error } = await supabase.functions.invoke('check-kyc-status');
+        const { data, error } = await supabase.functions.invoke('check-connect-status');
         
         if (error) {
+          console.error('Error checking Stripe Connect:', error);
+          setStripeConnectRequired(true);
+        } else {
+          // Require Stripe Connect if not fully onboarded
+          setStripeConnectRequired(!data?.onboarding_complete);
+        }
+      } catch (error) {
+        console.error('Error checking Stripe Connect:', error);
+        setStripeConnectRequired(true);
+      } finally {
+        setStripeConnectChecking(false);
+      }
+
+      // Check KYC for high-value bounties
+      if (bountyAmount > 500) {
+        setKycChecking(true);
+        try {
+          const { data, error } = await supabase.functions.invoke('check-kyc-status');
+          
+          if (error) {
+            console.error('Error checking KYC:', error);
+            setKycRequired(true);
+          } else {
+            setKycRequired(!data?.verified);
+          }
+        } catch (error) {
           console.error('Error checking KYC:', error);
           setKycRequired(true);
-          return;
+        } finally {
+          setKycChecking(false);
         }
-
-        setKycRequired(!data?.verified);
-      } catch (error) {
-        console.error('Error checking KYC:', error);
-        setKycRequired(true);
-      } finally {
-        setKycChecking(false);
+      } else {
+        setKycRequired(false);
       }
     };
 
-    if (isOpen && user) {
-      checkKycStatus();
-    }
+    checkRequirements();
   }, [isOpen, user, bountyAmount]);
+
+  const handleStartStripeOnboarding = async () => {
+    setStartingStripeOnboarding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-connect-account');
+      
+      if (error) throw error;
+      
+      if (data?.onboarding_url) {
+        window.location.href = data.onboarding_url;
+      } else {
+        throw new Error('No onboarding URL received');
+      }
+    } catch (error: any) {
+      console.error('Error starting Stripe onboarding:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start payout setup. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setStartingStripeOnboarding(false);
+    }
+  };
 
   const handleAddProofUrl = () => {
     setProofUrls([...proofUrls, '']);
@@ -159,6 +203,15 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
       return;
     }
 
+    if (stripeConnectRequired) {
+      toast({
+        title: "Payout setup required",
+        description: "Please set up your payout account before claiming bounties.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (kycRequired) {
       toast({
         title: "Verification required",
@@ -221,13 +274,52 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
           <DialogTitle>Submit Claim for "{bountyTitle}"</DialogTitle>
         </DialogHeader>
 
-        {kycRequired && (
+        {/* Stripe Connect Setup Alert - Show first as it's the primary requirement */}
+        {stripeConnectRequired && !stripeConnectChecking && (
+          <Alert className="border-primary bg-primary/5">
+            <CreditCard className="h-4 w-4 text-primary" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-semibold text-foreground">Set Up Payouts First</p>
+                <p className="text-muted-foreground">
+                  Before you can claim bounties, you need to set up your payout account so you can receive rewards when your claims are accepted.
+                </p>
+                <Button 
+                  onClick={handleStartStripeOnboarding} 
+                  className="mt-2"
+                  disabled={startingStripeOnboarding}
+                >
+                  {startingStripeOnboarding ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Setting up...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Set Up Payout Account
+                    </>
+                  )}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {stripeConnectChecking && (
+          <Alert>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <AlertDescription>Checking payout account status...</AlertDescription>
+          </Alert>
+        )}
+
+        {kycRequired && !stripeConnectRequired && (
           <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
             <Shield className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
               <div className="space-y-2">
                 <p className="font-semibold">Identity Verification Required</p>
-                <p>Bounties over $200 require identity verification before claiming. This helps protect both hunters and posters.</p>
+                <p>Bounties over $500 require identity verification before claiming. This helps protect both hunters and posters.</p>
                 <Button 
                   onClick={handleStartKyc} 
                   variant="outline" 
@@ -312,9 +404,12 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
             </Button>
             <Button 
               onClick={handleSubmit} 
-              disabled={isSubmitting || kycRequired || kycChecking}
+              disabled={isSubmitting || stripeConnectRequired || stripeConnectChecking || kycRequired || kycChecking}
             >
-              {isSubmitting ? 'Submitting...' : kycRequired ? 'Verification Required' : 'Submit Claim'}
+              {isSubmitting ? 'Submitting...' : 
+               stripeConnectRequired ? 'Payout Setup Required' :
+               kycRequired ? 'Verification Required' : 
+               'Submit Claim'}
             </Button>
           </div>
         </div>
