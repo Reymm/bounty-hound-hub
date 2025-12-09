@@ -93,6 +93,10 @@ const faqData = [
       {
         q: "What payment methods are accepted?",
         a: "We accept all major credit and debit cards through Stripe. Posters pay when creating a bounty, and hunters receive payouts to their connected bank account."
+      },
+      {
+        q: "What are the cancellation fees?",
+        a: "If you cancel a bounty within 24 hours of posting, there's no platform cancellation fee. After 24 hours, a 2% cancellation fee applies to cover administrative costs. Additionally, Stripe does not refund their processing fees (~2.9% + 30¢) on refunds, so you'll lose that portion regardless of timing. For example, cancelling a $100 bounty after 24 hours means you'd lose approximately $5.20 total ($2 platform fee + $3.20 Stripe fee) and receive ~$94.80 back."
       }
     ]
   },
