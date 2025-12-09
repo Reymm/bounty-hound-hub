@@ -76,8 +76,15 @@ export function BountyCard({ bounty }: BountyCardProps) {
           {/* Header with status and bounty amount */}
           <div className="flex items-start justify-between gap-2">
             {getStatusBadge()}
-            <div className="bounty-amount font-bold">
-              ${bounty.bountyAmount.toLocaleString()}
+            <div className="text-right">
+              <div className="bounty-amount font-bold">
+                ${bounty.bountyAmount.toLocaleString()}
+              </div>
+              {bounty.targetPriceMin && bounty.targetPriceMax && (
+                <div className="text-xs text-muted-foreground">
+                  Item: ${bounty.targetPriceMin.toLocaleString()}-${bounty.targetPriceMax.toLocaleString()}
+                </div>
+              )}
             </div>
           </div>
 
