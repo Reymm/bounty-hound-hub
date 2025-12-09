@@ -42,75 +42,58 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [activeTab, setActiveTab] = useState('signup');
 
+  // State to track if we're processing a recovery flow
+  const [isProcessingRecovery, setIsProcessingRecovery] = useState(false);
+
   // Check if user is coming from email confirmation or password reset
   useEffect(() => {
-    const processAuthHash = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const queryParams = new URLSearchParams(window.location.search);
-      const type = hashParams.get('type');
-      const confirmed = queryParams.get('confirmed');
-      const tab = queryParams.get('tab');
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      
-      console.log('Auth page load - hash type:', type, 'hasAccessToken:', !!accessToken);
-      
-      // If we have access_token in the hash with recovery type, process it
-      if (accessToken && type === 'recovery') {
-        console.log('Processing recovery token from hash');
-        // Set recovery mode FIRST before setting session to prevent redirect race condition
-        setIsRecoveryMode(true);
-        
-        try {
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || ''
-          });
-          
-          if (error) {
-            console.error('Error setting session from recovery token:', error);
-            setError('Password reset link has expired. Please request a new one.');
-            setIsRecoveryMode(false);
-          } else {
-            console.log('Session set successfully from recovery token');
-          }
-        } catch (err) {
-          console.error('Error processing recovery token:', err);
-          setError('Password reset link is invalid. Please request a new one.');
-          setIsRecoveryMode(false);
-        }
-        return; // Don't process other logic if in recovery mode
-      }
-      
-      // Check for recovery type in hash params (without token - shouldn't happen but handle it)
-      if (type === 'recovery') {
-        console.log('Setting recovery mode to true from hash params');
-        setIsRecoveryMode(true);
-        return;
-      } else if (type === 'signup' || type === 'email_confirmation') {
-        // Only show confirmed message if we actually got here from email link with proper token
-        setEmailConfirmed(true);
-        setActiveTab('signin');
-        window.history.replaceState(null, '', window.location.pathname);
-      } else if (confirmed === 'true') {
-        // Don't automatically show success - the token might have expired
-        setActiveTab('signin');
-        window.history.replaceState(null, '', window.location.pathname);
-      } else if (tab === 'signin' || tab === 'signup') {
-        setActiveTab(tab);
-      }
-    };
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
+    const type = hashParams.get('type');
+    const confirmed = queryParams.get('confirmed');
+    const tab = queryParams.get('tab');
+    const accessToken = hashParams.get('access_token');
     
-    processAuthHash();
+    console.log('Auth page load - hash type:', type, 'hasAccessToken:', !!accessToken, 'hash:', window.location.hash);
+    
+    // If this is a recovery flow, set recovery mode immediately
+    if (type === 'recovery') {
+      console.log('Recovery flow detected from hash type');
+      setIsRecoveryMode(true);
+      setIsProcessingRecovery(true);
+      
+      // Give Supabase time to process the tokens, then check for session
+      setTimeout(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('After timeout - session exists:', !!session);
+        setIsProcessingRecovery(false);
+        if (!session) {
+          setError('Password reset link has expired. Please request a new one.');
+        }
+      }, 500);
+      return;
+    }
+    
+    if (type === 'signup' || type === 'email_confirmation') {
+      setEmailConfirmed(true);
+      setActiveTab('signin');
+      window.history.replaceState(null, '', window.location.pathname);
+    } else if (confirmed === 'true') {
+      setActiveTab('signin');
+      window.history.replaceState(null, '', window.location.pathname);
+    } else if (tab === 'signin' || tab === 'signup') {
+      setActiveTab(tab);
+    }
   }, []);
   
-  // Separate effect to listen for auth state changes - this catches PASSWORD_RECOVERY event
+  // Listen for auth state changes - PASSWORD_RECOVERY event confirms we should show reset form
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change event:', event);
+      console.log('Auth state change event:', event, 'hasSession:', !!session);
       if (event === 'PASSWORD_RECOVERY') {
-        console.log('PASSWORD_RECOVERY event detected, setting recovery mode');
+        console.log('PASSWORD_RECOVERY event detected');
         setIsRecoveryMode(true);
+        setIsProcessingRecovery(false);
       }
     });
     
@@ -125,24 +108,19 @@ export default function Auth() {
       const hashType = hashParams.get('type');
       const hasAccessToken = hashParams.has('access_token');
       
-      // Don't redirect if:
-      // 1. We're in recovery mode
-      // 2. URL hash contains recovery type
-      // 3. URL hash contains access_token (could be any auth flow)
-      if (isRecoveryMode || hashType === 'recovery' || hasAccessToken) {
+      // Don't redirect during recovery flow
+      if (isRecoveryMode || isProcessingRecovery || hashType === 'recovery' || hasAccessToken) {
         console.log('Skipping redirect - recovery flow detected');
         return;
       }
       
       if (user) {
-        // Check if user has completed profile setup
         const { data: profile } = await supabase
           .from('profiles')
           .select('username, full_name')
           .eq('id', user.id)
           .single();
         
-        // If no username, redirect to profile setup
         if (!profile?.username) {
           navigate('/setup');
         } else {
@@ -153,7 +131,7 @@ export default function Auth() {
     };
     
     checkProfileAndRedirect();
-  }, [user, navigate, location, isRecoveryMode]);
+  }, [user, navigate, location, isRecoveryMode, isProcessingRecovery]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,7 +271,7 @@ export default function Auth() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(emailToReset, {
-        redirectTo: `${window.location.origin}/auth#`,
+        redirectTo: `${window.location.origin}/auth`,
       });
 
       if (error) {
