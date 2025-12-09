@@ -658,35 +658,6 @@ export default function Profile() {
                   )}
                 </div>
 
-                <div className="p-4 border border-border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Notifications</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Manage your email and push notification preferences
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" disabled>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Manage
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="p-4 border border-border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Privacy Settings</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Control who can see your profile and activity
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" disabled>
-                      <Shield className="h-4 w-4 mr-2" />
-                      Configure
-                    </Button>
-                  </div>
-                </div>
 
                 <Separator />
 
