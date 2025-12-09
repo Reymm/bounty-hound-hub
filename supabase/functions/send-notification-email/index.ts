@@ -15,10 +15,11 @@ const corsHeaders = {
 
 interface EmailRequest {
   type: 'bounty_posted' | 'bounty_claimed' | 'submission_received' | 'submission_accepted' | 'submission_rejected' | 'shipping_details_provided' | 'bounty_completed' | 'support_ticket_created' | 'revision_requested' | 'dispute_opened' | 'dispute_resolved' | 'item_shipped' | 'item_delivered';
-  recipientEmail: string;
-  recipientName: string;
+  recipientEmail?: string;
+  recipientName?: string;
   bountyTitle?: string;
   bountyId?: string;
+  submissionId?: string; // For looking up recipient info server-side
   senderName?: string;
   amount?: number;
   rejectionReason?: string;
@@ -467,8 +468,28 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     console.log('Received email notification request');
-    const emailData: EmailRequest = await req.json();
+    let emailData: EmailRequest = await req.json();
     console.log('Email data:', emailData);
+
+    // For item_delivered, look up the hunter info server-side
+    if (emailData.type === 'item_delivered' && emailData.submissionId && !emailData.recipientEmail) {
+      const { data: submission } = await supabase
+        .from('Submissions')
+        .select('hunter_id')
+        .eq('id', emailData.submissionId)
+        .single();
+      
+      if (submission) {
+        const { data: hunterUser } = await supabase.auth.admin.getUserById(submission.hunter_id);
+        if (hunterUser?.user) {
+          emailData = {
+            ...emailData,
+            recipientEmail: hunterUser.user.email!,
+            recipientName: hunterUser.user.email?.split('@')[0] || 'Hunter'
+          };
+        }
+      }
+    }
 
     // Validate required fields
     if (!emailData.type || !emailData.recipientEmail) {
