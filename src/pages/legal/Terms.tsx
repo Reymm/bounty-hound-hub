@@ -19,7 +19,7 @@ export default function Terms() {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Terms of Service</CardTitle>
-          <p className="text-muted-foreground">Last updated: January 1, 2024</p>
+          <p className="text-muted-foreground">Last updated: December 9, 2025</p>
         </CardHeader>
         <CardContent className="prose prose-sm max-w-none">
           <div className="space-y-6">
@@ -102,10 +102,18 @@ export default function Terms() {
                 <div>
                   <h3 className="font-medium mb-2">Platform Fees</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>Platform fee: 2.3% charged to posters, 2.3% deducted from hunters (4.6% total)</li>
-                    <li>Payment processing fees apply as per Stripe&apos;s rates</li>
-                    <li>Poster pays 2.3% fee at bounty creation; hunter pays 2.3% fee at payout</li>
-                    <li>Refunds are processed minus applicable fees</li>
+                    <li>Posters pay no platform fee—only the bounty reward plus Stripe processing fees (~2.9% + 30¢)</li>
+                    <li>Hunters pay a 7% platform fee, deducted from their payout upon successful completion</li>
+                    <li>Payment processing fees apply as per Stripe&apos;s standard rates</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">Cancellation Fees</h3>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>Bounties cancelled within 24 hours of posting: No platform cancellation fee</li>
+                    <li>Bounties cancelled after 24 hours: 2% cancellation fee applies</li>
+                    <li>Stripe processing fees (~2.9% + 30¢) are non-refundable regardless of cancellation timing</li>
+                    <li>Refunds are processed minus all applicable fees</li>
                   </ul>
                 </div>
               </div>
@@ -119,10 +127,12 @@ export default function Terms() {
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                 <li>Posting bounties for illegal items or services</li>
                 <li>Submitting false or fraudulent claims</li>
-                <li>Circumventing the platform's payment system</li>
+                <li>Circumventing the platform's payment system or conducting off-platform transactions</li>
+                <li>Arranging payments outside of BountyBay for bounties initiated on the platform</li>
                 <li>Harassment or inappropriate communication</li>
                 <li>Creating multiple accounts to manipulate ratings</li>
                 <li>Violating intellectual property rights</li>
+                <li>Attempting to contact other users outside the platform to avoid fees</li>
               </ul>
             </section>
 
