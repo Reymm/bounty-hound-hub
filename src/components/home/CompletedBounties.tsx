@@ -27,66 +27,24 @@ export function CompletedBounties() {
 
   const loadCompletedBounties = async () => {
     try {
-      // Get fulfilled bounties with accepted submissions
-      const { data: bounties, error } = await supabase
-        .from('Bounties')
-        .select(`
-          id,
-          title,
-          amount,
-          category,
-          images,
-          updated_at,
-          poster_id
-        `)
-        .eq('status', 'fulfilled')
-        .order('updated_at', { ascending: false })
-        .limit(6);
+      // Use the database function that bypasses RLS for public showcase
+      const { data, error } = await supabase.rpc('get_completed_bounties_showcase', {
+        limit_count: 6
+      });
 
       if (error) throw error;
 
-      if (bounties && bounties.length > 0) {
-        // Get submission and profile data
-        const enrichedBounties = await Promise.all(
-          bounties.map(async (bounty) => {
-            // Get accepted submission for this bounty
-            const { data: submission } = await supabase
-              .from('Submissions')
-              .select('hunter_id, updated_at')
-              .eq('bounty_id', bounty.id)
-              .eq('status', 'accepted')
-              .single();
-
-            if (!submission) return null;
-
-            // Get hunter profile
-            const { data: hunterProfile } = await supabase
-              .from('profiles')
-              .select('username, full_name')
-              .eq('id', submission.hunter_id)
-              .single();
-
-            // Get poster profile
-            const { data: posterProfile } = await supabase
-              .from('profiles')
-              .select('username, full_name')
-              .eq('id', bounty.poster_id)
-              .single();
-
-            return {
-              id: bounty.id,
-              title: bounty.title,
-              amount: bounty.amount || 0,
-              category: bounty.category || 'Other',
-              completed_at: submission.updated_at,
-              hunter_name: hunterProfile?.username || hunterProfile?.full_name || 'Anonymous',
-              poster_name: posterProfile?.username || posterProfile?.full_name || 'Anonymous',
-              images: bounty.images || [],
-            };
-          })
-        );
-
-        setCompletedBounties(enrichedBounties.filter((b): b is CompletedBounty => b !== null));
+      if (data && data.length > 0) {
+        setCompletedBounties(data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          amount: item.amount || 0,
+          category: item.category || 'Other',
+          completed_at: item.completed_at,
+          hunter_name: item.hunter_name,
+          poster_name: item.poster_name,
+          images: item.images || [],
+        })));
       }
     } catch (error) {
       console.error('Error loading completed bounties:', error);
