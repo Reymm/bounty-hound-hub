@@ -178,7 +178,7 @@ export default function Terms() {
                 If you have questions about these Terms of Service, please contact us at:
               </p>
               <div className="mt-3 text-muted-foreground">
-                <p>Email: legal@bountybay.com</p>
+                <p>Email: legal@bountybay.co</p>
                 <p>Address: [Company Address]</p>
               </div>
             </section>
