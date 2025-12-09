@@ -898,6 +898,19 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_completed_bounties_showcase: {
+        Args: { limit_count?: number }
+        Returns: {
+          amount: number
+          category: string
+          completed_at: string
+          hunter_name: string
+          id: string
+          images: string[]
+          poster_name: string
+          title: string
+        }[]
+      }
       get_public_profile_data: {
         Args: { profile_id: string }
         Returns: {
