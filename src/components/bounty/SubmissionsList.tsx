@@ -27,9 +27,10 @@ interface SubmissionsListProps {
   currentUserId?: string;
   requiresShipping?: boolean;
   onRefresh?: () => void;
+  onEditSubmission?: () => void;
 }
 
-export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId, requiresShipping = false, onRefresh }: SubmissionsListProps) {
+export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId, requiresShipping = false, onRefresh, onEditSubmission }: SubmissionsListProps) {
   const [submissions, setSubmissions] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
@@ -473,20 +474,29 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       </Button>
                     </>
                   )}
-                  {/* Hunter can withdraw their own pending claim */}
+                  {/* Hunter can edit or withdraw their own pending claim */}
                   {submission.status === ClaimStatus.SUBMITTED && currentUserId === submission.hunterId && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedSubmission(submission.id);
-                        setWithdrawDialogOpen(true);
-                      }}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Withdraw
-                    </Button>
+                    <>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => onEditSubmission?.()}
+                      >
+                        Edit
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedSubmission(submission.id);
+                          setWithdrawDialogOpen(true);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Withdraw
+                      </Button>
+                    </>
                   )}
                   {submission.status === ClaimStatus.ACCEPTED && currentUserId === submission.hunterId && requiresShipping && (
                     <Button 
