@@ -503,7 +503,7 @@ export default function Messages() {
                     </h2>
                     {selectedThread.bountyId ? (
                       <Link 
-                        to={`/bounty/${selectedThread.bountyId}`}
+                        to={`/b/${selectedThread.bountyId}`}
                         className="text-xs text-muted-foreground hover:text-primary hover:underline truncate block"
                       >
                         Re: {selectedThread.bountyTitle}
