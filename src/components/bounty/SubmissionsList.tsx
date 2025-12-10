@@ -93,6 +93,12 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         setAcceptedClaim(claim);
         // Only show shipping dialog if bounty requires shipping
         if (requiresShipping) {
+          // Update shipping status to 'requested' so hunter knows to wait for details
+          await supabase
+            .from('Bounties')
+            .update({ shipping_status: 'requested' })
+            .eq('id', bountyId);
+            
           setShippingDialogOpen(true);
         }
         
