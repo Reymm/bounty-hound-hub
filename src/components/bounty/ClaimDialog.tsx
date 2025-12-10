@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X, Shield, CreditCard, Loader2 } from 'lucide-react';
+import { Plus, X, Shield, CreditCard, Loader2, CheckCircle } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
@@ -310,6 +310,16 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
           <Alert>
             <Loader2 className="h-4 w-4 animate-spin" />
             <AlertDescription>Checking payout account status...</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Stripe Connect Connected Success Indicator */}
+        {!stripeConnectChecking && !stripeConnectRequired && (
+          <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
+            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              Payout account connected
+            </AlertDescription>
           </Alert>
         )}
 
