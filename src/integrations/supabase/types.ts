@@ -478,6 +478,35 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_bounties: {
+        Row: {
+          bounty_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bounty_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bounty_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_bounties_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_audit_log: {
         Row: {
           action: string
