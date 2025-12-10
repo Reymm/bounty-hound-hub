@@ -10,8 +10,8 @@ import { Loader2 } from 'lucide-react';
 
 interface ShippingDetailsDialogProps {
   bountyId: string;
-  bountyTitle: string;
-  hunterName: string;
+  bountyTitle?: string;
+  hunterName?: string;
   isOpen: boolean;
   onClose: () => void;
   onShippingDetailsProvided: () => void;
@@ -76,7 +76,7 @@ export function ShippingDetailsDialog({
       if (success) {
         toast({
           title: "Shipping details provided",
-          description: `${hunterName} has been notified with your shipping information.`,
+          description: hunterName ? `${hunterName} has been notified with your shipping information.` : "The hunter has been notified with your shipping information.",
         });
         onShippingDetailsProvided();
         onClose();
@@ -128,8 +128,9 @@ export function ShippingDetailsDialog({
         <DialogHeader>
           <DialogTitle>Shipping Details Required</DialogTitle>
           <DialogDescription>
-            Your bounty "{bountyTitle}" has been fulfilled! Would you like to provide shipping details 
-            so {hunterName} can send the item?
+            {bountyTitle 
+              ? `Your bounty "${bountyTitle}" has been fulfilled! Would you like to provide shipping details so ${hunterName || 'the hunter'} can send the item?`
+              : `Please provide your shipping address so the hunter can send the item to you.`}
           </DialogDescription>
         </DialogHeader>
 

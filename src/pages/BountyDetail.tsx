@@ -13,6 +13,7 @@ import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
 import { ShippingInfoCard } from '@/components/bounty/ShippingInfoCard';
+import { ShippingDetailsDialog } from '@/components/bounty/ShippingDetailsDialog';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +28,7 @@ export default function BountyDetail() {
   const [loading, setLoading] = useState(true);
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [refreshKey, setRefreshKey] = useState(0);
   const [totalPaid, setTotalPaid] = useState<number | undefined>(undefined);
@@ -471,6 +473,7 @@ export default function BountyDetail() {
                       shippingStatus={bounty.shippingStatus}
                       isHunter={isClaimAccepted && !isOwnBounty}
                       isPoster={isOwnBounty}
+                      onProvideShipping={() => setIsShippingDialogOpen(true)}
                     />
                   )}
                   
@@ -565,6 +568,24 @@ export default function BountyDetail() {
           open={isCancelDialogOpen}
           onOpenChange={setIsCancelDialogOpen}
           totalPaid={totalPaid}
+        />
+      )}
+
+      {/* Shipping Details Dialog */}
+      {bounty && (
+        <ShippingDetailsDialog
+          bountyId={bounty.id}
+          bountyTitle={bounty.title}
+          isOpen={isShippingDialogOpen}
+          onClose={() => setIsShippingDialogOpen(false)}
+          onShippingDetailsProvided={() => {
+            loadBountyDetail();
+            setIsShippingDialogOpen(false);
+            toast({
+              title: "Shipping details saved",
+              description: "The hunter has been notified with your shipping address.",
+            });
+          }}
         />
       )}
 

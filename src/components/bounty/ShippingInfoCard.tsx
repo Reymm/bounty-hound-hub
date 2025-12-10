@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Package, MapPin, Phone, FileText, AlertCircle } from 'lucide-react';
 import { ShippingDetails } from '@/lib/types';
 
@@ -8,13 +9,15 @@ interface ShippingInfoCardProps {
   shippingStatus?: string;
   isHunter: boolean;
   isPoster: boolean;
+  onProvideShipping?: () => void;
 }
 
 export function ShippingInfoCard({ 
   shippingDetails, 
   shippingStatus, 
   isHunter,
-  isPoster
+  isPoster,
+  onProvideShipping
 }: ShippingInfoCardProps) {
   // Only show to hunters with accepted claims or to the poster
   if (!isHunter && !isPoster) return null;
@@ -29,13 +32,13 @@ export function ShippingInfoCard({
             Shipping Details Required
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
             You've accepted this submission. Please provide your shipping address so the hunter can send the item to you.
           </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Use the "Provide Shipping Details" button below to submit your address.
-          </p>
+          <Button onClick={onProvideShipping} className="w-full">
+            Provide Shipping Details
+          </Button>
         </CardContent>
       </Card>
     );
