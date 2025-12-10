@@ -328,10 +328,10 @@ export default function BountyDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className={`grid w-full ${isOwnBounty ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              <TabsTrigger value="claims">Claims</TabsTrigger>
+              {isOwnBounty && <TabsTrigger value="claims">Claims</TabsTrigger>}
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
@@ -405,27 +405,29 @@ export default function BountyDetail() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="claims">
-              <div className="space-y-6">
-                <SubmissionsList 
-                  key={refreshKey}
-                  bountyId={bounty.id}
-                  bountyTitle={bounty.title}
-                  posterId={bounty.posterId}
-                  currentUserId={user?.id}
-                  requiresShipping={bounty.requires_shipping}
-                  onRefresh={() => setRefreshKey(prev => prev + 1)}
-                />
-                
-                {/* Rating Section - Show after bounty completion */}
-                <BountyRatingSection
-                  bountyId={bounty.id}
-                  posterId={bounty.posterId}
-                  posterName={bounty.posterName}
-                  bountyStatus={bounty.status}
-                />
-              </div>
-            </TabsContent>
+            {isOwnBounty && (
+              <TabsContent value="claims">
+                <div className="space-y-6">
+                  <SubmissionsList 
+                    key={refreshKey}
+                    bountyId={bounty.id}
+                    bountyTitle={bounty.title}
+                    posterId={bounty.posterId}
+                    currentUserId={user?.id}
+                    requiresShipping={bounty.requires_shipping}
+                    onRefresh={() => setRefreshKey(prev => prev + 1)}
+                  />
+                  
+                  {/* Rating Section - Show after bounty completion */}
+                  <BountyRatingSection
+                    bountyId={bounty.id}
+                    posterId={bounty.posterId}
+                    posterName={bounty.posterName}
+                    bountyStatus={bounty.status}
+                  />
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
 
