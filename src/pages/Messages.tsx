@@ -1,6 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, Send, Paperclip, ArrowLeft } from 'lucide-react';
+import { Search, Send, Paperclip, ArrowLeft, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -29,6 +39,8 @@ export default function Messages() {
   const [searchQuery, setSearchQuery] = useState('');
   const [otherParticipantName, setOtherParticipantName] = useState<string>('');
   const [otherParticipantAvatar, setOtherParticipantAvatar] = useState<string>('');
+  const [threadToDelete, setThreadToDelete] = useState<MessageThread | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -286,6 +298,60 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const deleteConversation = async (thread: MessageThread) => {
+    if (!user) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Extract participants from thread ID
+      const [participantPart] = thread.id.split(':::');
+      const participants = participantPart.split('___');
+      const otherParticipant = participants.find(p => p !== user.id);
+      
+      if (!otherParticipant) return;
+      
+      // Delete all messages in this conversation (where user is sender or recipient)
+      // Also filter by bounty_id if it exists
+      let query = supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherParticipant}),and(sender_id.eq.${otherParticipant},recipient_id.eq.${user.id})`);
+      
+      if (thread.bountyId) {
+        query = query.eq('bounty_id', thread.bountyId);
+      }
+      
+      const { error } = await query;
+      
+      if (error) throw error;
+      
+      // Remove from threads list
+      setThreads(prev => prev.filter(t => t.id !== thread.id));
+      
+      // Clear selection if this was the selected thread
+      if (selectedThread?.id === thread.id) {
+        setSelectedThread(null);
+        setMessages([]);
+      }
+      
+      toast({
+        title: "Conversation deleted",
+        description: "The conversation has been removed.",
+      });
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      toast({
+        title: "Error deleting conversation",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setThreadToDelete(null);
+    }
+  };
+
   const formatMessageTime = (timestamp: Date) => {
     if (isToday(timestamp)) {
       return format(timestamp, 'HH:mm');
@@ -339,38 +405,55 @@ export default function Messages() {
             ) : (
               <div className="divide-y divide-border">
                 {filteredThreads.map((thread) => (
-                  <button
+                  <div
                     key={thread.id}
-                    onClick={() => setSelectedThread(thread)}
-                    className={`w-full p-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:bg-muted/50 ${
+                    className={`relative group w-full p-4 text-left hover:bg-muted/50 transition-colors ${
                       selectedThread?.id === thread.id ? 'bg-muted/70' : ''
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-1">
-                      <h3 className="font-medium text-foreground truncate flex-1 pr-2">
-                        {thread.otherParticipantName || 'Unknown User'}
-                      </h3>
-                      {thread.unreadCount > 0 && (
-                        <Badge variant="destructive" className="text-xs h-5 min-w-5 px-1.5 flex items-center justify-center flex-shrink-0">
-                          {thread.unreadCount}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
-                      Re: {thread.bountyTitle}
-                    </p>
-                    
-                    {thread.lastMessage && (
-                      <p className="text-sm text-muted-foreground line-clamp-1 mb-1">
-                        {thread.lastMessage.body}
+                    <button
+                      onClick={() => setSelectedThread(thread)}
+                      className="w-full text-left focus:outline-none"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="font-medium text-foreground truncate flex-1 pr-2">
+                          {thread.otherParticipantName || 'Unknown User'}
+                        </h3>
+                        {thread.unreadCount > 0 && (
+                          <Badge variant="destructive" className="text-xs h-5 min-w-5 px-1.5 flex items-center justify-center flex-shrink-0">
+                            {thread.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
+                        Re: {thread.bountyTitle}
                       </p>
-                    )}
+                      
+                      {thread.lastMessage && (
+                        <p className="text-sm text-muted-foreground line-clamp-1 mb-1">
+                          {thread.lastMessage.body}
+                        </p>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(thread.updatedAt, { addSuffix: true })}
+                      </p>
+                    </button>
                     
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(thread.updatedAt, { addSuffix: true })}
-                    </p>
-                  </button>
+                    {/* Delete button - appears on hover */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setThreadToDelete(thread);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             )}
@@ -520,6 +603,28 @@ export default function Messages() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!threadToDelete} onOpenChange={() => setThreadToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all messages in this conversation. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => threadToDelete && deleteConversation(threadToDelete)}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
