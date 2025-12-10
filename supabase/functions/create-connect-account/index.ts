@@ -76,7 +76,6 @@ serve(async (req) => {
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
-        country: 'CA', // Canada
         email: user.email,
         capabilities: {
           card_payments: { requested: true },
