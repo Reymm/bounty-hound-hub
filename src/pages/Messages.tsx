@@ -288,7 +288,8 @@ export default function Messages() {
   };
 
   const filteredThreads = threads.filter(thread =>
-    thread.bountyTitle.toLowerCase().includes(searchQuery.toLowerCase())
+    thread.bountyTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (thread.otherParticipantName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
   );
 
   return (
@@ -337,7 +338,7 @@ export default function Messages() {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2 flex-1 pr-2">
                         <h3 className="font-medium text-foreground truncate">
-                          {thread.bountyTitle}
+                          {thread.otherParticipantName || 'Unknown User'}
                         </h3>
                         {thread.lastMessage?.attachments && thread.lastMessage.attachments.length > 0 && (
                           <span className="text-primary" title="Has attachments">📸</span>
@@ -349,6 +350,10 @@ export default function Messages() {
                         </Badge>
                       )}
                     </div>
+                    
+                    <p className="text-xs text-muted-foreground truncate mb-1">
+                      Re: {thread.bountyTitle}
+                    </p>
                     
                     {thread.lastMessage && (
                       <p className="text-sm text-muted-foreground truncate mb-1">
