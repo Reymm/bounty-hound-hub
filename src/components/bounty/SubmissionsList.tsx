@@ -16,7 +16,7 @@ import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, ExternalLink, FileText, AlertTriangle, RefreshCw, Package } from 'lucide-react';
+import { MessageCircle, ExternalLink, FileText, AlertTriangle, RefreshCw, Package, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -47,6 +47,8 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [submissionToAccept, setSubmissionToAccept] = useState<string | null>(null);
   const [ratingPromptOpen, setRatingPromptOpen] = useState(false);
   const [ratingPromptData, setRatingPromptData] = useState<{ hunterId: string; hunterName: string } | null>(null);
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
+  const [withdrawingClaim, setWithdrawingClaim] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -229,6 +231,42 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       });
     } finally {
       setConfirmingDelivery(false);
+    }
+  };
+
+  const handleWithdrawClaim = async () => {
+    if (!selectedSubmission) return;
+    
+    try {
+      setWithdrawingClaim(true);
+      
+      const { error } = await supabase
+        .from('Submissions')
+        .delete()
+        .eq('id', selectedSubmission)
+        .eq('hunter_id', currentUserId) // Ensure only own submission
+        .eq('status', 'submitted'); // Only allow withdrawing pending claims
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Claim withdrawn",
+        description: "Your submission has been removed.",
+      });
+      
+      setWithdrawDialogOpen(false);
+      setSelectedSubmission(null);
+      await loadSubmissions();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error withdrawing claim:', error);
+      toast({
+        title: "Error",
+        description: "Failed to withdraw claim. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setWithdrawingClaim(false);
     }
   };
 
@@ -435,6 +473,21 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       </Button>
                     </>
                   )}
+                  {/* Hunter can withdraw their own pending claim */}
+                  {submission.status === ClaimStatus.SUBMITTED && currentUserId === submission.hunterId && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSubmission(submission.id);
+                        setWithdrawDialogOpen(true);
+                      }}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Withdraw
+                    </Button>
+                  )}
                   {submission.status === ClaimStatus.ACCEPTED && currentUserId === submission.hunterId && requiresShipping && (
                     <Button 
                       size="sm" 
@@ -626,6 +679,28 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
               className="bg-green-600 hover:bg-green-700"
             >
               Accept & Process Payout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Withdraw Claim Confirmation Dialog */}
+      <AlertDialog open={withdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Withdraw Claim</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to withdraw your claim? This action cannot be undone and you will need to submit a new claim if you change your mind.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={withdrawingClaim}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleWithdrawClaim}
+              disabled={withdrawingClaim}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {withdrawingClaim ? 'Withdrawing...' : 'Withdraw Claim'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
