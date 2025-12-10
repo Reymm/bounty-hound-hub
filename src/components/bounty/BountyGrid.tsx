@@ -2,21 +2,26 @@ import { BountyCard } from './BountyCard';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Bounty } from '@/lib/types';
-import { Package, Search } from 'lucide-react';
+import { Package } from 'lucide-react';
+import { useSavedBounties } from '@/hooks/use-saved-bounties';
 
 interface BountyGridProps {
   bounties: Bounty[];
   loading?: boolean;
   emptyMessage?: string;
   emptyDescription?: string;
+  showSaveButton?: boolean;
 }
 
 export function BountyGrid({ 
   bounties, 
   loading = false, 
   emptyMessage = "No bounties found",
-  emptyDescription = "Try adjusting your search filters or check back later for new bounties."
+  emptyDescription = "Try adjusting your search filters or check back later for new bounties.",
+  showSaveButton = true
 }: BountyGridProps) {
+  const { isSaved, toggleSave } = useSavedBounties();
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -42,7 +47,13 @@ export function BountyGrid({
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {bounties.map((bounty) => (
-          <BountyCard key={bounty.id} bounty={bounty} />
+          <BountyCard 
+            key={bounty.id} 
+            bounty={bounty} 
+            isSaved={isSaved(bounty.id)}
+            onToggleSave={() => toggleSave(bounty.id)}
+            showSaveButton={showSaveButton}
+          />
         ))}
       </div>
       

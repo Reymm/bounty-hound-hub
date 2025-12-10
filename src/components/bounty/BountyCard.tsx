@@ -4,12 +4,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bounty, BountyStatus } from '@/lib/types';
 import { formatDistanceToNow, isAfter, subDays } from 'date-fns';
+import { SaveBountyButton } from './SaveBountyButton';
 
 interface BountyCardProps {
   bounty: Bounty;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
+  showSaveButton?: boolean;
 }
 
-export function BountyCard({ bounty }: BountyCardProps) {
+export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButton = true }: BountyCardProps) {
   const isUrgent = bounty.deadline ? isAfter(new Date(), subDays(bounty.deadline, 3)) : false;
   const isSoon = bounty.deadline ? isAfter(new Date(), subDays(bounty.deadline, 7)) && !isUrgent : false;
   
@@ -75,7 +79,12 @@ export function BountyCard({ bounty }: BountyCardProps) {
         <div className="p-4 space-y-3">
           {/* Header with status and bounty amount */}
           <div className="flex items-start justify-between gap-2">
-            {getStatusBadge()}
+            <div className="flex items-center gap-2">
+              {getStatusBadge()}
+              {showSaveButton && onToggleSave && (
+                <SaveBountyButton isSaved={isSaved} onToggle={onToggleSave} />
+              )}
+            </div>
             <div className="text-right">
               <div className="bounty-amount font-bold">
                 ${bounty.bountyAmount.toLocaleString()}

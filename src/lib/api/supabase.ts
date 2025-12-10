@@ -258,6 +258,55 @@ export const supabaseApi = {
     }
   },
 
+  async getBountiesByIds(ids: string[]): Promise<Bounty[]> {
+    try {
+      if (ids.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from('Bounties')
+        .select('*')
+        .in('id', ids);
+
+      if (error) throw error;
+
+      // Fetch profile data for all bounties using secure function
+      const posterIds = data?.map(bounty => bounty.poster_id).filter(Boolean) || [];
+      const uniquePosterIds = [...new Set(posterIds)];
+      
+      const profilePromises = uniquePosterIds.map(async (posterId) => {
+        const { data } = await supabase.rpc('get_public_profile_data', {
+          profile_id: posterId
+        });
+        return data?.[0] ? { 
+          id: posterId, 
+          ...data[0],
+          total_failed_claims: 0
+        } : null;
+      });
+      
+      const profiles = await Promise.all(profilePromises);
+      const profileMap = new Map(
+        profiles
+          .filter(Boolean)
+          .map(p => [p.id, p])
+      );
+
+      // Maintain order of IDs
+      const bountyMap = new Map(data?.map(b => [b.id, b]) || []);
+      return ids
+        .map(id => bountyMap.get(id))
+        .filter(Boolean)
+        .map(bounty => {
+          const sanitizedBounty = { ...bounty };
+          delete sanitizedBounty.shipping_details;
+          return transformBountyRow(sanitizedBounty, profileMap.get(bounty.poster_id));
+        });
+    } catch (error) {
+      console.error('Error fetching bounties by IDs:', error);
+      return [];
+    }
+  },
+
   async createBounty(formData: CreateBountyData): Promise<Bounty> {
     try {
       const { data: { user } } = await supabase.auth.getUser();

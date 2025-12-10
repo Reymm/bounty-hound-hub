@@ -1,32 +1,40 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Eye, MessageCircle, Settings, Plus, Package, Users, CheckCircle, DollarSign, Truck } from 'lucide-react';
+import { Eye, MessageCircle, Plus, Package, Users, CheckCircle, DollarSign, Truck, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Bounty, Claim, BountyStatus, ClaimStatus, ClaimType } from '@/lib/types';
+import { Bounty, Claim, BountyStatus, ClaimStatus } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
+import { BountyCard } from '@/components/bounty/BountyCard';
+import { useSavedBounties } from '@/hooks/use-saved-bounties';
 
 export default function MyBounties() {
   const [searchParams] = useSearchParams();
   const [postedBounties, setPostedBounties] = useState<Bounty[]>([]);
   const [appliedBounties, setAppliedBounties] = useState<(Bounty & { claim: Claim })[]>([]);
+  const [savedBounties, setSavedBounties] = useState<Bounty[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedLoading, setSavedLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('posted');
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isSaved, toggleSave, refresh: refreshSavedIds } = useSavedBounties();
 
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'applied') {
       setActiveTab('applied');
+    } else if (tab === 'saved') {
+      setActiveTab('saved');
     }
   }, [searchParams]);
 
@@ -56,6 +64,50 @@ export default function MyBounties() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load saved bounties when tab changes to 'saved'
+  useEffect(() => {
+    if (activeTab === 'saved' && user) {
+      loadSavedBounties();
+    }
+  }, [activeTab, user]);
+
+  const loadSavedBounties = async () => {
+    if (!user) return;
+    
+    try {
+      setSavedLoading(true);
+      
+      // Get saved bounty IDs
+      const { data: savedData, error: savedError } = await supabase
+        .from('saved_bounties')
+        .select('bounty_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (savedError) throw savedError;
+
+      if (savedData.length === 0) {
+        setSavedBounties([]);
+        return;
+      }
+
+      // Fetch the actual bounties
+      const bountyIds = savedData.map(item => item.bounty_id);
+      const bounties = await supabaseApi.getBountiesByIds(bountyIds);
+      setSavedBounties(bounties);
+
+    } catch (error) {
+      console.error('Error loading saved bounties:', error);
+      toast({
+        title: "Error loading saved bounties",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavedLoading(false);
     }
   };
 
@@ -110,12 +162,16 @@ export default function MyBounties() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="posted" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="posted">
             Posted ({postedBounties.length})
           </TabsTrigger>
           <TabsTrigger value="applied">
             Applied ({appliedBounties.length})
+          </TabsTrigger>
+          <TabsTrigger value="saved">
+            <Bookmark className="h-4 w-4 mr-1" />
+            Saved ({savedBounties.length})
           </TabsTrigger>
         </TabsList>
 
@@ -394,6 +450,47 @@ export default function MyBounties() {
                     </div>
                   </CardContent>
                 </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="saved" className="space-y-6">
+          {savedLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <LoadingSkeleton key={i} className="h-64" />
+              ))}
+            </div>
+          ) : savedBounties.length === 0 ? (
+            <EmptyState
+              icon={Bookmark}
+              title="No saved bounties"
+              description="Browse bounties and click the bookmark icon to save them for later."
+              action={
+                <Button asChild variant="outline">
+                  <Link to="/">
+                    Browse Bounties
+                  </Link>
+                </Button>
+              }
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {savedBounties.map((bounty) => (
+                <BountyCard 
+                  key={bounty.id} 
+                  bounty={bounty}
+                  isSaved={isSaved(bounty.id)}
+                  onToggleSave={() => {
+                    toggleSave(bounty.id);
+                    // Refresh the list when unsaving
+                    setTimeout(() => {
+                      loadSavedBounties();
+                      refreshSavedIds();
+                    }, 500);
+                  }}
+                />
               ))}
             </div>
           )}
