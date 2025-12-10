@@ -549,25 +549,53 @@ export const supabaseApi = {
       
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
-        id: [row.participant_1, row.participant_2].sort().join('___'),
-        bountyId: row.bounty_id,
-        bountyTitle: 'Bounty Discussion', // TODO: Get actual bounty title
-        participants: [row.participant_1, row.participant_2],
-        lastMessage: {
-          id: 'last',
-          threadId: '',
+      if (!data || data.length === 0) return [];
+
+      // Get unique bounty IDs and other participant IDs to fetch their info
+      const bountyIds = [...new Set(data.filter((row: any) => row.bounty_id).map((row: any) => row.bounty_id))];
+      const otherParticipantIds = [...new Set(data.map((row: any) => 
+        row.participant_1 === userId ? row.participant_2 : row.participant_1
+      ))];
+
+      // Fetch bounty titles and participant profiles in parallel
+      const [bountiesResult, profilesResult] = await Promise.all([
+        bountyIds.length > 0 
+          ? supabase.from('Bounties').select('id, title').in('id', bountyIds)
+          : { data: [] },
+        otherParticipantIds.length > 0 
+          ? supabase.from('profiles').select('id, username, full_name').in('id', otherParticipantIds)
+          : { data: [] }
+      ]);
+
+      const bountyMap = new Map((bountiesResult.data || []).map(b => [b.id, b.title]));
+      const profileMap = new Map((profilesResult.data || []).map(p => [p.id, p.username || p.full_name || 'Unknown User']));
+
+      return (data || []).map((row: any) => {
+        const otherParticipantId = row.participant_1 === userId ? row.participant_2 : row.participant_1;
+        const otherParticipantName = profileMap.get(otherParticipantId) || 'Unknown User';
+        const bountyTitle = bountyMap.get(row.bounty_id) || 'Direct Message';
+
+        return {
+          id: [row.participant_1, row.participant_2].sort().join('___'),
           bountyId: row.bounty_id,
-          senderId: '',
-          senderName: '',
-          body: row.last_message,
-          attachments: [],
-          timestamp: new Date(row.last_message_at),
-          isRead: row.unread_count === 0
-        },
-        unreadCount: row.unread_count,
-        updatedAt: new Date(row.last_message_at)
-      }));
+          bountyTitle: bountyTitle,
+          otherParticipantName: otherParticipantName,
+          participants: [row.participant_1, row.participant_2],
+          lastMessage: {
+            id: 'last',
+            threadId: '',
+            bountyId: row.bounty_id,
+            senderId: '',
+            senderName: '',
+            body: row.last_message,
+            attachments: [],
+            timestamp: new Date(row.last_message_at),
+            isRead: row.unread_count === 0
+          },
+          unreadCount: row.unread_count,
+          updatedAt: new Date(row.last_message_at)
+        };
+      });
     } catch (error) {
       console.error('Error fetching message threads:', error);
       return [];

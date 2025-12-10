@@ -59,6 +59,7 @@ export interface MessageThread {
   id: string;
   bountyId: string;
   bountyTitle: string;
+  otherParticipantName?: string;
   participants: string[];
   lastMessage?: Message;
   unreadCount: number;
