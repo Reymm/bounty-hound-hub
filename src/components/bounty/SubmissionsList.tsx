@@ -666,8 +666,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           <AlertDialogHeader>
             <AlertDialogTitle>Accept this submission?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will accept the submission and immediately process the payout to the hunter. 
-              The bounty reward will be transferred to the hunter's account (minus the 7% platform fee).
+              This will mark the bounty as completed and release the reward to the hunter. 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
