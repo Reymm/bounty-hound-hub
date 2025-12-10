@@ -19,8 +19,30 @@ export function ShippingInfoCard({
   // Only show to hunters with accepted claims or to the poster
   if (!isHunter && !isPoster) return null;
 
-  // If shipping not required or not provided
-  if (shippingStatus === 'not_requested' || shippingStatus === 'not_provided') {
+  // For poster: show prompt to provide shipping details when not yet requested/provided
+  if (isPoster && (shippingStatus === 'not_requested' || shippingStatus === 'requested')) {
+    return (
+      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            Shipping Details Required
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            You've accepted this submission. Please provide your shipping address so the hunter can send the item to you.
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Use the "Provide Shipping Details" button below to submit your address.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Hide for hunter if shipping not yet requested
+  if (isHunter && (shippingStatus === 'not_requested' || shippingStatus === 'not_provided')) {
     return null;
   }
 
