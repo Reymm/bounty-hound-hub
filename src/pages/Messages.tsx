@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, Send, Paperclip } from 'lucide-react';
+import { Search, Send, Paperclip, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Messages() {
   const location = useLocation();
@@ -31,6 +32,7 @@ export default function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadThreads();
@@ -294,9 +296,11 @@ export default function Messages() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-12 h-[calc(100vh-10rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
-        {/* Thread List */}
-        <div className="lg:col-span-4 xl:col-span-3 bg-muted/30 border-r border-border">
+      <div className="flex h-[calc(100vh-10rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
+        {/* Thread List - hidden on mobile when a thread is selected */}
+        <div className={`${
+          isMobile && selectedThread ? 'hidden' : 'flex'
+        } flex-col w-full lg:w-80 xl:w-72 bg-muted/30 border-r border-border flex-shrink-0`}>
           <div className="p-4 border-b border-border">
             <h1 className="text-xl font-semibold mb-4">Messages</h1>
             <div className="relative">
@@ -310,11 +314,11 @@ export default function Messages() {
             </div>
           </div>
 
-          <div className="overflow-y-auto" style={{ height: 'calc(100% - 8rem)' }}>
+          <div className="flex-1 overflow-y-auto">
             {threadsLoading ? (
               <div className="p-4 space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <LoadingSkeleton key={i} className="h-16" />
+                  <LoadingSkeleton key={i} className="h-20" />
                 ))}
               </div>
             ) : filteredThreads.length === 0 ? (
@@ -326,7 +330,7 @@ export default function Messages() {
                 />
               </div>
             ) : (
-                <div className="divide-y divide-border">
+              <div className="divide-y divide-border">
                 {filteredThreads.map((thread) => (
                   <button
                     key={thread.id}
@@ -335,29 +339,23 @@ export default function Messages() {
                       selectedThread?.id === thread.id ? 'bg-muted/70' : ''
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2 flex-1 pr-2">
-                        <h3 className="font-medium text-foreground truncate">
-                          {thread.otherParticipantName || 'Unknown User'}
-                        </h3>
-                        {thread.lastMessage?.attachments && thread.lastMessage.attachments.length > 0 && (
-                          <span className="text-primary" title="Has attachments">📸</span>
-                        )}
-                      </div>
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="font-medium text-foreground truncate flex-1 pr-2">
+                        {thread.otherParticipantName || 'Unknown User'}
+                      </h3>
                       {thread.unreadCount > 0 && (
-                        <Badge variant="destructive" className="text-xs h-5 w-5 p-0 flex items-center justify-center">
+                        <Badge variant="destructive" className="text-xs h-5 min-w-5 px-1.5 flex items-center justify-center flex-shrink-0">
                           {thread.unreadCount}
                         </Badge>
                       )}
                     </div>
                     
-                    <p className="text-xs text-muted-foreground truncate mb-1">
+                    <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
                       Re: {thread.bountyTitle}
                     </p>
                     
                     {thread.lastMessage && (
-                      <p className="text-sm text-muted-foreground truncate mb-1">
-                        <span className="font-medium">{thread.lastMessage.senderName}:</span>{' '}
+                      <p className="text-sm text-muted-foreground line-clamp-1 mb-1">
                         {thread.lastMessage.body}
                       </p>
                     )}
@@ -372,8 +370,10 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* Chat Panel */}
-        <div className="lg:col-span-8 xl:col-span-9 flex flex-col">
+        {/* Chat Panel - hidden on mobile when no thread selected */}
+        <div className={`${
+          isMobile && !selectedThread ? 'hidden' : 'flex'
+        } flex-1 flex-col min-w-0`}>
           {!selectedThread ? (
             <div className="flex-1 flex items-center justify-center">
               <EmptyState
@@ -386,27 +386,34 @@ export default function Messages() {
             <>
               {/* Chat Header */}
               <div className="p-4 border-b border-border bg-background">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                        {otherParticipantAvatar ? (
-                          <img src={otherParticipantAvatar} alt={otherParticipantName} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-lg font-semibold text-muted-foreground">
-                            {otherParticipantName ? otherParticipantName[0]?.toUpperCase() : '?'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h2 className="font-semibold text-foreground">
-                        {otherParticipantName || 'Loading user...'}
-                      </h2>
-                      <p className="text-xs text-muted-foreground truncate max-w-xs">
-                        Re: {selectedThread.bountyTitle}
-                      </p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  {/* Back button - only visible on mobile */}
+                  {isMobile && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedThread(null)}
+                      className="flex-shrink-0"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                  )}
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {otherParticipantAvatar ? (
+                      <img src={otherParticipantAvatar} alt={otherParticipantName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-lg font-semibold text-muted-foreground">
+                        {otherParticipantName ? otherParticipantName[0]?.toUpperCase() : '?'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-semibold text-foreground truncate">
+                      {otherParticipantName || 'Loading user...'}
+                    </h2>
+                    <p className="text-xs text-muted-foreground truncate">
+                      Re: {selectedThread.bountyTitle}
+                    </p>
                   </div>
                 </div>
               </div>
