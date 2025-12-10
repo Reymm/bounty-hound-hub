@@ -24,6 +24,20 @@ export interface Bounty {
   claimsCount: number;
   viewsCount: number;
   requires_shipping?: boolean;
+  shippingDetails?: ShippingDetails;
+  shippingStatus?: 'not_requested' | 'requested' | 'provided' | 'not_provided';
+  hunterPurchasesItem?: boolean;
+}
+
+export interface ShippingDetails {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone?: string;
+  notes?: string;
 }
 
 export interface Claim {

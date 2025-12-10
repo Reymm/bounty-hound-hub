@@ -12,6 +12,7 @@ import { CancelBountyDialog } from '@/components/bounty/CancelBountyDialog';
 import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
+import { ShippingInfoCard } from '@/components/bounty/ShippingInfoCard';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -462,6 +463,16 @@ export default function BountyDetail() {
             {canSeeClaimsTab && (
               <TabsContent value="claims">
                 <div className="space-y-6">
+                  {/* Show shipping info for hunters with accepted claims */}
+                  {bounty.requires_shipping && (bounty.status === BountyStatus.FULFILLED || hasUserSubmission) && (
+                    <ShippingInfoCard
+                      shippingDetails={bounty.shippingDetails}
+                      shippingStatus={bounty.shippingStatus}
+                      isHunter={hasUserSubmission && !isOwnBounty}
+                      isPoster={isOwnBounty}
+                    />
+                  )}
+                  
                   <SubmissionsList 
                     key={refreshKey}
                     bountyId={bounty.id}

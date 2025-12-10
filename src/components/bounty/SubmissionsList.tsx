@@ -115,7 +115,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           
           toast({
             title: "Bounty completed & payout sent!",
-            description: `Payment of $${amountDisplay} sent to hunter (2.3% platform fee: $${feeDisplay})`,
+            description: `Payment of $${amountDisplay} sent to hunter (7% platform fee: $${feeDisplay})`,
           });
         } else if (payoutResult.success) {
           toast({
@@ -667,7 +667,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
             <AlertDialogTitle>Accept this submission?</AlertDialogTitle>
             <AlertDialogDescription>
               This will accept the submission and immediately process the payout to the hunter. 
-              The bounty reward will be transferred to the hunter's account (minus the 2.3% platform fee).
+              The bounty reward will be transferred to the hunter's account (minus the 7% platform fee).
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
