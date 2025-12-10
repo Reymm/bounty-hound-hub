@@ -1,0 +1,101 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Package, MapPin, Phone, FileText, AlertCircle } from 'lucide-react';
+import { ShippingDetails } from '@/lib/types';
+
+interface ShippingInfoCardProps {
+  shippingDetails?: ShippingDetails;
+  shippingStatus?: string;
+  isHunter: boolean;
+  isPoster: boolean;
+}
+
+export function ShippingInfoCard({ 
+  shippingDetails, 
+  shippingStatus, 
+  isHunter,
+  isPoster
+}: ShippingInfoCardProps) {
+  // Only show to hunters with accepted claims or to the poster
+  if (!isHunter && !isPoster) return null;
+
+  // If shipping not required or not provided
+  if (shippingStatus === 'not_requested' || shippingStatus === 'not_provided') {
+    return null;
+  }
+
+  // Show waiting state for hunter if shipping is requested but not yet provided
+  if (isHunter && shippingStatus === 'requested' && !shippingDetails) {
+    return (
+      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            Awaiting Shipping Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            The bounty poster has been asked to provide shipping details. You'll be notified once they submit the address.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If shipping details are provided, show them
+  if (shippingDetails && shippingStatus === 'provided') {
+    return (
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="h-5 w-5 text-primary" />
+              Shipping Address
+            </CardTitle>
+            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+              Ready to Ship
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="p-4 rounded-lg bg-background border">
+            <div className="space-y-2">
+              <p className="font-semibold text-foreground">{shippingDetails.name}</p>
+              <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                <div>
+                  <p>{shippingDetails.address}</p>
+                  <p>{shippingDetails.city}, {shippingDetails.state} {shippingDetails.postalCode}</p>
+                  <p>{shippingDetails.country}</p>
+                </div>
+              </div>
+              {shippingDetails.phone && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-4 w-4 shrink-0" />
+                  <span>{shippingDetails.phone}</span>
+                </div>
+              )}
+              {shippingDetails.notes && (
+                <div className="flex items-start gap-2 text-sm text-muted-foreground mt-2 pt-2 border-t">
+                  <FileText className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-foreground text-xs mb-1">Special Instructions:</p>
+                    <p>{shippingDetails.notes}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {isHunter && (
+            <p className="text-xs text-muted-foreground">
+              Please ship the item to this address and add tracking information once shipped.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return null;
+}

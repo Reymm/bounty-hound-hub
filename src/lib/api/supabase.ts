@@ -77,7 +77,10 @@ function transformBountyRow(row: BountyRow, profile?: any, claimsCount?: number)
     updatedAt: parseDbTimestamp((row as any).updated_at || row.created_at as any),
     claimsCount: claimsCount || 0,
     viewsCount: row.view_count || 0,
-    requires_shipping: row.requires_shipping || false
+    requires_shipping: row.requires_shipping || false,
+    shippingDetails: row.shipping_details as any || undefined,
+    shippingStatus: row.shipping_status || undefined,
+    hunterPurchasesItem: row.hunter_purchases_item || false
   };
 }
 
