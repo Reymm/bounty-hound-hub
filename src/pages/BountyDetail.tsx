@@ -328,7 +328,7 @@ export default function BountyDetail() {
                         disabled={!user}
                       >
                         <Flag className="h-4 w-4 mr-2" />
-                        Claim This Bounty
+                        {hasUserSubmission ? 'Edit My Claim' : 'Claim This Bounty'}
                       </Button>
                     </>
                   )}
@@ -508,7 +508,7 @@ export default function BountyDetail() {
                     disabled={!user}
                   >
                     <Flag className="h-4 w-4 mr-2" />
-                    Claim This Bounty
+                    {hasUserSubmission ? 'Edit My Claim' : 'Claim This Bounty'}
                   </Button>
                 </>
               )}
