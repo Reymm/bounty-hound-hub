@@ -575,15 +575,19 @@ export const supabaseApi = {
         const otherParticipantName = profileMap.get(otherParticipantId) || 'Unknown User';
         const bountyTitle = bountyMap.get(row.bounty_id) || 'Direct Message';
 
+        // Include bounty_id in thread ID to make each bounty conversation unique
+        const participantPart = [row.participant_1, row.participant_2].sort().join('___');
+        const threadId = row.bounty_id ? `${participantPart}:::${row.bounty_id}` : participantPart;
+
         return {
-          id: [row.participant_1, row.participant_2].sort().join('___'),
+          id: threadId,
           bountyId: row.bounty_id,
           bountyTitle: bountyTitle,
           otherParticipantName: otherParticipantName,
           participants: [row.participant_1, row.participant_2],
           lastMessage: {
             id: 'last',
-            threadId: '',
+            threadId: threadId,
             bountyId: row.bounty_id,
             senderId: '',
             senderName: '',
@@ -602,16 +606,22 @@ export const supabaseApi = {
     }
   },
 
-  async getMessages(senderId: string, recipientId: string): Promise<Message[]> {
+  async getMessages(senderId: string, recipientId: string, bountyId?: string): Promise<Message[]> {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('messages')
         .select(`
           *,
           sender_profile:profiles!sender_id (full_name, username)
         `)
-        .or(`and(sender_id.eq.${senderId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${senderId})`)
-        .order('created_at', { ascending: true });
+        .or(`and(sender_id.eq.${senderId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${senderId})`);
+      
+      // Filter by bounty_id if provided
+      if (bountyId) {
+        query = query.eq('bounty_id', bountyId);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: true });
 
       if (error) throw error;
 
