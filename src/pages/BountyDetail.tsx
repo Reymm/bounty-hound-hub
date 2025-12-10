@@ -30,11 +30,13 @@ export default function BountyDetail() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [totalPaid, setTotalPaid] = useState<number | undefined>(undefined);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [hasUserSubmission, setHasUserSubmission] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
   const isOwnBounty = user?.id === bounty?.posterId;
   const canCancelBounty = isOwnBounty && bounty?.status !== BountyStatus.FULFILLED;
+  const canSeeClaimsTab = isOwnBounty || hasUserSubmission;
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -85,10 +87,21 @@ export default function BountyDetail() {
       const bountyData = await supabaseApi.getBounty(id);
       setBounty(bountyData);
       
+      // Check if current user has a submission for this bounty
+      if (user?.id && user.id !== bountyData.posterId) {
+        const { data: userSubmission } = await supabase
+          .from('Submissions')
+          .select('id')
+          .eq('bounty_id', id)
+          .eq('hunter_id', user.id)
+          .maybeSingle();
+        
+        setHasUserSubmission(!!userSubmission);
+      }
+      
       // If user owns the bounty, fetch escrow data to show correct refund amount
       if (user?.id === bountyData.posterId) {
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
           const { data: escrowData } = await supabase
             .from('escrow_transactions')
             .select('total_charged_amount')
@@ -100,7 +113,6 @@ export default function BountyDetail() {
           }
         } catch (escrowError) {
           console.log('Could not fetch escrow data:', escrowError);
-          // Not critical, will fall back to bounty amount
         }
       }
     } catch (error) {
@@ -328,10 +340,14 @@ export default function BountyDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className={`grid w-full ${isOwnBounty ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsList className={`grid w-full ${canSeeClaimsTab ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              {isOwnBounty && <TabsTrigger value="claims">Claims</TabsTrigger>}
+              {canSeeClaimsTab && (
+                <TabsTrigger value="claims">
+                  {isOwnBounty ? 'Claims' : 'My Claim'}
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
@@ -405,7 +421,7 @@ export default function BountyDetail() {
               </Card>
             </TabsContent>
 
-            {isOwnBounty && (
+            {canSeeClaimsTab && (
               <TabsContent value="claims">
                 <div className="space-y-6">
                   <SubmissionsList 
