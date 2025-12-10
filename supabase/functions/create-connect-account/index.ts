@@ -76,7 +76,7 @@ serve(async (req) => {
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
-        country: 'US', // You can make this dynamic based on user location
+        country: 'CA', // Canada
         email: user.email,
         capabilities: {
           card_payments: { requested: true },
