@@ -349,9 +349,23 @@ export default function BountyDetail() {
               {canSeeClaimsTab && (
                 <TabsTrigger value="claims" className="flex items-center gap-1.5">
                   {isOwnBounty ? 'Claims' : 'My Claim'}
-                  {!isOwnBounty && isClaimEditable && (
-                    <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-600 rounded-full font-medium">
-                      Editable
+                  {!isOwnBounty && userSubmissionStatus && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                      userSubmissionStatus === 'submitted' 
+                        ? 'bg-amber-500/20 text-amber-600' 
+                        : userSubmissionStatus === 'accepted' 
+                        ? 'bg-green-500/20 text-green-600'
+                        : userSubmissionStatus === 'rejected'
+                        ? 'bg-red-500/20 text-red-600'
+                        : userSubmissionStatus === 'revision_requested'
+                        ? 'bg-orange-500/20 text-orange-600'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {userSubmissionStatus === 'submitted' ? 'Pending' 
+                        : userSubmissionStatus === 'accepted' ? 'Accepted'
+                        : userSubmissionStatus === 'rejected' ? 'Rejected'
+                        : userSubmissionStatus === 'revision_requested' ? 'Revision'
+                        : userSubmissionStatus}
                     </span>
                   )}
                 </TabsTrigger>
