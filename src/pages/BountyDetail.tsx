@@ -144,10 +144,14 @@ export default function BountyDetail() {
 
   const handleClaimSubmitted = () => {
     setRefreshKey(prev => prev + 1);
+    setHasUserSubmission(true);
+    setUserSubmissionStatus('submitted');
     toast({
       title: "Claim submitted successfully!",
       description: "The bounty poster will review your submission.",
     });
+    // Switch to claims tab so user can see their submission
+    setActiveTab('claims');
   };
 
   if (loading) {
