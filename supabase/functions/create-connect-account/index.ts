@@ -82,6 +82,10 @@ serve(async (req) => {
           transfers: { requested: true },
         },
         business_type: 'individual',
+        business_profile: {
+          product_description: 'Freelance finder services - locating items and leads for bounty posters on BountyBay marketplace',
+          mcc: '7299', // Miscellaneous personal services
+        },
         metadata: {
           supabase_user_id: user.id,
           user_email: user.email,
