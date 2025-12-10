@@ -40,6 +40,18 @@ export default function BountyDetail() {
   const canSeeClaimsTab = isOwnBounty || hasUserSubmission;
   const isClaimEditable = userSubmissionStatus === 'submitted';
 
+  const handleClaimClick = () => {
+    if (hasUserSubmission) {
+      toast({
+        title: "Already submitted",
+        description: "You've already submitted a claim for this bounty. Check the 'My Claim' tab to view or edit it.",
+      });
+      setActiveTab('claims');
+    } else {
+      setIsClaimDialogOpen(true);
+    }
+  };
+
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'claims') {
@@ -324,11 +336,11 @@ export default function BountyDetail() {
 
                       <Button
                         className="w-full bg-primary hover:bg-primary-hover"
-                        onClick={() => setIsClaimDialogOpen(true)}
+                        onClick={handleClaimClick}
                         disabled={!user}
                       >
                         <Flag className="h-4 w-4 mr-2" />
-                        {hasUserSubmission ? 'Edit My Claim' : 'Claim This Bounty'}
+                        Claim This Bounty
                       </Button>
                     </>
                   )}
@@ -504,11 +516,11 @@ export default function BountyDetail() {
 
                   <Button
                     className="w-full bg-primary hover:bg-primary-hover"
-                    onClick={() => setIsClaimDialogOpen(true)}
+                    onClick={handleClaimClick}
                     disabled={!user}
                   >
                     <Flag className="h-4 w-4 mr-2" />
-                    {hasUserSubmission ? 'Edit My Claim' : 'Claim This Bounty'}
+                    Claim This Bounty
                   </Button>
                 </>
               )}
