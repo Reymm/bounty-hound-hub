@@ -75,9 +75,9 @@ export default function Messages() {
 
   useEffect(() => {
     if (selectedThread) {
-      loadMessages(selectedThread.id);
+      loadMessages(selectedThread.id, selectedThread.bountyId);
     }
-  }, [selectedThread?.id]);
+  }, [selectedThread?.id, selectedThread?.bountyId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -105,10 +105,13 @@ export default function Messages() {
           
           // If this message is for the current thread, add it to messages
           if (selectedThread) {
-            const participants = selectedThread.id.split('___');
+            const [participantPart] = selectedThread.id.split(':::');
+            const participants = participantPart.split('___');
             const newMessage = payload.new as any;
             
-            if (participants.includes(newMessage.sender_id)) {
+            // Only add message if it's from a participant AND for the same bounty
+            if (participants.includes(newMessage.sender_id) && 
+                newMessage.bounty_id === selectedThread.bountyId) {
               // Fetch sender profile
               const { data: profileData } = await supabase
                 .from('profiles')
@@ -162,15 +165,17 @@ export default function Messages() {
     }
   };
 
-  const loadMessages = async (threadId: string) => {
+  const loadMessages = async (threadId: string, bountyId?: string) => {
     if (!user) return;
     
-    console.log('Loading messages for thread:', threadId);
+    console.log('Loading messages for thread:', threadId, 'bounty:', bountyId);
     
     try {
       setMessagesLoading(true);
-      // Extract participant IDs from threadId (format: participant1___participant2)
-      const participants = threadId.split('___');
+      // Extract participant IDs from threadId (format: participant1___participant2:::bountyId)
+      // First split by ::: to separate participants from bountyId
+      const [participantPart] = threadId.split(':::');
+      const participants = participantPart.split('___');
       console.log('Thread participants:', participants);
       
       const otherParticipant = participants.find(p => p !== user.id);
@@ -201,7 +206,8 @@ export default function Messages() {
         setOtherParticipantAvatar('');
       }
       
-      const messagesData = await supabaseApi.getMessages(user.id, otherParticipant);
+      // Pass bountyId to filter messages for this specific conversation
+      const messagesData = await supabaseApi.getMessages(user.id, otherParticipant, bountyId);
       console.log('Loaded messages:', messagesData.length);
       setMessages(messagesData);
       
@@ -247,8 +253,9 @@ export default function Messages() {
     try {
       setSendingMessage(true);
       
-      // Extract participant IDs from threadId
-      const participants = selectedThread.id.split('___');
+      // Extract participant IDs from threadId (format: participant1___participant2:::bountyId)
+      const [participantPart] = selectedThread.id.split(':::');
+      const participants = participantPart.split('___');
       const recipientId = participants.find(p => p !== user.id);
       if (!recipientId) return;
       
