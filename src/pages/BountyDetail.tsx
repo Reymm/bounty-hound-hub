@@ -466,6 +466,7 @@ export default function BountyDetail() {
                     currentUserId={user?.id}
                     requiresShipping={bounty.requires_shipping}
                     onRefresh={() => setRefreshKey(prev => prev + 1)}
+                    onEditSubmission={() => setIsClaimDialogOpen(true)}
                   />
                   
                   {/* Rating Section - Show after bounty completion */}
