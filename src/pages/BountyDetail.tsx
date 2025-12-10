@@ -40,6 +40,7 @@ export default function BountyDetail() {
   const canCancelBounty = isOwnBounty && bounty?.status !== BountyStatus.FULFILLED;
   const canSeeClaimsTab = isOwnBounty || hasUserSubmission;
   const isClaimEditable = userSubmissionStatus === 'submitted';
+  const isClaimAccepted = userSubmissionStatus === 'accepted';
 
   const handleClaimClick = () => {
     if (hasUserSubmission) {
@@ -463,12 +464,12 @@ export default function BountyDetail() {
             {canSeeClaimsTab && (
               <TabsContent value="claims">
                 <div className="space-y-6">
-                  {/* Show shipping info for hunters with accepted claims */}
-                  {bounty.requires_shipping && (bounty.status === BountyStatus.FULFILLED || hasUserSubmission) && (
+                  {/* Show shipping info for hunters with accepted claims or for poster */}
+                  {bounty.requires_shipping && (isOwnBounty || isClaimAccepted) && (
                     <ShippingInfoCard
                       shippingDetails={bounty.shippingDetails}
                       shippingStatus={bounty.shippingStatus}
-                      isHunter={hasUserSubmission && !isOwnBounty}
+                      isHunter={isClaimAccepted && !isOwnBounty}
                       isPoster={isOwnBounty}
                     />
                   )}
