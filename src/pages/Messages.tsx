@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Search, Send, Paperclip, ArrowLeft, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -501,9 +501,18 @@ export default function Messages() {
                     <h2 className="font-semibold text-foreground truncate">
                       {otherParticipantName || 'Loading user...'}
                     </h2>
-                    <p className="text-xs text-muted-foreground truncate">
-                      Re: {selectedThread.bountyTitle}
-                    </p>
+                    {selectedThread.bountyId ? (
+                      <Link 
+                        to={`/bounty/${selectedThread.bountyId}`}
+                        className="text-xs text-muted-foreground hover:text-primary hover:underline truncate block"
+                      >
+                        Re: {selectedThread.bountyTitle}
+                      </Link>
+                    ) : (
+                      <p className="text-xs text-muted-foreground truncate">
+                        Re: {selectedThread.bountyTitle}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
