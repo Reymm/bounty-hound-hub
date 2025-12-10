@@ -31,12 +31,14 @@ export default function BountyDetail() {
   const [totalPaid, setTotalPaid] = useState<number | undefined>(undefined);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [hasUserSubmission, setHasUserSubmission] = useState(false);
+  const [userSubmissionStatus, setUserSubmissionStatus] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
   const isOwnBounty = user?.id === bounty?.posterId;
   const canCancelBounty = isOwnBounty && bounty?.status !== BountyStatus.FULFILLED;
   const canSeeClaimsTab = isOwnBounty || hasUserSubmission;
+  const isClaimEditable = userSubmissionStatus === 'submitted';
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -91,12 +93,13 @@ export default function BountyDetail() {
       if (user?.id && user.id !== bountyData.posterId) {
         const { data: userSubmission } = await supabase
           .from('Submissions')
-          .select('id')
+          .select('id, status')
           .eq('bounty_id', id)
           .eq('hunter_id', user.id)
           .maybeSingle();
         
         setHasUserSubmission(!!userSubmission);
+        setUserSubmissionStatus(userSubmission?.status || null);
       }
       
       // If user owns the bounty, fetch escrow data to show correct refund amount
@@ -344,8 +347,13 @@ export default function BountyDetail() {
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="requirements">Requirements</TabsTrigger>
               {canSeeClaimsTab && (
-                <TabsTrigger value="claims">
+                <TabsTrigger value="claims" className="flex items-center gap-1.5">
                   {isOwnBounty ? 'Claims' : 'My Claim'}
+                  {!isOwnBounty && isClaimEditable && (
+                    <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-600 rounded-full font-medium">
+                      Editable
+                    </span>
+                  )}
                 </TabsTrigger>
               )}
             </TabsList>
