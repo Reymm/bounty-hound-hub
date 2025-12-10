@@ -23,6 +23,13 @@ interface ClaimDialogProps {
   onClaimSubmitted: () => void;
 }
 
+interface ExistingSubmission {
+  id: string;
+  status: string;
+  message: string | null;
+  proof_urls: string[] | null;
+}
+
 export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClose, onClaimSubmitted }: ClaimDialogProps) {
   const [message, setMessage] = useState('');
   const [proofUrls, setProofUrls] = useState<string[]>(['']);
@@ -33,8 +40,9 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   const [stripeConnectRequired, setStripeConnectRequired] = useState(false);
   const [stripeConnectChecking, setStripeConnectChecking] = useState(false);
   const [startingStripeOnboarding, setStartingStripeOnboarding] = useState(false);
-  const [hasExistingSubmission, setHasExistingSubmission] = useState(false);
+  const [existingSubmission, setExistingSubmission] = useState<ExistingSubmission | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -47,12 +55,26 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
       try {
         const { data } = await supabase
           .from('Submissions')
-          .select('id')
+          .select('id, status, message, proof_urls')
           .eq('bounty_id', bountyId)
           .eq('hunter_id', user.id)
           .maybeSingle();
         
-        setHasExistingSubmission(!!data);
+        setExistingSubmission(data);
+        
+        // If there's an existing editable submission, pre-fill the form
+        if (data && data.status === 'submitted') {
+          setIsEditMode(true);
+          setMessage(data.message || '');
+          // Separate uploaded images from proof URLs
+          const urls = data.proof_urls || [];
+          const imageUrls = urls.filter(url => url.includes('supabase') || url.includes('blob'));
+          const otherUrls = urls.filter(url => !url.includes('supabase') && !url.includes('blob'));
+          setUploadedImages(imageUrls);
+          setProofUrls(otherUrls.length > 0 ? otherUrls : ['']);
+        } else {
+          setIsEditMode(false);
+        }
       } catch (error) {
         console.error('Error checking existing submission:', error);
       } finally {
@@ -62,6 +84,10 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     
     checkExistingSubmission();
   }, [isOpen, user, bountyId]);
+
+  // Computed states
+  const hasExistingSubmission = !!existingSubmission;
+  const canEdit = existingSubmission?.status === 'submitted';
 
   // Check if Stripe Connect and KYC are required
   useEffect(() => {
@@ -260,32 +286,56 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     try {
       setIsSubmitting(true);
 
-      // Filter out empty URLs
+      // Filter out empty URLs and combine with uploaded images
       const validUrls = proofUrls.filter(url => url.trim());
+      const allProofUrls = [...validUrls, ...uploadedImages];
 
-      await supabaseApi.createClaim(bountyId, {
-        type: ClaimType.FOUND, // Default to 'found' type
-        message: message.trim(),
-        proofUrls: validUrls,
-        proofImages: uploadedImages // This should be URLs, not File objects
-      });
+      if (isEditMode && existingSubmission) {
+        // Update existing submission
+        const { error } = await supabase
+          .from('Submissions')
+          .update({
+            message: message.trim(),
+            proof_urls: allProofUrls.length > 0 ? allProofUrls : null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingSubmission.id);
 
-      toast({
-        title: "Claim submitted successfully!",
-        description: "The bounty poster will review your submission.",
-        variant: "default",
-      });
+        if (error) throw error;
+
+        toast({
+          title: "Claim updated successfully!",
+          description: "Your changes have been saved.",
+          variant: "default",
+        });
+      } else {
+        // Create new submission
+        await supabaseApi.createClaim(bountyId, {
+          type: ClaimType.FOUND,
+          message: message.trim(),
+          proofUrls: validUrls,
+          proofImages: uploadedImages
+        });
+
+        toast({
+          title: "Claim submitted successfully!",
+          description: "The bounty poster will review your submission.",
+          variant: "default",
+        });
+      }
 
       // Reset form
       setMessage('');
       setProofUrls(['']);
       setUploadedImages([]);
+      setExistingSubmission(null);
+      setIsEditMode(false);
       onClaimSubmitted();
       onClose();
     } catch (error) {
       console.error('Error submitting claim:', error);
       toast({
-        title: "Error submitting claim",
+        title: isEditMode ? "Error updating claim" : "Error submitting claim",
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -298,18 +348,20 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Submit Claim for "{bountyTitle}"</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? `Edit Claim for "${bountyTitle}"` : `Submit Claim for "${bountyTitle}"`}
+          </DialogTitle>
         </DialogHeader>
 
-        {/* Already submitted alert */}
-        {hasExistingSubmission && !checkingExisting && (
+        {/* Already submitted and NOT editable */}
+        {hasExistingSubmission && !canEdit && !checkingExisting && (
           <Alert className="border-amber-500 bg-amber-500/10">
             <CheckCircle className="h-4 w-4 text-amber-500" />
             <AlertDescription>
               <div className="space-y-2">
                 <p className="font-semibold text-foreground">You've already submitted a claim</p>
                 <p className="text-muted-foreground">
-                  You can only submit one claim per bounty. View your submission in the "My Claim" tab on this bounty page.
+                  Your claim has been reviewed and can no longer be edited. View your submission in the "My Claim" tab on this bounty page.
                 </p>
                 <Button onClick={onClose} variant="outline" className="mt-2">
                   Close
@@ -325,7 +377,8 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
           </div>
         )}
 
-        {!hasExistingSubmission && !checkingExisting && (
+        {/* Show form if: no existing submission OR existing submission is editable */}
+        {((!hasExistingSubmission || canEdit) && !checkingExisting) && (
           <>
 
         {/* Stripe Connect Setup Alert - Show first as it's the primary requirement */}
@@ -470,10 +523,10 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
               onClick={handleSubmit} 
               disabled={isSubmitting || stripeConnectRequired || stripeConnectChecking || kycRequired || kycChecking}
             >
-              {isSubmitting ? 'Submitting...' : 
+              {isSubmitting ? (isEditMode ? 'Updating...' : 'Submitting...') : 
                stripeConnectRequired ? 'Payout Setup Required' :
                kycRequired ? 'Verification Required' : 
-               'Submit Claim'}
+               isEditMode ? 'Update Claim' : 'Submit Claim'}
             </Button>
           </div>
         </div>
