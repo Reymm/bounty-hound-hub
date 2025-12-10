@@ -33,8 +33,35 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   const [stripeConnectRequired, setStripeConnectRequired] = useState(false);
   const [stripeConnectChecking, setStripeConnectChecking] = useState(false);
   const [startingStripeOnboarding, setStartingStripeOnboarding] = useState(false);
+  const [hasExistingSubmission, setHasExistingSubmission] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Check if user already has a submission for this bounty
+  useEffect(() => {
+    const checkExistingSubmission = async () => {
+      if (!isOpen || !user) return;
+      
+      setCheckingExisting(true);
+      try {
+        const { data } = await supabase
+          .from('Submissions')
+          .select('id')
+          .eq('bounty_id', bountyId)
+          .eq('hunter_id', user.id)
+          .maybeSingle();
+        
+        setHasExistingSubmission(!!data);
+      } catch (error) {
+        console.error('Error checking existing submission:', error);
+      } finally {
+        setCheckingExisting(false);
+      }
+    };
+    
+    checkExistingSubmission();
+  }, [isOpen, user, bountyId]);
 
   // Check if Stripe Connect and KYC are required
   useEffect(() => {
@@ -274,6 +301,33 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
           <DialogTitle>Submit Claim for "{bountyTitle}"</DialogTitle>
         </DialogHeader>
 
+        {/* Already submitted alert */}
+        {hasExistingSubmission && !checkingExisting && (
+          <Alert className="border-amber-500 bg-amber-500/10">
+            <CheckCircle className="h-4 w-4 text-amber-500" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-semibold text-foreground">You've already submitted a claim</p>
+                <p className="text-muted-foreground">
+                  You can only submit one claim per bounty. View your submission in the "My Claim" tab on this bounty page.
+                </p>
+                <Button onClick={onClose} variant="outline" className="mt-2">
+                  Close
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {checkingExisting && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {!hasExistingSubmission && !checkingExisting && (
+          <>
+
         {/* Stripe Connect Setup Alert - Show first as it's the primary requirement */}
         {stripeConnectRequired && !stripeConnectChecking && (
           <Alert className="border-primary bg-primary/5">
@@ -423,6 +477,8 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
             </Button>
           </div>
         </div>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
