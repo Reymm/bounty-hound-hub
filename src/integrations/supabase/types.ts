@@ -204,7 +204,13 @@ export type Database = {
           cancelled_at: string | null
           created_at: string
           currency: string
+          hunter_country: string | null
+          hunter_payout_email: string | null
           id: string
+          manual_payout_reference: string | null
+          manual_payout_sent_at: string | null
+          manual_payout_status: string | null
+          payout_method: string | null
           platform_fee_amount: number | null
           poster_id: string
           refund_amount: number | null
@@ -220,7 +226,13 @@ export type Database = {
           cancelled_at?: string | null
           created_at?: string
           currency?: string
+          hunter_country?: string | null
+          hunter_payout_email?: string | null
           id?: string
+          manual_payout_reference?: string | null
+          manual_payout_sent_at?: string | null
+          manual_payout_status?: string | null
+          payout_method?: string | null
           platform_fee_amount?: number | null
           poster_id: string
           refund_amount?: number | null
@@ -236,7 +248,13 @@ export type Database = {
           cancelled_at?: string | null
           created_at?: string
           currency?: string
+          hunter_country?: string | null
+          hunter_payout_email?: string | null
           id?: string
+          manual_payout_reference?: string | null
+          manual_payout_sent_at?: string | null
+          manual_payout_status?: string | null
+          payout_method?: string | null
           platform_fee_amount?: number | null
           poster_id?: string
           refund_amount?: number | null
@@ -409,6 +427,8 @@ export type Database = {
           is_suspended: boolean | null
           kyc_verified: boolean | null
           kyc_verified_at: string | null
+          payout_country: string | null
+          payout_email: string | null
           region: string | null
           reputation_score: number | null
           stripe_connect_account_id: string | null
@@ -435,6 +455,8 @@ export type Database = {
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          payout_country?: string | null
+          payout_email?: string | null
           region?: string | null
           reputation_score?: number | null
           stripe_connect_account_id?: string | null
@@ -461,6 +483,8 @@ export type Database = {
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          payout_country?: string | null
+          payout_email?: string | null
           region?: string | null
           reputation_score?: number | null
           stripe_connect_account_id?: string | null
