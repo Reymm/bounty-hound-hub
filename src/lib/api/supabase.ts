@@ -765,7 +765,9 @@ export const supabaseApi = {
         isSuspended: profileData.is_suspended || false,
         suspendedUntil: profileData.suspended_until ? new Date(profileData.suspended_until) : undefined,
         stripeConnectOnboardingComplete: profileData.stripe_connect_onboarding_complete || false,
-        stripeConnectPayoutsEnabled: profileData.stripe_connect_payouts_enabled || false
+        stripeConnectPayoutsEnabled: profileData.stripe_connect_payouts_enabled || false,
+        payoutCountry: profileData.payout_country || undefined,
+        payoutEmail: profileData.payout_email || undefined
       };
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -773,7 +775,7 @@ export const supabaseApi = {
     }
   },
 
-  async updateProfile(userId: string, updates: { displayName?: string; username?: string; bio?: string; region?: string; avatarUrl?: string }): Promise<Profile | null> {
+  async updateProfile(userId: string, updates: { displayName?: string; username?: string; bio?: string; region?: string; avatarUrl?: string; payoutCountry?: string; payoutEmail?: string }): Promise<Profile | null> {
     try {
       const updateData: any = {};
       if (updates.displayName !== undefined) updateData.full_name = updates.displayName;
@@ -781,6 +783,8 @@ export const supabaseApi = {
       if (updates.bio !== undefined) updateData.bio = updates.bio || null;
       if (updates.region !== undefined) updateData.region = updates.region || null;
       if (updates.avatarUrl !== undefined) updateData.avatar_url = updates.avatarUrl || null;
+      if (updates.payoutCountry !== undefined) updateData.payout_country = updates.payoutCountry || null;
+      if (updates.payoutEmail !== undefined) updateData.payout_email = updates.payoutEmail || null;
 
       const { data, error } = await supabase
         .from('profiles')
@@ -815,7 +819,9 @@ export const supabaseApi = {
         isSuspended: data.is_suspended || false,
         suspendedUntil: data.suspended_until ? new Date(data.suspended_until) : undefined,
         stripeConnectOnboardingComplete: data.stripe_connect_onboarding_complete || false,
-        stripeConnectPayoutsEnabled: data.stripe_connect_payouts_enabled || false
+        stripeConnectPayoutsEnabled: data.stripe_connect_payouts_enabled || false,
+        payoutCountry: data.payout_country || undefined,
+        payoutEmail: data.payout_email || undefined
       };
     } catch (error) {
       console.error('Error updating profile:', error);

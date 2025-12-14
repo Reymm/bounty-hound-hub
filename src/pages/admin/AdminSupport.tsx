@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AdminTicketList } from '@/components/admin/AdminTicketList';
 import { AdminUserReportsList } from '@/components/admin/AdminUserReportsList';
+import { AdminManualPayouts } from '@/components/admin/AdminManualPayouts';
 import { adminSupportApi } from '@/lib/api/admin-support';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { 
   BarChart3, 
   MessageSquare, 
-  Settings,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  DollarSign
 } from 'lucide-react';
 
 export function AdminSupport() {
@@ -83,19 +84,23 @@ export function AdminSupport() {
           <h1 className="text-3xl font-bold">Support Admin</h1>
         </div>
         <p className="text-muted-foreground">
-          Manage support tickets, respond to users, and monitor support metrics.
+          Manage support tickets, payouts, and monitor platform activity.
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Dashboard
           </TabsTrigger>
+          <TabsTrigger value="payouts" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Payouts
+          </TabsTrigger>
           <TabsTrigger value="tickets" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
-            Support Tickets
+            Tickets
           </TabsTrigger>
           <TabsTrigger value="disputes" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
@@ -103,12 +108,16 @@ export function AdminSupport() {
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            User Reports
+            Reports
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-6">
           <AdminDashboard />
+        </TabsContent>
+
+        <TabsContent value="payouts" className="space-y-6">
+          <AdminManualPayouts />
         </TabsContent>
 
         <TabsContent value="tickets" className="space-y-6">

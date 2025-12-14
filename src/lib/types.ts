@@ -105,8 +105,9 @@ export interface Profile {
   suspendedUntil?: Date;
   stripeConnectOnboardingComplete?: boolean;
   stripeConnectPayoutsEnabled?: boolean;
+  payoutCountry?: string;
+  payoutEmail?: string;
 }
-
 export interface Activity {
   id: string;
   type: 'bounty_posted' | 'claim_submitted' | 'claim_accepted' | 'claim_rejected' | 'rating_received';

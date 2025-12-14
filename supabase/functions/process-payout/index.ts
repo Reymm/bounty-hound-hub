@@ -15,6 +15,9 @@ const logStep = (step: string, details?: any) => {
 // Platform fee: 7% from hunter's payout
 const PLATFORM_FEE_PERCENT = 0.07;
 
+// Countries that require manual payout (CA platform can't auto-payout to these)
+const MANUAL_PAYOUT_COUNTRIES = ['US'];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -109,10 +112,10 @@ serve(async (req) => {
       throw new Error(`Escrow is in invalid state for payout: ${escrowTx.status}`);
     }
 
-    // Get hunter's Connect account
+    // Get hunter's profile including Connect account and country
     const { data: hunterProfile } = await supabaseClient
       .from('profiles')
-      .select('stripe_connect_account_id, stripe_connect_payouts_enabled, full_name')
+      .select('stripe_connect_account_id, stripe_connect_payouts_enabled, full_name, username, payout_country, payout_email')
       .eq('id', submission.hunter_id)
       .maybeSingle();
 
@@ -128,9 +131,51 @@ serve(async (req) => {
       payoutAmount: payoutAmount / 100
     });
 
+    // Determine if this requires manual payout based on hunter's country
+    const hunterCountry = hunterProfile?.payout_country || 'CA'; // Default to CA if not set
+    const requiresManualPayout = MANUAL_PAYOUT_COUNTRIES.includes(hunterCountry);
+
+    logStep("Payout method determination", {
+      hunterCountry,
+      requiresManualPayout
+    });
+
+    // If hunter is in a country requiring manual payout, mark for manual processing
+    if (requiresManualPayout) {
+      logStep("Setting up manual payout for US hunter");
+      
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({ 
+          status: 'captured',
+          payout_method: 'manual',
+          manual_payout_status: 'pending',
+          platform_fee_amount: platformFee / 100,
+          hunter_payout_email: hunterProfile?.payout_email || null,
+          hunter_country: hunterCountry
+        })
+        .eq('id', escrowTx.id);
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Payment captured. Manual payout required for US hunter.',
+        payout_method: 'manual',
+        manual_payout_required: true,
+        escrow_captured: true,
+        bounty_amount: bountyAmount,
+        amount: payoutAmount / 100,
+        platform_fee: platformFee / 100,
+        platform_fee_percent: PLATFORM_FEE_PERCENT * 100,
+        hunter_country: hunterCountry
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // For CA hunters - proceed with Stripe Connect auto payout
     if (!hunterProfile?.stripe_connect_account_id) {
       logStep("Hunter missing Connect account", { hunterId: submission.hunter_id });
-      // Still return success since escrow was captured - funds are secured
       return new Response(JSON.stringify({
         success: true,
         message: 'Payment captured. Hunter needs to set up Stripe Connect to receive payout.',
@@ -167,7 +212,7 @@ serve(async (req) => {
       accountId: hunterProfile.stripe_connect_account_id 
     });
 
-    // Create transfer to Connect account
+    // Create transfer to Connect account (CA hunters only)
     const transfer = await stripe.transfers.create({
       amount: payoutAmount,
       currency: 'usd',
@@ -193,12 +238,14 @@ serve(async (req) => {
       .from('escrow_transactions')
       .update({ 
         status: 'completed',
-        platform_fee_amount: platformFee / 100 // Store the actual fee taken
+        payout_method: 'stripe',
+        platform_fee_amount: platformFee / 100
       })
       .eq('id', escrowTx.id);
 
     return new Response(JSON.stringify({
       success: true,
+      payout_method: 'stripe',
       transfer_id: transfer.id,
       bounty_amount: bountyAmount,
       amount: payoutAmount / 100,
