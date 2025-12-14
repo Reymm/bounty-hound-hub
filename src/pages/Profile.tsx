@@ -602,8 +602,10 @@ export default function Profile() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  {profile.hasPayoutMethod ? (
-                    <Badge className="status-active">Connected</Badge>
+                  {profile.stripeConnectPayoutsEnabled ? (
+                    <Badge className="status-active">Ready for Payouts</Badge>
+                  ) : profile.hasPayoutMethod ? (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">Pending Verification</Badge>
                   ) : (
                     <Badge variant="secondary">Not Set Up</Badge>
                   )}
@@ -618,6 +620,23 @@ export default function Profile() {
                   </Button>
                 </div>
               </div>
+
+              {/* Warning when onboarding complete but payouts not enabled */}
+              {profile.hasPayoutMethod && !profile.stripeConnectPayoutsEnabled && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-amber-800">Verification Pending</h4>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Your Stripe Connect account setup is complete, but Stripe is still verifying your information. 
+                        You cannot receive payouts until verification is complete. Click "Manage" to check your status 
+                        or complete any additional requirements.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-muted/50 rounded-lg p-4">
                 <h4 className="font-medium mb-2">Payout Information</h4>
