@@ -113,8 +113,8 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         setStripeConnectChecking(false);
       }
 
-      // Check KYC for high-value bounties
-      if (bountyAmount > 500) {
+      // Check KYC for high-value bounties (over $1,000)
+      if (bountyAmount > 1000) {
         setKycChecking(true);
         try {
           const { data, error } = await supabase.functions.invoke('check-kyc-status');
@@ -436,7 +436,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
             <AlertDescription className="text-amber-800 dark:text-amber-200">
               <div className="space-y-2">
                 <p className="font-semibold">Identity Verification Required</p>
-                <p>Bounties over $500 require identity verification before claiming. This helps protect both hunters and posters.</p>
+                <p>Bounties over $1,000 require identity verification before claiming. This helps protect both hunters and posters.</p>
                 <Button 
                   onClick={handleStartKyc} 
                   variant="outline" 
