@@ -4,14 +4,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   User, 
-  Shield, 
   CreditCard, 
   Star, 
   MapPin, 
   Calendar,
-  CheckCircle,
   AlertCircle,
-  Clock,
   Activity,
   Settings,
   Trash2
@@ -31,7 +28,7 @@ import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { ActivityHistory } from '@/components/profile/ActivityHistory';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
-import { Profile as ProfileType, IdvStatus } from '@/lib/types';
+import { Profile as ProfileType } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,7 +41,6 @@ export default function Profile() {
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [verificationLoading, setVerificationLoading] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(() => {
@@ -183,39 +179,9 @@ export default function Profile() {
     }
   };
 
-  const handleStartVerification = async () => {
-    try {
-      setPayoutLoading(false);
-      setVerificationLoading(true);
-      
-      const result = await supabaseApi.createKycVerification();
-      
-      if (!result) throw new Error('Failed to create verification session');
-      
-      if (result.verification_url) {
-        // Save scroll position and tab before navigating
-        sessionStorage.setItem('profile_scroll_position', window.scrollY.toString());
-        sessionStorage.setItem('profile_active_tab', activeTab);
-        // Redirect to Stripe Identity verification
-        window.location.href = result.verification_url;
-      } else {
-        throw new Error('No verification URL received');
-      }
-      
-    } catch (error) {
-      console.error('Error starting verification:', error);
-      toast({
-        title: "Error starting verification",
-        description: error instanceof Error ? error.message : "Please try again later.",
-        variant: "destructive",
-      });
-      setVerificationLoading(false);
-    }
-  };
-
   const handleSetupPayout = async () => {
     try {
-      setVerificationLoading(false);
+      setPayoutLoading(true);
       setPayoutLoading(true);
       
       const result = await supabaseApi.createConnectAccount();
@@ -279,32 +245,6 @@ export default function Profile() {
       });
     } finally {
       setDeleting(false);
-    }
-  };
-
-  const getIdvStatusIcon = (status: IdvStatus) => {
-    switch (status) {
-      case IdvStatus.VERIFIED:
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      case IdvStatus.PENDING:
-        return <Clock className="h-4 w-4 text-warning" />;
-      case IdvStatus.FAILED:
-        return <AlertCircle className="h-4 w-4 text-destructive" />;
-      default:
-        return <Shield className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
-  const getIdvStatusBadge = (status: IdvStatus) => {
-    switch (status) {
-      case IdvStatus.VERIFIED:
-        return <Badge className="status-active">Verified</Badge>;
-      case IdvStatus.PENDING:
-        return <Badge className="status-pending">Pending</Badge>;
-      case IdvStatus.FAILED:
-        return <Badge variant="destructive">Failed</Badge>;
-      default:
-        return <Badge variant="secondary">Not Verified</Badge>;
     }
   };
 
@@ -547,76 +487,6 @@ export default function Profile() {
         </TabsContent>
 
         <TabsContent value="verification" className="space-y-6">
-          {/* Identity Verification */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Identity Verification
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                <div className="flex items-center gap-3">
-                  {getIdvStatusIcon(profile.idvStatus)}
-                  <div>
-                    <p className="font-medium">Identity Verification</p>
-                    <p className="text-sm text-muted-foreground">
-                      Required for bounties over $1,000
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {getIdvStatusBadge(profile.idvStatus)}
-                  {profile.idvStatus === IdvStatus.NOT_VERIFIED && (
-                    <Button 
-                      onClick={handleStartVerification}
-                      disabled={verificationLoading}
-                      size="sm"
-                      className="bg-primary hover:bg-primary-hover text-primary-foreground"
-                    >
-                      {verificationLoading ? 'Starting...' : 'Verify Identity'}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {profile.idvStatus === IdvStatus.NOT_VERIFIED && (
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <h4 className="font-medium mb-2">Why verify your identity?</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Submit claims on high-value bounties (over $1,000)</li>
-                    <li>• Build trust with the community</li>
-                    <li>• Access premium features</li>
-                  </ul>
-                </div>
-              )}
-
-              {profile.idvStatus === IdvStatus.PENDING && (
-                <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
-                  <p className="text-sm text-warning-foreground">
-                    Your identity verification is being processed. This usually takes 1-2 business days.
-                  </p>
-                </div>
-              )}
-
-              {profile.idvStatus === IdvStatus.FAILED && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                  <p className="text-sm text-destructive mb-2">
-                    Identity verification failed. Please try again or contact support.
-                  </p>
-                  <Button 
-                    onClick={handleStartVerification}
-                    disabled={verificationLoading}
-                    size="sm"
-                    variant="outline"
-                  >
-                    {verificationLoading ? 'Starting...' : 'Retry Verification'}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
           {/* Payout Method */}
           <Card data-payout-card>

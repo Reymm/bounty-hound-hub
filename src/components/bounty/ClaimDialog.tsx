@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X, Shield, CreditCard, Loader2, CheckCircle } from 'lucide-react';
+import { Plus, X, CreditCard, Loader2, CheckCircle } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,8 +35,6 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   const [proofUrls, setProofUrls] = useState<string[]>(['']);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [kycRequired, setKycRequired] = useState(false);
-  const [kycChecking, setKycChecking] = useState(false);
   const [stripeConnectRequired, setStripeConnectRequired] = useState(false);
   const [stripeConnectChecking, setStripeConnectChecking] = useState(false);
   const [startingStripeOnboarding, setStartingStripeOnboarding] = useState(false);
@@ -113,31 +111,10 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         setStripeConnectChecking(false);
       }
 
-      // Check KYC for high-value bounties (over $1,000)
-      if (bountyAmount > 1000) {
-        setKycChecking(true);
-        try {
-          const { data, error } = await supabase.functions.invoke('check-kyc-status');
-          
-          if (error) {
-            console.error('Error checking KYC:', error);
-            setKycRequired(true);
-          } else {
-            setKycRequired(!data?.verified);
-          }
-        } catch (error) {
-          console.error('Error checking KYC:', error);
-          setKycRequired(true);
-        } finally {
-          setKycChecking(false);
-        }
-      } else {
-        setKycRequired(false);
-      }
     };
 
     checkRequirements();
-  }, [isOpen, user, bountyAmount]);
+  }, [isOpen, user]);
 
   const handleStartStripeOnboarding = async () => {
     setStartingStripeOnboarding(true);
@@ -228,24 +205,6 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     setUploadedImages(newImages);
   };
 
-  const handleStartKyc = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-kyc-verification');
-      
-      if (error) throw error;
-      
-      if (data?.verification_url) {
-        window.location.href = data.verification_url;
-      }
-    } catch (error: any) {
-      toast({
-        title: "Verification error",
-        description: error.message || "Failed to start verification",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSubmit = async () => {
     if (!user) {
       toast({
@@ -260,15 +219,6 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
       toast({
         title: "Payout setup required",
         description: "Please set up your payout account before claiming bounties.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (kycRequired) {
-      toast({
-        title: "Verification required",
-        description: "Please complete identity verification before claiming this bounty.",
         variant: "destructive",
       });
       return;
@@ -430,26 +380,6 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
           </Alert>
         )}
 
-        {kycRequired && !stripeConnectRequired && (
-          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
-            <Shield className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            <AlertDescription className="text-amber-800 dark:text-amber-200">
-              <div className="space-y-2">
-                <p className="font-semibold">Identity Verification Required</p>
-                <p>Bounties over $1,000 require identity verification before claiming. This helps protect both hunters and posters.</p>
-                <Button 
-                  onClick={handleStartKyc} 
-                  variant="outline" 
-                  className="mt-2 border-amber-600 text-amber-700 hover:bg-amber-100"
-                  disabled={kycChecking}
-                >
-                  {kycChecking ? 'Checking...' : 'Start Verification'}
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
         <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="message">Your Claim Details *</Label>
@@ -521,11 +451,10 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
             </Button>
             <Button 
               onClick={handleSubmit} 
-              disabled={isSubmitting || stripeConnectRequired || stripeConnectChecking || kycRequired || kycChecking}
+              disabled={isSubmitting || stripeConnectRequired || stripeConnectChecking}
             >
               {isSubmitting ? (isEditMode ? 'Updating...' : 'Submitting...') : 
                stripeConnectRequired ? 'Payout Setup Required' :
-               kycRequired ? 'Verification Required' : 
                isEditMode ? 'Update Claim' : 'Submit Claim'}
             </Button>
           </div>
