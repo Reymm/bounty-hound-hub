@@ -33,6 +33,7 @@ import { RatingSummary } from '@/components/ratings/RatingSummary';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType, IdvStatus } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -95,11 +96,43 @@ export default function Profile() {
     };
   }, [loading, activeTab]);
 
+  const syncStripeConnectStatus = async () => {
+    if (!user) return;
+    
+    try {
+      // Call the check-connect-status edge function to sync latest status from Stripe
+      const { data, error } = await supabase.functions.invoke('check-connect-status', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+      
+      if (error) {
+        console.error('Error syncing Stripe Connect status:', error);
+      } else {
+        console.log('Stripe Connect status synced:', data);
+      }
+    } catch (error) {
+      console.error('Error syncing Stripe Connect status:', error);
+    }
+  };
+
   const loadProfile = async () => {
     if (!user) return;
     
     try {
       setLoading(true);
+      
+      // Sync Stripe Connect status in background (don't await)
+      syncStripeConnectStatus().then(() => {
+        // Reload profile after sync to get updated status
+        supabaseApi.getProfile(user.id).then(updatedProfile => {
+          if (updatedProfile) {
+            setProfile(updatedProfile);
+          }
+        });
+      });
+      
       const profileData = await supabaseApi.getProfile(user.id);
       setProfile(profileData);
       
