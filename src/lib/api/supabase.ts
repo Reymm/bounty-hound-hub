@@ -764,7 +764,8 @@ export const supabaseApi = {
         totalFailedClaims: profileData.total_failed_claims || 0,
         isSuspended: profileData.is_suspended || false,
         suspendedUntil: profileData.suspended_until ? new Date(profileData.suspended_until) : undefined,
-        stripeConnectOnboardingComplete: profileData.stripe_connect_onboarding_complete || false
+        stripeConnectOnboardingComplete: profileData.stripe_connect_onboarding_complete || false,
+        stripeConnectPayoutsEnabled: profileData.stripe_connect_payouts_enabled || false
       };
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -813,7 +814,8 @@ export const supabaseApi = {
         totalFailedClaims: data.total_failed_claims || 0,
         isSuspended: data.is_suspended || false,
         suspendedUntil: data.suspended_until ? new Date(data.suspended_until) : undefined,
-        stripeConnectOnboardingComplete: data.stripe_connect_onboarding_complete || false
+        stripeConnectOnboardingComplete: data.stripe_connect_onboarding_complete || false,
+        stripeConnectPayoutsEnabled: data.stripe_connect_payouts_enabled || false
       };
     } catch (error) {
       console.error('Error updating profile:', error);

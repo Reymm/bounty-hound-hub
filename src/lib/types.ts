@@ -104,6 +104,7 @@ export interface Profile {
   isSuspended: boolean;
   suspendedUntil?: Date;
   stripeConnectOnboardingComplete?: boolean;
+  stripeConnectPayoutsEnabled?: boolean;
 }
 
 export interface Activity {
