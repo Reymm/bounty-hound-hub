@@ -15,8 +15,9 @@ const logStep = (step: string, details?: any) => {
 // Platform fee: 7% from hunter's payout
 const PLATFORM_FEE_PERCENT = 0.07;
 
-// Countries that require manual payout (CA platform can't auto-payout to these)
-const MANUAL_PAYOUT_COUNTRIES = ['US'];
+// Countries that require manual payout (Stripe Connect not available)
+// Note: US and CA both fully support Stripe Connect payouts
+const MANUAL_PAYOUT_COUNTRIES: string[] = [];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
