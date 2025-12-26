@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
-import { GlobalRatingPrompt } from "@/components/ratings/GlobalRatingPrompt";
+
 // Pages
 import { AdminSupport } from "./pages/admin/AdminSupport";
 import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
@@ -44,7 +44,7 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
-          <GlobalRatingPrompt />
+          
           <div className="min-h-screen flex flex-col bg-background">
             <Routes>
               {/* Public routes */}

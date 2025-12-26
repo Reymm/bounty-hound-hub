@@ -439,9 +439,7 @@ export const supabaseApi = {
 
       return (data || []).map(submission => ({
         ...transformSubmissionRow(submission),
-        hunterName: profileMap.get(submission.hunter_id)?.full_name || 
-                   profileMap.get(submission.hunter_id)?.username || 
-                   'Anonymous',
+        hunterName: profileMap.get(submission.hunter_id)?.username || 'Anonymous',
         hunterRating: profileMap.get(submission.hunter_id)?.reputation_score || 5,
         hunterRatingCount: profileMap.get(submission.hunter_id)?.total_ratings_received || 0
       }));

@@ -70,7 +70,7 @@ export function BountyRatingSection({
         .eq('id', hunterId)
         .single();
 
-      const hunterName = hunterProfile?.full_name || hunterProfile?.username || 'Hunter';
+      const hunterName = hunterProfile?.username || 'Hunter';
       setHunterInfo({ id: hunterId, name: hunterName });
       
       const [
