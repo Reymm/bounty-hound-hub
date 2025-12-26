@@ -32,8 +32,8 @@ import NotFound from "./pages/NotFound";
 import KycComplete from "./pages/KycComplete";
 import ConnectComplete from "./pages/ConnectComplete";
 import Auth from "./pages/Auth";
-import Letterhead from "./pages/Letterhead";
-import TestingChecklist from "./pages/TestingChecklist";
+import Letterhead from "@/pages/Letterhead";
+import TestingChecklist from "@/pages/TestingChecklist";
 
 const queryClient = new QueryClient();
 
