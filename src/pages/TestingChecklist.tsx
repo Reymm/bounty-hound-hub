@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const TestingChecklist = () => {
+export const TestingChecklist = () => {
   useEffect(() => {
     // Auto-trigger print dialog when page loads
     const timer = setTimeout(() => {
