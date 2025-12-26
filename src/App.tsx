@@ -33,6 +33,7 @@ import KycComplete from "./pages/KycComplete";
 import ConnectComplete from "./pages/ConnectComplete";
 import Auth from "./pages/Auth";
 import Letterhead from "./pages/Letterhead";
+import TestingChecklist from "./pages/TestingChecklist";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
               <Route path="/letterhead" element={<Letterhead />} />
+              <Route path="/testing-checklist" element={<TestingChecklist />} />
               
               {/* Routes with navigation */}
               <Route path="/*" element={
