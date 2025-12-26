@@ -128,9 +128,28 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-connect-account", { message: errorMessage });
+    logStep("ERROR in create-connect-account", { message: errorMessage, code: error?.code, type: error?.type });
+    
+    // Check if this is a country restriction error from Stripe
+    const isCountryRestriction = 
+      errorMessage.includes('country') || 
+      errorMessage.includes('not currently supported') ||
+      error?.code === 'country_unsupported' ||
+      (error?.type === 'StripeInvalidRequestError' && errorMessage.toLowerCase().includes('country'));
+    
+    if (isCountryRestriction) {
+      return new Response(JSON.stringify({ 
+        error: errorMessage,
+        code: 'country_unsupported',
+        message: 'Stripe Connect is not available in your country. Please use manual payout (PayPal/Wise) instead.'
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+    
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

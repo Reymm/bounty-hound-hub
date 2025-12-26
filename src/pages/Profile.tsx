@@ -182,11 +182,24 @@ export default function Profile() {
   const handleSetupPayout = async () => {
     try {
       setPayoutLoading(true);
-      setPayoutLoading(true);
       
       const result = await supabaseApi.createConnectAccount();
       
       if (!result) throw new Error('Failed to create Connect account');
+      
+      // Check if this is a country restriction error
+      if (result.code === 'country_unsupported') {
+        toast({
+          title: "Stripe Connect Unavailable",
+          description: "Stripe Connect is not available in your country. Please set your country to 'United States' and enter your PayPal/Wise email above to receive manual payouts.",
+          variant: "destructive",
+        });
+        // Scroll to the payout information section
+        const payoutSection = document.querySelector('[data-payout-info]');
+        payoutSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setPayoutLoading(false);
+        return;
+      }
       
       if (result.onboarding_url) {
         window.open(result.onboarding_url, '_blank');
@@ -195,13 +208,25 @@ export default function Profile() {
         throw new Error('No onboarding URL received');
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error setting up payout:', error);
-      toast({
-        title: "Error setting up payout",
-        description: error instanceof Error ? error.message : "Please try again later.",
-        variant: "destructive",
-      });
+      
+      // Check for country restriction in the error
+      if (error?.code === 'country_unsupported' || error?.message?.includes('country')) {
+        toast({
+          title: "Stripe Connect Unavailable",
+          description: "Stripe Connect is not available in your country. Please enter your PayPal/Wise email above for manual payouts.",
+          variant: "destructive",
+        });
+        const payoutSection = document.querySelector('[data-payout-info]');
+        payoutSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        toast({
+          title: "Error setting up payout",
+          description: error instanceof Error ? error.message : "Please try again later.",
+          variant: "destructive",
+        });
+      }
       setPayoutLoading(false);
     }
   };
@@ -489,7 +514,7 @@ export default function Profile() {
         <TabsContent value="verification" className="space-y-6">
 
           {/* Payout Country & Email - for manual payouts */}
-          <Card>
+          <Card data-payout-info>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
