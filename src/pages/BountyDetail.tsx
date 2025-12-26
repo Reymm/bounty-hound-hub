@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
 import { ShippingInfoCard } from '@/components/bounty/ShippingInfoCard';
 import { ShippingDetailsDialog } from '@/components/bounty/ShippingDetailsDialog';
+import { SendFundsDialog } from '@/components/bounty/SendFundsDialog';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,12 +30,14 @@ export default function BountyDetail() {
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isShippingDialogOpen, setIsShippingDialogOpen] = useState(false);
+  const [isSendFundsDialogOpen, setIsSendFundsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [refreshKey, setRefreshKey] = useState(0);
   const [totalPaid, setTotalPaid] = useState<number | undefined>(undefined);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [hasUserSubmission, setHasUserSubmission] = useState(false);
   const [userSubmissionStatus, setUserSubmissionStatus] = useState<string | null>(null);
+  const [acceptedHunter, setAcceptedHunter] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -118,7 +121,7 @@ export default function BountyDetail() {
         setUserSubmissionStatus(userSubmission?.status || null);
       }
       
-      // If user owns the bounty, fetch escrow data to show correct refund amount
+      // If user owns the bounty, fetch escrow data and accepted hunter
       if (user?.id === bountyData.posterId) {
         try {
           const { data: escrowData } = await supabase
@@ -132,6 +135,31 @@ export default function BountyDetail() {
           }
         } catch (escrowError) {
           console.log('Could not fetch escrow data:', escrowError);
+        }
+
+        // Check for accepted hunter (for Send Funds button)
+        try {
+          const { data: acceptedSubmission } = await supabase
+            .from('Submissions')
+            .select('hunter_id')
+            .eq('bounty_id', id)
+            .eq('status', 'accepted')
+            .maybeSingle();
+
+          if (acceptedSubmission?.hunter_id) {
+            const { data: hunterProfile } = await supabase
+              .from('profiles')
+              .select('username')
+              .eq('id', acceptedSubmission.hunter_id)
+              .single();
+
+            setAcceptedHunter({
+              id: acceptedSubmission.hunter_id,
+              name: hunterProfile?.username || 'Hunter',
+            });
+          }
+        } catch (hunterError) {
+          console.log('Could not fetch accepted hunter:', hunterError);
         }
       }
     } catch (error) {
@@ -466,6 +494,26 @@ export default function BountyDetail() {
             {canSeeClaimsTab && (
               <TabsContent value="claims">
                 <div className="space-y-6">
+                  {/* Send Additional Funds button for poster when there's an accepted hunter */}
+                  {isOwnBounty && acceptedHunter && (
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <h4 className="font-medium">Send Additional Funds</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Send extra payment to {acceptedHunter.name} (e.g., for item purchase)
+                            </p>
+                          </div>
+                          <Button onClick={() => setIsSendFundsDialogOpen(true)}>
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Send Funds
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Show shipping info for hunters with accepted claims or for poster */}
                   {bounty.requires_shipping && (isOwnBounty || isClaimAccepted) && (
                     <ShippingInfoCard
@@ -589,7 +637,23 @@ export default function BountyDetail() {
         />
       )}
 
-      {/* Image Lightbox Dialog */}
+      {/* Send Additional Funds Dialog */}
+      {bounty && acceptedHunter && (
+        <SendFundsDialog
+          bountyId={bounty.id}
+          bountyTitle={bounty.title}
+          hunterId={acceptedHunter.id}
+          hunterName={acceptedHunter.name}
+          isOpen={isSendFundsDialogOpen}
+          onClose={() => setIsSendFundsDialogOpen(false)}
+          onSuccess={() => {
+            toast({
+              title: "Funds sent successfully",
+              description: `Payment sent to ${acceptedHunter.name}.`,
+            });
+          }}
+        />
+      )}
       <Dialog open={selectedImageIndex !== null} onOpenChange={() => setSelectedImageIndex(null)}>
         <DialogContent className="max-w-5xl w-full p-0 overflow-hidden bg-black/95">
           <button
