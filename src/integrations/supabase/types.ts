@@ -153,6 +153,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bounty_milestones_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bounty_milestones_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
@@ -271,6 +278,13 @@ export type Database = {
             referencedRelation: "Bounties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "escrow_transactions_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
+            referencedColumns: ["id"]
+          },
         ]
       }
       kyc_verifications: {
@@ -349,8 +363,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "messages_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "messages_recipient_id_fkey"
             columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_secure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -359,7 +394,7 @@ export type Database = {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "profiles_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -404,6 +439,13 @@ export type Database = {
             columns: ["bounty_id"]
             isOneToOne: false
             referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_bounty"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
             referencedColumns: ["id"]
           },
           {
@@ -529,6 +571,13 @@ export type Database = {
             referencedRelation: "Bounties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "saved_bounties_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
+            referencedColumns: ["id"]
+          },
         ]
       }
       security_audit_log: {
@@ -640,10 +689,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_submissions_bounty"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "Submissions_bounty_id_fkey"
             columns: ["bounty_id"]
             isOneToOne: false
             referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Submissions_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -741,6 +804,13 @@ export type Database = {
             columns: ["bounty_id"]
             isOneToOne: false
             referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
             referencedColumns: ["id"]
           },
           {
@@ -853,7 +923,186 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      bounties_secure: {
+        Row: {
+          amount: number | null
+          category: string | null
+          created_at: string | null
+          deadline: string | null
+          description: string | null
+          escrow_amount: number | null
+          escrow_status: string | null
+          has_milestones: boolean | null
+          hunter_purchases_item: boolean | null
+          id: string | null
+          images: string[] | null
+          location: string | null
+          milestone_data: Json | null
+          poster_id: string | null
+          requires_shipping: boolean | null
+          shipping_details: Json | null
+          shipping_status:
+            | Database["public"]["Enums"]["shipping_status_type"]
+            | null
+          status: string | null
+          subcategory: string | null
+          tags: string[] | null
+          target_price_max: number | null
+          target_price_min: number | null
+          title: string | null
+          updated_at: string | null
+          verification_requirements: string[] | null
+          view_count: number | null
+        }
+        Insert: {
+          amount?: number | null
+          category?: string | null
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          escrow_amount?: number | null
+          escrow_status?: string | null
+          has_milestones?: boolean | null
+          hunter_purchases_item?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          location?: string | null
+          milestone_data?: Json | null
+          poster_id?: string | null
+          requires_shipping?: boolean | null
+          shipping_details?: never
+          shipping_status?:
+            | Database["public"]["Enums"]["shipping_status_type"]
+            | null
+          status?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          target_price_max?: number | null
+          target_price_min?: number | null
+          title?: string | null
+          updated_at?: string | null
+          verification_requirements?: string[] | null
+          view_count?: number | null
+        }
+        Update: {
+          amount?: number | null
+          category?: string | null
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          escrow_amount?: number | null
+          escrow_status?: string | null
+          has_milestones?: boolean | null
+          hunter_purchases_item?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          location?: string | null
+          milestone_data?: Json | null
+          poster_id?: string | null
+          requires_shipping?: boolean | null
+          shipping_details?: never
+          shipping_status?:
+            | Database["public"]["Enums"]["shipping_status_type"]
+            | null
+          status?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          target_price_max?: number | null
+          target_price_min?: number | null
+          title?: string | null
+          updated_at?: string | null
+          verification_requirements?: string[] | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      profiles_secure: {
+        Row: {
+          avatar_url: string | null
+          average_rating: number | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_support_admin: boolean | null
+          is_suspended: boolean | null
+          kyc_verified: boolean | null
+          kyc_verified_at: string | null
+          payout_country: string | null
+          payout_email: string | null
+          region: string | null
+          reputation_score: number | null
+          stripe_connect_account_id: string | null
+          stripe_connect_charges_enabled: boolean | null
+          stripe_connect_details_submitted: boolean | null
+          stripe_connect_onboarding_complete: boolean | null
+          stripe_connect_payouts_enabled: boolean | null
+          suspended_until: string | null
+          total_failed_claims: number | null
+          total_ratings_given: number | null
+          total_ratings_received: number | null
+          total_successful_claims: number | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          average_rating?: number | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_support_admin?: boolean | null
+          is_suspended?: boolean | null
+          kyc_verified?: boolean | null
+          kyc_verified_at?: string | null
+          payout_country?: never
+          payout_email?: never
+          region?: string | null
+          reputation_score?: number | null
+          stripe_connect_account_id?: never
+          stripe_connect_charges_enabled?: never
+          stripe_connect_details_submitted?: never
+          stripe_connect_onboarding_complete?: never
+          stripe_connect_payouts_enabled?: never
+          suspended_until?: string | null
+          total_failed_claims?: number | null
+          total_ratings_given?: number | null
+          total_ratings_received?: number | null
+          total_successful_claims?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          average_rating?: number | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_support_admin?: boolean | null
+          is_suspended?: boolean | null
+          kyc_verified?: boolean | null
+          kyc_verified_at?: string | null
+          payout_country?: never
+          payout_email?: never
+          region?: string | null
+          reputation_score?: number | null
+          stripe_connect_account_id?: never
+          stripe_connect_charges_enabled?: never
+          stripe_connect_details_submitted?: never
+          stripe_connect_onboarding_complete?: never
+          stripe_connect_payouts_enabled?: never
+          suspended_until?: string | null
+          total_failed_claims?: number | null
+          total_ratings_given?: number | null
+          total_ratings_received?: number | null
+          total_successful_claims?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_send_message: {
