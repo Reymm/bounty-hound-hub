@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { CurrencyDisplay } from '@/components/ui/currency-display';
 import { ClaimDialog } from '@/components/bounty/ClaimDialog';
 import { CancelBountyDialog } from '@/components/bounty/CancelBountyDialog';
 import { SubmissionsList } from '@/components/bounty/SubmissionsList';
@@ -21,7 +22,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Bounty, BountyStatus } from '@/lib/types';
 import { format, formatDistanceToNow } from 'date-fns';
-
 export default function BountyDetail() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -250,7 +250,7 @@ export default function BountyDetail() {
               <div className="flex items-center gap-4 flex-wrap">
                 {getStatusBadge()}
                 <div className="bounty-amount text-xl font-bold">
-                  ${bounty.bountyAmount.toLocaleString()}
+                  <CurrencyDisplay amount={bounty.bountyAmount} />
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Eye className="h-4 w-4" />
