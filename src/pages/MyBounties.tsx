@@ -40,7 +40,9 @@ export default function MyBounties() {
   }, [searchParams]);
 
   useEffect(() => {
-    loadMyBounties();
+    if (user) {
+      loadMyBounties();
+    }
   }, [user]);
 
   const loadMyBounties = async () => {
@@ -162,7 +164,18 @@ export default function MyBounties() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="posted" className="space-y-6">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(value) => {
+          setActiveTab(value);
+          // Always refresh saved bounties when switching to saved tab
+          if (value === 'saved') {
+            loadSavedBounties();
+          }
+        }} 
+        defaultValue="posted" 
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="posted">
             Posted ({postedBounties.length})
