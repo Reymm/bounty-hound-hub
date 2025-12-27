@@ -94,9 +94,9 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
                 className="bounty-amount font-bold"
               />
               {bounty.targetPriceMin && bounty.targetPriceMax && (
-                <div className="text-xs text-muted-foreground">
-                  Item: ${bounty.targetPriceMin.toLocaleString()}-${bounty.targetPriceMax.toLocaleString()}
-                </div>
+              <div className="text-xs text-muted-foreground">
+                Target: ${bounty.targetPriceMin.toLocaleString()}-${bounty.targetPriceMax.toLocaleString()}
+              </div>
               )}
             </div>
           </div>
