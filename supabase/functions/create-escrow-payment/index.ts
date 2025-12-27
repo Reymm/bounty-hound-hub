@@ -71,15 +71,18 @@ serve(async (req) => {
 
     const { amount, currency } = validation.data;
     
-    // NO platform fee for poster - hunter pays 7% fee on payout
-    // Only charge Stripe processing fee: 2.9% + $0.30, added ON TOP of bounty
-    // If user enters $50 bounty, hunter gets $50, user pays $50 + fees
+    // Platform fee: 7% taken from hunter on payout (not charged to poster upfront)
+    // Stripe processing fee: 2.9% + $0.30, added ON TOP of bounty
+    // If user enters $50 bounty, hunter gets $46.50 (after 7%), poster pays $50 + Stripe fees
+    const platformFeePercent = 0.07;
+    const platformFee = Math.round(amount * platformFeePercent * 100) / 100;
     const stripeFee = Math.round((amount * 0.029 + 0.30) * 100) / 100;
     const totalChargeAmount = Math.round((amount + stripeFee) * 100) / 100;
     
     logStep("Amount and fees calculated", { 
       bountyAmount: amount, 
-      platformFee: 0, // No poster fee
+      platformFee: platformFee, // 7% from hunter on payout
+      platformFeePercent: `${platformFeePercent * 100}%`,
       stripeFee,
       totalCharge: totalChargeAmount, 
       currency 
@@ -112,7 +115,8 @@ serve(async (req) => {
         supabase_user_id: user.id,
         type: 'escrow_deposit',
         bounty_amount: amount.toString(),
-        platform_fee: '0' // No poster fee
+        platform_fee: platformFee.toString(), // 7% fee taken from hunter on payout
+        platform_fee_percent: '7'
       }
     });
     logStep("Created payment intent", { paymentIntentId: paymentIntent.id, status: paymentIntent.status });
@@ -123,9 +127,9 @@ serve(async (req) => {
       .insert({
         poster_id: user.id,
         stripe_payment_intent_id: paymentIntent.id,
-        amount: amount, // Bounty amount (full amount goes to escrow)
-        platform_fee_amount: 0, // No poster fee
-        total_charged_amount: totalChargeAmount, // Total charged (bounty + Stripe fee)
+        amount: amount, // Bounty amount
+        platform_fee_amount: platformFee, // 7% fee to be collected on payout
+        total_charged_amount: totalChargeAmount, // Total charged to poster (bounty + Stripe fee)
         currency: currency.toLowerCase(),
         status: paymentIntent.status
       })
@@ -143,7 +147,7 @@ serve(async (req) => {
       client_secret: paymentIntent.client_secret,
       escrow_id: escrowData.id,
       bounty_amount: amount,
-      platform_fee: 0, // No poster fee
+      platform_fee: platformFee, // 7% fee from hunter
       stripe_fee: stripeFee,
       total_charge: totalChargeAmount,
       status: paymentIntent.status
