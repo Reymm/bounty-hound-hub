@@ -12,11 +12,12 @@ import { RequestRevisionDialog } from './RequestRevisionDialog';
 import { OpenDisputeDialog } from './OpenDisputeDialog';
 import { TrackingDialog } from './TrackingDialog';
 import { RatingPromptDialog } from '@/components/ratings/RatingPromptDialog';
+import { ProofImages } from './ProofImages';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, ExternalLink, FileText, AlertTriangle, RefreshCw, Package, Trash2 } from 'lucide-react';
+import { MessageCircle, FileText, AlertTriangle, RefreshCw, Package, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -350,79 +351,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
               </div>
 
               {submission.proofUrls.length > 0 && (
-                <div className="space-y-3">
-                  {/* Separate image URLs from regular URLs */}
-                  {(() => {
-                    // Check if URL is an image - either by extension OR if it's a Supabase storage URL
-                    const isImageUrl = (url: string) => {
-                      // Check file extension
-                      if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) return true;
-                      // Check if it's a Supabase storage URL (likely an image upload)
-                      if (url.includes('supabase.co/storage/v1/object')) return true;
-                      return false;
-                    };
-                    
-                    const imageUrls = submission.proofUrls.filter(isImageUrl);
-                    const otherUrls = submission.proofUrls.filter(url => !isImageUrl(url));
-                    
-                    return (
-                      <>
-                        {/* Display images */}
-                        {imageUrls.length > 0 && (
-                          <div>
-                            <p className="text-xs font-medium text-foreground mb-2">Proof Images:</p>
-                            <div className="grid grid-cols-2 gap-2">
-                              {imageUrls.map((url, index) => (
-                                <a
-                                  key={index}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="block"
-                                >
-                                  <img
-                                    src={url}
-                                    alt={`Proof ${index + 1}`}
-                                    className="w-full h-32 object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer border"
-                                    onError={(e) => {
-                                      console.error('Image failed to load:', url);
-                                      // Show as link fallback instead of hiding
-                                      const parent = e.currentTarget.parentElement;
-                                      if (parent) {
-                                        parent.innerHTML = `<span class="flex items-center gap-2 text-xs text-primary">📎 View file</span>`;
-                                      }
-                                    }}
-                                  />
-                                </a>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Display other URLs */}
-                        {otherUrls.length > 0 && (
-                          <div>
-                            <p className="text-xs font-medium text-foreground mb-2">Proof URLs:</p>
-                            <div className="space-y-1">
-                              {otherUrls.map((url, index) => (
-                                <a
-                                  key={index}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 text-xs text-primary hover:underline"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  {url.length > 50 ? `${url.substring(0, 50)}...` : url}
-                                </a>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
+                <ProofImages urls={submission.proofUrls} />
               )}
 
               <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">

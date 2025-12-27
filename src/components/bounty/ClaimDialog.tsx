@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
 import { Plus, X, CreditCard, Loader2, CheckCircle } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
-import { uploadFile } from '@/lib/storage';
+import { uploadFile, resolveStorageUrls } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ClaimDialogProps {
@@ -33,7 +33,10 @@ interface ExistingSubmission {
 export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClose, onClaimSubmitted }: ClaimDialogProps) {
   const [message, setMessage] = useState('');
   const [proofUrls, setProofUrls] = useState<string[]>(['']);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  // uploadedImageRefs stores the storage references (supabase-storage://...)
+  const [uploadedImageRefs, setUploadedImageRefs] = useState<string[]>([]);
+  // uploadedImageDisplay stores resolved URLs for display in ImageUpload
+  const [uploadedImageDisplay, setUploadedImageDisplay] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stripeConnectRequired, setStripeConnectRequired] = useState(false);
   const [stripeConnectChecking, setStripeConnectChecking] = useState(false);
@@ -43,6 +46,12 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   const [isEditMode, setIsEditMode] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Check if a URL is an image (storage reference or Supabase URL)
+  const isImageRef = (url: string) => {
+    return url.startsWith('supabase-storage://') || 
+           url.includes('supabase.co/storage/v1/object');
+  };
 
   // Check if user already has a submission for this bounty
   useEffect(() => {
@@ -64,12 +73,22 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         if (data && data.status === 'submitted') {
           setIsEditMode(true);
           setMessage(data.message || '');
+          
           // Separate uploaded images from proof URLs
           const urls = data.proof_urls || [];
-          const imageUrls = urls.filter(url => url.includes('supabase') || url.includes('blob'));
-          const otherUrls = urls.filter(url => !url.includes('supabase') && !url.includes('blob'));
-          setUploadedImages(imageUrls);
+          const imageRefs = urls.filter(isImageRef);
+          const otherUrls = urls.filter(url => !isImageRef(url));
+          
+          setUploadedImageRefs(imageRefs);
           setProofUrls(otherUrls.length > 0 ? otherUrls : ['']);
+          
+          // Resolve the image references for display
+          if (imageRefs.length > 0) {
+            const resolved = await resolveStorageUrls(imageRefs);
+            setUploadedImageDisplay(resolved);
+          } else {
+            setUploadedImageDisplay([]);
+          }
         } else {
           setIsEditMode(false);
         }
@@ -163,7 +182,8 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
       );
       const uploadResults = await Promise.all(uploadPromises);
       
-      const successfulUploads = uploadResults
+      // Get the storage references (supabase-storage://...)
+      const successfulRefs = uploadResults
         .filter(result => !result.error && result.url)
         .map(result => result.url!);
       
@@ -182,13 +202,18 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         });
       }
       
-      if (successfulUploads.length > 0) {
-        const newImages = [...uploadedImages, ...successfulUploads];
-        setUploadedImages(newImages);
+      if (successfulRefs.length > 0) {
+        // Add storage references
+        const newRefs = [...uploadedImageRefs, ...successfulRefs];
+        setUploadedImageRefs(newRefs);
+        
+        // Resolve and add display URLs
+        const resolvedUrls = await resolveStorageUrls(successfulRefs);
+        setUploadedImageDisplay(prev => [...prev, ...resolvedUrls]);
         
         toast({
           title: "Images uploaded",
-          description: `${successfulUploads.length} image(s) uploaded successfully.`,
+          description: `${successfulRefs.length} image(s) uploaded successfully.`,
         });
       }
     } catch (error: any) {
@@ -200,9 +225,14 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     }
   };
 
-  const handleImageRemove = async (imageUrl: string) => {
-    const newImages = uploadedImages.filter(img => img !== imageUrl);
-    setUploadedImages(newImages);
+  const handleImageRemove = async (displayUrl: string) => {
+    // Find the index in display array
+    const index = uploadedImageDisplay.indexOf(displayUrl);
+    if (index !== -1) {
+      // Remove from both arrays at the same index
+      setUploadedImageRefs(prev => prev.filter((_, i) => i !== index));
+      setUploadedImageDisplay(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   const handleSubmit = async () => {
@@ -236,9 +266,9 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     try {
       setIsSubmitting(true);
 
-      // Filter out empty URLs and combine with uploaded images
+      // Filter out empty URLs and combine with uploaded image references
       const validUrls = proofUrls.filter(url => url.trim());
-      const allProofUrls = [...validUrls, ...uploadedImages];
+      const allProofUrls = [...validUrls, ...uploadedImageRefs];
 
       if (isEditMode && existingSubmission) {
         // Update existing submission
@@ -264,7 +294,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
           type: ClaimType.FOUND,
           message: message.trim(),
           proofUrls: validUrls,
-          proofImages: uploadedImages
+          proofImages: uploadedImageRefs
         });
 
         toast({
@@ -277,7 +307,8 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
       // Reset form
       setMessage('');
       setProofUrls(['']);
-      setUploadedImages([]);
+      setUploadedImageRefs([]);
+      setUploadedImageDisplay([]);
       setExistingSubmission(null);
       setIsEditMode(false);
       onClaimSubmitted();
@@ -439,7 +470,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
             <ImageUpload
               onUpload={handleImageUpload}
               onRemove={handleImageRemove}
-              uploadedImages={uploadedImages}
+              uploadedImages={uploadedImageDisplay}
               maxFiles={5}
               maxSize={10 * 1024 * 1024} // 10MB
             />
