@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { ZoomIn, ZoomOut, Crop } from 'lucide-react';
@@ -10,6 +10,7 @@ interface ImageCropDialogProps {
   onOpenChange: (open: boolean) => void;
   imageSrc: string;
   onCropComplete: (croppedImageBlob: Blob) => void;
+  onSkip?: () => void;
   aspectRatio?: number;
 }
 
@@ -18,6 +19,7 @@ export function ImageCropDialog({
   onOpenChange,
   imageSrc,
   onCropComplete,
+  onSkip,
   aspectRatio = 16 / 9,
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -83,17 +85,27 @@ export function ImageCropDialog({
     }
   };
 
+  const handleSkip = () => {
+    if (onSkip) {
+      onSkip();
+    }
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col">
+      <DialogContent className="max-w-[95vw] w-[900px] max-h-[95vh] flex flex-col p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Crop className="h-5 w-5" />
             Crop & Position Image
           </DialogTitle>
+          <DialogDescription>
+            Adjust the crop area to show the best part of your image
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 relative bg-muted rounded-lg overflow-hidden">
+        <div className="flex-1 relative bg-muted rounded-lg overflow-hidden min-h-[400px] sm:min-h-[500px]">
           <Cropper
             image={imageSrc}
             crop={crop}
@@ -102,17 +114,23 @@ export function ImageCropDialog({
             onCropChange={onCropChange}
             onCropComplete={onCropAreaChange}
             onZoomChange={setZoom}
+            objectFit="contain"
             style={{
               containerStyle: {
                 borderRadius: '0.5rem',
+                width: '100%',
+                height: '100%',
+              },
+              mediaStyle: {
+                maxHeight: '100%',
               },
             }}
           />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
           <div className="flex items-center gap-4">
-            <ZoomOut className="h-4 w-4 text-muted-foreground" />
+            <ZoomOut className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Slider
               value={[zoom]}
               min={1}
@@ -121,7 +139,7 @@ export function ImageCropDialog({
               onValueChange={(values) => setZoom(values[0])}
               className="flex-1"
             />
-            <ZoomIn className="h-4 w-4 text-muted-foreground" />
+            <ZoomIn className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </div>
           
           <p className="text-xs text-muted-foreground text-center">
@@ -129,7 +147,17 @@ export function ImageCropDialog({
           </p>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+          {onSkip && (
+            <Button
+              variant="ghost"
+              onClick={handleSkip}
+              disabled={isProcessing}
+              className="sm:mr-auto"
+            >
+              Skip Cropping
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { X, Upload, Loader2, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 
 interface FileProgress {
   name: string;
@@ -34,6 +35,11 @@ export function ImageUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [currentCropIndex, setCurrentCropIndex] = useState(0);
+  const [croppedFiles, setCroppedFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
   const uploadFiles = async (files: File[]) => {
@@ -71,8 +77,82 @@ export function ImageUpload({
     } finally {
       setIsUploading(false);
       setFileProgress([]);
+      setCroppedFiles([]);
     }
   };
+
+  const startCropping = useCallback((files: File[]) => {
+    if (files.length === 0) return;
+    
+    setPendingFiles(files);
+    setCroppedFiles([]);
+    setCurrentCropIndex(0);
+    
+    // Load first image for cropping
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImageToCrop(e.target?.result as string);
+      setCropDialogOpen(true);
+    };
+    reader.readAsDataURL(files[0]);
+  }, []);
+
+  const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
+    const currentFile = pendingFiles[currentCropIndex];
+    const croppedFile = new File([croppedBlob], currentFile.name, { type: 'image/jpeg' });
+    
+    const newCroppedFiles = [...croppedFiles, croppedFile];
+    setCroppedFiles(newCroppedFiles);
+    
+    // Check if there are more files to crop
+    if (currentCropIndex + 1 < pendingFiles.length) {
+      const nextIndex = currentCropIndex + 1;
+      setCurrentCropIndex(nextIndex);
+      
+      // Load next image for cropping
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageToCrop(e.target?.result as string);
+      };
+      reader.readAsDataURL(pendingFiles[nextIndex]);
+    } else {
+      // All files cropped, now upload them
+      setCropDialogOpen(false);
+      setImageToCrop(null);
+      setPendingFiles([]);
+      setCurrentCropIndex(0);
+      
+      await uploadFiles(newCroppedFiles);
+    }
+  }, [pendingFiles, currentCropIndex, croppedFiles]);
+
+  const handleSkipCrop = useCallback(async () => {
+    // Skip cropping for current file, use original
+    const currentFile = pendingFiles[currentCropIndex];
+    const newCroppedFiles = [...croppedFiles, currentFile];
+    setCroppedFiles(newCroppedFiles);
+    
+    // Check if there are more files to crop
+    if (currentCropIndex + 1 < pendingFiles.length) {
+      const nextIndex = currentCropIndex + 1;
+      setCurrentCropIndex(nextIndex);
+      
+      // Load next image for cropping
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageToCrop(e.target?.result as string);
+      };
+      reader.readAsDataURL(pendingFiles[nextIndex]);
+    } else {
+      // All files processed, now upload them
+      setCropDialogOpen(false);
+      setImageToCrop(null);
+      setPendingFiles([]);
+      setCurrentCropIndex(0);
+      
+      await uploadFiles(newCroppedFiles);
+    }
+  }, [pendingFiles, currentCropIndex, croppedFiles]);
 
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
@@ -111,9 +191,9 @@ export function ImageUpload({
     }
 
     if (validFiles.length > 0) {
-      await uploadFiles(validFiles);
+      startCropping(validFiles);
     }
-  }, [uploadedImages.length, maxFiles, maxSize, toast]);
+  }, [uploadedImages.length, maxFiles, maxSize, toast, startCropping]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -242,6 +322,25 @@ export function ImageUpload({
             </div>
           ))}
         </div>
+      )}
+
+      {imageToCrop && (
+        <ImageCropDialog
+          open={cropDialogOpen}
+          onOpenChange={(open) => {
+            setCropDialogOpen(open);
+            if (!open) {
+              setImageToCrop(null);
+              setPendingFiles([]);
+              setCurrentCropIndex(0);
+              setCroppedFiles([]);
+            }
+          }}
+          imageSrc={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onSkip={handleSkipCrop}
+          aspectRatio={16 / 9}
+        />
       )}
     </div>
   );
