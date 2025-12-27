@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { Bounty, BountyStatus } from '@/lib/types';
 import { formatDistanceToNow, isAfter, subDays } from 'date-fns';
 import { SaveBountyButton } from './SaveBountyButton';
-
 interface BountyCardProps {
   bounty: Bounty;
   isSaved?: boolean;
@@ -86,9 +86,10 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
               )}
             </div>
             <div className="text-right">
-              <div className="bounty-amount font-bold">
-                ${bounty.bountyAmount.toLocaleString()}
-              </div>
+              <CurrencyDisplayCompact 
+                amount={bounty.bountyAmount} 
+                className="bounty-amount font-bold"
+              />
               {bounty.targetPriceMin && bounty.targetPriceMax && (
                 <div className="text-xs text-muted-foreground">
                   Item: ${bounty.targetPriceMin.toLocaleString()}-${bounty.targetPriceMax.toLocaleString()}

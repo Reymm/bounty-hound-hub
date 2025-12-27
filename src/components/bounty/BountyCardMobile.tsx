@@ -3,9 +3,9 @@ import { Calendar, MapPin, Eye, Clock, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { Bounty, BountyStatus } from '@/lib/types';
-import { formatCurrency, formatTimeRemaining } from '@/lib/utils';
-
+import { formatTimeRemaining } from '@/lib/utils';
 interface BountyCardMobileProps {
   bounty: Bounty;
   onViewDetails: () => void;
@@ -51,9 +51,10 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
               </h3>
             </Link>
             
-            <div className="text-xl font-bold text-primary ml-3">
-              {formatCurrency(bounty.bountyAmount)}
-            </div>
+            <CurrencyDisplayCompact 
+              amount={bounty.bountyAmount} 
+              className="text-xl font-bold text-primary ml-3"
+            />
           </div>
           
           <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
