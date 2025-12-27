@@ -697,7 +697,7 @@ function PostBountyForm() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                No platform fees for posters. Hunters pay a 7% fee when paid out.
+                No platform fees for posters. Hunters pay a $2 + 5% fee when paid out.
               </p>
             </div>
 
@@ -1175,7 +1175,7 @@ function PostBountyForm() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2 border-t">
-                  💰 No platform fees for posters. Hunters pay 7% when paid out. If hunter purchases the item, you'll send those funds securely after approval.
+                  💰 No platform fees for posters. Hunters pay $2 + 5% when paid out. If hunter purchases the item, you'll send those funds securely after approval.
                 </p>
               </div>
             )}

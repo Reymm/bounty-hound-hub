@@ -12,8 +12,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[PROCESS-PAYOUT] ${step}${detailsStr}`);
 };
 
-// Platform fee: 7% from hunter's payout
-const PLATFORM_FEE_PERCENT = 0.07;
+// Platform fee: $2 + 5% from hunter's payout
+const PLATFORM_FEE_PERCENT = 0.05;
+const PLATFORM_FEE_FLAT = 2; // $2 flat fee
 
 // Countries that require manual payout (CA platform cannot pay out to these via Stripe Connect)
 // Canadian Stripe platforms can only pay Canadian connected accounts
@@ -120,9 +121,9 @@ serve(async (req) => {
       .eq('id', submission.hunter_id)
       .maybeSingle();
 
-    // Calculate payout amounts - 7% platform fee from hunter
+    // Calculate payout amounts - $2 + 5% platform fee from hunter
     const bountyAmount = parseFloat(submission.Bounties.amount);
-    const platformFee = Math.round(bountyAmount * PLATFORM_FEE_PERCENT * 100); // in cents
+    const platformFee = Math.round((PLATFORM_FEE_FLAT + bountyAmount * PLATFORM_FEE_PERCENT) * 100); // in cents ($2 + 5%)
     const payoutAmount = Math.round(bountyAmount * 100) - platformFee; // in cents
 
     logStep("Calculated payout amounts", {

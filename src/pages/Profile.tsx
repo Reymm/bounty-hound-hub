@@ -668,7 +668,7 @@ export default function Profile() {
                     <ul className="text-sm text-muted-foreground space-y-1">
                       <li>• Payments processed via Stripe</li>
                       <li>• Funds released when bounty poster approves</li>
-                      <li>• Platform fee: 7% deducted from payout</li>
+                      <li>• Platform fee: $2 + 5% deducted from payout</li>
                       <li>• Payouts typically arrive in 2-7 business days</li>
                     </ul>
                   </div>

@@ -21,7 +21,7 @@ const faqData = [
       },
       {
         q: "Is BountyBay free to use?",
-        a: "Creating an account and browsing bounties is completely free. Posters pay the bounty reward plus Stripe processing fees when posting. Hunters pay nothing upfront—a 7% platform fee is deducted from successful payouts."
+        a: "Creating an account and browsing bounties is completely free. Posters pay the bounty reward plus Stripe processing fees when posting. Hunters pay nothing upfront—a $2 + 5% platform fee is deducted from successful payouts."
       }
     ]
   },
@@ -80,7 +80,7 @@ const faqData = [
     questions: [
       {
         q: "What are the platform fees?",
-        a: "Posters pay no platform fee—only the bounty reward plus Stripe processing fees (~2.9% + 30¢). Hunters pay a 7% platform fee, deducted from their payout when a bounty is successfully completed."
+        a: "Posters pay no platform fee—only the bounty reward plus Stripe processing fees (~2.9% + 30¢). Hunters pay a $2 + 5% platform fee, deducted from their payout when a bounty is successfully completed."
       },
       {
         q: "How do payouts work?",
