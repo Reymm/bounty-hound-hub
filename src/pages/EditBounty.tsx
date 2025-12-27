@@ -202,12 +202,9 @@ export default function EditBounty() {
         }
 
         if (!moderationResult.allowed) {
-          const violationReason = typeof moderationResult.violation_details === 'object' 
-            ? moderationResult.violation_details?.reason 
-            : moderationResult.violation_details;
           toast({
             title: "Content not allowed",
-            description: violationReason || "Your content violates our community guidelines.",
+            description: moderationResult.message || "Your content violates our community guidelines.",
             variant: "destructive",
           });
           setSaving(false);
