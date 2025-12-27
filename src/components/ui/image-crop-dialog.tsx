@@ -114,15 +114,14 @@ export function ImageCropDialog({
             onCropChange={onCropChange}
             onCropComplete={onCropAreaChange}
             onZoomChange={setZoom}
-            objectFit="contain"
+            objectFit="horizontal-cover"
+            minZoom={0.5}
+            maxZoom={3}
             style={{
               containerStyle: {
                 borderRadius: '0.5rem',
                 width: '100%',
                 height: '100%',
-              },
-              mediaStyle: {
-                maxHeight: '100%',
               },
             }}
           />
@@ -133,7 +132,7 @@ export function ImageCropDialog({
             <ZoomOut className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Slider
               value={[zoom]}
-              min={1}
+              min={0.5}
               max={3}
               step={0.1}
               onValueChange={(values) => setZoom(values[0])}
