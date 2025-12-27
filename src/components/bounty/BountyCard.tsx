@@ -57,11 +57,11 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
         {/* Image Thumbnail */}
         {bounty.images && bounty.images.length > 0 ? (
           <Link to={`/b/${bounty.id}`} className="block">
-            <div className="relative aspect-video w-full overflow-hidden bg-muted">
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
               <img
                 src={bounty.images[0]}
                 alt={bounty.title}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
               />
             </div>
           </Link>
