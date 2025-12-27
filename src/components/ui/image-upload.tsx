@@ -189,6 +189,8 @@ export function ImageUpload({
     if (e.target.files && e.target.files.length > 0) {
       handleFiles(e.target.files);
     }
+    // Reset input so the same file can be selected again
+    e.target.value = '';
   };
 
   const formatFileSize = (bytes: number) => {
