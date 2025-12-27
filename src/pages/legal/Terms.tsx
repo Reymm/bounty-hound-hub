@@ -103,7 +103,7 @@ export default function Terms() {
                   <h3 className="font-medium mb-2">Platform Fees</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Posters pay no platform fee—only the bounty reward plus Stripe processing fees (~2.9% + 30¢)</li>
-                    <li>Hunters pay a 7% platform fee, deducted from their payout upon successful completion</li>
+                    <li>Hunters pay a $2 + 5% platform fee, deducted from their payout upon successful completion</li>
                     <li>Payment processing fees apply as per Stripe&apos;s standard rates</li>
                   </ul>
                 </div>

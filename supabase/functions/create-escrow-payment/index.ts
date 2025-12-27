@@ -71,17 +71,19 @@ serve(async (req) => {
 
     const { amount, currency } = validation.data;
     
-    // Platform fee: 7% taken from hunter on payout (not charged to poster upfront)
+    // Platform fee: $2 + 5% taken from hunter on payout (not charged to poster upfront)
     // Stripe processing fee: 2.9% + $0.30, added ON TOP of bounty
-    // If user enters $50 bounty, hunter gets $46.50 (after 7%), poster pays $50 + Stripe fees
-    const platformFeePercent = 0.07;
-    const platformFee = Math.round(amount * platformFeePercent * 100) / 100;
+    // If user enters $50 bounty, hunter gets $45.50 (after $2 + 5%), poster pays $50 + Stripe fees
+    const platformFeeFlat = 2; // $2 flat fee
+    const platformFeePercent = 0.05; // 5%
+    const platformFee = Math.round((platformFeeFlat + amount * platformFeePercent) * 100) / 100;
     const stripeFee = Math.round((amount * 0.029 + 0.30) * 100) / 100;
     const totalChargeAmount = Math.round((amount + stripeFee) * 100) / 100;
     
     logStep("Amount and fees calculated", { 
       bountyAmount: amount, 
-      platformFee: platformFee, // 7% from hunter on payout
+      platformFee: platformFee, // $2 + 5% from hunter on payout
+      platformFeeFlat: `$${platformFeeFlat}`,
       platformFeePercent: `${platformFeePercent * 100}%`,
       stripeFee,
       totalCharge: totalChargeAmount, 
@@ -115,8 +117,8 @@ serve(async (req) => {
         supabase_user_id: user.id,
         type: 'escrow_deposit',
         bounty_amount: amount.toString(),
-        platform_fee: platformFee.toString(), // 7% fee taken from hunter on payout
-        platform_fee_percent: '7'
+        platform_fee: platformFee.toString(), // $2 + 5% fee taken from hunter on payout
+        platform_fee_structure: '$2 + 5%'
       }
     });
     logStep("Created payment intent", { paymentIntentId: paymentIntent.id, status: paymentIntent.status });

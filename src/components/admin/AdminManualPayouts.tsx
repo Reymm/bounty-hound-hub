@@ -170,7 +170,8 @@ export function AdminManualPayouts() {
   };
 
   const calculatePayoutAmount = (payout: PendingPayout) => {
-    const platformFee = payout.platform_fee_amount || (payout.amount * 0.07);
+    // $2 + 5% platform fee
+    const platformFee = payout.platform_fee_amount || (2 + payout.amount * 0.05);
     return payout.amount - platformFee;
   };
 
@@ -247,7 +248,7 @@ export function AdminManualPayouts() {
                             ${calculatePayoutAmount(payout).toFixed(2)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            (${payout.amount.toFixed(2)} - 7% fee)
+                            (${payout.amount.toFixed(2)} - $2 + 5% fee)
                           </p>
                         </div>
 
