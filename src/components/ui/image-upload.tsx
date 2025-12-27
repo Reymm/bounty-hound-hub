@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { X, Upload, Image, Loader2, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 
 interface FileProgress {
   name: string;
@@ -34,7 +35,97 @@ export function ImageUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [currentCropIndex, setCurrentCropIndex] = useState(0);
   const { toast } = useToast();
+
+  const [croppedFiles, setCroppedFiles] = useState<File[]>([]);
+
+  const startCropping = useCallback((files: File[]) => {
+    if (files.length === 0) return;
+    
+    setPendingFiles(files);
+    setCroppedFiles([]);
+    setCurrentCropIndex(0);
+    
+    // Load first image for cropping
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImageToCrop(e.target?.result as string);
+      setCropDialogOpen(true);
+    };
+    reader.readAsDataURL(files[0]);
+  }, []);
+
+  const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
+    const currentFile = pendingFiles[currentCropIndex];
+    const croppedFile = new File([croppedBlob], currentFile.name, { type: 'image/jpeg' });
+    
+    const newCroppedFiles = [...croppedFiles, croppedFile];
+    setCroppedFiles(newCroppedFiles);
+    
+    // Check if there are more files to crop
+    if (currentCropIndex + 1 < pendingFiles.length) {
+      const nextIndex = currentCropIndex + 1;
+      setCurrentCropIndex(nextIndex);
+      
+      // Load next image for cropping
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageToCrop(e.target?.result as string);
+      };
+      reader.readAsDataURL(pendingFiles[nextIndex]);
+    } else {
+      // All files cropped, now upload them
+      setCropDialogOpen(false);
+      setImageToCrop(null);
+      setPendingFiles([]);
+      setCurrentCropIndex(0);
+      
+      await uploadFiles(newCroppedFiles);
+    }
+  }, [pendingFiles, currentCropIndex, croppedFiles]);
+
+  const uploadFiles = async (files: File[]) => {
+    setIsUploading(true);
+    
+    const initialProgress: FileProgress[] = files.map(file => ({
+      name: file.name,
+      progress: 0,
+      completed: false
+    }));
+    setFileProgress(initialProgress);
+
+    try {
+      await onUpload(files, (fileName: string, progress: number) => {
+        setFileProgress(prev => 
+          prev.map(fp => 
+            fp.name === fileName 
+              ? { ...fp, progress, completed: progress === 100 }
+              : fp
+          )
+        );
+      });
+      
+      toast({
+        title: "Upload complete",
+        description: `Successfully uploaded ${files.length} image${files.length > 1 ? 's' : ''}`,
+      });
+    } catch (error) {
+      console.error('Failed to upload files:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload images. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setFileProgress([]);
+      setCroppedFiles([]);
+    }
+  };
 
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
@@ -73,44 +164,9 @@ export function ImageUpload({
     }
 
     if (validFiles.length > 0) {
-      setIsUploading(true);
-      
-      // Initialize progress for each file
-      const initialProgress: FileProgress[] = validFiles.map(file => ({
-        name: file.name,
-        progress: 0,
-        completed: false
-      }));
-      setFileProgress(initialProgress);
-
-      try {
-        await onUpload(validFiles, (fileName: string, progress: number) => {
-          setFileProgress(prev => 
-            prev.map(fp => 
-              fp.name === fileName 
-                ? { ...fp, progress, completed: progress === 100 }
-                : fp
-            )
-          );
-        });
-        
-        toast({
-          title: "Upload complete",
-          description: `Successfully uploaded ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
-        });
-      } catch (error) {
-        console.error('Failed to upload files:', error);
-        toast({
-          title: "Upload failed",
-          description: "Failed to upload images. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsUploading(false);
-        setFileProgress([]);
-      }
+      startCropping(validFiles);
     }
-  }, [uploadedImages.length, maxFiles, maxSize, toast, onUpload]);
+  }, [uploadedImages.length, maxFiles, maxSize, toast, startCropping]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -237,6 +293,24 @@ export function ImageUpload({
             </div>
           ))}
         </div>
+      )}
+
+      {imageToCrop && (
+        <ImageCropDialog
+          open={cropDialogOpen}
+          onOpenChange={(open) => {
+            setCropDialogOpen(open);
+            if (!open) {
+              setImageToCrop(null);
+              setPendingFiles([]);
+              setCurrentCropIndex(0);
+              setCroppedFiles([]);
+            }
+          }}
+          imageSrc={imageToCrop}
+          onCropComplete={handleCropComplete}
+          aspectRatio={16 / 9}
+        />
       )}
     </div>
   );
