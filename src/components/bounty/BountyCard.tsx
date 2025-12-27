@@ -88,17 +88,10 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
                 <SaveBountyButton isSaved={isSaved} onToggle={onToggleSave} />
               )}
             </div>
-            <div className="text-right">
-              <CurrencyDisplayCompact 
-                amount={bounty.bountyAmount} 
-                className="bounty-amount font-bold"
-              />
-              {bounty.targetPriceMin && bounty.targetPriceMax && (
-              <div className="text-xs text-muted-foreground">
-                Target: ${bounty.targetPriceMin.toLocaleString()}-${bounty.targetPriceMax.toLocaleString()}
-              </div>
-              )}
-            </div>
+            <CurrencyDisplayCompact 
+              amount={bounty.bountyAmount} 
+              className="bounty-amount font-bold"
+            />
           </div>
 
           {/* Title */}
