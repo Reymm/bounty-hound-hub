@@ -10,6 +10,7 @@ interface ImageCropDialogProps {
   onOpenChange: (open: boolean) => void;
   imageSrc: string;
   onCropComplete: (croppedImageBlob: Blob) => void;
+  aspectRatio?: number;
 }
 
 export function ImageCropDialog({
@@ -17,6 +18,7 @@ export function ImageCropDialog({
   onOpenChange,
   imageSrc,
   onCropComplete,
+  aspectRatio = 16 / 9,
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -96,7 +98,7 @@ export function ImageCropDialog({
             image={imageSrc}
             crop={crop}
             zoom={zoom}
-            aspect={16 / 9}
+            aspect={aspectRatio}
             onCropChange={onCropChange}
             onCropComplete={onCropAreaChange}
             onZoomChange={setZoom}
