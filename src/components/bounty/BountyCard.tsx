@@ -3,6 +3,7 @@ import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon } from 'lucide-r
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
+import { SafeImage } from '@/components/ui/safe-image';
 import { Bounty, BountyStatus } from '@/lib/types';
 import { formatDistanceToNow, isAfter, subDays } from 'date-fns';
 import { SaveBountyButton } from './SaveBountyButton';
@@ -58,10 +59,12 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
         {bounty.images && bounty.images.length > 0 ? (
           <Link to={`/b/${bounty.id}`} className="block">
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-              <img
+              <SafeImage
                 src={bounty.images[0]}
                 alt={bounty.title}
                 className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+                fallbackClassName="w-full h-full"
+                showFallbackIcon={true}
               />
             </div>
           </Link>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
+import { SafeImage } from '@/components/ui/safe-image';
 import { Bounty, BountyStatus } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils';
 interface BountyCardMobileProps {
@@ -21,10 +22,12 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
       {bounty.images && bounty.images.length > 0 ? (
         <Link to={`/b/${bounty.id}`} className="block">
           <div className="relative aspect-video w-full overflow-hidden bg-muted">
-            <img
+            <SafeImage
               src={bounty.images[0]}
               alt={bounty.title}
               className="w-full h-full object-cover"
+              fallbackClassName="w-full h-full"
+              showFallbackIcon={true}
             />
           </div>
         </Link>

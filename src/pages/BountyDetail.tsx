@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { CurrencyDisplay } from '@/components/ui/currency-display';
+import { SafeImage } from '@/components/ui/safe-image';
 import { ClaimDialog } from '@/components/bounty/ClaimDialog';
 import { CancelBountyDialog } from '@/components/bounty/CancelBountyDialog';
 import { SubmissionsList } from '@/components/bounty/SubmissionsList';
@@ -452,11 +453,12 @@ export default function BountyDetail() {
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {bounty.images.map((image, index) => (
-                        <img
+                        <SafeImage
                           key={index}
                           src={image}
                           alt={`Bounty image ${index + 1}`}
                           className="rounded-lg object-cover w-full h-32 cursor-pointer hover:opacity-80 transition-opacity"
+                          fallbackClassName="rounded-lg w-full h-32"
                           onClick={() => setSelectedImageIndex(index)}
                         />
                       ))}
@@ -688,10 +690,11 @@ export default function BountyDetail() {
               )}
               
               {/* Image */}
-              <img
+              <SafeImage
                 src={bounty.images[selectedImageIndex]}
                 alt={`Bounty image ${selectedImageIndex + 1}`}
                 className="max-w-full max-h-[90vh] w-auto h-auto object-contain"
+                fallbackClassName="w-96 h-64"
               />
               
               {/* Next Button */}
