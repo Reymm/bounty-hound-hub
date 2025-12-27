@@ -33,6 +33,7 @@ import KycComplete from "./pages/KycComplete";
 import ConnectComplete from "./pages/ConnectComplete";
 import Auth from "./pages/Auth";
 import Letterhead from "@/pages/Letterhead";
+import EditBounty from "./pages/EditBounty";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,11 @@ const App = () => (
                       <Route path="/" element={<Index />} />
                       <Route path="/bounties" element={<ActiveBounties />} />
                       <Route path="/b/:id" element={<BountyDetail />} />
+                      <Route path="/b/:id/edit" element={
+                        <ProtectedRoute>
+                          <EditBounty />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/faq" element={<FAQ />} />
                       
                       {/* Protected routes */}
