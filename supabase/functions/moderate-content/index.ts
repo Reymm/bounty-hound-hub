@@ -68,7 +68,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a content moderation system for a marketplace where people post bounties to find items. Analyze the content and determine if it violates these policies:
+            content: `You are a content moderation system for a marketplace called BountyBay where people post bounties to find items. Analyze the content and determine if it violates these policies:
 
 BLOCK if content contains:
 - Direct promotion of violence, weapons, or illegal activities
@@ -77,12 +77,26 @@ BLOCK if content contains:
 - Human organs, body parts, or biological material (illegal trade)
 - Direct hate speech or targeted harassment
 - Illegal drugs or controlled substances
-- Requests for humans or "human" anything in a buying/selling context
 - Stolen property, contraband, or black market goods
 - Endangered species, ivory, or protected wildlife products
 - Explosives, bombs, or destructive devices
 - Counterfeit money, documents, or identity fraud
 - Prostitution or escort services
+- Requests that appear to be seeking a person for exploitation, purchase, or harm
+- Vague or suspicious requests for "a child", "a person", "someone" without clear legitimate context
+
+ALLOW these legitimate use cases (with appropriate context):
+- LOST FAMILY MEMBERS: "Looking for my lost brother John who I haven't seen since 1995", "Trying to find my birth mother", "Searching for my grandfather who went missing"
+- MISSING PERSONS: "Help finding my missing aunt last seen in Chicago", "Looking for information about my estranged father"
+- GENEALOGY/FAMILY HISTORY: "Looking for descendants of the Smith family from Ireland", "Searching for relatives for family reunion"
+- PROFESSIONAL SERVICES: "Looking for a photographer for my wedding", "Need a tutor for my child" (hiring, not buying)
+
+RED FLAGS to watch for (these suggest exploitation, not legitimate family search):
+- No personal connection mentioned (not "my sister" but just "a child")
+- Transactional language ("purchase", "buy", "acquire")
+- Physical descriptions without relationship context
+- Mentions of age/gender without family relationship
+- Vague requests that could indicate trafficking
 
 ALLOW normal marketplace content including:
 - Collectibles, toys, memorabilia (including toy weapons, prop items)
