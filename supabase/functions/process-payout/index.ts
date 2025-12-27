@@ -214,35 +214,70 @@ serve(async (req) => {
     });
 
     // Create transfer to Connect account (CA hunters only)
-    const transfer = await stripe.transfers.create({
-      amount: payoutAmount,
-      currency: 'usd',
-      destination: hunterProfile.stripe_connect_account_id,
-      description: `Bounty payout for: ${submission.Bounties.title}`,
-      metadata: {
-        submission_id: submission.id,
-        bounty_id: submission.bounty_id,
-        hunter_id: submission.hunter_id,
-        bounty_amount: bountyAmount.toString(),
-        platform_fee: (platformFee / 100).toString(),
-        platform_fee_percent: (PLATFORM_FEE_PERCENT * 100).toString()
-      }
-    });
+    // The platform fee is automatically retained - we only transfer the net amount to hunter
+    // The difference between captured amount and transferred amount stays in our Stripe account
+    try {
+      const transfer = await stripe.transfers.create({
+        amount: payoutAmount, // This is the bounty minus 7% fee
+        currency: 'usd',
+        destination: hunterProfile.stripe_connect_account_id,
+        description: `Bounty payout for: ${submission.Bounties.title}`,
+        metadata: {
+          submission_id: submission.id,
+          bounty_id: submission.bounty_id,
+          hunter_id: submission.hunter_id,
+          bounty_amount: bountyAmount.toString(),
+          platform_fee: (platformFee / 100).toString(),
+          platform_fee_percent: (PLATFORM_FEE_PERCENT * 100).toString()
+        }
+      });
 
-    logStep("Transfer created successfully", { 
-      transferId: transfer.id,
-      amount: transfer.amount / 100
-    });
+      logStep("Transfer created successfully", { 
+        transferId: transfer.id,
+        amount: transfer.amount / 100,
+        feeRetained: platformFee / 100
+      });
 
-    // Update escrow status to completed and record the platform fee
-    await supabaseClient
-      .from('escrow_transactions')
-      .update({ 
-        status: 'completed',
+      // Update escrow status to completed and record the platform fee
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({ 
+          status: 'completed',
+          payout_method: 'stripe',
+          platform_fee_amount: platformFee / 100
+        })
+        .eq('id', escrowTx.id);
+
+      return new Response(JSON.stringify({
+        success: true,
         payout_method: 'stripe',
-        platform_fee_amount: platformFee / 100
-      })
-      .eq('id', escrowTx.id);
+        transfer_id: transfer.id,
+        bounty_amount: bountyAmount,
+        amount: payoutAmount / 100,
+        platform_fee: platformFee / 100,
+        platform_fee_percent: PLATFORM_FEE_PERCENT * 100,
+        hunter_account: hunterProfile.stripe_connect_account_id
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+
+    } catch (transferError: any) {
+      // Transfer failed - but payment is already captured
+      // Mark as captured with pending transfer so admin can retry
+      logStep("Transfer failed", { message: transferError.message });
+      
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({ 
+          status: 'transfer_failed',
+          payout_method: 'stripe',
+          platform_fee_amount: platformFee / 100
+        })
+        .eq('id', escrowTx.id);
+
+      throw new Error(`Payment captured but transfer failed: ${transferError.message}. Admin can retry the payout.`);
+    }
 
     return new Response(JSON.stringify({
       success: true,
