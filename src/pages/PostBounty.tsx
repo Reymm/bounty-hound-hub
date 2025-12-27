@@ -301,14 +301,6 @@ function PostBountyForm() {
     try {
       setIsSubmitting(true);
       
-      // If we already have a payment intent (user went back to edit), 
-      // just go back to payment without creating a new one
-      if (clientSecret && paymentIntentId) {
-        setCurrentStep('payment');
-        setIsSubmitting(false);
-        return;
-      }
-      
       // Validate required fields
       if (!data.category) {
         toast({
@@ -332,7 +324,7 @@ function PostBountyForm() {
         hasDeadline
       }));
       
-      // Content moderation check
+      // ALWAYS run content moderation check - even if user went back to edit
       toast({
         title: "Checking content",
         description: "Verifying your bounty meets community guidelines...",
@@ -354,6 +346,15 @@ function PostBountyForm() {
           description: moderationData.message || "Your bounty content violates community guidelines. Please revise and try again.",
           variant: "destructive",
         });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // If we already have a payment intent (user went back to edit), 
+      // just go back to payment without creating a new one
+      if (clientSecret && paymentIntentId) {
+        setCurrentStep('payment');
+        setIsSubmitting(false);
         return;
       }
       
