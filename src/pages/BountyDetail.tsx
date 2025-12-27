@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -325,15 +325,25 @@ export default function BountyDetail() {
                 </div>
               )}
               
-              {canCancelBounty && (
-                <Button
-                  variant="destructive"
-                  onClick={() => setIsCancelDialogOpen(true)}
-                  className="mt-4"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Cancel Bounty
-                </Button>
+              {isOwnBounty && bounty.status === BountyStatus.OPEN && (
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    asChild
+                  >
+                    <Link to={`/b/${bounty.id}/edit`}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit Bounty
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setIsCancelDialogOpen(true)}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Cancel Bounty
+                  </Button>
+                </div>
               )}
             </div>
 
