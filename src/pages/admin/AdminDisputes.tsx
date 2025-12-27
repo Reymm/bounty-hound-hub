@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ProofImages } from '@/components/bounty/ProofImages';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertTriangle, ExternalLink, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 
 interface DisputedSubmission {
   id: string;
@@ -206,21 +207,8 @@ export default function AdminDisputes() {
 
                 {dispute.proof_urls && dispute.proof_urls.length > 0 && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Proof URLs:</Label>
-                    <div className="space-y-1">
-                      {dispute.proof_urls.map((url, index) => (
-                        <a
-                          key={index}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-primary hover:underline"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          {url}
-                        </a>
-                      ))}
-                    </div>
+                    <Label className="text-sm font-semibold">Proof:</Label>
+                    <ProofImages urls={dispute.proof_urls} />
                   </div>
                 )}
 
