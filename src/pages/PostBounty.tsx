@@ -148,12 +148,12 @@ function PostBountyForm() {
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
       // No platform fee for poster - only Stripe processing fees
-      // Stripe fee: 2.9% + $0.30 on the total charge
-      // Formula: total = (bounty + 0.30) / (1 - 0.029)
-      const stripeFee = Math.round(((watchedBountyAmount + 0.30) / (1 - 0.029) - watchedBountyAmount) * 100) / 100;
+      // Stripe fee: 2.9% + $0.30, added ON TOP of the bounty amount
+      // If user enters $50 bounty, hunter gets $50, user pays $50 + fees
+      const stripeFee = Math.round((watchedBountyAmount * 0.029 + 0.30) * 100) / 100;
       const total = Math.round((watchedBountyAmount + stripeFee) * 100) / 100;
       
-      setPlatformFee(0); // No platform fee for poster
+      setPlatformFee(stripeFee); // Store stripe fee for display
       setTotalCharge(total);
       // KYC required for bounties over $1000
       setKycRequired(watchedBountyAmount > 1000);
@@ -1160,7 +1160,7 @@ function PostBountyForm() {
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Payment Processing (Stripe):</span>
-                    <span>${(totalCharge - watchedBountyAmount).toFixed(2)}</span>
+                    <span>${platformFee.toFixed(2)}</span>
                   </div>
                   {kycRequired && (
                     <div className="flex justify-between text-xs text-muted-foreground mt-2 pt-2 border-t">

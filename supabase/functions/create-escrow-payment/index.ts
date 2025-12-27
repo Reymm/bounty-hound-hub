@@ -72,9 +72,9 @@ serve(async (req) => {
     const { amount, currency } = validation.data;
     
     // NO platform fee for poster - hunter pays 7% fee on payout
-    // Only charge Stripe processing fee: 2.9% + $0.30
-    // Formula: total = (bounty + 0.30) / (1 - 0.029)
-    const stripeFee = Math.round(((amount + 0.30) / (1 - 0.029) - amount) * 100) / 100;
+    // Only charge Stripe processing fee: 2.9% + $0.30, added ON TOP of bounty
+    // If user enters $50 bounty, hunter gets $50, user pays $50 + fees
+    const stripeFee = Math.round((amount * 0.029 + 0.30) * 100) / 100;
     const totalChargeAmount = Math.round((amount + stripeFee) * 100) / 100;
     
     logStep("Amount and fees calculated", { 
