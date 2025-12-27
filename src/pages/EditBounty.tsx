@@ -153,18 +153,9 @@ export default function EditBounty() {
   };
 
   const handleImageRemove = async (imageUrl: string) => {
-    try {
-      // Extract path from URL if needed
-      const urlParts = imageUrl.split('/bounty-images/');
-      if (urlParts.length > 1) {
-        await deleteFile('bounty-images', urlParts[1]);
-      }
-      setUploadedImages(prev => prev.filter(img => img !== imageUrl));
-    } catch (error) {
-      console.error('Delete error:', error);
-      // Still remove from UI even if delete fails
-      setUploadedImages(prev => prev.filter(img => img !== imageUrl));
-    }
+    // Remove from UI state immediately - don't delete from storage
+    // The image will be orphaned but that's safer than deleting before save
+    setUploadedImages(prev => prev.filter(img => img !== imageUrl));
   };
 
   const addVerificationRequirement = () => {
@@ -188,6 +179,47 @@ export default function EditBounty() {
     
     try {
       setSaving(true);
+
+      // Run content moderation before saving
+      try {
+        const { data: moderationResult, error: moderationError } = await supabase.functions.invoke('moderate-content', {
+          body: {
+            title: data.title,
+            description: data.description,
+            tags: tags,
+          },
+        });
+
+        if (moderationError) {
+          console.error('Moderation error:', moderationError);
+          toast({
+            title: "Content check failed",
+            description: "Unable to verify content. Please try again.",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+
+        if (!moderationResult.allowed) {
+          toast({
+            title: "Content not allowed",
+            description: moderationResult.violation_details || "Your content violates our community guidelines.",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+      } catch (modError) {
+        console.error('Moderation request failed:', modError);
+        toast({
+          title: "Content check failed",
+          description: "Unable to verify content. Please try again.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
 
       const filteredRequirements = verificationRequirements.filter(req => req.trim() !== '');
 
