@@ -15,6 +15,35 @@ export interface UploadProgress {
   error?: string;
 }
 
+/**
+ * Verify that an image URL actually exists and is accessible
+ */
+export const verifyImageExists = async (url: string): Promise<boolean> => {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Verify multiple image URLs exist
+ */
+export const verifyImagesExist = async (urls: string[]): Promise<{ valid: string[]; invalid: string[] }> => {
+  const results = await Promise.all(
+    urls.map(async (url) => ({
+      url,
+      exists: await verifyImageExists(url)
+    }))
+  );
+  
+  return {
+    valid: results.filter(r => r.exists).map(r => r.url),
+    invalid: results.filter(r => !r.exists).map(r => r.url)
+  };
+};
+
 export const uploadFile = async (
   file: File,
   bucket: StorageBucket,
@@ -63,14 +92,15 @@ export const uploadFile = async (
       
       console.log('[STORAGE] Getting URL for public bucket:', isPublicBucket);
       
+      let finalUrl: string;
+      
       if (isPublicBucket) {
         const { data } = supabase.storage
           .from(bucket)
           .getPublicUrl(filePath);
         
-        console.log('[STORAGE] Public URL generated:', data.publicUrl);
-        onProgress?.(100);
-        return { url: data.publicUrl, path: filePath };
+        finalUrl = data.publicUrl;
+        console.log('[STORAGE] Public URL generated:', finalUrl);
       } else {
         const { data, error: signError } = await supabase.storage
           .from(bucket)
@@ -81,10 +111,23 @@ export const uploadFile = async (
           throw signError;
         }
         
+        finalUrl = data.signedUrl;
         console.log('[STORAGE] Signed URL generated');
-        onProgress?.(100);
-        return { url: data.signedUrl, path: filePath };
       }
+      
+      // CRITICAL: Verify the file actually exists before returning
+      console.log('[STORAGE] Verifying upload exists...');
+      const exists = await verifyImageExists(finalUrl);
+      
+      if (!exists) {
+        console.error('[STORAGE] Upload verification failed - file does not exist at URL');
+        throw new Error('Upload verification failed - file was not saved correctly');
+      }
+      
+      console.log('[STORAGE] Upload verified successfully');
+      onProgress?.(100);
+      return { url: finalUrl, path: filePath };
+      
     } catch (uploadError) {
       clearInterval(progressInterval);
       throw uploadError;
