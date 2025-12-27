@@ -91,25 +91,25 @@ export function ProofImages({ urls }: ProofImagesProps) {
       {imageUrls.length > 0 && (
         <div>
           <p className="text-xs font-medium text-foreground mb-2">Proof Images:</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {imageUrls.map((urlData, index) => (
               <a
                 key={index}
                 href={urlData.resolved}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block"
+                className="block overflow-hidden rounded-lg border hover:opacity-90 transition-opacity"
               >
                 <img
                   src={urlData.resolved}
                   alt={`Proof ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer border"
+                  className="w-full h-48 sm:h-56 object-cover cursor-pointer"
                   onError={(e) => {
                     console.error('Image failed to load:', urlData.resolved);
                     // Show as link fallback instead of hiding
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
-                      parent.innerHTML = `<span class="flex items-center gap-2 text-xs text-primary">📎 View file</span>`;
+                      parent.innerHTML = `<span class="flex items-center justify-center gap-2 text-sm text-primary p-4">📎 View file</span>`;
                     }
                   }}
                 />
