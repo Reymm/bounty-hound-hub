@@ -209,6 +209,10 @@ export type Database = {
           bounty_id: string | null
           cancellation_fee_amount: number | null
           cancelled_at: string | null
+          capture_error: string | null
+          capture_lock_id: string | null
+          capture_status: string | null
+          captured_at: string | null
           created_at: string
           currency: string
           hunter_country: string | null
@@ -217,6 +221,8 @@ export type Database = {
           manual_payout_reference: string | null
           manual_payout_sent_at: string | null
           manual_payout_status: string | null
+          payout_freeze: boolean | null
+          payout_freeze_reason: string | null
           payout_method: string | null
           platform_fee_amount: number | null
           poster_id: string
@@ -231,6 +237,10 @@ export type Database = {
           bounty_id?: string | null
           cancellation_fee_amount?: number | null
           cancelled_at?: string | null
+          capture_error?: string | null
+          capture_lock_id?: string | null
+          capture_status?: string | null
+          captured_at?: string | null
           created_at?: string
           currency?: string
           hunter_country?: string | null
@@ -239,6 +249,8 @@ export type Database = {
           manual_payout_reference?: string | null
           manual_payout_sent_at?: string | null
           manual_payout_status?: string | null
+          payout_freeze?: boolean | null
+          payout_freeze_reason?: string | null
           payout_method?: string | null
           platform_fee_amount?: number | null
           poster_id: string
@@ -253,6 +265,10 @@ export type Database = {
           bounty_id?: string | null
           cancellation_fee_amount?: number | null
           cancelled_at?: string | null
+          capture_error?: string | null
+          capture_lock_id?: string | null
+          capture_status?: string | null
+          captured_at?: string | null
           created_at?: string
           currency?: string
           hunter_country?: string | null
@@ -261,6 +277,8 @@ export type Database = {
           manual_payout_reference?: string | null
           manual_payout_sent_at?: string | null
           manual_payout_status?: string | null
+          payout_freeze?: boolean | null
+          payout_freeze_reason?: string | null
           payout_method?: string | null
           platform_fee_amount?: number | null
           poster_id?: string
@@ -615,6 +633,7 @@ export type Database = {
       }
       Submissions: {
         Row: {
+          accepted_at: string | null
           bounty_id: string
           created_at: string | null
           delivered_at: string | null
@@ -637,6 +656,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           bounty_id: string
           created_at?: string | null
           delivered_at?: string | null
@@ -659,6 +679,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           bounty_id?: string
           created_at?: string | null
           delivered_at?: string | null

@@ -16,8 +16,6 @@ const logStep = (step: string, details?: any) => {
 const PLATFORM_FEE_PERCENT = 0.05;
 const PLATFORM_FEE_FLAT = 2; // $2 flat fee
 
-// All payouts are manual (via PayPal) - no Stripe Connect transfers
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,6 +46,8 @@ serve(async (req) => {
         hunter_id,
         bounty_id,
         status,
+        dispute_opened,
+        dispute_reason,
         Bounties!Submissions_bounty_id_fkey(
           id,
           amount,
@@ -64,6 +64,20 @@ serve(async (req) => {
 
     if (submission.status !== 'accepted') {
       throw new Error('Can only process payout for accepted submissions');
+    }
+
+    // CRITICAL: Check if dispute is opened - hard block
+    if (submission.dispute_opened) {
+      logStep("BLOCKED: Dispute is open on this submission");
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Cannot process payout: dispute is open on this submission',
+        dispute_blocked: true,
+        dispute_reason: submission.dispute_reason
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
     }
 
     logStep("Retrieved submission", { 
@@ -84,33 +98,54 @@ serve(async (req) => {
       throw new Error(`Escrow transaction not found: ${escrowError?.message}`);
     }
 
+    // CRITICAL: Check payout freeze - hard block
+    if (escrowTx.payout_freeze) {
+      logStep("BLOCKED: Payout is frozen", { reason: escrowTx.payout_freeze_reason });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Cannot process payout: payout is frozen',
+        payout_frozen: true,
+        freeze_reason: escrowTx.payout_freeze_reason
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    // CRITICAL: Check if already captured - idempotency check
+    if (escrowTx.capture_status === 'captured') {
+      logStep("Already captured - returning success (idempotent)");
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Payment already captured',
+        already_captured: true,
+        captured_at: escrowTx.captured_at
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // CRITICAL: Check if currently being captured by another request
+    if (escrowTx.capture_status === 'capturing') {
+      logStep("BLOCKED: Another capture is in progress");
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Capture already in progress',
+        capture_in_progress: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409, // Conflict
+      });
+    }
+
     logStep("Found escrow transaction", {
       escrowId: escrowTx.id,
       paymentIntentId: escrowTx.stripe_payment_intent_id,
       status: escrowTx.status,
+      captureStatus: escrowTx.capture_status,
       amount: escrowTx.amount
     });
-
-    // First, capture the PaymentIntent if it's in requires_capture status
-    if (escrowTx.status === 'requires_capture') {
-      logStep("Capturing PaymentIntent...");
-      
-      try {
-        const capturedIntent = await stripe.paymentIntents.capture(escrowTx.stripe_payment_intent_id);
-        logStep("PaymentIntent captured", { status: capturedIntent.status });
-
-        // Update escrow status
-        await supabaseClient
-          .from('escrow_transactions')
-          .update({ status: 'captured' })
-          .eq('id', escrowTx.id);
-      } catch (captureError: any) {
-        logStep("Capture error", { message: captureError.message });
-        throw new Error(`Failed to capture payment: ${captureError.message}`);
-      }
-    } else if (escrowTx.status !== 'captured' && escrowTx.status !== 'succeeded') {
-      throw new Error(`Escrow is in invalid state for payout: ${escrowTx.status}`);
-    }
 
     // Get hunter's profile including Connect account and country
     const { data: hunterProfile } = await supabaseClient
@@ -122,7 +157,7 @@ serve(async (req) => {
     // CRITICAL: Require Stripe Connect onboarding to be complete before payout
     // This ensures every hunter who receives payment is ID-verified
     if (!hunterProfile?.stripe_connect_onboarding_complete) {
-      logStep("Hunter has not completed Stripe Connect onboarding - blocking payout");
+      logStep("Hunter has not completed identity verification - blocking payout");
       return new Response(JSON.stringify({
         success: false,
         error: 'Hunter must complete identity verification before receiving payout',
@@ -134,10 +169,42 @@ serve(async (req) => {
       });
     }
 
-    logStep("Hunter is ID-verified via Stripe Connect", {
+    logStep("Hunter is ID-verified", {
       connectAccountId: hunterProfile.stripe_connect_account_id,
       onboardingComplete: hunterProfile.stripe_connect_onboarding_complete
     });
+
+    // ============================================================
+    // ATOMIC LOCK PATTERN: Acquire capture lock
+    // This UPDATE only succeeds once - prevents double capture
+    // ============================================================
+    const lockId = crypto.randomUUID();
+    
+    const { data: lockResult, error: lockError } = await supabaseClient
+      .from('escrow_transactions')
+      .update({ 
+        capture_status: 'capturing',
+        capture_lock_id: lockId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', escrowTx.id)
+      .in('capture_status', ['not_captured', 'capture_failed'])
+      .select('id, capture_lock_id, stripe_payment_intent_id')
+      .maybeSingle();
+
+    if (lockError || !lockResult) {
+      logStep("Failed to acquire capture lock - another process may have it", { lockError });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Could not acquire capture lock. Payment may already be processing.',
+        lock_failed: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409,
+      });
+    }
+
+    logStep("Acquired capture lock", { lockId, escrowId: lockResult.id });
 
     // Calculate payout amounts - $2 + 5% platform fee from hunter
     const bountyAmount = parseFloat(submission.Bounties.amount);
@@ -151,40 +218,101 @@ serve(async (req) => {
       payoutAmount: payoutAmount / 100
     });
 
-    // All payouts are manual via PayPal
-    const hunterCountry = hunterProfile?.payout_country || 'Unknown';
+    // ============================================================
+    // CAPTURE PAYMENT - Now we have the lock, safe to capture
+    // ============================================================
+    try {
+      // First, check the PaymentIntent status in Stripe
+      const paymentIntent = await stripe.paymentIntents.retrieve(escrowTx.stripe_payment_intent_id);
+      
+      logStep("PaymentIntent status from Stripe", { 
+        status: paymentIntent.status,
+        capturable: paymentIntent.amount_capturable
+      });
 
-    logStep("Setting up manual payout", {
-      hunterCountry,
-      payoutEmail: hunterProfile?.payout_email
-    });
-    
-    await supabaseClient
-      .from('escrow_transactions')
-      .update({ 
-        status: 'captured',
+      let capturedIntent = paymentIntent;
+
+      // Only capture if it's in requires_capture status
+      if (paymentIntent.status === 'requires_capture') {
+        logStep("Capturing PaymentIntent...");
+        capturedIntent = await stripe.paymentIntents.capture(escrowTx.stripe_payment_intent_id);
+        logStep("PaymentIntent captured successfully", { status: capturedIntent.status });
+      } else if (paymentIntent.status === 'succeeded') {
+        logStep("PaymentIntent already succeeded - no capture needed");
+      } else {
+        // Status is something else (canceled, requires_payment_method, etc.)
+        throw new Error(`PaymentIntent is in invalid state for capture: ${paymentIntent.status}`);
+      }
+
+      // ============================================================
+      // SUCCESS: Mark as captured with lock verification
+      // ============================================================
+      const hunterCountry = hunterProfile?.payout_country || 'Unknown';
+
+      const { error: successError } = await supabaseClient
+        .from('escrow_transactions')
+        .update({ 
+          capture_status: 'captured',
+          captured_at: new Date().toISOString(),
+          status: 'captured',
+          payout_method: 'manual',
+          manual_payout_status: 'pending',
+          platform_fee_amount: platformFee / 100,
+          hunter_payout_email: hunterProfile?.payout_email || null,
+          hunter_country: hunterCountry,
+          capture_error: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', escrowTx.id)
+        .eq('capture_lock_id', lockId); // Only update if we still hold the lock
+
+      if (successError) {
+        logStep("Warning: Failed to mark as captured, but Stripe capture succeeded", { successError });
+        // Don't throw here - Stripe capture succeeded, which is what matters
+      }
+
+      logStep("Payout processing complete", {
+        escrowId: escrowTx.id,
+        capturedAt: new Date().toISOString(),
+        hunterCountry,
+        payoutEmail: hunterProfile?.payout_email
+      });
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Payment captured. Manual payout required after 7-day hold.',
         payout_method: 'manual',
-        manual_payout_status: 'pending',
-        platform_fee_amount: platformFee / 100,
-        hunter_payout_email: hunterProfile?.payout_email || null,
-        hunter_country: hunterCountry
-      })
-      .eq('id', escrowTx.id);
+        manual_payout_required: true,
+        escrow_captured: true,
+        bounty_amount: bountyAmount,
+        amount: payoutAmount / 100,
+        platform_fee: platformFee / 100,
+        hunter_country: hunterCountry,
+        captured_at: new Date().toISOString()
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Payment captured. Manual payout required.',
-      payout_method: 'manual',
-      manual_payout_required: true,
-      escrow_captured: true,
-      bounty_amount: bountyAmount,
-      amount: payoutAmount / 100,
-      platform_fee: platformFee / 100,
-      hunter_country: hunterCountry
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    } catch (captureError: any) {
+      // ============================================================
+      // FAILURE: Mark as capture_failed with error, release lock
+      // ============================================================
+      logStep("Capture failed", { message: captureError.message });
+
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({ 
+          capture_status: 'capture_failed',
+          capture_error: captureError.message,
+          capture_lock_id: null, // Release the lock
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', escrowTx.id)
+        .eq('capture_lock_id', lockId);
+
+      throw new Error(`Failed to capture payment: ${captureError.message}`);
+    }
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
