@@ -126,19 +126,6 @@ serve(async (req) => {
       });
     }
 
-    // CRITICAL: Check if currently being captured by another request
-    if (escrowTx.capture_status === 'capturing') {
-      logStep("BLOCKED: Another capture is in progress");
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Capture already in progress',
-        capture_in_progress: true
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 409, // Conflict
-      });
-    }
-
     logStep("Found escrow transaction", {
       escrowId: escrowTx.id,
       paymentIntentId: escrowTx.stripe_payment_intent_id,
@@ -154,8 +141,7 @@ serve(async (req) => {
       .eq('id', submission.hunter_id)
       .maybeSingle();
 
-    // CRITICAL: Require Stripe Connect onboarding to be complete before payout
-    // This ensures every hunter who receives payment is ID-verified
+    // CRITICAL: Require identity verification (via Stripe Connect onboarding) before payout
     if (!hunterProfile?.stripe_connect_onboarding_complete) {
       logStep("Hunter has not completed identity verification - blocking payout");
       return new Response(JSON.stringify({
@@ -175,28 +161,38 @@ serve(async (req) => {
     });
 
     // ============================================================
-    // ATOMIC LOCK PATTERN: Acquire capture lock
-    // This UPDATE only succeeds once - prevents double capture
+    // ATOMIC LOCK via RPC: Uses DB function with stale lock reclaim
+    // Cleaner than .or() filter, no syntax ambiguity
     // ============================================================
     const lockId = crypto.randomUUID();
     
     const { data: lockResult, error: lockError } = await supabaseClient
-      .from('escrow_transactions')
-      .update({ 
-        capture_status: 'capturing',
-        capture_lock_id: lockId,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', escrowTx.id)
-      .in('capture_status', ['not_captured', 'capture_failed'])
-      .select('id, capture_lock_id, stripe_payment_intent_id')
-      .maybeSingle();
+      .rpc('acquire_capture_lock', {
+        p_escrow_id: escrowTx.id,
+        p_lock_id: lockId,
+        p_lock_timeout_minutes: 5
+      });
 
-    if (lockError || !lockResult) {
-      logStep("Failed to acquire capture lock - another process may have it", { lockError });
+    if (lockError) {
+      logStep("RPC lock error", { error: lockError.message });
       return new Response(JSON.stringify({
         success: false,
-        error: 'Could not acquire capture lock. Payment may already be processing.',
+        error: 'Failed to acquire capture lock: ' + lockError.message,
+        lock_failed: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+
+    // RPC returns array, get first row
+    const lockRow = Array.isArray(lockResult) ? lockResult[0] : lockResult;
+    
+    if (!lockRow || !lockRow.success) {
+      logStep("Failed to acquire capture lock", { message: lockRow?.message });
+      return new Response(JSON.stringify({
+        success: false,
+        error: lockRow?.message || 'Could not acquire capture lock. Payment may already be processing.',
         lock_failed: true
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -204,7 +200,11 @@ serve(async (req) => {
       });
     }
 
-    logStep("Acquired capture lock", { lockId, escrowId: lockResult.id });
+    logStep("Acquired capture lock via RPC", { 
+      lockId, 
+      escrowId: lockRow.escrow_id,
+      paymentIntentId: lockRow.payment_intent_id
+    });
 
     // Calculate payout amounts - $2 + 5% platform fee from hunter
     const bountyAmount = parseFloat(submission.Bounties.amount);
@@ -222,8 +222,11 @@ serve(async (req) => {
     // CAPTURE PAYMENT - Now we have the lock, safe to capture
     // ============================================================
     try {
+      // Use the payment_intent_id from the lock result for consistency
+      const paymentIntentId = lockRow.payment_intent_id || escrowTx.stripe_payment_intent_id;
+      
       // First, check the PaymentIntent status in Stripe
-      const paymentIntent = await stripe.paymentIntents.retrieve(escrowTx.stripe_payment_intent_id);
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       
       logStep("PaymentIntent status from Stripe", { 
         status: paymentIntent.status,
@@ -235,7 +238,7 @@ serve(async (req) => {
       // Only capture if it's in requires_capture status
       if (paymentIntent.status === 'requires_capture') {
         logStep("Capturing PaymentIntent...");
-        capturedIntent = await stripe.paymentIntents.capture(escrowTx.stripe_payment_intent_id);
+        capturedIntent = await stripe.paymentIntents.capture(paymentIntentId);
         logStep("PaymentIntent captured successfully", { status: capturedIntent.status });
       } else if (paymentIntent.status === 'succeeded') {
         logStep("PaymentIntent already succeeded - no capture needed");
@@ -306,6 +309,7 @@ serve(async (req) => {
           capture_status: 'capture_failed',
           capture_error: captureError.message,
           capture_lock_id: null, // Release the lock
+          capture_locked_at: null,
           updated_at: new Date().toISOString()
         })
         .eq('id', escrowTx.id)

@@ -362,15 +362,15 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         {((!hasExistingSubmission || canEdit) && !checkingExisting) && (
           <>
 
-        {/* Stripe Connect Setup Alert - Show first as it's the primary requirement */}
+        {/* Identity Verification Alert - Show first as it's the primary requirement */}
         {stripeConnectRequired && !stripeConnectChecking && (
           <Alert className="border-primary bg-primary/5">
             <CreditCard className="h-4 w-4 text-primary" />
             <AlertDescription>
               <div className="space-y-2">
-                <p className="font-semibold text-foreground">Set Up Payouts First</p>
+                <p className="font-semibold text-foreground">Complete Identity Verification</p>
                 <p className="text-muted-foreground">
-                  Before you can claim bounties, you need to set up your payout account so you can receive rewards when your claims are accepted.
+                  Before you can claim bounties, you need to verify your identity. This ensures safe transactions and allows you to receive payouts when your claims are accepted.
                 </p>
                 <Button 
                   onClick={handleStartStripeOnboarding} 
@@ -385,7 +385,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
                   ) : (
                     <>
                       <CreditCard className="h-4 w-4 mr-2" />
-                      Set Up Payout Account
+                      Verify Identity
                     </>
                   )}
                 </Button>
@@ -397,16 +397,16 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         {stripeConnectChecking && (
           <Alert>
             <Loader2 className="h-4 w-4 animate-spin" />
-            <AlertDescription>Checking payout account status...</AlertDescription>
+            <AlertDescription>Checking verification status...</AlertDescription>
           </Alert>
         )}
 
-        {/* Stripe Connect Connected Success Indicator */}
+        {/* Identity Verified Success Indicator */}
         {!stripeConnectChecking && !stripeConnectRequired && (
           <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
             <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
             <AlertDescription className="text-green-800 dark:text-green-200">
-              Payout account connected
+              Identity verified — ready to claim
             </AlertDescription>
           </Alert>
         )}

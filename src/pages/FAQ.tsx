@@ -59,7 +59,7 @@ const faqData = [
       },
       {
         q: "Do I need to set up anything before claiming?",
-        a: "Yes, you need to complete Stripe Connect setup before you can claim bounties. This ensures we can pay you when your claim is accepted. You'll be prompted to do this when attempting your first claim."
+        a: "Yes, you need to complete identity verification before you can claim bounties. This ensures we can verify your identity and pay you securely when your claim is accepted. You'll be prompted to do this when attempting your first claim."
       },
       {
         q: "What counts as valid proof?",
@@ -71,7 +71,7 @@ const faqData = [
       },
       {
         q: "When do I get paid?",
-        a: "Payment is sent via PayPal 7 days after the poster accepts your submission. This hold period protects against fraud and chargebacks. You must complete identity verification through Stripe Connect before receiving your first payout."
+        a: "Payment is sent via PayPal 7 days after the poster accepts your submission. This hold period protects against fraud and chargebacks. You must complete identity verification before receiving your first payout."
       },
       {
         q: "Why is there a 7-day waiting period?",
@@ -88,7 +88,7 @@ const faqData = [
       },
       {
         q: "How do payouts work?",
-        a: "When a poster accepts your claim, funds are captured from escrow and held for 7 days. After the hold period, you'll receive payment via PayPal to the email address in your profile. All hunters must complete identity verification through Stripe Connect before receiving their first payout."
+        a: "When a poster accepts your claim, funds are captured from escrow and held for 7 days. After the hold period, you'll receive payment via PayPal to the email address in your profile. All hunters must complete identity verification before receiving their first payout."
       },
       {
         q: "Are there PayPal fees on payouts?",

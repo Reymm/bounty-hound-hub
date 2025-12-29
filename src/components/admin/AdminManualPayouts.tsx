@@ -55,6 +55,7 @@ export function AdminManualPayouts() {
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
   const [selectedPayout, setSelectedPayout] = useState<PendingPayout | null>(null);
   const [paymentReference, setPaymentReference] = useState('');
+  const [payoutAmountSent, setPayoutAmountSent] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -80,7 +81,8 @@ export function AdminManualPayouts() {
           updated_at,
           capture_status,
           payout_freeze,
-          payout_freeze_reason
+          payout_freeze_reason,
+          eligible_at
         `)
         .eq('payout_method', 'manual')
         .eq('manual_payout_status', 'pending')
@@ -117,9 +119,11 @@ export function AdminManualPayouts() {
             .eq('id', submission.hunter_id)
             .maybeSingle();
 
-          // Use accepted_at if available, fallback to updated_at
+          // Use eligible_at from DB if available, otherwise calculate from accepted_at
           const acceptedAt = new Date(submission.accepted_at || submission.updated_at);
-          const payoutEligibleAt = addDays(acceptedAt, 7);
+          const payoutEligibleAt = payout.eligible_at 
+            ? new Date(payout.eligible_at) 
+            : addDays(acceptedAt, 7);
           
           // HARD ENFORCEMENT: Check all conditions
           const isEligibleForPayout = 
@@ -223,12 +227,22 @@ export function AdminManualPayouts() {
         throw new Error('Payment has not been captured yet');
       }
 
+      // Get current user for audit trail
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
+
+      const sentAmount = parseFloat(payoutAmountSent) || calculatePayoutAmount(selectedPayout);
+
       const { error } = await supabase
         .from('escrow_transactions')
         .update({
           manual_payout_status: 'sent',
           manual_payout_sent_at: new Date().toISOString(),
-          manual_payout_reference: paymentReference.trim()
+          manual_payout_reference: paymentReference.trim(),
+          payout_sent_by_admin_user_id: user.id,
+          payout_sent_amount: sentAmount
         })
         .eq('id', selectedPayout.id)
         .eq('payout_freeze', false) // Extra safety: only update if not frozen
@@ -238,11 +252,12 @@ export function AdminManualPayouts() {
 
       toast({
         title: 'Payout Marked as Sent',
-        description: `Payment to ${selectedPayout.hunter_name} has been recorded.`
+        description: `Payment of $${sentAmount.toFixed(2)} to ${selectedPayout.hunter_name} has been recorded.`
       });
 
       setSelectedPayout(null);
       setPaymentReference('');
+      setPayoutAmountSent('');
       loadPendingPayouts();
     } catch (error: any) {
       console.error('Error marking payout:', error);
@@ -440,8 +455,23 @@ export function AdminManualPayouts() {
               <div className="rounded-lg bg-muted p-4 space-y-2">
                 <p><strong>Hunter:</strong> {selectedPayout.hunter_name}</p>
                 <p><strong>PayPal/Email:</strong> {selectedPayout.hunter_payout_email || 'Not provided'}</p>
-                <p><strong>Amount to Send:</strong> <span className="text-green-600 font-bold">${calculatePayoutAmount(selectedPayout).toFixed(2)} USD</span></p>
+                <p><strong>Expected Amount:</strong> <span className="text-green-600 font-bold">${calculatePayoutAmount(selectedPayout).toFixed(2)} USD</span></p>
                 <p><strong>Bounty:</strong> {selectedPayout.bounty_title}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount Sent (USD) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  placeholder={calculatePayoutAmount(selectedPayout).toFixed(2)}
+                  value={payoutAmountSent}
+                  onChange={(e) => setPayoutAmountSent(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the exact amount you sent via PayPal.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -465,7 +495,7 @@ export function AdminManualPayouts() {
             </Button>
             <Button 
               onClick={handleMarkAsPaid}
-              disabled={markingPaid === selectedPayout?.id || !paymentReference.trim()}
+              disabled={markingPaid === selectedPayout?.id || !paymentReference.trim() || !payoutAmountSent.trim()}
             >
               {markingPaid ? 'Saving...' : 'Confirm Payment Sent'}
             </Button>

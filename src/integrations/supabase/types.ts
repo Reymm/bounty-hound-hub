@@ -211,10 +211,12 @@ export type Database = {
           cancelled_at: string | null
           capture_error: string | null
           capture_lock_id: string | null
+          capture_locked_at: string | null
           capture_status: string | null
           captured_at: string | null
           created_at: string
           currency: string
+          eligible_at: string | null
           hunter_country: string | null
           hunter_payout_email: string | null
           id: string
@@ -223,10 +225,17 @@ export type Database = {
           manual_payout_status: string | null
           payout_freeze: boolean | null
           payout_freeze_reason: string | null
+          payout_hold_overridden: boolean | null
+          payout_hold_overridden_at: string | null
+          payout_hold_overridden_by: string | null
           payout_method: string | null
+          payout_sent_amount: number | null
+          payout_sent_by_admin_user_id: string | null
           platform_fee_amount: number | null
           poster_id: string
           refund_amount: number | null
+          refund_reference: string | null
+          refunded_at: string | null
           status: string
           stripe_payment_intent_id: string
           total_charged_amount: number | null
@@ -239,10 +248,12 @@ export type Database = {
           cancelled_at?: string | null
           capture_error?: string | null
           capture_lock_id?: string | null
+          capture_locked_at?: string | null
           capture_status?: string | null
           captured_at?: string | null
           created_at?: string
           currency?: string
+          eligible_at?: string | null
           hunter_country?: string | null
           hunter_payout_email?: string | null
           id?: string
@@ -251,10 +262,17 @@ export type Database = {
           manual_payout_status?: string | null
           payout_freeze?: boolean | null
           payout_freeze_reason?: string | null
+          payout_hold_overridden?: boolean | null
+          payout_hold_overridden_at?: string | null
+          payout_hold_overridden_by?: string | null
           payout_method?: string | null
+          payout_sent_amount?: number | null
+          payout_sent_by_admin_user_id?: string | null
           platform_fee_amount?: number | null
           poster_id: string
           refund_amount?: number | null
+          refund_reference?: string | null
+          refunded_at?: string | null
           status?: string
           stripe_payment_intent_id: string
           total_charged_amount?: number | null
@@ -267,10 +285,12 @@ export type Database = {
           cancelled_at?: string | null
           capture_error?: string | null
           capture_lock_id?: string | null
+          capture_locked_at?: string | null
           capture_status?: string | null
           captured_at?: string | null
           created_at?: string
           currency?: string
+          eligible_at?: string | null
           hunter_country?: string | null
           hunter_payout_email?: string | null
           id?: string
@@ -279,10 +299,17 @@ export type Database = {
           manual_payout_status?: string | null
           payout_freeze?: boolean | null
           payout_freeze_reason?: string | null
+          payout_hold_overridden?: boolean | null
+          payout_hold_overridden_at?: string | null
+          payout_hold_overridden_by?: string | null
           payout_method?: string | null
+          payout_sent_amount?: number | null
+          payout_sent_by_admin_user_id?: string | null
           platform_fee_amount?: number | null
           poster_id?: string
           refund_amount?: number | null
+          refund_reference?: string | null
+          refunded_at?: string | null
           status?: string
           stripe_payment_intent_id?: string
           total_charged_amount?: number | null
@@ -292,14 +319,14 @@ export type Database = {
           {
             foreignKeyName: "escrow_transactions_bounty_id_fkey"
             columns: ["bounty_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "Bounties"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "escrow_transactions_bounty_id_fkey"
             columns: ["bounty_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "bounties_secure"
             referencedColumns: ["id"]
           },
@@ -1126,6 +1153,20 @@ export type Database = {
       }
     }
     Functions: {
+      acquire_capture_lock: {
+        Args: {
+          p_escrow_id: string
+          p_lock_id: string
+          p_lock_timeout_minutes?: number
+        }
+        Returns: {
+          escrow_id: string
+          lock_id: string
+          message: string
+          payment_intent_id: string
+          success: boolean
+        }[]
+      }
       admin_send_message: {
         Args: {
           attachment_urls_param?: string[]
