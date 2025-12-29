@@ -98,8 +98,8 @@ export function CompletedBounties() {
         </div>
 
         {/* Horizontal scroll container */}
-        <div className="relative -mx-4 px-4">
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+        <div className="relative -mx-4 px-4 overflow-hidden">
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide pr-8">
             {completedBounties.map((bounty) => (
               <Link 
                 key={bounty.id} 
