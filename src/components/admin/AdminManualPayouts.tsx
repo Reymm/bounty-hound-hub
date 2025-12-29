@@ -21,9 +21,10 @@ import {
   CheckCircle2,
   ExternalLink,
   Mail,
-  MapPin
+  MapPin,
+  AlertTriangle
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addDays, isPast, formatDistanceToNow } from 'date-fns';
 
 interface PendingPayout {
   id: string;
@@ -37,6 +38,9 @@ interface PendingPayout {
   bounty_title: string;
   hunter_name: string;
   hunter_id: string;
+  accepted_at: string; // When the submission was accepted
+  payout_eligible_at: string; // 7 days after acceptance
+  is_eligible_for_payout: boolean;
 }
 
 export function AdminManualPayouts() {
@@ -85,10 +89,10 @@ export function AdminManualPayouts() {
           .eq('id', payout.bounty_id)
           .maybeSingle();
 
-        // Get accepted submission to find hunter
+        // Get accepted submission to find hunter and acceptance time
         const { data: submission } = await supabase
           .from('Submissions')
-          .select('hunter_id')
+          .select('hunter_id, updated_at')
           .eq('bounty_id', payout.bounty_id)
           .eq('status', 'accepted')
           .maybeSingle();
@@ -101,13 +105,21 @@ export function AdminManualPayouts() {
             .eq('id', submission.hunter_id)
             .maybeSingle();
 
+          // Calculate 7-day hold period
+          const acceptedAt = new Date(submission.updated_at);
+          const payoutEligibleAt = addDays(acceptedAt, 7);
+          const isEligibleForPayout = isPast(payoutEligibleAt);
+
           payoutsWithDetails.push({
             ...payout,
             bounty_title: bounty?.title || 'Unknown Bounty',
             hunter_name: hunter?.username || hunter?.full_name || 'Unknown',
             hunter_id: submission.hunter_id,
             hunter_payout_email: payout.hunter_payout_email || hunter?.payout_email || null,
-            hunter_country: payout.hunter_country || hunter?.payout_country || null
+            hunter_country: payout.hunter_country || hunter?.payout_country || null,
+            accepted_at: submission.updated_at,
+            payout_eligible_at: payoutEligibleAt.toISOString(),
+            is_eligible_for_payout: isEligibleForPayout
           });
         }
       }
@@ -208,14 +220,28 @@ export function AdminManualPayouts() {
           ) : (
             <div className="space-y-4">
               {pendingPayouts.map((payout) => (
-                <Card key={payout.id} className="border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20">
+                <Card 
+                  key={payout.id} 
+                  className={payout.is_eligible_for_payout 
+                    ? "border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20"
+                    : "border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20"
+                  }
+                >
                   <CardContent className="pt-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                            Manual Payout Required
-                          </Badge>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {payout.is_eligible_for_payout ? (
+                            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Ready for Payout
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              7-Day Hold
+                            </Badge>
+                          )}
                           <Badge variant="secondary" className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {payout.hunter_country || 'US'}
@@ -237,9 +263,15 @@ export function AdminManualPayouts() {
                           )}
                           <span className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            Completed {format(new Date(payout.updated_at), 'MMM d, yyyy')}
+                            Accepted {format(new Date(payout.accepted_at), 'MMM d, yyyy')}
                           </span>
                         </div>
+
+                        {!payout.is_eligible_for_payout && (
+                          <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                            Payout eligible {formatDistanceToNow(new Date(payout.payout_eligible_at), { addSuffix: true })}
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-4">
@@ -254,9 +286,10 @@ export function AdminManualPayouts() {
 
                         <Button
                           onClick={() => setSelectedPayout(payout)}
-                          disabled={markingPaid === payout.id}
+                          disabled={markingPaid === payout.id || !payout.is_eligible_for_payout}
+                          variant={payout.is_eligible_for_payout ? "default" : "outline"}
                         >
-                          Mark as Paid
+                          {payout.is_eligible_for_payout ? 'Mark as Paid' : 'On Hold'}
                         </Button>
                       </div>
                     </div>
