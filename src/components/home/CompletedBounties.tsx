@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { CheckCircle, DollarSign, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { CheckCircle, DollarSign, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -20,10 +21,38 @@ interface CompletedBounty {
 export function CompletedBounties() {
   const [completedBounties, setCompletedBounties] = useState<CompletedBounty[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScrollability = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     loadCompletedBounties();
   }, []);
+
+  useEffect(() => {
+    // Check scrollability after bounties load
+    if (completedBounties.length > 0) {
+      setTimeout(checkScrollability, 100);
+    }
+  }, [completedBounties]);
 
   const loadCompletedBounties = async () => {
     try {
@@ -99,7 +128,11 @@ export function CompletedBounties() {
 
         {/* Horizontal scroll container */}
         <div className="relative -mx-4 px-4 overflow-hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide pr-8">
+          <div 
+            ref={scrollRef}
+            onScroll={checkScrollability}
+            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide pr-8"
+          >
             {completedBounties.map((bounty) => (
               <Link 
                 key={bounty.id} 
@@ -159,6 +192,29 @@ export function CompletedBounties() {
               </Link>
             ))}
           </div>
+        </div>
+
+        {/* Scroll navigation buttons */}
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => scroll('left')}
+            disabled={!canScrollLeft}
+            className="h-9 w-9 rounded-full border-border hover:bg-muted disabled:opacity-30"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground">Scroll to see more</span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => scroll('right')}
+            disabled={!canScrollRight}
+            className="h-9 w-9 rounded-full border-border hover:bg-muted disabled:opacity-30"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </section>
