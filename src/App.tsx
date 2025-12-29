@@ -13,6 +13,7 @@ import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { AdminSupport } from "./pages/admin/AdminSupport";
 import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
 import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminPayouts from "./pages/admin/AdminPayouts";
 import { SupportTicket } from "./pages/SupportTicket";
 import { Support } from "./pages/Support";
 import Index from "./pages/Index";
@@ -137,6 +138,11 @@ const App = () => (
                       <Route path="/admin/disputes" element={
                         <ProtectedRoute>
                           <AdminDisputes />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/payouts" element={
+                        <ProtectedRoute>
+                          <AdminPayouts />
                         </ProtectedRoute>
                       } />
                       
