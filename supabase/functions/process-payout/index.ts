@@ -115,9 +115,29 @@ serve(async (req) => {
     // Get hunter's profile including Connect account and country
     const { data: hunterProfile } = await supabaseClient
       .from('profiles')
-      .select('stripe_connect_account_id, stripe_connect_payouts_enabled, full_name, username, payout_country, payout_email')
+      .select('stripe_connect_account_id, stripe_connect_onboarding_complete, stripe_connect_payouts_enabled, full_name, username, payout_country, payout_email')
       .eq('id', submission.hunter_id)
       .maybeSingle();
+
+    // CRITICAL: Require Stripe Connect onboarding to be complete before payout
+    // This ensures every hunter who receives payment is ID-verified
+    if (!hunterProfile?.stripe_connect_onboarding_complete) {
+      logStep("Hunter has not completed Stripe Connect onboarding - blocking payout");
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Hunter must complete identity verification before receiving payout',
+        requires_verification: true,
+        hunter_id: submission.hunter_id
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    logStep("Hunter is ID-verified via Stripe Connect", {
+      connectAccountId: hunterProfile.stripe_connect_account_id,
+      onboardingComplete: hunterProfile.stripe_connect_onboarding_complete
+    });
 
     // Calculate payout amounts - $2 + 5% platform fee from hunter
     const bountyAmount = parseFloat(submission.Bounties.amount);

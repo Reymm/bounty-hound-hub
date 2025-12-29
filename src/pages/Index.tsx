@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus, TrendingUp, Trophy } from 'lucide-react';
+import { Plus, TrendingUp, Trophy, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
@@ -123,10 +123,18 @@ const Index = () => {
             <h2 className="text-xl lg:text-2xl font-semibold text-primary mb-6">
               Powered by crowdsourced hunting.
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+            <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
               Post a bounty for hard-to-find items and let our community of hunters 
               help you discover exactly what you're looking for.
             </p>
+            
+            {/* Trust Badge */}
+            <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2 mb-8">
+              <ShieldCheck className="h-5 w-5 text-success" />
+              <span className="text-sm font-medium text-success">
+                Every hunter is ID-verified. No scammers. Safe transactions.
+              </span>
+            </div>
             <div className="flex flex-col gap-4 items-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground w-full sm:w-auto">
                 <Link to={user ? "/post" : "/setup"}>
