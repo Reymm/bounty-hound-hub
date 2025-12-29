@@ -1037,6 +1037,7 @@ export const supabaseApi = {
     amount?: number;
     platform_fee?: number;
     error?: string;
+    requires_verification?: boolean;
   }> {
     try {
       const { data, error } = await supabase.functions.invoke('process-payout', {

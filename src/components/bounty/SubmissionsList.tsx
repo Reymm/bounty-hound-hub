@@ -121,25 +121,32 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           const feeDisplay = payoutResult.platform_fee?.toFixed(2) || '0.00';
           
           toast({
-            title: "Bounty completed & payout sent!",
-            description: `Payment of $${amountDisplay} sent to hunter (7% platform fee: $${feeDisplay})`,
+            title: "Bounty completed!",
+            description: `Payment captured. Manual payout of $${amountDisplay} pending (platform fee: $${feeDisplay})`,
+          });
+        } else if (payoutResult.requires_verification) {
+          toast({
+            title: "Hunter verification required",
+            description: "The hunter must complete identity verification before receiving payout. They will be notified.",
+            variant: "destructive",
           });
         } else if (payoutResult.success) {
           toast({
             title: "Bounty completed",
-            description: "Claim accepted. Hunter will receive payout once they complete Stripe Connect setup.",
+            description: "Claim accepted. Payout will be processed once hunter completes verification.",
           });
         } else {
           toast({
             title: "Bounty completed",
-            description: "Claim accepted. Payout processing pending - hunter will receive payment shortly.",
+            description: payoutResult.error || "Claim accepted. Payout processing pending.",
+            variant: payoutResult.error ? "destructive" : "default",
           });
         }
       } catch (payoutError) {
         console.error('Payout error:', payoutError);
         toast({
           title: "Bounty completed",
-          description: "Claim accepted successfully. Payout will be processed automatically.",
+          description: "Claim accepted successfully. Payout will be processed when hunter is verified.",
         });
       }
       

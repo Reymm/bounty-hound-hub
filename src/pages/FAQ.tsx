@@ -71,7 +71,7 @@ const faqData = [
       },
       {
         q: "When do I get paid?",
-        a: "Payment is released to your Stripe Connect account when the poster accepts your submission. For physical items requiring shipping, payment may be held until delivery is confirmed."
+        a: "Payment is sent via PayPal after the poster accepts your submission and you've completed identity verification through Stripe Connect. For physical items requiring shipping, payment may be held until delivery is confirmed."
       }
     ]
   },
@@ -84,7 +84,7 @@ const faqData = [
       },
       {
         q: "How do payouts work?",
-        a: "When a poster accepts your claim, funds are transferred from escrow to your Stripe Connect account. From there, you can withdraw to your bank account according to Stripe's payout schedule."
+        a: "When a poster accepts your claim, funds are captured from escrow. You'll receive payment via PayPal to the email address in your profile. All hunters must complete identity verification through Stripe Connect before receiving their first payout."
       },
       {
         q: "Is my payment secure?",
