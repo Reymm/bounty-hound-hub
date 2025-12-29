@@ -4,7 +4,8 @@ import {
   Flag,
   Clock, 
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  DollarSign
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +16,7 @@ import { adminSupportApi } from '@/lib/api/admin-support';
 import { getAdminUserReports, updateUserReportStatus } from '@/lib/api/user-reports';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 interface AdminTicket {
   id: string;
@@ -188,6 +190,12 @@ export function AdminDashboard() {
         <TabsList>
           <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
           <TabsTrigger value="reports">User Reports</TabsTrigger>
+          <TabsTrigger value="payouts" asChild>
+            <Link to="/admin/payouts" className="inline-flex items-center gap-1">
+              <DollarSign className="h-4 w-4" />
+              Payouts
+            </Link>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tickets" className="space-y-4">
