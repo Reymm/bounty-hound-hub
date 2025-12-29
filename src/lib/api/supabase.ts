@@ -1038,6 +1038,12 @@ export const supabaseApi = {
     platform_fee?: number;
     error?: string;
     requires_verification?: boolean;
+    dispute_blocked?: boolean;
+    payout_frozen?: boolean;
+    freeze_reason?: string;
+    already_captured?: boolean;
+    capture_in_progress?: boolean;
+    lock_failed?: boolean;
   }> {
     try {
       const { data, error } = await supabase.functions.invoke('process-payout', {

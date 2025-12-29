@@ -19,10 +19,11 @@ import {
   User, 
   Clock, 
   CheckCircle2,
-  ExternalLink,
   Mail,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  ShieldAlert,
+  ShieldOff
 } from 'lucide-react';
 import { format, addDays, isPast, formatDistanceToNow } from 'date-fns';
 
@@ -38,9 +39,14 @@ interface PendingPayout {
   bounty_title: string;
   hunter_name: string;
   hunter_id: string;
-  accepted_at: string; // When the submission was accepted
-  payout_eligible_at: string; // 7 days after acceptance
+  accepted_at: string;
+  payout_eligible_at: string;
   is_eligible_for_payout: boolean;
+  // New security fields
+  capture_status: string;
+  payout_freeze: boolean;
+  payout_freeze_reason: string | null;
+  dispute_opened: boolean;
 }
 
 export function AdminManualPayouts() {
@@ -60,6 +66,7 @@ export function AdminManualPayouts() {
       setLoading(true);
       
       // Fetch escrow transactions with manual payout pending
+      // Include new security fields
       const { data, error } = await supabase
         .from('escrow_transactions')
         .select(`
@@ -70,10 +77,14 @@ export function AdminManualPayouts() {
           hunter_payout_email,
           hunter_country,
           created_at,
-          updated_at
+          updated_at,
+          capture_status,
+          payout_freeze,
+          payout_freeze_reason
         `)
         .eq('payout_method', 'manual')
         .eq('manual_payout_status', 'pending')
+        .eq('capture_status', 'captured') // Only show captured payments
         .order('updated_at', { ascending: true });
 
       if (error) throw error;
@@ -90,9 +101,10 @@ export function AdminManualPayouts() {
           .maybeSingle();
 
         // Get accepted submission to find hunter and acceptance time
+        // Now use accepted_at instead of updated_at
         const { data: submission } = await supabase
           .from('Submissions')
-          .select('hunter_id, updated_at')
+          .select('hunter_id, accepted_at, updated_at, dispute_opened')
           .eq('bounty_id', payout.bounty_id)
           .eq('status', 'accepted')
           .maybeSingle();
@@ -105,10 +117,16 @@ export function AdminManualPayouts() {
             .eq('id', submission.hunter_id)
             .maybeSingle();
 
-          // Calculate 7-day hold period
-          const acceptedAt = new Date(submission.updated_at);
+          // Use accepted_at if available, fallback to updated_at
+          const acceptedAt = new Date(submission.accepted_at || submission.updated_at);
           const payoutEligibleAt = addDays(acceptedAt, 7);
-          const isEligibleForPayout = isPast(payoutEligibleAt);
+          
+          // HARD ENFORCEMENT: Check all conditions
+          const isEligibleForPayout = 
+            isPast(payoutEligibleAt) && 
+            !payout.payout_freeze && 
+            !submission.dispute_opened &&
+            payout.capture_status === 'captured';
 
           payoutsWithDetails.push({
             ...payout,
@@ -117,9 +135,13 @@ export function AdminManualPayouts() {
             hunter_id: submission.hunter_id,
             hunter_payout_email: payout.hunter_payout_email || hunter?.payout_email || null,
             hunter_country: payout.hunter_country || hunter?.payout_country || null,
-            accepted_at: submission.updated_at,
+            accepted_at: submission.accepted_at || submission.updated_at,
             payout_eligible_at: payoutEligibleAt.toISOString(),
-            is_eligible_for_payout: isEligibleForPayout
+            is_eligible_for_payout: isEligibleForPayout,
+            capture_status: payout.capture_status || 'not_captured',
+            payout_freeze: payout.payout_freeze || false,
+            payout_freeze_reason: payout.payout_freeze_reason || null,
+            dispute_opened: submission.dispute_opened || false
           });
         }
       }
@@ -147,8 +169,59 @@ export function AdminManualPayouts() {
       return;
     }
 
+    // HARD ENFORCEMENT: Double-check eligibility before marking as paid
+    if (!selectedPayout.is_eligible_for_payout) {
+      toast({
+        title: 'Payout Blocked',
+        description: 'This payout is not eligible. It may be frozen, disputed, or still in 7-day hold.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (selectedPayout.payout_freeze) {
+      toast({
+        title: 'Payout Frozen',
+        description: `Cannot pay: ${selectedPayout.payout_freeze_reason || 'Payout is frozen'}`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (selectedPayout.dispute_opened) {
+      toast({
+        title: 'Dispute Active',
+        description: 'Cannot pay while a dispute is open on this submission.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
       setMarkingPaid(selectedPayout.id);
+
+      // Double-check in database before updating
+      const { data: currentEscrow, error: checkError } = await supabase
+        .from('escrow_transactions')
+        .select('payout_freeze, manual_payout_status, capture_status')
+        .eq('id', selectedPayout.id)
+        .maybeSingle();
+
+      if (checkError || !currentEscrow) {
+        throw new Error('Could not verify payout status');
+      }
+
+      if (currentEscrow.payout_freeze) {
+        throw new Error('Payout has been frozen since you opened this dialog');
+      }
+
+      if (currentEscrow.manual_payout_status !== 'pending') {
+        throw new Error('Payout status has changed since you opened this dialog');
+      }
+
+      if (currentEscrow.capture_status !== 'captured') {
+        throw new Error('Payment has not been captured yet');
+      }
 
       const { error } = await supabase
         .from('escrow_transactions')
@@ -157,7 +230,9 @@ export function AdminManualPayouts() {
           manual_payout_sent_at: new Date().toISOString(),
           manual_payout_reference: paymentReference.trim()
         })
-        .eq('id', selectedPayout.id);
+        .eq('id', selectedPayout.id)
+        .eq('payout_freeze', false) // Extra safety: only update if not frozen
+        .eq('capture_status', 'captured'); // Extra safety: only update if captured
 
       if (error) throw error;
 
@@ -169,11 +244,11 @@ export function AdminManualPayouts() {
       setSelectedPayout(null);
       setPaymentReference('');
       loadPendingPayouts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking payout:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update payout status',
+        description: error.message || 'Failed to update payout status',
         variant: 'destructive'
       });
     } finally {
@@ -185,6 +260,49 @@ export function AdminManualPayouts() {
     // $2 + 5% platform fee
     const platformFee = payout.platform_fee_amount || (2 + payout.amount * 0.05);
     return payout.amount - platformFee;
+  };
+
+  const getPayoutStatusBadge = (payout: PendingPayout) => {
+    if (payout.payout_freeze) {
+      return (
+        <Badge variant="destructive" className="flex items-center gap-1">
+          <ShieldAlert className="h-3 w-3" />
+          FROZEN
+        </Badge>
+      );
+    }
+    if (payout.dispute_opened) {
+      return (
+        <Badge variant="destructive" className="flex items-center gap-1">
+          <ShieldOff className="h-3 w-3" />
+          DISPUTED
+        </Badge>
+      );
+    }
+    if (payout.is_eligible_for_payout) {
+      return (
+        <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          Ready for Payout
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+        <AlertTriangle className="h-3 w-3 mr-1" />
+        7-Day Hold
+      </Badge>
+    );
+  };
+
+  const getCardClass = (payout: PendingPayout) => {
+    if (payout.payout_freeze || payout.dispute_opened) {
+      return "border-red-300 bg-red-50/50 dark:border-red-900 dark:bg-red-950/20";
+    }
+    if (payout.is_eligible_for_payout) {
+      return "border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20";
+    }
+    return "border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20";
   };
 
   if (loading) {
@@ -208,7 +326,7 @@ export function AdminManualPayouts() {
             Manual Payouts Pending
           </CardTitle>
           <CardDescription>
-            US hunters require manual payout via PayPal or Wise. Send payment, then mark as paid.
+            Hunters require manual payout via PayPal. 7-day hold applies. Frozen/disputed payouts are blocked.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -220,31 +338,15 @@ export function AdminManualPayouts() {
           ) : (
             <div className="space-y-4">
               {pendingPayouts.map((payout) => (
-                <Card 
-                  key={payout.id} 
-                  className={payout.is_eligible_for_payout 
-                    ? "border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20"
-                    : "border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20"
-                  }
-                >
+                <Card key={payout.id} className={getCardClass(payout)}>
                   <CardContent className="pt-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {payout.is_eligible_for_payout ? (
-                            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Ready for Payout
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              7-Day Hold
-                            </Badge>
-                          )}
+                          {getPayoutStatusBadge(payout)}
                           <Badge variant="secondary" className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            {payout.hunter_country || 'US'}
+                            {payout.hunter_country || 'Unknown'}
                           </Badge>
                         </div>
                         
@@ -267,7 +369,22 @@ export function AdminManualPayouts() {
                           </span>
                         </div>
 
-                        {!payout.is_eligible_for_payout && (
+                        {/* Show freeze reason */}
+                        {payout.payout_freeze && payout.payout_freeze_reason && (
+                          <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                            ⛔ Freeze reason: {payout.payout_freeze_reason}
+                          </p>
+                        )}
+
+                        {/* Show dispute warning */}
+                        {payout.dispute_opened && (
+                          <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                            ⚠️ Active dispute - payout blocked until resolved
+                          </p>
+                        )}
+
+                        {/* Show hold countdown */}
+                        {!payout.is_eligible_for_payout && !payout.payout_freeze && !payout.dispute_opened && (
                           <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
                             Payout eligible {formatDistanceToNow(new Date(payout.payout_eligible_at), { addSuffix: true })}
                           </p>
@@ -286,10 +403,17 @@ export function AdminManualPayouts() {
 
                         <Button
                           onClick={() => setSelectedPayout(payout)}
-                          disabled={markingPaid === payout.id || !payout.is_eligible_for_payout}
+                          disabled={
+                            markingPaid === payout.id || 
+                            !payout.is_eligible_for_payout ||
+                            payout.payout_freeze ||
+                            payout.dispute_opened
+                          }
                           variant={payout.is_eligible_for_payout ? "default" : "outline"}
                         >
-                          {payout.is_eligible_for_payout ? 'Mark as Paid' : 'On Hold'}
+                          {payout.payout_freeze ? 'Frozen' : 
+                           payout.dispute_opened ? 'Disputed' :
+                           payout.is_eligible_for_payout ? 'Mark as Paid' : 'On Hold'}
                         </Button>
                       </div>
                     </div>
@@ -329,7 +453,7 @@ export function AdminManualPayouts() {
                   onChange={(e) => setPaymentReference(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Enter the transaction ID from PayPal, Wise, or other payment method used.
+                  Enter the transaction ID from PayPal or other payment method used.
                 </p>
               </div>
             </div>

@@ -122,7 +122,30 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           
           toast({
             title: "Bounty completed!",
-            description: `Payment captured. Manual payout of $${amountDisplay} pending (platform fee: $${feeDisplay})`,
+            description: `Payment captured. Manual payout of $${amountDisplay} pending after 7-day hold (platform fee: $${feeDisplay})`,
+          });
+        } else if (payoutResult.already_captured) {
+          toast({
+            title: "Payment already captured",
+            description: "This payment has already been processed.",
+          });
+        } else if (payoutResult.dispute_blocked) {
+          toast({
+            title: "Payout blocked",
+            description: "Cannot process payout: a dispute is open on this submission.",
+            variant: "destructive",
+          });
+        } else if (payoutResult.payout_frozen) {
+          toast({
+            title: "Payout frozen",
+            description: payoutResult.freeze_reason || "Payout is frozen and cannot be processed.",
+            variant: "destructive",
+          });
+        } else if (payoutResult.capture_in_progress || payoutResult.lock_failed) {
+          toast({
+            title: "Processing in progress",
+            description: "Payment capture is already in progress. Please wait.",
+            variant: "destructive",
           });
         } else if (payoutResult.requires_verification) {
           toast({
