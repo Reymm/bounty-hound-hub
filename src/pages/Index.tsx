@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus, TrendingUp } from 'lucide-react';
+import { Plus, TrendingUp, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
@@ -18,6 +18,7 @@ const Index = () => {
   const [filters, setFilters] = useState<SearchFiltersType>({});
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [sortByTop, setSortByTop] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -149,6 +150,26 @@ const Index = () => {
                     Browse Active Bounties
                   </Link>
                 </Button>
+                <Button 
+                  variant={sortByTop ? "default" : "outline"} 
+                  size="default"
+                  onClick={() => {
+                    setSortByTop(!sortByTop);
+                    setFilters(prev => ({ 
+                      ...prev, 
+                      sortBy: !sortByTop ? 'top' : 'newest' 
+                    }));
+                    // Scroll to browse section
+                    const browseSection = document.getElementById('browse');
+                    if (browseSection) {
+                      browseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className={sortByTop ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
+                >
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Top Bounties
+                </Button>
               </div>
             </div>
           </div>
@@ -159,13 +180,20 @@ const Index = () => {
       <section id="browse" className="py-8 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-                Active Bounties
-              </h2>
-              <p className="text-primary">
-                Discover what people are looking for and start earning
-              </p>
+            <div className="flex items-center gap-3">
+              {sortByTop && (
+                <Trophy className="h-6 w-6 text-amber-500" />
+              )}
+              <div>
+                <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+                  {sortByTop ? 'Top Bounties' : 'Active Bounties'}
+                </h2>
+                <p className="text-primary">
+                  {sortByTop 
+                    ? 'Highest paying bounties - biggest rewards first'
+                    : 'Discover what people are looking for and start earning'}
+                </p>
+              </div>
             </div>
             
             <SearchFilters
