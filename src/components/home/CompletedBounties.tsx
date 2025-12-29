@@ -110,13 +110,13 @@ export function CompletedBounties() {
                   <CardContent className="p-0">
                     {/* Compact Image */}
                     {bounty.images.length > 0 ? (
-                      <div className="relative h-36 overflow-hidden">
+                      <div className="relative h-40 overflow-hidden bg-muted/30">
                         <img
                           src={bounty.images[0]}
                           alt={bounty.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                         <Badge className="absolute top-2 right-2 bg-success text-success-foreground border-0 text-xs">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Found
