@@ -71,7 +71,11 @@ const faqData = [
       },
       {
         q: "When do I get paid?",
-        a: "Payment is sent via PayPal after the poster accepts your submission and you've completed identity verification through Stripe Connect. For physical items requiring shipping, payment may be held until delivery is confirmed."
+        a: "Payment is sent via PayPal 7 days after the poster accepts your submission. This hold period protects against fraud and chargebacks. You must complete identity verification through Stripe Connect before receiving your first payout."
+      },
+      {
+        q: "Why is there a 7-day waiting period?",
+        a: "The 7-day hold protects the platform against credit card chargebacks and gives time to resolve any disputes. After the hold period, you'll receive payment via PayPal within 2-3 business days."
       }
     ]
   },
@@ -84,7 +88,11 @@ const faqData = [
       },
       {
         q: "How do payouts work?",
-        a: "When a poster accepts your claim, funds are captured from escrow. You'll receive payment via PayPal to the email address in your profile. All hunters must complete identity verification through Stripe Connect before receiving their first payout."
+        a: "When a poster accepts your claim, funds are captured from escrow and held for 7 days. After the hold period, you'll receive payment via PayPal to the email address in your profile. All hunters must complete identity verification through Stripe Connect before receiving their first payout."
+      },
+      {
+        q: "Are there PayPal fees on payouts?",
+        a: "We cover PayPal transfer fees on our end, so you receive the full payout amount after the platform fee ($2 + 5%). No additional fees are deducted from your payment."
       },
       {
         q: "Is my payment secure?",
@@ -92,7 +100,7 @@ const faqData = [
       },
       {
         q: "What payment methods are accepted?",
-        a: "We accept all major credit and debit cards through Stripe. Posters pay when creating a bounty, and hunters receive payouts to their connected bank account."
+        a: "We accept all major credit and debit cards through Stripe. Posters pay when creating a bounty, and hunters receive payouts via PayPal."
       },
       {
         q: "What are the cancellation fees?",
