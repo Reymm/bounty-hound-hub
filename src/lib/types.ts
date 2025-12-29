@@ -420,6 +420,7 @@ export interface SearchFilters {
   deadline?: 'soonest' | 'week' | 'month';
   deadlineBefore?: Date; // Internal use for API
   status?: BountyStatus[];
+  sortBy?: 'newest' | 'top' | 'soonest';
 }
 
 // API Response types

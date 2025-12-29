@@ -149,7 +149,9 @@ export const supabaseApi = {
       }
 
       // Apply sorting
-      if (filters.deadline === 'soonest') {
+      if (filters.sortBy === 'top') {
+        query = query.order('amount', { ascending: false }); // Highest payouts first
+      } else if (filters.sortBy === 'soonest' || filters.deadline === 'soonest') {
         query = query.order('deadline', { ascending: true }); // Closest deadlines first
       } else {
         query = query.order('created_at', { ascending: false }); // Newest first by default
