@@ -657,9 +657,9 @@ function PostBountyForm() {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Authorize Your Bounty</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Verify Your Payment Method</h1>
           <p className="text-muted-foreground">
-            We'll place a hold on your card. You're only charged when you approve a submission.
+            We'll save your card securely. You're only charged when you approve a submission.
           </p>
         </div>
 
@@ -667,7 +667,7 @@ function PostBountyForm() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Authorization Hold - ${totalCharge.toFixed(2)}
+              Bounty: ${watchedBountyAmount?.toFixed(2) || '0.00'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -675,24 +675,24 @@ function PostBountyForm() {
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>Your card won't be charged yet:</strong> We place a temporary hold on your card. You're only charged when you approve a hunter's submission. If no one claims your bounty or you're not satisfied, the hold is released automatically.
+                <strong>No charge today:</strong> We verify and securely save your card. You're only charged when you approve a hunter's submission. If no one claims your bounty, you pay nothing.
               </AlertDescription>
             </Alert>
 
             {/* Payment Breakdown */}
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <h4 className="font-medium text-sm">Authorization Details</h4>
+              <h4 className="font-medium text-sm">When You Approve a Submission</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Bounty reward to hunter:</span>
-                  <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
+                  <span className="font-medium">${watchedBountyAmount?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Payment processing (Stripe):</span>
-                  <span>${(totalCharge - watchedBountyAmount).toFixed(2)}</span>
+                  <span>${(totalCharge - (watchedBountyAmount || 0)).toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Authorization hold:</span>
+                  <span>Total (charged on approval):</span>
                   <span>${totalCharge.toFixed(2)}</span>
                 </div>
               </div>
@@ -701,29 +701,33 @@ function PostBountyForm() {
               </p>
             </div>
 
-            {/* How Escrow Works */}
+            {/* How it Works */}
             <div className="space-y-3 text-sm">
               <h4 className="font-medium">How it works:</h4>
               <ol className="space-y-2 text-muted-foreground">
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">1.</span>
-                  <span>We place a ${totalCharge.toFixed(2)} hold on your card (not charged yet)</span>
+                  <span>We verify and securely save your card (no charge)</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">2.</span>
-                  <span>Hunter finds your item and submits proof</span>
+                  <span>Your bounty goes live for hunters to find</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">3.</span>
-                  <span>You review and approve (or reject) the submission</span>
+                  <span>Hunter finds your item and submits proof</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">4.</span>
-                  <span>Only when you approve, ${totalCharge.toFixed(2)} is charged and ${watchedBountyAmount.toFixed(2)} goes to the hunter</span>
+                  <span>You review and approve (or reject) the submission</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-foreground">5.</span>
+                  <span>Only then: ${totalCharge.toFixed(2)} charged, ${watchedBountyAmount?.toFixed(2) || '0.00'} goes to hunter</span>
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                💡 If your bounty expires without a claim, or you cancel before accepting a submission, the hold is released and you pay nothing.
+                💡 If your bounty expires with no claims, or you cancel, you pay nothing.
               </p>
             </div>
 
@@ -818,7 +822,7 @@ function PostBountyForm() {
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      Authorize ${totalCharge.toFixed(2)} Hold
+                      Save Card & Post Bounty
                     </>
                   )}
                 </Button>
