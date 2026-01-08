@@ -187,20 +187,6 @@ export default function Profile() {
       
       if (!result) throw new Error('Failed to create Connect account');
       
-      // Check if this is a country restriction error
-      if (result.code === 'country_unsupported') {
-        toast({
-          title: "Stripe Connect Unavailable",
-          description: "Stripe Connect is not available in your country. Please set your country to 'United States' and enter your PayPal/Wise email above to receive manual payouts.",
-          variant: "destructive",
-        });
-        // Scroll to the payout information section
-        const payoutSection = document.querySelector('[data-payout-info]');
-        payoutSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setPayoutLoading(false);
-        return;
-      }
-      
       if (result.onboarding_url) {
         window.open(result.onboarding_url, '_blank');
         setPayoutLoading(false);
@@ -210,23 +196,11 @@ export default function Profile() {
       
     } catch (error: any) {
       console.error('Error setting up payout:', error);
-      
-      // Check for country restriction in the error
-      if (error?.code === 'country_unsupported' || error?.message?.includes('country')) {
-        toast({
-          title: "Stripe Connect Unavailable",
-          description: "Stripe Connect is not available in your country. Please enter your PayPal/Wise email above for manual payouts.",
-          variant: "destructive",
-        });
-        const payoutSection = document.querySelector('[data-payout-info]');
-        payoutSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        toast({
-          title: "Error setting up payout",
-          description: error instanceof Error ? error.message : "Please try again later.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error setting up payout",
+        description: error instanceof Error ? error.message : "Please try again later.",
+        variant: "destructive",
+      });
       setPayoutLoading(false);
     }
   };
@@ -512,168 +486,69 @@ export default function Profile() {
         </TabsContent>
 
         <TabsContent value="verification" className="space-y-6">
-
-          {/* Payout Country & Email - for manual payouts */}
-          <Card data-payout-info>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Payout Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-                  <div>
-                    <h4 className="font-medium text-amber-800">Important for US Hunters</h4>
-                    <p className="text-sm text-amber-700 mt-1">
-                      If you're based in the US, we currently process payouts manually via PayPal or Wise. 
-                      Please enter your country and PayPal/Wise email below so we can send your earnings.
-                      US payouts typically take 3-5 business days after bounty completion.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="payoutCountry">Your Country</Label>
-                  <select
-                    id="payoutCountry"
-                    className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={profile.payoutCountry || ''}
-                    onChange={async (e) => {
-                      const newCountry = e.target.value;
-                      const updated = await supabaseApi.updateProfile(user.id, { payoutCountry: newCountry });
-                      if (updated) {
-                        setProfile(updated);
-                        toast({ title: 'Country updated' });
-                      }
-                    }}
-                  >
-                    <option value="">Select country...</option>
-                    <option value="CA">Canada</option>
-                    <option value="US">United States</option>
-                  </select>
-                  <p className="text-xs text-muted-foreground">
-                    This determines how you receive payouts
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="payoutEmail">PayPal/Wise Email (US only)</Label>
-                  <Input
-                    id="payoutEmail"
-                    type="email"
-                    placeholder="your-paypal@email.com"
-                    defaultValue={profile.payoutEmail || ''}
-                    onBlur={async (e) => {
-                      const newEmail = e.target.value;
-                      if (newEmail !== profile.payoutEmail) {
-                        const updated = await supabaseApi.updateProfile(user.id, { payoutEmail: newEmail });
-                        if (updated) {
-                          setProfile(updated);
-                          toast({ title: 'Payout email updated' });
-                        }
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Required for US hunters to receive manual payouts
-                  </p>
-                </div>
-              </div>
-
-              {profile.payoutCountry === 'US' && !profile.payoutEmail && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                  <p className="text-sm text-destructive font-medium">
-                    Please enter your PayPal/Wise email to receive payouts!
-                  </p>
-                </div>
-              )}
-
-              {profile.payoutCountry === 'CA' && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm text-green-700">
-                    Canadian hunters receive automatic payouts via Stripe Connect. Make sure your payout method below is set up.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Payout Method */}
           <Card data-payout-card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Payout Method (Canadian Hunters)
+                Payout Method
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {profile.payoutCountry === 'US' ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  <p>US hunters receive payouts via PayPal/Wise.</p>
-                  <p className="text-sm mt-1">Make sure your payout email is set above.</p>
+              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div>
+                  <p className="font-medium">Bank Account / Debit Card</p>
+                  <p className="text-sm text-muted-foreground">
+                    Set up how you want to receive bounty payments via Stripe Connect
+                  </p>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div className="flex items-center gap-3">
+                  {profile.stripeConnectPayoutsEnabled ? (
+                    <Badge className="status-active">Ready for Payouts</Badge>
+                  ) : profile.hasPayoutMethod ? (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">Pending Verification</Badge>
+                  ) : (
+                    <Badge variant="secondary">Not Set Up</Badge>
+                  )}
+                  <Button 
+                    onClick={handleSetupPayout}
+                    disabled={payoutLoading}
+                    size="sm"
+                    variant={profile.hasPayoutMethod ? "outline" : "default"}
+                    className={!profile.hasPayoutMethod ? "bg-primary hover:bg-primary-hover text-primary-foreground" : ""}
+                  >
+                    {payoutLoading ? 'Opening...' : (profile.hasPayoutMethod ? 'Manage' : 'Set Up Payout')}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Warning when onboarding complete but payouts not enabled */}
+              {profile.hasPayoutMethod && !profile.stripeConnectPayoutsEnabled && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-medium">Bank Account / Debit Card</p>
-                      <p className="text-sm text-muted-foreground">
-                        Set up how you want to receive bounty payments
+                      <h4 className="font-medium text-amber-800">Verification Pending</h4>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Your Stripe Connect account setup is complete, but Stripe is still verifying your information. 
+                        You cannot receive payouts until verification is complete. Click "Manage" to check your status 
+                        or complete any additional requirements.
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {profile.stripeConnectPayoutsEnabled ? (
-                        <Badge className="status-active">Ready for Payouts</Badge>
-                      ) : profile.hasPayoutMethod ? (
-                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">Pending Verification</Badge>
-                      ) : (
-                        <Badge variant="secondary">Not Set Up</Badge>
-                      )}
-                      <Button 
-                        onClick={handleSetupPayout}
-                        disabled={payoutLoading}
-                        size="sm"
-                        variant={profile.hasPayoutMethod ? "outline" : "default"}
-                        className={!profile.hasPayoutMethod ? "bg-primary hover:bg-primary-hover text-primary-foreground" : ""}
-                      >
-                        {payoutLoading ? 'Opening...' : (profile.hasPayoutMethod ? 'Manage' : 'Set Up Payout')}
-                      </Button>
-                    </div>
                   </div>
-
-                  {/* Warning when onboarding complete but payouts not enabled */}
-                  {profile.hasPayoutMethod && !profile.stripeConnectPayoutsEnabled && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-amber-800">Verification Pending</h4>
-                          <p className="text-sm text-amber-700 mt-1">
-                            Your Stripe Connect account setup is complete, but Stripe is still verifying your information. 
-                            You cannot receive payouts until verification is complete. Click "Manage" to check your status 
-                            or complete any additional requirements.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">Payout Information</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Payments processed via Stripe</li>
-                      <li>• Funds released when bounty poster approves</li>
-                      <li>• Platform fee: $2 + 5% deducted from payout</li>
-                      <li>• Payouts typically arrive in 2-7 business days</li>
-                    </ul>
-                  </div>
-                </>
+                </div>
               )}
+
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h4 className="font-medium mb-2">Payout Information</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Payments processed via Stripe Connect</li>
+                  <li>• Funds released when bounty poster approves (after 7-day hold)</li>
+                  <li>• Platform fee: $2 + 5% deducted from payout</li>
+                  <li>• Payouts typically arrive in 2-7 business days</li>
+                  <li>• Maximum hold period: 90 days per Stripe policy</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
