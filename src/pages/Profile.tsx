@@ -6,7 +6,6 @@ import {
   User, 
   CreditCard, 
   Star, 
-  MapPin, 
   Calendar,
   AlertCircle,
   Activity,
@@ -27,6 +26,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { ActivityHistory } from '@/components/profile/ActivityHistory';
 import { CountrySelectDialog } from '@/components/profile/CountrySelectDialog';
+import { LocationPicker } from '@/components/ui/location-picker';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType } from '@/lib/types';
@@ -55,10 +55,14 @@ export default function Profile() {
     register,
     handleSubmit,
     formState: { errors, isDirty },
-    reset
+    reset,
+    setValue,
+    watch
   } = useForm<ProfileUpdateFormData>({
     resolver: zodResolver(profileUpdateSchema)
   });
+
+  const regionValue = watch('region');
 
   useEffect(() => {
     loadProfile();
@@ -373,15 +377,12 @@ export default function Profile() {
 
                     <div className="space-y-2">
                       <Label htmlFor="region">Region</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input
-                          id="region"
-                          placeholder="Your city or region"
-                          className={`pl-10 ${errors.region ? 'border-destructive' : ''}`}
-                          {...register('region')}
-                        />
-                      </div>
+                      <LocationPicker
+                        value={regionValue || ''}
+                        onChange={(location) => setValue('region', location, { shouldDirty: true })}
+                        placeholder="Search for your city or region..."
+                        className={errors.region ? '[&_input]:border-destructive' : ''}
+                      />
                       {errors.region && (
                         <p className="text-sm text-destructive">{errors.region.message}</p>
                       )}
