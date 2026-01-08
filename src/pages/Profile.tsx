@@ -188,8 +188,8 @@ export default function Profile() {
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        window.open(result.onboarding_url, '_blank');
-        setPayoutLoading(false);
+        // Use redirect instead of popup to avoid popup blockers
+        window.location.href = result.onboarding_url;
       } else {
         throw new Error('No onboarding URL received');
       }
