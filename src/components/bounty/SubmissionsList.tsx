@@ -122,7 +122,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           
           toast({
             title: "Bounty completed!",
-            description: `Payment captured. Manual payout of $${amountDisplay} pending after 7-day hold (platform fee: $${feeDisplay})`,
+            description: `Payment captured. Payout of $${amountDisplay} will transfer after 7-day hold (platform fee: $${feeDisplay})`,
           });
         } else if (payoutResult.already_captured) {
           toast({

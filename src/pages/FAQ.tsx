@@ -71,11 +71,11 @@ const faqData = [
       },
       {
         q: "When do I get paid?",
-        a: "Payment is sent via PayPal 7 days after the poster accepts your submission. This hold period protects against fraud and chargebacks. You must complete identity verification before receiving your first payout."
+        a: "Payment is transferred to your Stripe account 7 days after the poster accepts your submission. This hold period protects against fraud and chargebacks. You must set up Stripe Connect and complete identity verification before receiving your first payout."
       },
       {
         q: "Why is there a 7-day waiting period?",
-        a: "The 7-day hold protects the platform against credit card chargebacks and gives time to resolve any disputes. After the hold period, you'll receive payment via PayPal within 2-3 business days."
+        a: "The 7-day hold protects the platform against credit card chargebacks and gives time to resolve any disputes. After the hold period, funds are automatically transferred to your connected Stripe account."
       }
     ]
   },
@@ -88,19 +88,15 @@ const faqData = [
       },
       {
         q: "How do payouts work?",
-        a: "When a poster accepts your claim, funds are captured from escrow and held for 7 days. After the hold period, you'll receive payment via PayPal to the email address in your profile. All hunters must complete identity verification before receiving their first payout."
-      },
-      {
-        q: "Are there PayPal fees on payouts?",
-        a: "We cover PayPal transfer fees on our end, so you receive the full payout amount after the platform fee ($2 + 5%). No additional fees are deducted from your payment."
+        a: "When a poster accepts your claim, funds are captured from escrow and held for 7 days. After the hold period, payment is automatically transferred to your connected Stripe account. All hunters must set up Stripe Connect before receiving their first payout."
       },
       {
         q: "Is my payment secure?",
-        a: "Yes. All payments are processed through Stripe, a PCI-compliant payment processor. Funds are held in escrow until the bounty is completed, protecting both posters and hunters."
+        a: "Yes. All payments are processed through Stripe, a PCI-compliant payment processor. Funds are held in escrow until the bounty is completed, and payouts go directly to your Stripe account."
       },
       {
         q: "What payment methods are accepted?",
-        a: "We accept all major credit and debit cards through Stripe. Posters pay when creating a bounty, and hunters receive payouts via PayPal."
+        a: "We accept all major credit and debit cards through Stripe. Posters pay when creating a bounty, and hunters receive payouts to their connected Stripe account."
       },
       {
         q: "What are the cancellation fees?",
