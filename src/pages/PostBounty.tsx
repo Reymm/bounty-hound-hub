@@ -657,9 +657,9 @@ function PostBountyForm() {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Secure Your Bounty</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Authorize Your Bounty</h1>
           <p className="text-muted-foreground">
-            Complete your escrow payment to post your bounty with funds secured.
+            We'll place a hold on your card. You're only charged when you approve a submission.
           </p>
         </div>
 
@@ -667,7 +667,7 @@ function PostBountyForm() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Escrow Payment - ${totalCharge.toFixed(2)}
+              Authorization Hold - ${totalCharge.toFixed(2)}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -675,13 +675,13 @@ function PostBountyForm() {
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>Your funds are protected:</strong> Your payment is held securely in escrow and will ONLY be released when you approve the hunter's submission. If you're not satisfied, you can request a refund.
+                <strong>Your card won't be charged yet:</strong> We place a temporary hold on your card. You're only charged when you approve a hunter's submission. If no one claims your bounty or you're not satisfied, the hold is released automatically.
               </AlertDescription>
             </Alert>
 
             {/* Payment Breakdown */}
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <h4 className="font-medium text-sm">Payment Breakdown</h4>
+              <h4 className="font-medium text-sm">Authorization Details</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Bounty reward to hunter:</span>
@@ -692,7 +692,7 @@ function PostBountyForm() {
                   <span>${(totalCharge - watchedBountyAmount).toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Total charge:</span>
+                  <span>Authorization hold:</span>
                   <span>${totalCharge.toFixed(2)}</span>
                 </div>
               </div>
@@ -707,7 +707,7 @@ function PostBountyForm() {
               <ol className="space-y-2 text-muted-foreground">
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">1.</span>
-                  <span>We charge your card ${totalCharge.toFixed(2)} and hold it in escrow</span>
+                  <span>We place a ${totalCharge.toFixed(2)} hold on your card (not charged yet)</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">2.</span>
@@ -719,9 +719,12 @@ function PostBountyForm() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">4.</span>
-                  <span>Upon approval, ${watchedBountyAmount.toFixed(2)} is released to the hunter</span>
+                  <span>Only when you approve, ${totalCharge.toFixed(2)} is charged and ${watchedBountyAmount.toFixed(2)} goes to the hunter</span>
                 </li>
               </ol>
+              <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+                💡 If your bounty expires without a claim, or you cancel before accepting a submission, the hold is released and you pay nothing.
+              </p>
             </div>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-6">
@@ -815,7 +818,7 @@ function PostBountyForm() {
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      Secure ${totalCharge.toFixed(2)} in Escrow
+                      Authorize ${totalCharge.toFixed(2)} Hold
                     </>
                   )}
                 </Button>
