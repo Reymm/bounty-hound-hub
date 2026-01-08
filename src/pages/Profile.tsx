@@ -188,8 +188,10 @@ export default function Profile() {
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
-        // Use redirect instead of popup to avoid popup blockers
-        window.location.href = result.onboarding_url;
+        // Open in new tab - more reliable than redirect and avoids popup blockers
+        // since it's triggered by a direct user click
+        window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
+        setPayoutLoading(false);
       } else {
         throw new Error('No onboarding URL received');
       }
