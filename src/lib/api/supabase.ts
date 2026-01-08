@@ -1064,6 +1064,38 @@ export const supabaseApi = {
     }
   },
 
+  async releaseFunds(submissionId: string): Promise<{
+    success: boolean;
+    transfer_id?: string;
+    amount?: number;
+    platform_fee?: number;
+    hunter_name?: string;
+    error?: string;
+    already_released?: boolean;
+    hold_not_elapsed?: boolean;
+    eligible_at?: string;
+    hours_remaining?: number;
+    message?: string;
+  }> {
+    try {
+      const { data, error } = await supabase.functions.invoke('release-funds', {
+        body: { submissionId },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error releasing funds:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to release funds'
+      };
+    }
+  },
+
   // User's bounties
   async getUserBounties(userId: string): Promise<Bounty[]> {
     try {
