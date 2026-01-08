@@ -73,12 +73,13 @@ serve(async (req) => {
     }
 
     // Create new Connect account if one doesn't exist
+    // NOTE: We do NOT set 'country' here - this allows Stripe to show country selection
+    // during onboarding so hunters can choose their own country (US, CA, etc.)
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
         email: user.email,
         capabilities: {
-          card_payments: { requested: true },
           transfers: { requested: true },
         },
         business_type: 'individual',
