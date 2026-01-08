@@ -134,19 +134,19 @@ serve(async (req) => {
       amount: escrowTx.amount
     });
 
-    // Get hunter's profile including Connect account and country
+    // Get hunter's profile including Connect account
     const { data: hunterProfile } = await supabaseClient
       .from('profiles')
-      .select('stripe_connect_account_id, stripe_connect_onboarding_complete, stripe_connect_payouts_enabled, full_name, username, payout_country, payout_email')
+      .select('stripe_connect_account_id, stripe_connect_onboarding_complete, stripe_connect_payouts_enabled, full_name, username')
       .eq('id', submission.hunter_id)
       .maybeSingle();
 
-    // CRITICAL: Require identity verification (via Stripe Connect onboarding) before payout
+    // CRITICAL: Require Stripe Connect onboarding before payout
     if (!hunterProfile?.stripe_connect_onboarding_complete) {
-      logStep("Hunter has not completed identity verification - blocking payout");
+      logStep("Hunter has not completed Stripe Connect onboarding - blocking payout");
       return new Response(JSON.stringify({
         success: false,
-        error: 'Hunter must complete identity verification before receiving payout',
+        error: 'Hunter must complete Stripe Connect setup before receiving payout',
         requires_verification: true,
         hunter_id: submission.hunter_id
       }), {
@@ -155,14 +155,28 @@ serve(async (req) => {
       });
     }
 
-    logStep("Hunter is ID-verified", {
+    // CRITICAL: Require Stripe Connect account ID
+    if (!hunterProfile?.stripe_connect_account_id) {
+      logStep("Hunter has no Stripe Connect account ID - blocking payout");
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Hunter must have a Stripe Connect account to receive payout',
+        requires_verification: true,
+        hunter_id: submission.hunter_id
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    logStep("Hunter has Stripe Connect", {
       connectAccountId: hunterProfile.stripe_connect_account_id,
-      onboardingComplete: hunterProfile.stripe_connect_onboarding_complete
+      onboardingComplete: hunterProfile.stripe_connect_onboarding_complete,
+      payoutsEnabled: hunterProfile.stripe_connect_payouts_enabled
     });
 
     // ============================================================
     // ATOMIC LOCK via RPC: Uses DB function with stale lock reclaim
-    // Cleaner than .or() filter, no syntax ambiguity
     // ============================================================
     const lockId = crypto.randomUUID();
     
@@ -248,9 +262,9 @@ serve(async (req) => {
       }
 
       // ============================================================
-      // SUCCESS: Mark as captured with lock verification
+      // SUCCESS: Mark as captured - funds now in platform balance
+      // The 7-day hold and transfer to hunter happens separately
       // ============================================================
-      const hunterCountry = hunterProfile?.payout_country || 'Unknown';
 
       const { error: successError } = await supabaseClient
         .from('escrow_transactions')
@@ -258,11 +272,8 @@ serve(async (req) => {
           capture_status: 'captured',
           captured_at: new Date().toISOString(),
           status: 'captured',
-          payout_method: 'manual',
-          manual_payout_status: 'pending',
+          payout_method: 'stripe', // Using Stripe Connect transfers
           platform_fee_amount: platformFee / 100,
-          hunter_payout_email: hunterProfile?.payout_email || null,
-          hunter_country: hunterCountry,
           capture_error: null,
           updated_at: new Date().toISOString()
         })
@@ -274,23 +285,22 @@ serve(async (req) => {
         // Don't throw here - Stripe capture succeeded, which is what matters
       }
 
-      logStep("Payout processing complete", {
+      logStep("Payout processing complete - funds captured", {
         escrowId: escrowTx.id,
         capturedAt: new Date().toISOString(),
-        hunterCountry,
-        payoutEmail: hunterProfile?.payout_email
+        hunterConnectId: hunterProfile.stripe_connect_account_id,
+        payoutAmount: payoutAmount / 100
       });
 
       return new Response(JSON.stringify({
         success: true,
-        message: 'Payment captured. Manual payout required after 7-day hold.',
-        payout_method: 'manual',
-        manual_payout_required: true,
+        message: 'Payment captured. Funds will be transferred to hunter after 7-day hold period.',
+        payout_method: 'stripe',
         escrow_captured: true,
         bounty_amount: bountyAmount,
         amount: payoutAmount / 100,
         platform_fee: platformFee / 100,
-        hunter_country: hunterCountry,
+        hunter_connect_id: hunterProfile.stripe_connect_account_id,
         captured_at: new Date().toISOString()
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
