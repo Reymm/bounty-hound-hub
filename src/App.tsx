@@ -32,7 +32,6 @@ import NotFound from "./pages/NotFound";
 import KycComplete from "./pages/KycComplete";
 import ConnectComplete from "./pages/ConnectComplete";
 import Auth from "./pages/Auth";
-import Letterhead from "@/pages/Letterhead";
 import EditBounty from "./pages/EditBounty";
 
 const queryClient = new QueryClient();
@@ -52,7 +51,6 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
-              <Route path="/letterhead" element={<Letterhead />} />
               
               
               {/* Routes with navigation */}

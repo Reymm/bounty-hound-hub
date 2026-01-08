@@ -90,7 +90,7 @@ serve(async (req) => {
     // Check if hunter has Stripe Connect set up
     const { data: hunterProfile, error: hunterError } = await supabaseClient
       .from('profiles')
-      .select('stripe_connect_account_id, stripe_connect_payouts_enabled, username, payout_country, payout_email')
+      .select('stripe_connect_account_id, stripe_connect_payouts_enabled, username')
       .eq('id', hunterId)
       .single();
 
@@ -98,10 +98,13 @@ serve(async (req) => {
       throw new Error('Hunter profile not found');
     }
 
+    if (!hunterProfile.stripe_connect_account_id) {
+      throw new Error('Hunter has not set up Stripe Connect for payouts');
+    }
+
     logStep("Hunter profile found", { 
       hasStripeConnect: !!hunterProfile.stripe_connect_account_id,
-      payoutsEnabled: hunterProfile.stripe_connect_payouts_enabled,
-      country: hunterProfile.payout_country
+      payoutsEnabled: hunterProfile.stripe_connect_payouts_enabled
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -126,10 +129,7 @@ serve(async (req) => {
     
     logStep("Fees calculated", { amount, stripeFee, totalCharge });
 
-    // Determine if this will be a direct transfer or manual payout
-    const isManualPayout = hunterProfile.payout_country === 'US' || !hunterProfile.stripe_connect_account_id;
-
-    // Create payment intent
+    // Create payment intent with automatic transfer to hunter's Stripe Connect account
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalCharge * 100), // Convert to cents
       currency: 'usd',
@@ -141,22 +141,17 @@ serve(async (req) => {
         hunter_id: hunterId,
         poster_id: user.id,
         note: note || '',
-        is_manual_payout: isManualPayout.toString(),
         hunter_amount: amount.toString(),
       },
-      // If hunter has Connect and not US, we can do automatic transfer
-      ...(hunterProfile.stripe_connect_account_id && !isManualPayout ? {
-        transfer_data: {
-          destination: hunterProfile.stripe_connect_account_id,
-          amount: Math.round(amount * 100), // Transfer the full amount to hunter
-        },
-      } : {}),
+      transfer_data: {
+        destination: hunterProfile.stripe_connect_account_id,
+        amount: Math.round(amount * 100), // Transfer the full amount to hunter
+      },
     });
 
     logStep("Payment intent created", { 
       paymentIntentId: paymentIntent.id, 
-      status: paymentIntent.status,
-      isManualPayout 
+      status: paymentIntent.status
     });
 
     return new Response(JSON.stringify({
@@ -165,7 +160,6 @@ serve(async (req) => {
       amount: amount,
       stripe_fee: stripeFee,
       total_charge: totalCharge,
-      is_manual_payout: isManualPayout,
       hunter_name: hunterProfile.username || 'Hunter',
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
