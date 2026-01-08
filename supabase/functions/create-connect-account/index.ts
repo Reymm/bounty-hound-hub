@@ -67,21 +67,16 @@ serve(async (req) => {
 
     let accountId = profile?.stripe_connect_account_id;
 
-    // If user already has a fully onboarded account, return it
+    // If user already has a fully onboarded account, create a LOGIN link (not onboarding link)
     if (accountId && profile?.stripe_connect_onboarding_complete) {
-      logStep("User already has onboarded account", { accountId });
+      logStep("User already has onboarded account, creating login link", { accountId });
       
-      // Create a new account link for them to update details if needed
-      const accountLink = await stripe.accountLinks.create({
-        account: accountId,
-        refresh_url: `${req.headers.get("origin")}/me/profile`,
-        return_url: `${req.headers.get("origin")}/connect-complete`,
-        type: 'account_onboarding',
-      });
+      // Use createLoginLink for existing accounts - this goes directly to dashboard without re-auth
+      const loginLink = await stripe.accounts.createLoginLink(accountId);
 
       return new Response(JSON.stringify({
         account_id: accountId,
-        onboarding_url: accountLink.url,
+        onboarding_url: loginLink.url,
         status: 'existing'
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
