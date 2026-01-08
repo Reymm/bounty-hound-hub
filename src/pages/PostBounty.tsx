@@ -1392,6 +1392,37 @@ function PostBountyForm() {
           </CardContent>
         </Card>
 
+        {/* Validation Summary */}
+        {(() => {
+          const missingFields: string[] = [];
+          if (!watch('title')?.trim()) missingFields.push('Title');
+          if (!watch('description')?.trim()) missingFields.push('Description');
+          if (!watch('category')) missingFields.push('Category');
+          if (!watchedBountyAmount) missingFields.push('Bounty amount');
+          else if (watchedBountyAmount < 5) missingFields.push('Bounty amount (min $5)');
+          else if (watchedBountyAmount > 10000) missingFields.push('Bounty amount (max $10,000)');
+          if (!watch('location')?.trim()) missingFields.push('Location');
+          if ((watch('tags') || []).length === 0) missingFields.push('At least one tag');
+          if (verificationRequirements.filter(r => r.trim()).length === 0) missingFields.push('At least one verification requirement');
+          
+          if (missingFields.length > 0) {
+            return (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Please complete the following:</strong>
+                  <ul className="list-disc list-inside mt-1">
+                    {missingFields.map((field, i) => (
+                      <li key={i}>{field}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            );
+          }
+          return null;
+        })()}
+
         {/* Submit */}
         <div className="flex flex-col sm:flex-row gap-4 justify-end">
           <Button
