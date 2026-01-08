@@ -17,7 +17,7 @@ import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Claim, ClaimStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, FileText, AlertTriangle, RefreshCw, Package, Trash2 } from 'lucide-react';
+import { MessageCircle, FileText, AlertTriangle, RefreshCw, Package, Trash2, DollarSign, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -51,6 +51,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [ratingPromptData, setRatingPromptData] = useState<{ hunterId: string; hunterName: string } | null>(null);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [withdrawingClaim, setWithdrawingClaim] = useState(false);
+  const [releasingFunds, setReleasingFunds] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -308,6 +309,49 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
     }
   };
 
+  const handleReleaseFunds = async (submissionId: string) => {
+    try {
+      setReleasingFunds(true);
+      
+      const result = await supabaseApi.releaseFunds(submissionId);
+      
+      if (result.success) {
+        toast({
+          title: "Funds Released! 💰",
+          description: `$${result.amount?.toFixed(2)} transferred to ${result.hunter_name}'s Stripe account`,
+        });
+        await loadSubmissions();
+        onRefresh?.();
+      } else if (result.already_released) {
+        toast({
+          title: "Already Released",
+          description: "Funds have already been transferred to the hunter.",
+        });
+      } else if (result.hold_not_elapsed) {
+        toast({
+          title: "Hold Period Active",
+          description: result.message || `Funds can be released in ${result.hours_remaining} hours`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to release funds",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error releasing funds:', error);
+      toast({
+        title: "Error",
+        description: "Failed to release funds. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setReleasingFunds(false);
+    }
+  };
+
   const isOwner = currentUserId === posterId;
 
   if (loading) {
@@ -485,6 +529,19 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       className="text-green-600 hover:text-green-700"
                     >
                       Confirm Delivery
+                    </Button>
+                  )}
+                  {/* Release Funds button - shown for poster on accepted submissions */}
+                  {submission.status === ClaimStatus.ACCEPTED && isOwner && (
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      onClick={() => handleReleaseFunds(submission.id)}
+                      disabled={releasingFunds}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <DollarSign className="h-3 w-3 mr-1" />
+                      {releasingFunds ? 'Releasing...' : 'Release Funds'}
                     </Button>
                   )}
                   <Button 
