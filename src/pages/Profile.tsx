@@ -185,9 +185,34 @@ export default function Profile() {
     }
   };
 
-  const handleSetupPayout = () => {
-    // Open country selection dialog first
-    setCountryDialogOpen(true);
+  const handleSetupPayout = async () => {
+    // If user already has an account, go directly to Stripe (no country selection needed)
+    if (profile?.hasPayoutMethod) {
+      try {
+        setPayoutLoading(true);
+        const result = await supabaseApi.createConnectAccount();
+        
+        if (!result) throw new Error('Failed to get Connect account link');
+        
+        if (result.onboarding_url) {
+          window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
+        } else {
+          throw new Error('No onboarding URL received');
+        }
+      } catch (error: any) {
+        console.error('Error opening Stripe:', error);
+        toast({
+          title: "Error opening Stripe",
+          description: error instanceof Error ? error.message : "Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setPayoutLoading(false);
+      }
+    } else {
+      // New setup - open country selection dialog first
+      setCountryDialogOpen(true);
+    }
   };
 
   const handleCountrySelected = async (country: string) => {
