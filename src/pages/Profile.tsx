@@ -26,6 +26,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { ActivityHistory } from '@/components/profile/ActivityHistory';
+import { CountrySelectDialog } from '@/components/profile/CountrySelectDialog';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType } from '@/lib/types';
@@ -42,6 +43,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
+  const [countryDialogOpen, setCountryDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(() => {
     return sessionStorage.getItem('profile_active_tab') || 'profile';
@@ -179,15 +181,22 @@ export default function Profile() {
     }
   };
 
-  const handleSetupPayout = async () => {
+  const handleSetupPayout = () => {
+    // Open country selection dialog first
+    setCountryDialogOpen(true);
+  };
+
+  const handleCountrySelected = async (country: string) => {
     try {
       setPayoutLoading(true);
       
-      const result = await supabaseApi.createConnectAccount();
+      const result = await supabaseApi.createConnectAccount(country);
       
       if (!result) throw new Error('Failed to create Connect account');
       
       if (result.onboarding_url) {
+        // Close dialog before redirecting
+        setCountryDialogOpen(false);
         // Open in new tab - more reliable than redirect and avoids popup blockers
         // since it's triggered by a direct user click
         window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
@@ -633,6 +642,14 @@ export default function Profile() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Country Selection Dialog for Stripe Connect */}
+      <CountrySelectDialog
+        open={countryDialogOpen}
+        onOpenChange={setCountryDialogOpen}
+        onConfirm={handleCountrySelected}
+        loading={payoutLoading}
+      />
     </div>
   );
 }

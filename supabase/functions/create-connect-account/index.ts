@@ -39,6 +39,23 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Parse request body to get country selection
+    let selectedCountry: string | undefined;
+    try {
+      const body = await req.json();
+      selectedCountry = body.country;
+      logStep("Country from request", { country: selectedCountry });
+    } catch {
+      // No body or invalid JSON - country will be undefined
+      logStep("No country specified in request body");
+    }
+
+    // Validate country if provided
+    const supportedCountries = ['US', 'CA'];
+    if (selectedCountry && !supportedCountries.includes(selectedCountry)) {
+      throw new Error(`Unsupported country: ${selectedCountry}. Supported countries: ${supportedCountries.join(', ')}`);
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Check if user already has a Connect account
@@ -73,12 +90,9 @@ serve(async (req) => {
     }
 
     // Create new Connect account if one doesn't exist
-    // NOTE: We do NOT set 'country' here - this allows Stripe to show country selection
-    // during onboarding so hunters can choose their own country (US, CA, etc.)
-    // We request card_payments for US accounts (transfers not available for US Express)
-    // and transfers for CA accounts. Stripe will grant what's available per country.
+    // If a country is specified, use it. Otherwise let Stripe determine based on IP.
     if (!accountId) {
-      const account = await stripe.accounts.create({
+      const accountParams: any = {
         type: 'express',
         email: user.email,
         capabilities: {
@@ -94,7 +108,15 @@ serve(async (req) => {
           supabase_user_id: user.id,
           user_email: user.email,
         },
-      });
+      };
+
+      // Set country if explicitly selected by user
+      if (selectedCountry) {
+        accountParams.country = selectedCountry;
+        logStep("Creating account with explicit country", { country: selectedCountry });
+      }
+
+      const account = await stripe.accounts.create(accountParams);
       
       accountId = account.id;
       logStep("Created new Connect account", { accountId });
