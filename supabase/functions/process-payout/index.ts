@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Process payout function started");
+    logStep("Process payout function started - SAVE CARD MODEL");
 
     const { submissionId } = await req.json();
     if (!submissionId) throw new Error("submissionId is required");
@@ -112,7 +112,7 @@ serve(async (req) => {
       });
     }
 
-    // CRITICAL: Check if already captured - idempotency check
+    // CRITICAL: Check if already charged - idempotency check
     if (escrowTx.capture_status === 'captured') {
       logStep("Already captured - returning success (idempotent)");
       return new Response(JSON.stringify({
@@ -128,10 +128,11 @@ serve(async (req) => {
 
     logStep("Found escrow transaction", {
       escrowId: escrowTx.id,
-      paymentIntentId: escrowTx.stripe_payment_intent_id,
       status: escrowTx.status,
       captureStatus: escrowTx.capture_status,
-      amount: escrowTx.amount
+      amount: escrowTx.amount,
+      hasPaymentMethod: !!escrowTx.stripe_payment_method_id,
+      hasPaymentIntent: !!escrowTx.stripe_payment_intent_id
     });
 
     // Get hunter's profile including Connect account
@@ -155,7 +156,6 @@ serve(async (req) => {
       });
     }
 
-    // CRITICAL: Require Stripe Connect account ID
     if (!hunterProfile?.stripe_connect_account_id) {
       logStep("Hunter has no Stripe Connect account ID - blocking payout");
       return new Response(JSON.stringify({
@@ -176,7 +176,7 @@ serve(async (req) => {
     });
 
     // ============================================================
-    // ATOMIC LOCK via RPC: Uses DB function with stale lock reclaim
+    // ATOMIC LOCK via RPC
     // ============================================================
     const lockId = crypto.randomUUID();
     
@@ -199,7 +199,6 @@ serve(async (req) => {
       });
     }
 
-    // RPC returns array, get first row
     const lockRow = Array.isArray(lockResult) ? lockResult[0] : lockResult;
     
     if (!lockRow || !lockRow.success) {
@@ -214,80 +213,140 @@ serve(async (req) => {
       });
     }
 
-    logStep("Acquired capture lock via RPC", { 
-      lockId, 
-      escrowId: lockRow.escrow_id,
-      paymentIntentId: lockRow.payment_intent_id
-    });
+    logStep("Acquired capture lock via RPC", { lockId });
 
-    // Calculate payout amounts - $2 + 5% platform fee from hunter
+    // Calculate payout amounts
     const bountyAmount = parseFloat(submission.Bounties.amount);
-    const platformFee = Math.round((PLATFORM_FEE_FLAT + bountyAmount * PLATFORM_FEE_PERCENT) * 100); // in cents ($2 + 5%)
+    const platformFee = Math.round((PLATFORM_FEE_FLAT + bountyAmount * PLATFORM_FEE_PERCENT) * 100); // in cents
     const payoutAmount = Math.round(bountyAmount * 100) - platformFee; // in cents
 
     logStep("Calculated payout amounts", {
-      bountyAmount: bountyAmount,
-      platformFeePercent: `${PLATFORM_FEE_PERCENT * 100}%`,
+      bountyAmount,
       platformFee: platformFee / 100,
       payoutAmount: payoutAmount / 100
     });
 
     // ============================================================
-    // CAPTURE PAYMENT - Now we have the lock, safe to capture
+    // CHARGE / CAPTURE PAYMENT
     // ============================================================
     try {
-      // Use the payment_intent_id from the lock result for consistency
-      const paymentIntentId = lockRow.payment_intent_id || escrowTx.stripe_payment_intent_id;
-      
-      // First, check the PaymentIntent status in Stripe
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
-      logStep("PaymentIntent status from Stripe", { 
-        status: paymentIntent.status,
-        capturable: paymentIntent.amount_capturable
-      });
+      let chargedAmount = 0;
 
-      let capturedIntent = paymentIntent;
+      // Check if this is SAVE CARD MODEL (has payment_method_id) or LEGACY (has payment_intent_id)
+      if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
+        // SAVE CARD MODEL: Create and confirm PaymentIntent now
+        logStep("Using SAVE CARD model - charging saved card");
+        
+        // Get poster's customer ID
+        const { data: posterProfile } = await supabaseClient
+          .from('profiles')
+          .select('id')
+          .eq('id', submission.Bounties.poster_id)
+          .single();
 
-      // Only capture if it's in requires_capture status
-      if (paymentIntent.status === 'requires_capture') {
-        logStep("Capturing PaymentIntent...");
-        capturedIntent = await stripe.paymentIntents.capture(paymentIntentId);
-        logStep("PaymentIntent captured successfully", { status: capturedIntent.status });
-      } else if (paymentIntent.status === 'succeeded') {
-        logStep("PaymentIntent already succeeded - no capture needed");
+        // Get customer from Stripe
+        const customers = await stripe.customers.list({ 
+          limit: 1,
+          // We need the poster's email to find their customer
+        });
+
+        // Actually we stored the customer when we created the SetupIntent
+        // Get it from the payment method
+        const paymentMethod = await stripe.paymentMethods.retrieve(escrowTx.stripe_payment_method_id);
+        const customerId = paymentMethod.customer as string;
+
+        if (!customerId) {
+          throw new Error("No customer found for payment method");
+        }
+
+        // Calculate Stripe fees and total charge
+        // Stripe fee: 2.9% + $0.30
+        const stripeFee = Math.round(bountyAmount * 0.029 * 100 + 30); // in cents
+        const totalChargeAmount = Math.round(bountyAmount * 100) + stripeFee;
+
+        // Create PaymentIntent and charge immediately
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: totalChargeAmount,
+          currency: escrowTx.currency || 'usd',
+          customer: customerId,
+          payment_method: escrowTx.stripe_payment_method_id,
+          off_session: true,
+          confirm: true,
+          description: `Bounty payment: ${submission.Bounties.title}`,
+          metadata: {
+            bounty_id: submission.bounty_id,
+            submission_id: submissionId,
+            hunter_id: submission.hunter_id,
+            type: 'bounty_payment'
+          }
+        });
+
+        if (paymentIntent.status !== 'succeeded') {
+          throw new Error(`Payment failed. Status: ${paymentIntent.status}`);
+        }
+
+        logStep("Payment charged successfully (save-card model)", { 
+          paymentIntentId: paymentIntent.id,
+          status: paymentIntent.status,
+          amount: totalChargeAmount / 100
+        });
+
+        chargedAmount = totalChargeAmount;
+
+        // Update escrow with the new payment intent ID
+        await supabaseClient
+          .from('escrow_transactions')
+          .update({
+            stripe_payment_intent_id: paymentIntent.id,
+            total_charged_amount: totalChargeAmount / 100,
+            charge_attempted_at: new Date().toISOString()
+          })
+          .eq('id', escrowTx.id);
+
+      } else if (escrowTx.stripe_payment_intent_id && escrowTx.stripe_payment_intent_id !== '') {
+        // LEGACY MODEL: Capture the existing PaymentIntent
+        logStep("Using LEGACY model - capturing authorized payment");
+        
+        const paymentIntent = await stripe.paymentIntents.retrieve(escrowTx.stripe_payment_intent_id);
+        
+        if (paymentIntent.status === 'requires_capture') {
+          const capturedIntent = await stripe.paymentIntents.capture(escrowTx.stripe_payment_intent_id);
+          logStep("PaymentIntent captured successfully", { status: capturedIntent.status });
+          chargedAmount = capturedIntent.amount;
+        } else if (paymentIntent.status === 'succeeded') {
+          logStep("PaymentIntent already succeeded");
+          chargedAmount = paymentIntent.amount;
+        } else {
+          throw new Error(`PaymentIntent is in invalid state: ${paymentIntent.status}`);
+        }
       } else {
-        // Status is something else (canceled, requires_payment_method, etc.)
-        throw new Error(`PaymentIntent is in invalid state for capture: ${paymentIntent.status}`);
+        throw new Error("No payment method or payment intent found for this escrow");
       }
 
       // ============================================================
-      // SUCCESS: Mark as captured - funds now in platform balance
-      // The 7-day hold and transfer to hunter happens separately
+      // SUCCESS: Mark as captured
       // ============================================================
-
       const { error: successError } = await supabaseClient
         .from('escrow_transactions')
         .update({ 
           capture_status: 'captured',
           captured_at: new Date().toISOString(),
           status: 'captured',
-          payout_method: 'stripe', // Using Stripe Connect transfers
+          payout_method: 'stripe',
           platform_fee_amount: platformFee / 100,
           capture_error: null,
           updated_at: new Date().toISOString()
         })
         .eq('id', escrowTx.id)
-        .eq('capture_lock_id', lockId); // Only update if we still hold the lock
+        .eq('capture_lock_id', lockId);
 
       if (successError) {
-        logStep("Warning: Failed to mark as captured, but Stripe capture succeeded", { successError });
-        // Don't throw here - Stripe capture succeeded, which is what matters
+        logStep("Warning: Failed to mark as captured, but charge succeeded", { successError });
       }
 
       logStep("Payout processing complete - funds captured", {
         escrowId: escrowTx.id,
-        capturedAt: new Date().toISOString(),
+        chargedAmount: chargedAmount / 100,
         hunterConnectId: hunterProfile.stripe_connect_account_id,
         payoutAmount: payoutAmount / 100
       });
@@ -307,25 +366,27 @@ serve(async (req) => {
         status: 200,
       });
 
-    } catch (captureError: any) {
+    } catch (chargeError: any) {
       // ============================================================
-      // FAILURE: Mark as capture_failed with error, release lock
+      // FAILURE: Mark as charge_failed, release lock
       // ============================================================
-      logStep("Capture failed", { message: captureError.message });
+      logStep("Charge failed", { message: chargeError.message });
 
       await supabaseClient
         .from('escrow_transactions')
         .update({ 
           capture_status: 'capture_failed',
-          capture_error: captureError.message,
-          capture_lock_id: null, // Release the lock
+          capture_error: chargeError.message,
+          charge_failed_reason: chargeError.message,
+          charge_attempted_at: new Date().toISOString(),
+          capture_lock_id: null,
           capture_locked_at: null,
           updated_at: new Date().toISOString()
         })
         .eq('id', escrowTx.id)
         .eq('capture_lock_id', lockId);
 
-      throw new Error(`Failed to capture payment: ${captureError.message}`);
+      throw new Error(`Failed to charge payment: ${chargeError.message}`);
     }
 
   } catch (error) {

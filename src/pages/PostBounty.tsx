@@ -51,7 +51,7 @@ function PostBountyForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'details' | 'kyc' | 'payment' | 'processing'>('details');
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [setupIntentId, setSetupIntentId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [escrowId, setEscrowId] = useState<string | null>(null);
   const [kycRequired, setKycRequired] = useState(false);
@@ -145,16 +145,13 @@ function PostBountyForm() {
   }, [watch(), tags, verificationRequirements, uploadedImages, hasDeadline]);
 
   // Calculate fees when bounty amount changes
+  // With save-card model, we don't charge upfront - just save the card
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      // No platform fee for poster - only Stripe processing fees
-      // Stripe fee: 2.9% + $0.30, added ON TOP of the bounty amount
-      // If user enters $50 bounty, hunter gets $50, user pays $50 + fees
-      const stripeFee = Math.round((watchedBountyAmount * 0.029 + 0.30) * 100) / 100;
-      const total = Math.round((watchedBountyAmount + stripeFee) * 100) / 100;
-      
-      setPlatformFee(stripeFee); // Store stripe fee for display
-      setTotalCharge(total);
+      // No fees charged upfront with save-card model
+      // Fees only charged when poster accepts a submission
+      setPlatformFee(0);
+      setTotalCharge(watchedBountyAmount); // Display bounty amount only
       // KYC required for bounties over $1000
       setKycRequired(watchedBountyAmount > 1000);
     } else {
@@ -350,9 +347,9 @@ function PostBountyForm() {
         return;
       }
       
-      // If we already have a payment intent (user went back to edit), 
+      // If we already have a setup intent (user went back to edit), 
       // just go back to payment without creating a new one
-      if (clientSecret && paymentIntentId) {
+      if (clientSecret && setupIntentId) {
         setCurrentStep('payment');
         setIsSubmitting(false);
         return;
@@ -371,7 +368,7 @@ function PostBountyForm() {
         }
       }
       
-      // Proceed to payment
+      // Proceed to save card (SetupIntent)
       const { data: paymentData, error } = await supabase.functions.invoke('create-escrow-payment', {
         body: {
           amount: data.bountyAmount,
@@ -381,16 +378,16 @@ function PostBountyForm() {
 
       if (error) throw error;
 
-      setPaymentIntentId(paymentData.payment_intent_id);
+      setSetupIntentId(paymentData.setup_intent_id);
       setClientSecret(paymentData.client_secret);
       setEscrowId(paymentData.escrow_id);
       setPlatformFee(paymentData.platform_fee);
-      setTotalCharge(paymentData.total_charge);
+      setTotalCharge(data.bountyAmount);
       setCurrentStep('payment');
       
       toast({
-        title: "Payment created",
-        description: `Please complete your payment of $${paymentData.total_charge} (includes $${paymentData.platform_fee} platform fee).`,
+        title: "Save your card",
+        description: `Enter your card details to post a $${data.bountyAmount} bounty. You'll only be charged if you accept a submission.`,
       });
 
     } catch (error: any) {
@@ -478,8 +475,8 @@ function PostBountyForm() {
     const cardNumberElement = elements.getElement(CardNumberElement);
     if (!cardNumberElement) {
       toast({
-        title: "Payment Error",
-        description: "Payment form not ready. Please refresh the page and try again.",
+        title: "Card Error",
+        description: "Card form not ready. Please refresh the page and try again.",
         variant: "destructive",
       });
       return;
@@ -489,26 +486,26 @@ function PostBountyForm() {
     setIsPaymentProcessing(true);
 
     try {
-      // Use the cardNumberElement reference we got before state changes
-      const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      // SAVE CARD MODEL: Use confirmCardSetup instead of confirmCardPayment
+      const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
         payment_method: {
           card: cardNumberElement,
         }
       });
 
-      if (paymentError) {
-        throw new Error(paymentError.message);
+      if (setupError) {
+        throw new Error(setupError.message);
       }
 
-      // Only change to processing step after payment is confirmed
+      // Only change to processing step after card is saved
       setCurrentStep('processing');
 
-      if (paymentIntent.status === 'requires_capture') {
-        // Payment successful, create bounty
+      if (setupIntent.status === 'succeeded') {
+        // Card saved successfully, create bounty
         const formData = getValues();
         const { data: bountyData, error: bountyError } = await supabase.functions.invoke('confirm-escrow-and-create-bounty', {
           body: {
-            payment_intent_id: paymentIntent.id,
+            setup_intent_id: setupIntent.id,
             bounty_data: {
               title: formData.title,
               description: formData.description,

@@ -31,7 +31,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
+    logStep("Function started - SAVE CARD MODEL");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -71,22 +71,16 @@ serve(async (req) => {
 
     const { amount, currency } = validation.data;
     
-    // Platform fee: $2 + 5% taken from hunter on payout (not charged to poster upfront)
-    // Stripe processing fee: 2.9% + $0.30, added ON TOP of bounty
-    // If user enters $50 bounty, hunter gets $45.50 (after $2 + 5%), poster pays $50 + Stripe fees
+    // Platform fee: $2 + 5% taken from hunter on payout (not charged to poster)
     const platformFeeFlat = 2; // $2 flat fee
     const platformFeePercent = 0.05; // 5%
     const platformFee = Math.round((platformFeeFlat + amount * platformFeePercent) * 100) / 100;
-    const stripeFee = Math.round((amount * 0.029 + 0.30) * 100) / 100;
-    const totalChargeAmount = Math.round((amount + stripeFee) * 100) / 100;
     
-    logStep("Amount and fees calculated", { 
+    // With save-card model, we don't add Stripe fees upfront
+    // Stripe fees will be calculated when we actually charge
+    logStep("Amount calculated (save-card model)", { 
       bountyAmount: amount, 
-      platformFee: platformFee, // $2 + 5% from hunter on payout
-      platformFeeFlat: `$${platformFeeFlat}`,
-      platformFeePercent: `${platformFeePercent * 100}%`,
-      stripeFee,
-      totalCharge: totalChargeAmount, 
+      platformFee: platformFee,
       currency 
     });
 
@@ -106,34 +100,31 @@ serve(async (req) => {
       logStep("Created new customer", { customerId: customer.id });
     }
 
-    // Create payment intent for escrow (capture_method: manual for later capture)
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(totalChargeAmount * 100), // Convert total charge to cents
-      currency: currency.toLowerCase(),
+    // Create SetupIntent to save card without charging
+    const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,
-      capture_method: 'manual', // We'll capture later when bounty is completed
-      description: `Escrow deposit for bounty ($${amount})`,
+      payment_method_types: ['card'],
+      usage: 'off_session', // Allow charging later without customer present
       metadata: {
         supabase_user_id: user.id,
-        type: 'escrow_deposit',
+        type: 'bounty_escrow',
         bounty_amount: amount.toString(),
-        platform_fee: platformFee.toString(), // $2 + 5% fee taken from hunter on payout
-        platform_fee_structure: '$2 + 5%'
+        platform_fee: platformFee.toString()
       }
     });
-    logStep("Created payment intent", { paymentIntentId: paymentIntent.id, status: paymentIntent.status });
+    logStep("Created SetupIntent", { setupIntentId: setupIntent.id, status: setupIntent.status });
 
-    // Store escrow transaction in database
+    // Store escrow transaction in database with card_pending status
     const { data: escrowData, error: escrowError } = await supabaseClient
       .from('escrow_transactions')
       .insert({
         poster_id: user.id,
-        stripe_payment_intent_id: paymentIntent.id,
-        amount: amount, // Bounty amount
-        platform_fee_amount: platformFee, // 7% fee to be collected on payout
-        total_charged_amount: totalChargeAmount, // Total charged to poster (bounty + Stripe fee)
+        stripe_setup_intent_id: setupIntent.id,
+        stripe_payment_intent_id: '', // Will be set when we charge
+        amount: amount,
+        platform_fee_amount: platformFee,
         currency: currency.toLowerCase(),
-        status: paymentIntent.status
+        status: 'card_pending' // New status for save-card model
       })
       .select()
       .single();
@@ -145,14 +136,12 @@ serve(async (req) => {
     logStep("Created escrow record", { escrowId: escrowData.id });
 
     return new Response(JSON.stringify({
-      payment_intent_id: paymentIntent.id,
-      client_secret: paymentIntent.client_secret,
+      setup_intent_id: setupIntent.id,
+      client_secret: setupIntent.client_secret,
       escrow_id: escrowData.id,
       bounty_amount: amount,
-      platform_fee: platformFee, // 7% fee from hunter
-      stripe_fee: stripeFee,
-      total_charge: totalChargeAmount,
-      status: paymentIntent.status
+      platform_fee: platformFee,
+      status: 'card_pending'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
