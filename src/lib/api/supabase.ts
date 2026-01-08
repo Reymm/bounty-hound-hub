@@ -973,7 +973,7 @@ export const supabaseApi = {
   },
 
   // Stripe Connect methods
-  async createConnectAccount(): Promise<{ onboarding_url?: string; account_id?: string; status?: string; code?: string; message?: string; error?: string } | null> {
+  async createConnectAccount(country?: string): Promise<{ onboarding_url?: string; account_id?: string; status?: string; code?: string; message?: string; error?: string } | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User must be authenticated');
@@ -981,7 +981,8 @@ export const supabaseApi = {
       const { data, error } = await supabase.functions.invoke('create-connect-account', {
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
+        },
+        body: { country }
       });
 
       // Check for country unsupported error in the response
