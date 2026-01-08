@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
+    logStep("Function started - SAVE CARD MODEL");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -42,36 +42,54 @@ serve(async (req) => {
     const requestBody = await req.json();
     logStep("Raw request received", { body: requestBody });
     
-    const { payment_intent_id, bounty_data } = requestBody;
-    if (!payment_intent_id || !bounty_data) {
-      throw new Error("Payment intent ID and bounty data are required");
+    // Support both old (payment_intent_id) and new (setup_intent_id) flows
+    const { payment_intent_id, setup_intent_id, bounty_data } = requestBody;
+    const intentId = setup_intent_id || payment_intent_id;
+    
+    if (!intentId || !bounty_data) {
+      throw new Error("Intent ID and bounty data are required");
     }
+    
+    const isSetupIntent = !!setup_intent_id;
     logStep("Request data validated", { 
-      payment_intent_id, 
-      bountyTitle: bounty_data.title,
-      tags: bounty_data.tags,
-      images: bounty_data.images,
-      verificationRequirements: bounty_data.verificationRequirements,
-      category: bounty_data.category,
-      location: bounty_data.location
+      intentId,
+      isSetupIntent,
+      bountyTitle: bounty_data.title
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Verify payment intent is succeeded
-    const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent_id);
-    if (paymentIntent.status !== 'requires_capture') {
-      throw new Error(`Payment not ready for capture. Status: ${paymentIntent.status}`);
+    let paymentMethodId: string | null = null;
+
+    if (isSetupIntent) {
+      // SAVE CARD MODEL: Verify SetupIntent succeeded and get payment method
+      const setupIntent = await stripe.setupIntents.retrieve(intentId);
+      if (setupIntent.status !== 'succeeded') {
+        throw new Error(`Card not saved. Status: ${setupIntent.status}`);
+      }
+      paymentMethodId = typeof setupIntent.payment_method === 'string' 
+        ? setupIntent.payment_method 
+        : setupIntent.payment_method?.id || null;
+      
+      if (!paymentMethodId) {
+        throw new Error("No payment method found on SetupIntent");
+      }
+      logStep("SetupIntent verified", { status: setupIntent.status, paymentMethodId });
+    } else {
+      // LEGACY: Old PaymentIntent flow (backward compatibility)
+      const paymentIntent = await stripe.paymentIntents.retrieve(intentId);
+      if (paymentIntent.status !== 'requires_capture') {
+        throw new Error(`Payment not ready for capture. Status: ${paymentIntent.status}`);
+      }
+      logStep("PaymentIntent verified (legacy)", { status: paymentIntent.status });
     }
-    logStep("Payment intent verified", { status: paymentIntent.status });
 
     // Get escrow transaction
-    const { data: escrowData, error: escrowError } = await supabaseClient
-      .from('escrow_transactions')
-      .select('*')
-      .eq('stripe_payment_intent_id', payment_intent_id)
-      .eq('poster_id', user.id)
-      .single();
+    const escrowQuery = isSetupIntent 
+      ? supabaseClient.from('escrow_transactions').select('*').eq('stripe_setup_intent_id', intentId).eq('poster_id', user.id).single()
+      : supabaseClient.from('escrow_transactions').select('*').eq('stripe_payment_intent_id', intentId).eq('poster_id', user.id).single();
+    
+    const { data: escrowData, error: escrowError } = await escrowQuery;
 
     if (escrowError || !escrowData) {
       throw new Error("Escrow transaction not found");
@@ -85,7 +103,7 @@ serve(async (req) => {
       amount: escrowData.amount,
       poster_id: user.id,
       status: 'open',
-      escrow_status: 'secured',
+      escrow_status: isSetupIntent ? 'card_saved' : 'secured', // Different status for save-card model
       escrow_amount: escrowData.amount,
       images: bounty_data.images || [],
       category: bounty_data.category,
@@ -116,18 +134,23 @@ serve(async (req) => {
     }
     logStep("Bounty created successfully", { 
       bountyId: bountyData.id,
-      savedImages: bountyData.images,
-      savedLocation: bountyData.location,
-      savedCategory: bountyData.category
+      escrowStatus: bountyInsertData.escrow_status
     });
 
-    // Update escrow transaction with bounty ID
+    // Update escrow transaction with bounty ID and payment method
+    const escrowUpdate: Record<string, any> = {
+      bounty_id: bountyData.id,
+      status: isSetupIntent ? 'card_saved' : 'requires_capture',
+      card_saved_at: isSetupIntent ? new Date().toISOString() : null
+    };
+    
+    if (paymentMethodId) {
+      escrowUpdate.stripe_payment_method_id = paymentMethodId;
+    }
+
     const { error: updateError } = await supabaseClient
       .from('escrow_transactions')
-      .update({
-        bounty_id: bountyData.id,
-        status: 'requires_capture'
-      })
+      .update(escrowUpdate)
       .eq('id', escrowData.id);
 
     if (updateError) {
@@ -138,8 +161,10 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       bounty_id: bountyData.id,
-      escrow_status: 'secured',
-      message: 'Bounty created successfully with escrow secured'
+      escrow_status: isSetupIntent ? 'card_saved' : 'secured',
+      message: isSetupIntent 
+        ? 'Bounty created successfully. Card saved - will be charged when you accept a submission.'
+        : 'Bounty created successfully with escrow secured'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -214,6 +214,9 @@ export type Database = {
           capture_locked_at: string | null
           capture_status: string | null
           captured_at: string | null
+          card_saved_at: string | null
+          charge_attempted_at: string | null
+          charge_failed_reason: string | null
           created_at: string
           currency: string
           eligible_at: string | null
@@ -238,6 +241,8 @@ export type Database = {
           refunded_at: string | null
           status: string
           stripe_payment_intent_id: string
+          stripe_payment_method_id: string | null
+          stripe_setup_intent_id: string | null
           total_charged_amount: number | null
           updated_at: string
         }
@@ -251,6 +256,9 @@ export type Database = {
           capture_locked_at?: string | null
           capture_status?: string | null
           captured_at?: string | null
+          card_saved_at?: string | null
+          charge_attempted_at?: string | null
+          charge_failed_reason?: string | null
           created_at?: string
           currency?: string
           eligible_at?: string | null
@@ -275,6 +283,8 @@ export type Database = {
           refunded_at?: string | null
           status?: string
           stripe_payment_intent_id: string
+          stripe_payment_method_id?: string | null
+          stripe_setup_intent_id?: string | null
           total_charged_amount?: number | null
           updated_at?: string
         }
@@ -288,6 +298,9 @@ export type Database = {
           capture_locked_at?: string | null
           capture_status?: string | null
           captured_at?: string | null
+          card_saved_at?: string | null
+          charge_attempted_at?: string | null
+          charge_failed_reason?: string | null
           created_at?: string
           currency?: string
           eligible_at?: string | null
@@ -312,6 +325,8 @@ export type Database = {
           refunded_at?: string | null
           status?: string
           stripe_payment_intent_id?: string
+          stripe_payment_method_id?: string | null
+          stripe_setup_intent_id?: string | null
           total_charged_amount?: number | null
           updated_at?: string
         }
