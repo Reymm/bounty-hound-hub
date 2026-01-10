@@ -84,7 +84,7 @@ const faqData = [
     questions: [
       {
         q: "What are the platform fees?",
-        a: "Posters pay no platform fee—only the bounty reward plus Stripe processing fees (~2.9% + 30¢). Hunters pay a $2 + 5% platform fee, deducted from their payout when a bounty is successfully completed."
+        a: "Posters pay no platform fee—only the bounty reward plus Stripe processing fees (~2.9% + 30¢). Hunters pay a $2 + 5% platform fee plus a small transfer fee (~0.25% + 25¢), deducted from their payout when a bounty is successfully completed. For example, on a $100 bounty, hunters receive approximately $92.27."
       },
       {
         q: "How do payouts work?",

@@ -402,11 +402,15 @@ export default function Checkout() {
               <Separator />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Hunter receives</span>
-                <span className="font-medium">$93.00</span>
+                <span className="font-medium">$92.27</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground pl-2">
-                <span>↳ After platform fee ($2 + 5%)</span>
+                <span>↳ Platform fee ($2 + 5%)</span>
                 <span>-$7.00</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>↳ Transfer fee (0.25% + $0.25)</span>
+                <span>-$0.48</span>
               </div>
               <Separator />
               <div className="flex justify-between text-sm font-medium text-primary">
