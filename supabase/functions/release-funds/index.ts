@@ -168,21 +168,26 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Calculate payout amount (after platform fee)
+    // Calculate payout amount (after platform fee AND transfer fee)
     const bountyAmount = escrow.amount;
-    const platformFee = 2 + (bountyAmount * 0.05); // $2 + 5%
-    const hunterPayout = Math.round((bountyAmount - platformFee) * 100) / 100;
+    const platformFee = 2 + (bountyAmount * 0.05); // $2 + 5% platform fee
+    const afterPlatformFee = bountyAmount - platformFee;
+    
+    // Stripe Connect transfer fee: 0.25% + $0.25
+    const transferFee = Math.round((afterPlatformFee * 0.0025 + 0.25) * 100) / 100;
+    const hunterPayout = Math.round((afterPlatformFee - transferFee) * 100) / 100;
     
     logStep("Payout calculated", { 
       bountyAmount, 
-      platformFee: platformFee.toFixed(2), 
+      platformFee: platformFee.toFixed(2),
+      transferFee: transferFee.toFixed(2),
       hunterPayout: hunterPayout.toFixed(2) 
     });
 
     // Create transfer to hunter's Connect account
     const transfer = await stripe.transfers.create({
       amount: Math.round(hunterPayout * 100), // Convert to cents
-      currency: 'usd',
+      currency: escrow.currency || 'usd',
       destination: hunterProfile.stripe_connect_account_id,
       description: `BountyBay payout for: ${bounty.title}`,
       metadata: {
@@ -191,6 +196,7 @@ serve(async (req) => {
         hunter_id: submission.hunter_id,
         poster_id: bounty.poster_id,
         platform_fee: platformFee.toFixed(2),
+        transfer_fee: transferFee.toFixed(2),
         original_amount: bountyAmount.toString(),
       },
     });
@@ -222,7 +228,7 @@ serve(async (req) => {
         user_id: submission.hunter_id,
         type: 'payout_sent',
         title: 'Payment Released! 💰',
-        message: `$${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}"`,
+        message: `$${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`,
         bounty_id: submission.bounty_id,
         submission_id: submissionId,
       });
