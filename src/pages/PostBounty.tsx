@@ -146,12 +146,15 @@ function PostBountyForm() {
 
   // Calculate fees when bounty amount changes
   // With save-card model, we don't charge upfront - just save the card
+  // But we show poster what they'll pay on approval (bounty + Stripe processing fee)
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      // No fees charged upfront with save-card model
-      // Fees only charged when poster accepts a submission
-      setPlatformFee(0);
-      setTotalCharge(watchedBountyAmount); // Display bounty amount only
+      // Calculate Stripe processing fee: 2.9% + $0.30
+      const stripeFee = Math.round((watchedBountyAmount * 0.029 + 0.30) * 100) / 100;
+      const total = Math.round((watchedBountyAmount + stripeFee) * 100) / 100;
+      
+      setPlatformFee(stripeFee); // Repurposing this for Stripe fee display
+      setTotalCharge(total);
       // KYC required for bounties over $1000
       setKycRequired(watchedBountyAmount > 1000);
     } else {
@@ -685,16 +688,16 @@ function PostBountyForm() {
                   <span className="font-medium">${watchedBountyAmount?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Payment processing (Stripe):</span>
-                  <span>${(totalCharge - (watchedBountyAmount || 0)).toFixed(2)}</span>
+                  <span className="text-muted-foreground">Stripe processing fee (2.9% + $0.30):</span>
+                  <span>${platformFee.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Total (charged on approval):</span>
+                  <span>Total you pay:</span>
                   <span>${totalCharge.toFixed(2)}</span>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                No platform fees for posters. Hunters pay a $2 + 5% fee when paid out.
+                You pay bounty + processing fee. Hunter receives bounty minus their $2 + 5% platform fee.
               </p>
             </div>
 
@@ -720,7 +723,7 @@ function PostBountyForm() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">5.</span>
-                  <span>Only then: ${totalCharge.toFixed(2)} charged, ${watchedBountyAmount?.toFixed(2) || '0.00'} goes to hunter</span>
+                  <span>Only then: ${totalCharge.toFixed(2)} charged to you, hunter receives ${((watchedBountyAmount || 0) - 2 - (watchedBountyAmount || 0) * 0.05).toFixed(2)}</span>
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
