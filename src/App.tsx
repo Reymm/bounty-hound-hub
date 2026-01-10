@@ -29,7 +29,7 @@ import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
-import KycComplete from "./pages/KycComplete";
+
 import ConnectComplete from "./pages/ConnectComplete";
 import Auth from "./pages/Auth";
 import EditBounty from "./pages/EditBounty";
@@ -100,11 +100,6 @@ const App = () => (
                       <Route path="/checkout" element={
                         <ProtectedRoute>
                           <Checkout />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/kyc-complete" element={
-                        <ProtectedRoute>
-                          <KycComplete />
                         </ProtectedRoute>
                       } />
                       <Route path="/connect-complete" element={
