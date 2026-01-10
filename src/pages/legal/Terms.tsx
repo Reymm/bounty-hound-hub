@@ -19,175 +19,338 @@ export default function Terms() {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Terms of Service</CardTitle>
-          <p className="text-muted-foreground">Last updated: December 9, 2025</p>
+          <p className="text-muted-foreground">Effective Date: January 10, 2025</p>
         </CardHeader>
         <CardContent className="prose prose-sm max-w-none">
           <div className="space-y-6">
             <section>
-              <h2 className="text-xl font-semibold mb-3">1. Introduction</h2>
+              <h2 className="text-xl font-semibold mb-3">1. Agreement to Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Welcome to BountyBay, a reverse marketplace platform that connects people looking for 
-                hard-to-find items with hunters who can locate them. These Terms of Service ("Terms") 
-                govern your use of our platform and services.
+                These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") 
+                and Bountybay Ltd., a corporation incorporated under the laws of Canada ("BountyBay," "we," "us," or "our"). 
+                By accessing or using our platform at bountybay.co (the "Platform"), you acknowledge that you have read, 
+                understood, and agree to be bound by these Terms. If you do not agree to these Terms, you must not access 
+                or use the Platform.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">2. Platform Overview</h2>
+              <h2 className="text-xl font-semibold mb-3">2. Platform Description</h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
-                BountyBay operates as a marketplace where:
+                BountyBay operates as a reverse marketplace platform that facilitates connections between individuals 
+                seeking specific items ("Posters") and individuals capable of locating such items ("Hunters"). 
+                The Platform provides:
               </p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Users can post bounties for items they're seeking</li>
-                <li>Hunters can claim bounties and provide leads or found items</li>
-                <li>Payments are processed securely through our escrow system</li>
-                <li>All transactions are subject to verification requirements</li>
+                <li>A venue for Posters to publish requests ("Bounties") for specific items</li>
+                <li>A mechanism for Hunters to submit claims and provide proof of item location</li>
+                <li>Secure escrow payment processing through Stripe</li>
+                <li>Identity verification services to ensure user authenticity</li>
+                <li>Communication tools between verified users</li>
+                <li>Dispute resolution and customer support services</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">3. User Accounts</h2>
+              <h2 className="text-xl font-semibold mb-3">3. Eligibility and Account Registration</h2>
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-medium mb-2">Account Registration</h3>
+                  <h3 className="font-medium mb-2">3.1 Eligibility Requirements</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    To use BountyBay, you must create an account and provide accurate information. 
-                    You are responsible for maintaining the security of your account credentials.
+                    To use BountyBay, you must: (a) be at least 18 years of age; (b) have the legal capacity to enter 
+                    into a binding contract; (c) not be prohibited from using the Platform under applicable law; and 
+                    (d) not have been previously suspended or removed from the Platform.
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">Identity Verification</h3>
+                  <h3 className="font-medium mb-2">3.2 Account Security</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    Certain features require identity verification through Stripe Identity. 
-                    This includes messaging other users and submitting bounty claims.
+                    You are responsible for maintaining the confidentiality of your account credentials and for all 
+                    activities that occur under your account. You agree to immediately notify us of any unauthorized 
+                    use of your account or any other breach of security.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">3.3 Identity Verification</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Certain Platform features require identity verification through our payment partner, Stripe. 
+                    By completing verification, you authorize Stripe to collect and process your identity documents 
+                    in accordance with their privacy policy. Verified users display a verification badge on their profile.
                   </p>
                 </div>
               </div>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">4. Bounties</h2>
+              <h2 className="text-xl font-semibold mb-3">4. Bounty Terms and Conditions</h2>
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-medium mb-2">Posting Bounties</h3>
+                  <h3 className="font-medium mb-2">4.1 Posting Bounties</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>Bounty posters must provide accurate item descriptions</li>
-                    <li>All posted content must comply with our community guidelines</li>
-                    <li>Bounty amounts must be deposited into escrow before activation</li>
-                    <li>Verification requirements must be clearly specified</li>
+                    <li>Posters must provide accurate and complete item descriptions</li>
+                    <li>All posted content must comply with our Acceptable Use Policy (Section 7)</li>
+                    <li>Bounty amounts must be deposited into escrow prior to publication</li>
+                    <li>Verification requirements must be clearly specified at time of posting</li>
+                    <li>Posters are responsible for reviewing submissions in good faith</li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">Claiming Bounties</h3>
+                  <h3 className="font-medium mb-2">4.2 Claiming Bounties</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>Hunters must meet all verification requirements</li>
-                    <li>Claims must include valid proof as specified by the poster</li>
-                    <li>False or misleading claims may result in account suspension</li>
-                    <li>Payment release is subject to poster approval</li>
+                    <li>Hunters must meet all verification requirements specified by the Poster</li>
+                    <li>Claims must include valid proof as specified in the Bounty listing</li>
+                    <li>False, misleading, or fraudulent claims constitute grounds for immediate suspension</li>
+                    <li>Payment release is contingent upon Poster approval of submitted proof</li>
+                    <li>Hunters must complete identity verification through Stripe Connect to receive payouts</li>
                   </ul>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">4.3 Shipping Requirements</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    For Bounties requiring physical delivery, Hunters must provide valid tracking information. 
+                    Funds will be released upon confirmed delivery or after tracking shows delivery status. 
+                    BountyBay is not responsible for items lost or damaged during shipping.
+                  </p>
                 </div>
               </div>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">5. Payments and Fees</h2>
+              <h2 className="text-xl font-semibold mb-3">5. Fees and Payment Terms</h2>
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-medium mb-2">Escrow System</h3>
+                  <h3 className="font-medium mb-2">5.1 Escrow System</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    All bounty payments are processed through our secure escrow system powered by Stripe. 
-                    Funds are held until the bounty poster approves the delivery.
+                    All Bounty payments are processed through our secure escrow system powered by Stripe. 
+                    Funds are held in escrow until the Poster approves delivery or a dispute is resolved. 
+                    This protects both parties and ensures fair transactions.
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">Platform Fees</h3>
+                  <h3 className="font-medium mb-2">5.2 Fee Schedule</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>Posters pay no platform fee—only the bounty reward plus Stripe processing fees (~2.9% + 30¢)</li>
-                    <li>Hunters pay a $2 + 5% platform fee plus transfer fee (~0.25% + 25¢), deducted from their payout</li>
-                    <li>Example: On a $100 bounty, hunters receive approximately $92.27</li>
+                    <li><strong>Posters:</strong> No platform fee. Only the bounty reward amount plus Stripe processing fees (approximately 2.9% + $0.30 CAD per transaction)</li>
+                    <li><strong>Hunters:</strong> Platform fee of $2.00 CAD + 5% of bounty amount, plus Stripe transfer fees (approximately 0.25% + $0.25 CAD), deducted from payout</li>
+                    <li><strong>Example:</strong> On a $100 CAD bounty, Hunters receive approximately $92.27 CAD after all fees</li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">Cancellation Fees</h3>
+                  <h3 className="font-medium mb-2">5.3 Cancellation Policy</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Bounties cancelled within 24 hours of posting: No platform cancellation fee</li>
                     <li>Bounties cancelled after 24 hours: 2% cancellation fee applies</li>
-                    <li>Stripe processing fees (~2.9% + 30¢) are non-refundable regardless of cancellation timing</li>
-                    <li>Refunds are processed minus all applicable fees</li>
+                    <li>Stripe processing fees are non-refundable regardless of cancellation timing</li>
+                    <li>Refunds are processed to the original payment method minus all applicable fees</li>
+                    <li>Bounties with accepted claims may not be cancelled without mutual agreement</li>
                   </ul>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">5.4 Payout Timing</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Following approval of a claim, payouts are processed through Stripe Connect and typically 
+                    arrive within 2-7 business days depending on your location and banking institution. 
+                    BountyBay is not responsible for delays caused by banks or payment networks.
+                  </p>
                 </div>
               </div>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">6. Prohibited Activities</h2>
+              <h2 className="text-xl font-semibold mb-3">6. Platform Role and Liability</h2>
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-medium mb-2">6.1 Marketplace Facilitator</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    BountyBay operates solely as a marketplace facilitator connecting Posters and Hunters. 
+                    We are not a party to any transaction between users and do not act as an agent for either party. 
+                    We do not take ownership of, inspect, or verify any items listed or transacted on the Platform.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">6.2 No Warranty on Items</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    BountyBay makes no representations or warranties regarding the quality, authenticity, legality, 
+                    safety, or suitability of any items found through the Platform. All transactions are conducted 
+                    at the users' own risk. Users are solely responsible for verifying item authenticity and condition.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">6.3 User Disputes</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    While we provide dispute resolution services, BountyBay is not liable for any disputes between 
+                    users. Our dispute resolution decisions are made in good faith based on available evidence but 
+                    are not legally binding arbitration.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">7. Acceptable Use Policy</h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
+                You agree not to use the Platform for any unlawful purpose or in violation of these Terms. 
                 The following activities are strictly prohibited:
               </p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Posting bounties for illegal items or services</li>
-                <li>Submitting false or fraudulent claims</li>
-                <li>Circumventing the platform's payment system or conducting off-platform transactions</li>
-                <li>Arranging payments outside of BountyBay for bounties initiated on the platform</li>
-                <li>Harassment or inappropriate communication</li>
-                <li>Creating multiple accounts to manipulate ratings</li>
-                <li>Violating intellectual property rights</li>
-                <li>Attempting to contact other users outside the platform to avoid fees</li>
+                <li>Posting Bounties for illegal items, stolen goods, or controlled substances</li>
+                <li>Submitting false, fraudulent, or misleading claims</li>
+                <li>Circumventing the Platform's payment system or conducting off-platform transactions</li>
+                <li>Soliciting users to complete transactions outside of BountyBay</li>
+                <li>Harassment, threats, or inappropriate communication with other users</li>
+                <li>Creating multiple accounts to manipulate ratings or circumvent suspensions</li>
+                <li>Infringing upon intellectual property rights of third parties</li>
+                <li>Uploading malicious content, viruses, or harmful code</li>
+                <li>Attempting to access accounts or systems without authorization</li>
+                <li>Engaging in any activity that disrupts or interferes with the Platform</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">7. Dispute Resolution</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                In case of disputes between bounty posters and hunters, BountyBay provides mediation 
-                services. Our team will review evidence from both parties and make a determination 
-                regarding payment release or refund.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-3">8. Privacy and Data</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Your privacy is important to us. Please review our Privacy Policy to understand 
-                how we collect, use, and protect your personal information. By using BountyBay, 
-                you consent to our data practices as described in the Privacy Policy.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-3">9. Limitation of Liability</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                BountyBay acts as a platform connecting buyers and hunters. We are not responsible 
-                for the quality, legality, or accuracy of items found through our platform. 
-                Users engage with each other at their own risk.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-3">10. Changes to Terms</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                We reserve the right to modify these Terms at any time. Users will be notified 
-                of significant changes, and continued use of the platform constitutes acceptance 
-                of the updated Terms.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-3">11. Contact Information</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                If you have questions about these Terms of Service, please contact us at:
-              </p>
-              <div className="mt-3 text-muted-foreground">
-                <p>Email: legal@bountybay.co</p>
-                <p>Address: [Company Address]</p>
+              <h2 className="text-xl font-semibold mb-3">8. Dispute Resolution</h2>
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-medium mb-2">8.1 Internal Resolution</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    In the event of a dispute between a Poster and Hunter, either party may open a dispute through 
+                    the Platform. Our support team will review evidence submitted by both parties and render a 
+                    decision regarding payment release or refund within 14 business days.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">8.2 Governing Law</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    These Terms shall be governed by and construed in accordance with the laws of the Province of 
+                    Ontario and the federal laws of Canada applicable therein, without regard to conflict of law principles.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">8.3 Jurisdiction</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    You agree to submit to the exclusive jurisdiction of the courts located in the Province of Ontario, 
+                    Canada, for any disputes arising out of or relating to these Terms or your use of the Platform.
+                  </p>
+                </div>
               </div>
             </section>
 
-            <div className="bg-muted/50 rounded-lg p-4 mt-8">
-              <p className="text-sm text-muted-foreground">
-                <strong>Note:</strong> This is a placeholder Terms of Service for demonstration purposes. 
-                In a real application, you should consult with legal professionals to create comprehensive 
-                terms that comply with applicable laws and regulations.
+            <section>
+              <h2 className="text-xl font-semibold mb-3">9. Intellectual Property</h2>
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-medium mb-2">9.1 Platform Content</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    The Platform and its original content, features, and functionality are owned by Bountybay Ltd. 
+                    and are protected by international copyright, trademark, patent, trade secret, and other 
+                    intellectual property laws.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">9.2 User Content</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    By posting content on the Platform, you grant BountyBay a non-exclusive, royalty-free, 
+                    worldwide license to use, display, and distribute such content in connection with operating 
+                    and promoting the Platform. You retain ownership of your content.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">10. Limitation of Liability</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                TO THE MAXIMUM EXTENT PERMITTED BY LAW, BOUNTYBAY LTD. AND ITS OFFICERS, DIRECTORS, EMPLOYEES, 
+                AND AGENTS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE 
+                DAMAGES ARISING FROM OR RELATED TO YOUR USE OF THE PLATFORM, INCLUDING BUT NOT LIMITED TO:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>Loss of profits, revenue, or business opportunities</li>
+                <li>Items that are counterfeit, damaged, or not as described</li>
+                <li>Disputes between users that cannot be resolved</li>
+                <li>Unauthorized access to or alteration of your data</li>
+                <li>Any third-party conduct or content on the Platform</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mt-3">
+                In no event shall our total liability exceed the greater of $100 CAD or the fees paid by you to 
+                BountyBay in the twelve (12) months preceding the claim.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">11. Indemnification</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                You agree to indemnify, defend, and hold harmless Bountybay Ltd. and its officers, directors, 
+                employees, agents, and affiliates from and against any and all claims, damages, obligations, 
+                losses, liabilities, costs, and expenses arising from: (a) your use of the Platform; (b) your 
+                violation of these Terms; (c) your violation of any third-party rights; or (d) any content you 
+                submit to the Platform.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">12. Termination</h2>
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-medium mb-2">12.1 By User</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    You may terminate your account at any time through your account settings. Upon termination, 
+                    pending transactions must be completed or cancelled, and any outstanding balances will be 
+                    processed according to our standard procedures.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">12.2 By BountyBay</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    We reserve the right to suspend or terminate your account at any time for violations of these 
+                    Terms, fraudulent activity, or any other reason at our sole discretion. We will make reasonable 
+                    efforts to provide notice, except in cases of severe violations.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">13. Modifications to Terms</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                We reserve the right to modify these Terms at any time. Material changes will be communicated 
+                via email or prominent notice on the Platform at least 30 days before taking effect. Your 
+                continued use of the Platform after such modifications constitutes acceptance of the updated Terms. 
+                If you do not agree to the modified Terms, you must discontinue use of the Platform.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">14. Severability</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                If any provision of these Terms is held to be invalid, illegal, or unenforceable, the remaining 
+                provisions shall continue in full force and effect. The invalid provision shall be modified to 
+                the minimum extent necessary to make it valid and enforceable.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">15. Entire Agreement</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                These Terms, together with our Privacy Policy, constitute the entire agreement between you and 
+                Bountybay Ltd. regarding your use of the Platform and supersede all prior agreements, 
+                representations, and understandings.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">16. Contact Information</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                For questions regarding these Terms of Service, please contact us:
+              </p>
+              <div className="mt-3 text-muted-foreground space-y-1">
+                <p><strong>Bountybay Ltd.</strong></p>
+                <p>Email: legal@bountybay.co</p>
+                <p>Website: bountybay.co</p>
+              </div>
+            </section>
+
+            <div className="border-t pt-6 mt-8">
+              <p className="text-xs text-muted-foreground text-center">
+                © 2025 Bountybay Ltd. All rights reserved.
               </p>
             </div>
           </div>
