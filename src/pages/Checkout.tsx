@@ -386,22 +386,32 @@ export default function Checkout() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground mb-2">Example: $100 bounty</p>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Poster Pays</span>
-                <span className="font-medium">Bounty + Stripe fees</span>
+                <span className="text-muted-foreground">Poster pays</span>
+                <span className="font-medium">$103.20</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Hunter Fee</span>
-                <span className="font-medium">7% of bounty</span>
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>↳ Bounty reward</span>
+                <span>$100.00</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Stripe Processing</span>
-                <span className="font-medium">2.9% + $0.30</span>
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>↳ Stripe fee (2.9% + $0.30)</span>
+                <span>$3.20</span>
               </div>
               <Separator />
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Example: $500 bounty</span>
-                <span className="font-medium">Hunter receives $465</span>
+                <span className="text-muted-foreground">Hunter receives</span>
+                <span className="font-medium">$93.00</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                <span>↳ After platform fee ($2 + 5%)</span>
+                <span>-$7.00</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between text-sm font-medium text-primary">
+                <span>Platform keeps</span>
+                <span>$7.00</span>
               </div>
             </CardContent>
           </Card>
