@@ -755,7 +755,7 @@ export const supabaseApi = {
         total_ratings_received: profileData.total_ratings_received || 0,
         total_ratings_given: profileData.total_ratings_given || 0,
         joinedAt: profileData.created_at ? new Date(profileData.created_at) : new Date(),
-        idvStatus: profileData.kyc_verified ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
+        idvStatus: profileData.stripe_connect_onboarding_complete ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
         hasPayoutMethod: profileData.stripe_connect_onboarding_complete || false,
         completedBounties: profileData.total_successful_claims || 0,
         postedBounties: userBounties || 0,
@@ -809,7 +809,7 @@ export const supabaseApi = {
         total_ratings_received: data.total_ratings_received || 0,
         total_ratings_given: data.total_ratings_given || 0,
         joinedAt: new Date(data.created_at || Date.now()),
-        idvStatus: data.kyc_verified ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
+        idvStatus: data.stripe_connect_onboarding_complete ? IdvStatus.VERIFIED : IdvStatus.NOT_VERIFIED,
         hasPayoutMethod: data.stripe_connect_onboarding_complete || false,
         completedBounties: data.total_successful_claims || 0,
         postedBounties: 0,
@@ -829,29 +829,6 @@ export const supabaseApi = {
     }
   },
 
-  // KYC Verification
-  async createKycVerification(): Promise<{ verification_url: string; verification_session_id: string } | null> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User must be authenticated');
-
-      const { data, error } = await supabase.functions.invoke('create-kyc-verification', {
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
-      });
-
-      if (error) throw error;
-      
-      return {
-        verification_url: data.verification_url,
-        verification_session_id: data.verification_session_id
-      };
-    } catch (error) {
-      console.error('Error creating KYC verification:', error);
-      throw error;
-    }
-  },
 
   // Get user activity history
   async getUserActivity(userId: string): Promise<Activity[]> {
