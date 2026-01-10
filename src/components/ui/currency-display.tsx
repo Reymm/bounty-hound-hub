@@ -1,50 +1,42 @@
-import { useCurrency } from '@/hooks/use-currency';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CurrencyDisplayProps {
   amount: number;
-  showConversion?: boolean;
+  showUSD?: boolean;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
 export function CurrencyDisplay({ 
   amount, 
-  showConversion = true, 
+  showUSD = true, 
   className = '',
   size = 'md'
 }: CurrencyDisplayProps) {
-  const { userCurrency, formatCurrency, formatLocalOnly } = useCurrency();
-  
-  const usdFormatted = new Intl.NumberFormat('en-US', {
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
 
-  // If user is in USD or conversion disabled, just show USD
-  if (!showConversion || userCurrency === 'USD') {
-    return <span className={className}>{usdFormatted}</span>;
+  if (!showUSD) {
+    return <span className={className}>{formatted}</span>;
   }
-
-  const localAmount = formatLocalOnly(amount);
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <span className={`${className} cursor-help`}>
-            {usdFormatted}{' '}
-            <span className="text-muted-foreground text-sm">
-              ({localAmount})
+            {formatted}{' '}
+            <span className="text-muted-foreground text-xs font-normal">
+              USD
             </span>
           </span>
         </TooltipTrigger>
         <TooltipContent>
           <p className="text-xs">
-            Approximate conversion based on current exchange rates.
-            <br />
             All transactions are processed in USD.
           </p>
         </TooltipContent>
@@ -53,33 +45,39 @@ export function CurrencyDisplay({
   );
 }
 
-// Compact version for cards
+// Compact version for cards - shows USD label
 export function CurrencyDisplayCompact({ 
   amount, 
-  className = '' 
+  className = '',
+  showLabel = true
 }: { 
   amount: number; 
   className?: string;
+  showLabel?: boolean;
 }) {
-  const { userCurrency, formatLocalOnly } = useCurrency();
-  
-  const usdFormatted = new Intl.NumberFormat('en-US', {
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
 
-  if (userCurrency === 'USD') {
-    return <span className={className}>{usdFormatted}</span>;
-  }
-
   return (
     <span className={className}>
-      {usdFormatted}
-      <span className="block text-xs text-muted-foreground mt-0.5">
-        {formatLocalOnly(amount)}
-      </span>
+      {formatted}
+      {showLabel && (
+        <span className="text-xs text-muted-foreground ml-1">USD</span>
+      )}
     </span>
   );
+}
+
+// Simple inline format for tables/lists where we don't need label on every row
+export function formatUSD(amount: number, includeCents = false): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: includeCents ? 2 : 0,
+    maximumFractionDigits: includeCents ? 2 : 0,
+  }).format(amount);
 }
