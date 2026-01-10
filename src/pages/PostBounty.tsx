@@ -667,7 +667,7 @@ function PostBountyForm() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Bounty: ${watchedBountyAmount?.toFixed(2) || '0.00'}
+              Bounty: ${watchedBountyAmount?.toFixed(2) || '0.00'} USD
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1150,39 +1150,39 @@ function PostBountyForm() {
                 <p className="text-sm text-destructive">{errors.bountyAmount.message}</p>
               )}
               {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount < 5 && (
-                <p className="text-sm text-destructive">Minimum bounty must be $5</p>
+                <p className="text-sm text-destructive">Minimum bounty must be $5 USD</p>
               )}
               <p className="text-xs text-muted-foreground">
-                💰 This is your reward to the hunter for <strong>finding</strong> the item - not the item's purchase price ($5 - $10,000)
+                💰 All amounts in USD. This is your reward to the hunter for <strong>finding</strong> the item - not the item's purchase price ($5 - $10,000 USD)
               </p>
             </div>
 
             {/* Fee Breakdown */}
             {watchedBountyAmount > 0 && (
               <div className="bg-muted/50 p-4 rounded-lg space-y-3">
-                <h4 className="font-medium">Finder's Fee Payment Breakdown</h4>
+                <h4 className="font-medium">Payment Breakdown <span className="text-xs font-normal text-muted-foreground">(all amounts in USD)</span></h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Bounty Reward (Finder's Fee):</span>
-                    <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
+                    <span className="font-medium">${watchedBountyAmount.toFixed(2)} USD</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Payment Processing (Stripe):</span>
+                    <span>Payment Processing (Stripe 2.9% + $0.30):</span>
                     <span>${platformFee.toFixed(2)}</span>
                   </div>
                   {kycRequired && (
                     <div className="flex justify-between text-xs text-muted-foreground mt-2 pt-2 border-t">
                       <span>⚠️ Identity Verification Required:</span>
-                      <span>Bounty {'>'} $1,000</span>
+                      <span>Bounty {'>'} $1,000 USD</span>
                     </div>
                   )}
                   <div className="border-t pt-2 flex justify-between font-semibold text-base">
                     <span>Total Charge:</span>
-                    <span>${totalCharge.toFixed(2)}</span>
+                    <span>${totalCharge.toFixed(2)} USD</span>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2 border-t">
-                  💰 No platform fees for posters. Hunters pay $2 + 5% when paid out. If hunter purchases the item, you'll send those funds securely after approval.
+                  💰 No platform fees for posters. Hunters pay $2 + 5% + transfer fee when paid out.
                 </p>
               </div>
             )}
