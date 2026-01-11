@@ -71,16 +71,20 @@ serve(async (req) => {
 
     const { amount, currency } = validation.data;
     
-    // Platform fee: $2 + 5% taken from hunter on payout (not charged to poster)
-    const platformFeeFlat = 2; // $2 flat fee
-    const platformFeePercent = 0.05; // 5%
-    const platformFee = Math.round((platformFeeFlat + amount * platformFeePercent) * 100) / 100;
+    // Hunter fee: $2 + 5% taken from hunter on payout (not charged to poster)
+    const hunterFeeFlat = 2; // $2 flat fee
+    const hunterFeePercent = 0.05; // 5%
+    const hunterFee = Math.round((hunterFeeFlat + amount * hunterFeePercent) * 100) / 100;
     
-    // With save-card model, we don't add Stripe fees upfront
-    // Stripe fees will be calculated when we actually charge
+    // Stripe processing fee: 2.9% + $0.30 (charged to poster when card is charged)
+    const stripeFee = Math.round((amount * 0.029 + 0.30) * 100) / 100;
+    const totalCharge = Math.round((amount + stripeFee) * 100) / 100;
+    
     logStep("Amount calculated (save-card model)", { 
       bountyAmount: amount, 
-      platformFee: platformFee,
+      stripeFee: stripeFee,
+      totalCharge: totalCharge,
+      hunterFee: hunterFee,
       currency 
     });
 
@@ -122,7 +126,7 @@ serve(async (req) => {
         stripe_setup_intent_id: setupIntent.id,
         stripe_payment_intent_id: '', // Will be set when we charge
         amount: amount,
-        platform_fee_amount: platformFee,
+        platform_fee_amount: hunterFee, // This is the hunter's fee (stored for payout calculation)
         currency: currency.toLowerCase(),
         status: 'card_pending' // New status for save-card model
       })
@@ -140,7 +144,9 @@ serve(async (req) => {
       client_secret: setupIntent.client_secret,
       escrow_id: escrowData.id,
       bounty_amount: amount,
-      platform_fee: platformFee,
+      stripe_fee: stripeFee, // Fee poster pays (Stripe processing)
+      total_charge: totalCharge, // Bounty + Stripe fee
+      hunter_fee: hunterFee, // Fee hunter pays on payout (for reference)
       status: 'card_pending'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
