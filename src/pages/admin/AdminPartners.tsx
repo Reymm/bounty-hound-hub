@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminPartnerManagement } from '@/components/admin/AdminPartnerManagement';
+import { AdminPartnerApplications } from '@/components/admin/AdminPartnerApplications';
 
 export function AdminPartners() {
   const { user } = useAuth();
@@ -51,7 +52,7 @@ export function AdminPartners() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto py-8 px-4 max-w-4xl space-y-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Partner Management</h1>
         <p className="text-muted-foreground">
@@ -59,6 +60,7 @@ export function AdminPartners() {
         </p>
       </div>
       
+      <AdminPartnerApplications />
       <AdminPartnerManagement />
     </div>
   );

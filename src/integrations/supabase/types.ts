@@ -517,6 +517,54 @@ export type Database = {
           },
         ]
       }
+      partner_applications: {
+        Row: {
+          admin_notes: string | null
+          audience_size: string | null
+          business_name: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          social_media_handles: string | null
+          status: string
+          website_url: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          audience_size?: string | null
+          business_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_media_handles?: string | null
+          status?: string
+          website_url?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          audience_size?: string | null
+          business_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_media_handles?: string | null
+          status?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
