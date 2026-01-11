@@ -8,9 +8,21 @@ import {
   Check, 
   X, 
   Eye,
-  Loader2 
+  Loader2,
+  Trash2 
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -46,6 +58,7 @@ export function AdminPartnerApplications() {
   const [selectedApp, setSelectedApp] = useState<PartnerApplication | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -129,6 +142,35 @@ export function AdminPartnerApplications() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const deleteApplication = async (appId: string) => {
+    setDeleting(appId);
+    try {
+      const { error } = await supabase
+        .from('partner_applications')
+        .delete()
+        .eq('id', appId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Application deleted',
+        description: 'The partner application has been removed.',
+      });
+
+      setSelectedApp(null);
+      loadApplications();
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete application.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -248,17 +290,53 @@ export function AdminPartnerApplications() {
                       </p>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedApp(app);
-                        setAdminNotes(app.admin_notes || '');
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Review
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedApp(app);
+                          setAdminNotes(app.admin_notes || '');
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Review
+                      </Button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:text-destructive"
+                            disabled={deleting === app.id}
+                          >
+                            {deleting === app.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete application?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete the partner application from {app.name}. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteApplication(app.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </div>
               ))}
