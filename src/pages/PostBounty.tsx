@@ -561,11 +561,11 @@ function PostBountyForm() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">5.</span>
-                  <span>Only then: ${totalCharge.toFixed(2)} charged to you, hunter receives ~${(((watchedBountyAmount || 0) - 2 - (watchedBountyAmount || 0) * 0.05) * 0.9975 - 0.25).toFixed(2)}</span>
+                  <span>Only then: ${totalCharge.toFixed(2)} charged to you, hunter receives ~${(((watchedBountyAmount || 0) - 2 - (watchedBountyAmount || 0) * 0.05) * 0.9975).toFixed(2)}</span>
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                💡 If your bounty expires with no claims, or you cancel, you pay nothing.
+                💡 If your bounty expires with no claims, you pay nothing. Cancellations within 24 hours are free; after that, a small fee applies.
               </p>
             </div>
 
