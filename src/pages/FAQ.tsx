@@ -66,7 +66,7 @@ const faqData = [
       },
       {
         q: "Can I cancel my bounty?",
-        a: "Yes. Within 24 hours: no platform fee, just lose Stripe's processing fees (~3%). After 24 hours: 2% cancellation fee applies. If a hunter has an accepted claim in progress, cancellation requires mutual agreement."
+        a: "Yes, you can cancel anytime before a claim is accepted. If a hunter has an accepted claim in progress, cancellation requires mutual agreement. You only pay if you approve a submission."
       }
     ]
   },
@@ -138,7 +138,7 @@ const faqData = [
       },
       {
         q: "What are the cancellation fees?",
-        a: "Cancel within 24 hours: No platform fee, but Stripe keeps their ~3% processing fee (industry standard—they don't refund processor fees). After 24 hours: Additional 2% platform fee. Example: Cancelling a $100 bounty after 24 hours = ~$5.20 in fees, ~$94.80 refunded."
+        a: "There are no cancellation fees. You can cancel your bounty anytime before approving a submission. Your card is only charged when you accept a hunter's completed work."
       }
     ]
   },
@@ -257,7 +257,7 @@ const quickStats = [
   { label: "Poster Platform Fee", value: "$0", subtext: "Only pay Stripe processing" },
   { label: "Hunter Fee", value: "$2 + 5%", subtext: "Deducted from payouts" },
   { label: "Payout Hold", value: "7 days", subtext: "Then automatic transfer" },
-  { label: "Cancel Fee (24h+)", value: "2%", subtext: "Free within 24 hours" },
+  { label: "Cancellation", value: "Free", subtext: "Cancel anytime" },
 ];
 
 export default function FAQ() {

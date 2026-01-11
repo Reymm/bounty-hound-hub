@@ -137,10 +137,8 @@ export default function Terms() {
                 <div>
                   <h3 className="font-medium mb-2">5.3 Cancellation Policy</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>Bounties cancelled within 24 hours of posting: No platform cancellation fee</li>
-                    <li>Bounties cancelled after 24 hours: 2% cancellation fee applies</li>
-                    <li>Stripe processing fees are non-refundable regardless of cancellation timing</li>
-                    <li>Refunds are processed to the original payment method minus all applicable fees</li>
+                    <li>Bounties can be cancelled at any time before a submission is approved</li>
+                    <li>No cancellation fees apply - your card is only charged when you approve a submission</li>
                     <li>Bounties with accepted claims may not be cancelled without mutual agreement</li>
                   </ul>
                 </div>
