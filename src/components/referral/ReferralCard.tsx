@@ -6,13 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Gift, Copy, Users, Check, DollarSign, Share2, Crown, TrendingUp } from 'lucide-react';
+import { Gift, Copy, Users, Check, DollarSign, Share2, Crown, TrendingUp, Target } from 'lucide-react';
 
 interface ReferralStats {
   referralCode: string;
   totalReferred: number;
   pendingRewards: number;
   earnedCredits: number;
+  completedBounties: number;
   isPartner: boolean;
   partnerName: string | null;
   partnerCommissionPercent: number | null;
@@ -58,11 +59,19 @@ export function ReferralCard() {
         .eq('referrer_id', user.id)
         .in('status', ['signed_up', 'completed']);
 
+      // Count completed bounties from referred users (for partners)
+      const { count: completedBountiesCount } = await supabase
+        .from('referrals')
+        .select('*', { count: 'exact', head: true })
+        .eq('referrer_id', user.id)
+        .not('first_bounty_completed_at', 'is', null);
+
       setStats({
         referralCode: profile?.referral_code || '',
         totalReferred: referralCount || 0,
         pendingRewards: pendingCount || 0,
         earnedCredits: Number(profile?.referral_credits) || 0,
+        completedBounties: completedBountiesCount || 0,
         isPartner: profile?.is_partner || false,
         partnerName: profile?.partner_name || null,
         partnerCommissionPercent: profile?.partner_commission_percent ? Number(profile.partner_commission_percent) : null,
@@ -211,12 +220,19 @@ export function ReferralCard() {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className={`grid ${stats?.isPartner ? 'grid-cols-4' : 'grid-cols-3'} gap-3 text-center`}>
           <div className="p-3 bg-muted rounded-lg">
             <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
             <p className="text-2xl font-bold">{stats?.totalReferred || 0}</p>
             <p className="text-xs text-muted-foreground">Referred</p>
           </div>
+          {stats?.isPartner && (
+            <div className="p-3 bg-muted rounded-lg">
+              <Target className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-2xl font-bold">{stats?.completedBounties || 0}</p>
+              <p className="text-xs text-muted-foreground">Completed</p>
+            </div>
+          )}
           <div className="p-3 bg-muted rounded-lg">
             <Gift className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
             <p className="text-2xl font-bold">{stats?.pendingRewards || 0}</p>
