@@ -199,18 +199,15 @@ export function AdminPartnerManagement() {
     }
 
     try {
-      const updateData = {
-        is_partner: true,
-        partner_name: formData.partner_name || null,
-        partner_commission_percent: parseFloat(formData.partner_commission_percent) / 100,
-        partner_flat_fee_cents: parseInt(formData.partner_flat_fee_cents) || 0,
-        partner_attribution_expires_at: calculateExpiryDate(),
-      };
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', userId);
+      // Use the secure admin function to bypass RLS
+      const { error } = await supabase.rpc('admin_set_partner_status', {
+        target_user_id: userId,
+        p_is_partner: true,
+        p_partner_name: formData.partner_name || null,
+        p_partner_commission_percent: parseFloat(formData.partner_commission_percent) / 100,
+        p_partner_flat_fee_cents: parseInt(formData.partner_flat_fee_cents) || 0,
+        p_partner_attribution_expires_at: calculateExpiryDate(),
+      });
 
       if (error) throw error;
 
@@ -225,7 +222,7 @@ export function AdminPartnerManagement() {
       console.error('Error saving partner:', error);
       toast({
         title: "Error",
-        description: "Failed to save partner.",
+        description: "Failed to save partner. Make sure you have admin privileges.",
         variant: "destructive",
       });
     }
@@ -233,16 +230,15 @@ export function AdminPartnerManagement() {
 
   const handleRemovePartner = async (partnerId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          is_partner: false,
-          partner_name: null,
-          partner_commission_percent: null,
-          partner_flat_fee_cents: null,
-          partner_attribution_expires_at: null,
-        })
-        .eq('id', partnerId);
+      // Use the secure admin function to bypass RLS
+      const { error } = await supabase.rpc('admin_set_partner_status', {
+        target_user_id: partnerId,
+        p_is_partner: false,
+        p_partner_name: null,
+        p_partner_commission_percent: null,
+        p_partner_flat_fee_cents: null,
+        p_partner_attribution_expires_at: null,
+      });
 
       if (error) throw error;
 
