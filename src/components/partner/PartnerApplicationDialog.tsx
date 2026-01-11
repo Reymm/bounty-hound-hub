@@ -29,14 +29,7 @@ const applicationSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Please enter a valid email'),
   business_name: z.string().max(100).optional(),
-  website_url: z.string().max(500).optional().transform(val => {
-    if (!val || val.trim() === '') return '';
-    // Auto-prepend https:// if no protocol specified
-    if (val && !val.match(/^https?:\/\//i)) {
-      return `https://${val}`;
-    }
-    return val;
-  }),
+  website_url: z.string().max(500).optional(),
   social_media_handles: z.string().max(500).optional(),
   audience_size: z.string().optional(),
   message: z.string().min(20, 'Please provide more detail (at least 20 characters)').max(2000),
@@ -75,13 +68,19 @@ export function PartnerApplicationDialog({ trigger }: PartnerApplicationDialogPr
   const onSubmit = async (data: ApplicationFormData) => {
     setSubmitting(true);
     try {
+      // Auto-prepend https:// if website has no protocol
+      let websiteUrl = data.website_url?.trim() || null;
+      if (websiteUrl && !websiteUrl.match(/^https?:\/\//i)) {
+        websiteUrl = `https://${websiteUrl}`;
+      }
+
       const { error } = await supabase
         .from('partner_applications')
         .insert({
           name: data.name,
           email: data.email,
           business_name: data.business_name || null,
-          website_url: data.website_url || null,
+          website_url: websiteUrl,
           social_media_handles: data.social_media_handles || null,
           audience_size: data.audience_size || null,
           message: data.message,
