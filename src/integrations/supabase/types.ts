@@ -565,92 +565,6 @@ export type Database = {
         }
         Relationships: []
       }
-      partner_payouts: {
-        Row: {
-          amount: number
-          bounties_count: number | null
-          confirmed_at: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          notes: string | null
-          partner_id: string
-          payment_method: string
-          payment_reference: string | null
-          payout_email: string | null
-          period_end: string | null
-          period_start: string | null
-          processed_at: string | null
-          sent_at: string | null
-          status: string
-        }
-        Insert: {
-          amount: number
-          bounties_count?: number | null
-          confirmed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          partner_id: string
-          payment_method?: string
-          payment_reference?: string | null
-          payout_email?: string | null
-          period_end?: string | null
-          period_start?: string | null
-          processed_at?: string | null
-          sent_at?: string | null
-          status?: string
-        }
-        Update: {
-          amount?: number
-          bounties_count?: number | null
-          confirmed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          partner_id?: string
-          payment_method?: string
-          payment_reference?: string | null
-          payout_email?: string | null
-          period_end?: string | null
-          period_start?: string | null
-          processed_at?: string | null
-          sent_at?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "partner_payouts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "partner_payouts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles_secure"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "partner_payouts_partner_id_fkey"
-            columns: ["partner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "partner_payouts_partner_id_fkey"
-            columns: ["partner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_secure"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1500,16 +1414,6 @@ export type Database = {
           images: string[]
           poster_name: string
           title: string
-        }[]
-      }
-      get_partner_pending_earnings: {
-        Args: { p_partner_id: string }
-        Returns: {
-          bounties_count: number
-          last_payout_at: string
-          paid_earnings: number
-          pending_earnings: number
-          total_earnings: number
         }[]
       }
       get_public_profile_data: {
