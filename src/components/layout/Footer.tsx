@@ -13,8 +13,14 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               © 2024 BountyBay. All rights reserved.
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
               All prices are in USD
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" className="h-3 w-4 inline-block">
+                <path fill="#bf0a30" d="M0 0h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0z"/>
+                <path fill="#fff" d="M0 37h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0z"/>
+                <path fill="#002868" d="M0 0h256v259H0z"/>
+                <g fill="#fff"><g id="s18"><g id="s9"><g id="s5"><g id="s4"><path id="s" d="m128 11.7 3.9 12h12.6l-10.2 7.4 3.9 12-10.2-7.4-10.2 7.4 3.9-12-10.2-7.4h12.6z"/><use href="#s" y="42"/></g><use href="#s4" y="84"/></g><use href="#s5" y="42"/></g><use href="#s9" x="64"/></g><use href="#s18" x="128"/><use href="#s9" x="192"/></g>
+              </svg>
             </p>
           </div>
 
