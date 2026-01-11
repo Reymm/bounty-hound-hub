@@ -12,6 +12,7 @@ import { CookieConsent } from "@/components/layout/CookieConsent";
 // Pages
 import { AdminSupport } from "./pages/admin/AdminSupport";
 import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
+import { AdminPartners } from "./pages/admin/AdminPartners";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import { SupportTicket } from "./pages/SupportTicket";
 import { Support } from "./pages/Support";
@@ -130,6 +131,11 @@ const App = () => (
                       <Route path="/admin/disputes" element={
                         <ProtectedRoute>
                           <AdminDisputes />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/partners" element={
+                        <ProtectedRoute>
+                          <AdminPartners />
                         </ProtectedRoute>
                       } />
                       
