@@ -129,9 +129,9 @@ export default function Terms() {
                 <div>
                   <h3 className="font-medium mb-2">5.2 Fee Schedule</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li><strong>Posters:</strong> No platform fee. Only the bounty reward amount plus Stripe processing fees (approximately 2.9% + $0.30 CAD per transaction)</li>
-                    <li><strong>Hunters:</strong> Platform fee of $2.00 CAD + 5% of bounty amount, plus Stripe transfer fees (approximately 0.25% + $0.25 CAD), deducted from payout</li>
-                    <li><strong>Example:</strong> On a $100 CAD bounty, Hunters receive approximately $92.27 CAD after all fees</li>
+                    <li><strong>Posters:</strong> No platform fee. Only the bounty reward amount plus Stripe processing fees (approximately 2.9% + $0.30 per transaction)</li>
+                    <li><strong>Hunters:</strong> Platform fee of $2 + 5% of bounty amount, deducted from payout</li>
+                    <li><strong>Example:</strong> On a $100 bounty, Hunters receive approximately $93 after fees</li>
                   </ul>
                 </div>
                 <div>

@@ -535,7 +535,7 @@ function PostBountyForm() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                You pay bounty + processing fee. Hunter receives bounty minus $2 + 5% platform fee + ~0.25% transfer fee.
+                You pay bounty + processing fee. Hunter receives bounty minus $2 + 5% platform fee.
               </p>
             </div>
 
@@ -561,7 +561,7 @@ function PostBountyForm() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">5.</span>
-                  <span>Only then: ${totalCharge.toFixed(2)} charged to you, hunter receives ~${(((watchedBountyAmount || 0) - 2 - (watchedBountyAmount || 0) * 0.05) * 0.9975).toFixed(2)}</span>
+                  <span>Only then: ${totalCharge.toFixed(2)} charged to you, hunter receives ~${((watchedBountyAmount || 0) - 2 - (watchedBountyAmount || 0) * 0.05).toFixed(2)}</span>
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
@@ -989,7 +989,7 @@ function PostBountyForm() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2 border-t">
-                  💰 No platform fees for posters. Hunters pay $2 + 5% + transfer fee when paid out.
+                  💰 No platform fees for posters. Hunters pay $2 + 5% when paid out.
                 </p>
               </div>
             )}
