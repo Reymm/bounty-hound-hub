@@ -118,12 +118,9 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       try {
         const payoutResult = await supabaseApi.processPayout(submissionId);
         if (payoutResult.success && payoutResult.amount !== undefined) {
-          const amountDisplay = payoutResult.amount.toFixed(2);
-          const feeDisplay = payoutResult.platform_fee?.toFixed(2) || '0.00';
-          
           toast({
             title: "Bounty completed!",
-            description: `Payment captured. Payout of $${amountDisplay} will transfer after 7-day hold (platform fee: $${feeDisplay})`,
+            description: "Payment captured successfully. The hunter will receive their payout after the 7-day security hold.",
           });
         } else if (payoutResult.already_captured) {
           toast({
