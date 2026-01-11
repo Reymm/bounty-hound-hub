@@ -17,12 +17,14 @@ import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
 import { ShippingInfoCard } from '@/components/bounty/ShippingInfoCard';
 import { ShippingDetailsDialog } from '@/components/bounty/ShippingDetailsDialog';
 import { SendFundsDialog } from '@/components/bounty/SendFundsDialog';
+import { BountySEO } from '@/components/seo/BountySEO';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Bounty, BountyStatus } from '@/lib/types';
 import { format, formatDistanceToNow } from 'date-fns';
+
 export default function BountyDetail() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -232,7 +234,9 @@ export default function BountyDetail() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <BountySEO bounty={bounty} />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Back Navigation */}
       <div className="mb-6">
         <Button asChild variant="ghost" className="mb-4">
@@ -719,5 +723,6 @@ export default function BountyDetail() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }
