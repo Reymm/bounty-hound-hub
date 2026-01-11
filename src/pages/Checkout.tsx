@@ -408,10 +408,6 @@ export default function Checkout() {
                 <span>↳ Platform fee ($2 + 5%)</span>
                 <span>-$7.00</span>
               </div>
-              <div className="flex justify-between text-xs text-muted-foreground pl-2">
-                <span>↳ Transfer fee (0.25% + $0.25)</span>
-                <span>-$0.48</span>
-              </div>
               <Separator />
               <div className="flex justify-between text-sm font-medium text-primary">
                 <span>Platform keeps</span>
