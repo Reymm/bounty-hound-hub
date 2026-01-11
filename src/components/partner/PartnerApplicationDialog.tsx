@@ -29,7 +29,14 @@ const applicationSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Please enter a valid email'),
   business_name: z.string().max(100).optional(),
-  website_url: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  website_url: z.string().max(500).optional().transform(val => {
+    if (!val || val.trim() === '') return '';
+    // Auto-prepend https:// if no protocol specified
+    if (val && !val.match(/^https?:\/\//i)) {
+      return `https://${val}`;
+    }
+    return val;
+  }),
   social_media_handles: z.string().max(500).optional(),
   audience_size: z.string().optional(),
   message: z.string().min(20, 'Please provide more detail (at least 20 characters)').max(2000),
