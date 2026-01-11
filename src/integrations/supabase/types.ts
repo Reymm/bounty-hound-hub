@@ -530,6 +530,7 @@ export type Database = {
           is_suspended: boolean | null
           kyc_verified: boolean | null
           kyc_verified_at: string | null
+          partner_attribution_expires_at: string | null
           partner_commission_percent: number | null
           partner_flat_fee_cents: number | null
           partner_name: string | null
@@ -565,6 +566,7 @@ export type Database = {
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          partner_attribution_expires_at?: string | null
           partner_commission_percent?: number | null
           partner_flat_fee_cents?: number | null
           partner_name?: string | null
@@ -600,6 +602,7 @@ export type Database = {
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          partner_attribution_expires_at?: string | null
           partner_commission_percent?: number | null
           partner_flat_fee_cents?: number | null
           partner_name?: string | null
