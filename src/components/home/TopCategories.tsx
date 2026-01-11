@@ -1,4 +1,4 @@
-import { Car, Users, Package, Sparkles, Shirt, Gamepad2 } from 'lucide-react';
+import { Car, Heart, Package, Sparkles, Shirt, Disc3, Trophy, Gamepad2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BountyCategory } from '@/lib/types';
@@ -20,42 +20,49 @@ const topCategories: CategoryCard[] = [
     id: BountyCategory.COLLECTIBLES,
     label: 'Collectibles',
     icon: <Sparkles className="h-6 w-6" />,
-    description: 'Trading cards, sports cards, vintage toys',
+    description: 'Pokémon cards, sports cards, vintage toys, coins',
     gradient: 'from-amber-500/10 to-amber-600/5'
   },
   {
     id: BountyCategory.VEHICLES,
-    label: 'Vehicles',
+    label: 'Vehicles & Parts',
     icon: <Car className="h-6 w-6" />,
     description: 'Classic cars, rare parts, vintage motorcycles',
     gradient: 'from-blue-500/10 to-blue-600/5'
   },
   {
     id: BountyCategory.FASHION_APPAREL,
-    label: 'Fashion & Clothing',
+    label: 'Fashion & Sneakers',
     icon: <Shirt className="h-6 w-6" />,
-    description: 'Vintage fashion, rare sneakers, designer items',
+    description: 'Rare sneakers, vintage clothing, designer items',
     gradient: 'from-pink-500/10 to-pink-600/5'
   },
   {
     id: BountyCategory.ELECTRONICS,
-    label: 'Electronics',
-    icon: <Package className="h-6 w-6" />,
-    description: 'Retro gaming, vintage tech, rare devices',
+    label: 'Electronics & Gaming',
+    icon: <Gamepad2 className="h-6 w-6" />,
+    description: 'Retro consoles, rare games, vintage tech',
     gradient: 'from-purple-500/10 to-purple-600/5'
   },
   {
+    id: BountyCategory.MUSIC_VINYL,
+    label: 'Music & Vinyl',
+    icon: <Disc3 className="h-6 w-6" />,
+    description: 'Rare vinyl, signed albums, concert memorabilia',
+    gradient: 'from-rose-500/10 to-rose-600/5'
+  },
+  {
     id: BountyCategory.SPORTS_OUTDOORS,
-    label: 'Sports & Outdoors',
-    icon: <Gamepad2 className="h-6 w-6" />,
-    description: 'Vintage gear, rare equipment, memorabilia',
+    label: 'Sports & Memorabilia',
+    icon: <Trophy className="h-6 w-6" />,
+    description: 'Signed jerseys, vintage gear, rare equipment',
     gradient: 'from-green-500/10 to-green-600/5'
   },
   {
-    id: BountyCategory.PEOPLE_FAMILY,
-    label: 'People & Family',
-    icon: <Users className="h-6 w-6" />,
-    description: 'Biological parents, family members, old friends',
+    id: BountyCategory.RECONNECTIONS,
+    label: 'Reconnections',
+    icon: <Heart className="h-6 w-6" />,
+    description: 'Lost family, old friends, missing pets',
     gradient: 'from-teal-500/10 to-teal-600/5'
   }
 ];
