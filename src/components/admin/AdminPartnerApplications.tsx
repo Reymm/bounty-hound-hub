@@ -77,6 +77,10 @@ export function AdminPartnerApplications() {
   const updateApplicationStatus = async (appId: string, status: 'approved' | 'rejected') => {
     setUpdating(true);
     try {
+      // Get the application details for the email
+      const app = applications.find(a => a.id === appId);
+      if (!app) throw new Error('Application not found');
+
       const { error } = await supabase
         .from('partner_applications')
         .update({
@@ -88,11 +92,29 @@ export function AdminPartnerApplications() {
 
       if (error) throw error;
 
+      // Send email notification
+      try {
+        const emailResponse = await supabase.functions.invoke('send-partner-status-email', {
+          body: {
+            email: app.email,
+            name: app.name,
+            status,
+          },
+        });
+        
+        if (emailResponse.error) {
+          console.error('Failed to send email:', emailResponse.error);
+        }
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError);
+        // Don't fail the whole operation if email fails
+      }
+
       toast({
         title: status === 'approved' ? 'Application approved' : 'Application rejected',
         description: status === 'approved' 
-          ? 'Remember to add them as a partner manually.' 
-          : 'The application has been rejected.',
+          ? 'Email sent! Remember to add them as a partner manually.' 
+          : 'Email sent. The application has been rejected.',
       });
 
       setSelectedApp(null);
