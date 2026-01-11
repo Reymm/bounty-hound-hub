@@ -949,7 +949,7 @@ function PostBountyForm() {
                 <Input
                   id="bountyAmount"
                   type="number"
-                  min="5"
+                  min="10"
                   max="10000"
                   placeholder="500"
                   className={`pl-10 ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
@@ -962,11 +962,11 @@ function PostBountyForm() {
               {errors.bountyAmount && (
                 <p className="text-sm text-destructive">{errors.bountyAmount.message}</p>
               )}
-              {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount < 5 && (
-                <p className="text-sm text-destructive">Minimum bounty must be $5 USD</p>
+              {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount < 10 && (
+                <p className="text-sm text-destructive">Minimum bounty must be $10 USD</p>
               )}
               <p className="text-xs text-muted-foreground">
-                💰 All amounts in USD. This is your reward to the hunter for <strong>finding</strong> the item - not the item's purchase price ($5 - $10,000 USD)
+                💰 All amounts in USD. This is your reward to the hunter for <strong>finding</strong> the item - not the item's purchase price ($10 - $10,000 USD)
               </p>
             </div>
 
@@ -1186,7 +1186,7 @@ function PostBountyForm() {
           if (!watch('description')?.trim()) missingFields.push('Description');
           if (!watch('category')) missingFields.push('Category');
           if (!watchedBountyAmount) missingFields.push('Bounty amount');
-          else if (watchedBountyAmount < 5) missingFields.push('Bounty amount (min $5)');
+          else if (watchedBountyAmount < 10) missingFields.push('Bounty amount (min $10)');
           else if (watchedBountyAmount > 10000) missingFields.push('Bounty amount (max $10,000)');
           if (!watch('location')?.trim()) missingFields.push('Location');
           if ((watch('tags') || []).length === 0) missingFields.push('At least one tag');
