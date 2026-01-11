@@ -60,11 +60,12 @@ function PostBountyForm() {
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
-  const [bountyType, setBountyType] = useState<'lead-only' | 'item-delivery' | 'purchase-delivery'>('lead-only');
+  const [bountyType, setBountyType] = useState<'lead-only' | 'find-and-ship'>('lead-only');
 
   // Derive requiresShipping and hunterPurchasesItem from bountyType
-  const requiresShipping = bountyType === 'item-delivery' || bountyType === 'purchase-delivery';
-  const hunterPurchasesItem = bountyType === 'purchase-delivery';
+  // Find & Ship = shipping ON + hunter purchases ON (bundled together)
+  const requiresShipping = bountyType === 'find-and-ship';
+  const hunterPurchasesItem = bountyType === 'find-and-ship';
 
   const {
     register,
@@ -890,57 +891,32 @@ function PostBountyForm() {
                     <span>Lead Only</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Hunter tells you where to find the item (e.g., "Found it at a thrift shop in Cincinnati"). You'll handle getting it yourself.
+                    Hunter tells you where to find the item. You'll go get it yourself.
                   </p>
                 </div>
               </div>
 
-              {/* Option 2: Item Delivery */}
+              {/* Option 2: Find & Ship */}
               <div 
                 className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  bountyType === 'item-delivery' 
+                  bountyType === 'find-and-ship' 
                     ? 'border-primary bg-primary/5' 
                     : 'border-border bg-muted/30 hover:border-muted-foreground/50'
                 }`}
-                onClick={() => setBountyType('item-delivery')}
+                onClick={() => setBountyType('find-and-ship')}
               >
                 <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                  bountyType === 'item-delivery' ? 'border-primary' : 'border-muted-foreground'
+                  bountyType === 'find-and-ship' ? 'border-primary' : 'border-muted-foreground'
                 }`}>
-                  {bountyType === 'item-delivery' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                  {bountyType === 'find-and-ship' && <div className="h-2 w-2 rounded-full bg-primary" />}
                 </div>
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2 font-medium">
                     <Package className="h-4 w-4" />
-                    <span>Item Delivery</span>
+                    <span>Find & Ship</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Hunter already has the item and will ship it directly to you. You'll provide your shipping address after accepting their submission.
-                  </p>
-                </div>
-              </div>
-
-              {/* Option 3: Purchase & Delivery */}
-              <div 
-                className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  bountyType === 'purchase-delivery' 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border bg-muted/30 hover:border-muted-foreground/50'
-                }`}
-                onClick={() => setBountyType('purchase-delivery')}
-              >
-                <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                  bountyType === 'purchase-delivery' ? 'border-primary' : 'border-muted-foreground'
-                }`}>
-                  {bountyType === 'purchase-delivery' && <div className="h-2 w-2 rounded-full bg-primary" />}
-                </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2 font-medium">
-                    <DollarSign className="h-4 w-4" />
-                    <span>Purchase & Delivery</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Hunter finds, purchases, and ships the item to you. After approving their submission, you'll send purchase funds securely through our platform.
+                    Hunter finds the item, buys it if needed, and ships it to you. You'll reimburse their purchase cost + pay the bounty reward.
                   </p>
                 </div>
               </div>
@@ -960,7 +936,7 @@ function PostBountyForm() {
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>How pricing works:</strong> The bounty reward is your finder's fee for locating the item. The target price is what you'll pay for the item itself. The finder's fee is held in escrow now. If the hunter purchases the item for you, you'll send those funds securely through our platform after approving their submission.
+                <strong>How pricing works:</strong> The bounty reward is what you pay the hunter for finding your item. For "Find & Ship" bounties, you'll also reimburse the hunter for any purchase costs via "Send Additional Funds" after they ship.
               </AlertDescription>
             </Alert>
 
