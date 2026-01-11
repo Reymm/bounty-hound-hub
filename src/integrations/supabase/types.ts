@@ -525,10 +525,14 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          is_partner: boolean | null
           is_support_admin: boolean
           is_suspended: boolean | null
           kyc_verified: boolean | null
           kyc_verified_at: string | null
+          partner_commission_percent: number | null
+          partner_flat_fee_cents: number | null
+          partner_name: string | null
           payout_country: string | null
           payout_email: string | null
           referral_code: string | null
@@ -556,10 +560,14 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          is_partner?: boolean | null
           is_support_admin?: boolean
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          partner_commission_percent?: number | null
+          partner_flat_fee_cents?: number | null
+          partner_name?: string | null
           payout_country?: string | null
           payout_email?: string | null
           referral_code?: string | null
@@ -587,10 +595,14 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          is_partner?: boolean | null
           is_support_admin?: boolean
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
           kyc_verified_at?: string | null
+          partner_commission_percent?: number | null
+          partner_flat_fee_cents?: number | null
+          partner_name?: string | null
           payout_country?: string | null
           payout_email?: string | null
           referral_code?: string | null
