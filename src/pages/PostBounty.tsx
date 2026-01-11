@@ -565,7 +565,7 @@ function PostBountyForm() {
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                💡 If your bounty expires with no claims, you pay nothing. Cancellations within 24 hours are free; after that, a small fee applies.
+                💡 If your bounty expires or you cancel, you pay nothing.
               </p>
             </div>
 
