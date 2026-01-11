@@ -531,6 +531,9 @@ export type Database = {
           kyc_verified_at: string | null
           payout_country: string | null
           payout_email: string | null
+          referral_code: string | null
+          referral_credits: number | null
+          referred_by: string | null
           region: string | null
           reputation_score: number | null
           stripe_connect_account_id: string | null
@@ -559,6 +562,9 @@ export type Database = {
           kyc_verified_at?: string | null
           payout_country?: string | null
           payout_email?: string | null
+          referral_code?: string | null
+          referral_credits?: number | null
+          referred_by?: string | null
           region?: string | null
           reputation_score?: number | null
           stripe_connect_account_id?: string | null
@@ -587,6 +593,9 @@ export type Database = {
           kyc_verified_at?: string | null
           payout_country?: string | null
           payout_email?: string | null
+          referral_code?: string | null
+          referral_credits?: number | null
+          referred_by?: string | null
           region?: string | null
           reputation_score?: number | null
           stripe_connect_account_id?: string | null
@@ -601,6 +610,48 @@ export type Database = {
           total_successful_claims?: number | null
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          converted_at: string | null
+          created_at: string
+          first_bounty_completed_at: string | null
+          id: string
+          referral_code: string
+          referred_id: string | null
+          referrer_id: string
+          reward_amount: number | null
+          reward_credited: boolean | null
+          reward_credited_at: string | null
+          status: string
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string
+          first_bounty_completed_at?: string | null
+          id?: string
+          referral_code: string
+          referred_id?: string | null
+          referrer_id: string
+          reward_amount?: number | null
+          reward_credited?: boolean | null
+          reward_credited_at?: string | null
+          status?: string
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string
+          first_bounty_completed_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_id?: string | null
+          referrer_id?: string
+          reward_amount?: number | null
+          reward_credited?: boolean | null
+          reward_credited_at?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -1211,6 +1262,7 @@ export type Database = {
         Args: { p_bounty_id: string }
         Returns: boolean
       }
+      generate_referral_code: { Args: never; Returns: string }
       get_admin_ticket_details: {
         Args: { ticket_id_param: string }
         Returns: {
