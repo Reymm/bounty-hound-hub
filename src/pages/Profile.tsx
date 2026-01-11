@@ -28,6 +28,7 @@ import { ActivityHistory } from '@/components/profile/ActivityHistory';
 import { CountrySelectDialog } from '@/components/profile/CountrySelectDialog';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
+import { ReferralCard } from '@/components/referral/ReferralCard';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
@@ -510,6 +511,9 @@ export default function Profile() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Referral Program */}
+              <ReferralCard />
             </div>
           </div>
         </TabsContent>
