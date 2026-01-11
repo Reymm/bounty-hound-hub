@@ -386,9 +386,8 @@ export function AdminPartnerManagement() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Partner Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingPartner ? 'Edit Partner' : 'Add New Partner'}
