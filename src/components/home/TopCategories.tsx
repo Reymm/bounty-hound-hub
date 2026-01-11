@@ -1,4 +1,4 @@
-import { Car, Heart, Package, Sparkles, Shirt, Disc3, Trophy, Gamepad2 } from 'lucide-react';
+import { Car, Heart, Sparkles, Shirt, Disc3, Trophy, Gamepad2, BookOpen, Palette } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BountyCategory } from '@/lib/types';
@@ -64,6 +64,20 @@ const topCategories: CategoryCard[] = [
     icon: <Heart className="h-6 w-6" />,
     description: 'Lost family, old friends, missing pets',
     gradient: 'from-teal-500/10 to-teal-600/5'
+  },
+  {
+    id: BountyCategory.BOOKS_MEDIA,
+    label: 'Books & Rare Media',
+    icon: <BookOpen className="h-6 w-6" />,
+    description: 'First editions, out-of-print books, rare films',
+    gradient: 'from-orange-500/10 to-orange-600/5'
+  },
+  {
+    id: BountyCategory.CRAFTS_HOBBIES,
+    label: 'Art & Crafts',
+    icon: <Palette className="h-6 w-6" />,
+    description: 'Original art, handmade items, craft supplies',
+    gradient: 'from-indigo-500/10 to-indigo-600/5'
   }
 ];
 
