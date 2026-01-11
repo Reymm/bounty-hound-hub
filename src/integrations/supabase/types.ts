@@ -1256,6 +1256,17 @@ export type Database = {
         }
         Returns: string
       }
+      admin_set_partner_status: {
+        Args: {
+          p_is_partner: boolean
+          p_partner_attribution_expires_at?: string
+          p_partner_commission_percent?: number
+          p_partner_flat_fee_cents?: number
+          p_partner_name?: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
       admin_update_user_status: {
         Args: {
           new_is_support_admin?: boolean
