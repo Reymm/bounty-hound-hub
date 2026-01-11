@@ -6,13 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Gift, Copy, Users, Check, DollarSign, Share2 } from 'lucide-react';
+import { Gift, Copy, Users, Check, DollarSign, Share2, Crown, TrendingUp } from 'lucide-react';
 
 interface ReferralStats {
   referralCode: string;
   totalReferred: number;
   pendingRewards: number;
   earnedCredits: number;
+  isPartner: boolean;
+  partnerName: string | null;
+  partnerCommissionPercent: number | null;
+  partnerFlatFeeCents: number | null;
 }
 
 export function ReferralCard() {
@@ -32,10 +36,10 @@ export function ReferralCard() {
     if (!user) return;
     
     try {
-      // Get user's referral code and credits
+      // Get user's referral code, credits, and partner info
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('referral_code, referral_credits')
+        .select('referral_code, referral_credits, is_partner, partner_name, partner_commission_percent, partner_flat_fee_cents')
         .eq('id', user.id)
         .single();
 
@@ -59,6 +63,10 @@ export function ReferralCard() {
         totalReferred: referralCount || 0,
         pendingRewards: pendingCount || 0,
         earnedCredits: Number(profile?.referral_credits) || 0,
+        isPartner: profile?.is_partner || false,
+        partnerName: profile?.partner_name || null,
+        partnerCommissionPercent: profile?.partner_commission_percent ? Number(profile.partner_commission_percent) : null,
+        partnerFlatFeeCents: profile?.partner_flat_fee_cents || null,
       });
     } catch (error) {
       console.error('Error loading referral stats:', error);
@@ -124,18 +132,84 @@ export function ReferralCard() {
     );
   }
 
+  // Calculate partner earnings example (on a $100 bounty)
+  const calculatePartnerEarnings = () => {
+    if (!stats?.isPartner) return null;
+    const exampleBounty = 100;
+    const platformPercent = 0.05; // 5%
+    const platformFlat = 2; // $2
+    
+    const percentEarning = stats.partnerCommissionPercent 
+      ? exampleBounty * platformPercent * stats.partnerCommissionPercent 
+      : 0;
+    const flatEarning = stats.partnerFlatFeeCents 
+      ? stats.partnerFlatFeeCents / 100 
+      : 0;
+    
+    return {
+      percentEarning,
+      flatEarning,
+      total: percentEarning + flatEarning,
+      percentRate: stats.partnerCommissionPercent ? (stats.partnerCommissionPercent * 100) : 0,
+      flatRate: flatEarning,
+    };
+  };
+
+  const partnerEarnings = calculatePartnerEarnings();
+
   return (
-    <Card>
+    <Card className={stats?.isPartner ? 'border-primary/50 bg-gradient-to-br from-primary/5 to-transparent' : ''}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Gift className="h-5 w-5 text-primary" />
-          Refer Friends & Earn
+          {stats?.isPartner ? (
+            <>
+              <Crown className="h-5 w-5 text-primary" />
+              Partner Dashboard
+            </>
+          ) : (
+            <>
+              <Gift className="h-5 w-5 text-primary" />
+              Refer Friends & Earn
+            </>
+          )}
         </CardTitle>
         <CardDescription>
-          Invite friends to BountyBay. When they complete their first bounty, you both earn $10 credit!
+          {stats?.isPartner && stats.partnerName ? (
+            <span className="flex items-center gap-2">
+              <Badge variant="secondary" className="font-medium">
+                {stats.partnerName}
+              </Badge>
+            </span>
+          ) : (
+            "Invite friends to BountyBay. When they complete their first bounty, you both earn rewards!"
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Partner Commission Info */}
+        {stats?.isPartner && partnerEarnings && (
+          <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span className="font-medium text-sm">Your Commission Rates</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-muted-foreground">% of platform fee</p>
+                <p className="font-bold text-lg">{partnerEarnings.percentRate.toFixed(0)}%</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Flat fee per bounty</p>
+                <p className="font-bold text-lg">${partnerEarnings.flatRate.toFixed(2)}</p>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-primary/20">
+              <p className="text-xs text-muted-foreground">Example: On a $100 bounty you'd earn</p>
+              <p className="font-bold text-primary text-lg">${partnerEarnings.total.toFixed(2)}</p>
+            </div>
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="p-3 bg-muted rounded-lg">
