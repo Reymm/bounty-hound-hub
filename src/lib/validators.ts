@@ -26,7 +26,7 @@ export const postBountySchema = z.object({
     required_error: 'Bounty amount is required',
     invalid_type_error: 'Please enter a valid amount'
   })
-    .min(5, 'Minimum bounty is $5')
+    .min(10, 'Minimum bounty is $10')
     .max(10000, 'Maximum bounty is $10,000')
     .optional()
     .refine(val => val !== undefined, 'Bounty amount is required'),
