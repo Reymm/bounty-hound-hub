@@ -14,7 +14,7 @@ export function Footer() {
               © 2024 BountyBay. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              All prices are in USD 🇺🇸
+              All prices are in USD
             </p>
           </div>
 
