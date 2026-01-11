@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
-
+import { CookieConsent } from "@/components/layout/CookieConsent";
 // Pages
 import { AdminSupport } from "./pages/admin/AdminSupport";
 import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
@@ -140,6 +140,7 @@ const App = () => (
                 </>
               } />
             </Routes>
+            <CookieConsent />
           </div>
         </AuthProvider>
       </BrowserRouter>
