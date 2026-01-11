@@ -4,6 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminPartnerManagement } from '@/components/admin/AdminPartnerManagement';
 import { AdminPartnerApplications } from '@/components/admin/AdminPartnerApplications';
+import { AdminPartnerPayouts } from '@/components/admin/AdminPartnerPayouts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, FileText, DollarSign } from 'lucide-react';
 
 export function AdminPartners() {
   const { user } = useAuth();
@@ -52,16 +55,42 @@ export function AdminPartners() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl space-y-8">
+    <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Partner Management</h1>
         <p className="text-muted-foreground">
-          Add and manage affiliate partners with custom commission rates
+          Manage affiliate partners, applications, and payouts
         </p>
       </div>
       
-      <AdminPartnerApplications />
-      <AdminPartnerManagement />
+      <Tabs defaultValue="partners" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="partners" className="gap-2">
+            <Users className="h-4 w-4" />
+            Partners
+          </TabsTrigger>
+          <TabsTrigger value="applications" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Applications
+          </TabsTrigger>
+          <TabsTrigger value="payouts" className="gap-2">
+            <DollarSign className="h-4 w-4" />
+            Payouts
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="partners">
+          <AdminPartnerManagement />
+        </TabsContent>
+
+        <TabsContent value="applications">
+          <AdminPartnerApplications />
+        </TabsContent>
+
+        <TabsContent value="payouts">
+          <AdminPartnerPayouts />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
