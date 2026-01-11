@@ -28,6 +28,18 @@ export default function Auth() {
     console.log('Initial hash captured:', type, 'full hash:', hash);
     return type;
   });
+
+  // Capture referral code from URL
+  const [referralCode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      // Store in sessionStorage so it persists through the signup flow
+      sessionStorage.setItem('referral_code', ref);
+      console.log('Referral code captured:', ref);
+    }
+    return ref || sessionStorage.getItem('referral_code');
+  });
   
   // If we detected recovery in the initial hash, start in recovery mode
   const [isRecoveryMode, setIsRecoveryMode] = useState(() => initialHashType === 'recovery');
@@ -212,6 +224,42 @@ export default function Auth() {
       if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
         setError('An account with this email already exists. Please sign in instead.');
         return;
+      }
+
+      // If there's a referral code, track it
+      if (referralCode && data?.user) {
+        try {
+          // Find the referrer by their referral code
+          const { data: referrerProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('referral_code', referralCode)
+            .single();
+
+          if (referrerProfile) {
+            // Create referral record
+            await supabase.from('referrals').insert({
+              referrer_id: referrerProfile.id,
+              referred_id: data.user.id,
+              referral_code: referralCode,
+              status: 'signed_up',
+              converted_at: new Date().toISOString(),
+            });
+
+            // Update the new user's profile with referred_by
+            await supabase
+              .from('profiles')
+              .update({ referred_by: referrerProfile.id })
+              .eq('id', data.user.id);
+
+            console.log('Referral tracked successfully');
+          }
+        } catch (refError) {
+          // Don't block signup if referral tracking fails
+          console.error('Error tracking referral:', refError);
+        }
+        // Clear the referral code from session
+        sessionStorage.removeItem('referral_code');
       }
 
       // Show prominent confirmation message
