@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Bug } from 'lucide-react';
+import { PartnerApplicationDialog } from '@/components/partner/PartnerApplicationDialog';
 
 export function Footer() {
   return (
@@ -55,6 +56,7 @@ export function Footer() {
             >
               Contact
             </a>
+            <PartnerApplicationDialog />
           </nav>
         </div>
       </div>
