@@ -170,8 +170,8 @@ export function PartnerApplicationDialog({ trigger }: PartnerApplicationDialogPr
               <Label htmlFor="website_url">Website</Label>
               <Input
                 id="website_url"
-                type="url"
-                placeholder="https://..."
+                type="text"
+                placeholder="www.yoursite.com"
                 {...register('website_url')}
               />
               {errors.website_url && (
