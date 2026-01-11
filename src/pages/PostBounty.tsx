@@ -364,8 +364,8 @@ function PostBountyForm() {
       setSetupIntentId(paymentData.setup_intent_id);
       setClientSecret(paymentData.client_secret);
       setEscrowId(paymentData.escrow_id);
-      setPlatformFee(paymentData.platform_fee);
-      setTotalCharge(data.bountyAmount);
+      setPlatformFee(paymentData.stripe_fee); // Stripe processing fee (what poster pays)
+      setTotalCharge(paymentData.total_charge); // Bounty + Stripe fee
       setCurrentStep('payment');
       
       toast({
