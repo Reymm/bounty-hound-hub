@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,16 +29,17 @@ export default function Auth() {
     return type;
   });
 
-  // Capture referral code from URL
-  const [referralCode] = useState(() => {
+  // Capture referral code from URL and allow manual entry
+  const [referralCode, setReferralCode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
     if (ref) {
       // Store in sessionStorage so it persists through the signup flow
       sessionStorage.setItem('referral_code', ref);
       console.log('Referral code captured:', ref);
+      return ref;
     }
-    return ref || sessionStorage.getItem('referral_code');
+    return sessionStorage.getItem('referral_code') || '';
   });
   
   // If we detected recovery in the initial hash, start in recovery mode
@@ -934,6 +935,37 @@ export default function Auth() {
                         disabled={isLoading}
                       />
                     </div>
+                  </div>
+
+                  {/* Referral Code - optional */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-referral" className="flex items-center gap-1.5">
+                      <Gift className="h-3.5 w-3.5 text-primary" />
+                      Referral Code (Optional)
+                    </Label>
+                    <Input
+                      id="signup-referral"
+                      type="text"
+                      placeholder="Enter a referral code if you have one"
+                      value={referralCode}
+                      onChange={(e) => {
+                        const code = e.target.value.toUpperCase();
+                        setReferralCode(code);
+                        if (code) {
+                          sessionStorage.setItem('referral_code', code);
+                        } else {
+                          sessionStorage.removeItem('referral_code');
+                        }
+                      }}
+                      className="font-mono"
+                      disabled={isLoading}
+                      maxLength={20}
+                    />
+                    {referralCode && (
+                      <p className="text-xs text-muted-foreground">
+                        You'll be connected to the referrer when you sign up!
+                      </p>
+                    )}
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
