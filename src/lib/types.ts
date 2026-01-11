@@ -229,28 +229,29 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
       'vehicle-parts': 'Vehicle Parts'
     }
   },
-  'people-family': {
-    label: 'People & Family',
+  'reconnections': {
+    label: 'Reconnections',
     subcategories: {
       'biological-parents': 'Biological Parents',
       'family-members': 'Family Members',
       'old-friends': 'Old Friends',
       'adoption-search': 'Adoption Search',
-      'genealogy': 'Genealogy Research',
+      'lost-pets': 'Lost Pets',
       'lost-contact': 'Lost Contact',
-      'birth-records': 'Birth Records',
+      'genealogy': 'Genealogy Research',
       'family-history': 'Family History'
     }
   },
-  'pets': {
-    label: 'Lost Pets',
+  'music-vinyl': {
+    label: 'Music & Vinyl',
     subcategories: {
-      'dogs': 'Dogs',
-      'cats': 'Cats',
-      'birds': 'Birds',
-      'exotic-pets': 'Exotic Pets',
-      'livestock': 'Livestock',
-      'other-pets': 'Other Pets'
+      'vinyl-records': 'Vinyl Records',
+      'rare-albums': 'Rare Albums',
+      'concert-memorabilia': 'Concert Memorabilia',
+      'band-merch': 'Band Merchandise',
+      'musical-instruments': 'Musical Instruments',
+      'audio-equipment': 'Audio Equipment',
+      'signed-memorabilia': 'Signed Memorabilia'
     }
   },
   'automotive': {
@@ -341,18 +342,18 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
 
 // Enums for backward compatibility and ease of use
 export enum BountyCategory {
-  VEHICLES = 'vehicles',
-  PEOPLE_FAMILY = 'people-family',
-  PETS = 'pets',
   COLLECTIBLES = 'collectibles',
-  ELECTRONICS = 'electronics',
+  VEHICLES = 'vehicles',
   FASHION_APPAREL = 'fashion-apparel',
+  ELECTRONICS = 'electronics',
+  MUSIC_VINYL = 'music-vinyl',
+  SPORTS_OUTDOORS = 'sports-outdoors',
+  RECONNECTIONS = 'reconnections',
   BOOKS_MEDIA = 'books-media',
   HOME_GARDEN = 'home-garden',
   AUTOMOTIVE = 'automotive',
   TOOLS_HARDWARE = 'tools-hardware',
   HEALTH_BEAUTY = 'health-beauty',
-  SPORTS_OUTDOORS = 'sports-outdoors',
   CRAFTS_HOBBIES = 'crafts-hobbies',
   BUSINESS_INDUSTRIAL = 'business-industrial',
   MISCELLANEOUS = 'miscellaneous'
