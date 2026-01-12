@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -89,6 +89,29 @@ export function NotificationBell() {
       prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
     );
     setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
+  const deleteNotification = async (e: React.MouseEvent, notificationId: string) => {
+    e.stopPropagation(); // Prevent triggering the click handler
+    
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId);
+
+    if (!error) {
+      const wasUnread = notifications.find(n => n.id === notificationId)?.is_read === false;
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      if (wasUnread) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to delete notification",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNotificationClick = async (notification: Notification) => {
@@ -200,7 +223,7 @@ export function NotificationBell() {
             notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                className="flex flex-col items-start p-3 cursor-pointer"
+                className="flex flex-col items-start p-3 cursor-pointer group"
                 onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start gap-2 w-full">
@@ -218,6 +241,13 @@ export function NotificationBell() {
                       })}
                     </p>
                   </div>
+                  <button
+                    onClick={(e) => deleteNotification(e, notification.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded-full flex-shrink-0"
+                    aria-label="Delete notification"
+                  >
+                    <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                  </button>
                 </div>
               </DropdownMenuItem>
             ))
