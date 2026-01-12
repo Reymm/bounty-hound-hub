@@ -131,12 +131,21 @@ Respond ONLY with a JSON object in this exact format:
     
     console.log('Raw moderation response:', content);
     
-    // Parse the JSON response from Claude
+    // Parse the JSON response - handle markdown code blocks that AI sometimes returns
     let moderation;
     try {
-      moderation = JSON.parse(content);
+      // Strip markdown code blocks if present (```json ... ``` or ``` ... ```)
+      let cleanedContent = content.trim();
+      if (cleanedContent.startsWith('```')) {
+        // Remove opening ``` (with optional language identifier like ```json)
+        cleanedContent = cleanedContent.replace(/^```(?:json)?\s*\n?/, '');
+        // Remove closing ```
+        cleanedContent = cleanedContent.replace(/\n?```\s*$/, '');
+      }
+      moderation = JSON.parse(cleanedContent.trim());
     } catch (parseError) {
       console.error('Failed to parse moderation response:', parseError);
+      console.error('Raw content was:', content);
       throw new Error('Invalid moderation response format');
     }
 
