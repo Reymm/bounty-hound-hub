@@ -315,7 +315,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       if (result.success) {
         toast({
           title: "Funds Released! 💰",
-          description: `$${result.amount?.toFixed(2)} transferred to ${result.hunter_name}'s Stripe account`,
+          description: `Payment sent to ${result.hunter_name}`,
         });
         await loadSubmissions();
         onRefresh?.();
