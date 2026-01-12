@@ -119,12 +119,13 @@ serve(async (req) => {
     logStep("Created SetupIntent", { setupIntentId: setupIntent.id, status: setupIntent.status });
 
     // Store escrow transaction in database with card_pending status
+    // Use setup intent ID as placeholder for payment_intent_id (unique constraint requires non-empty unique value)
     const { data: escrowData, error: escrowError } = await supabaseClient
       .from('escrow_transactions')
       .insert({
         poster_id: user.id,
         stripe_setup_intent_id: setupIntent.id,
-        stripe_payment_intent_id: '', // Will be set when we charge
+        stripe_payment_intent_id: `setup_${setupIntent.id}`, // Unique placeholder until we charge
         amount: amount,
         platform_fee_amount: hunterFee, // This is the hunter's fee (stored for payout calculation)
         currency: currency.toLowerCase(),
