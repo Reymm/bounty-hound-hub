@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Process payout function started - SAVE CARD MODEL");
+    logStep("Process payout function started - DESTINATION CHARGE MODEL");
 
     const { submissionId } = await req.json();
     if (!submissionId) throw new Error("submissionId is required");
@@ -218,40 +218,32 @@ serve(async (req) => {
     // Calculate payout amounts
     const bountyAmount = parseFloat(submission.Bounties.amount);
     const platformFee = Math.round((PLATFORM_FEE_FLAT + bountyAmount * PLATFORM_FEE_PERCENT) * 100); // in cents
-    const payoutAmount = Math.round(bountyAmount * 100) - platformFee; // in cents
+    
+    // Stripe fee: 2.9% + $0.30 (charged to poster, added to total)
+    const stripeFee = Math.round(bountyAmount * 0.029 * 100 + 30); // in cents
+    const totalChargeAmount = Math.round(bountyAmount * 100) + stripeFee; // Total to charge poster
 
     logStep("Calculated payout amounts", {
       bountyAmount,
       platformFee: platformFee / 100,
-      payoutAmount: payoutAmount / 100
+      stripeFee: stripeFee / 100,
+      totalChargeAmount: totalChargeAmount / 100,
+      hunterReceives: (totalChargeAmount - platformFee) / 100
     });
 
     // ============================================================
-    // CHARGE / CAPTURE PAYMENT
+    // CHARGE WITH DESTINATION CHARGE (automatic split)
     // ============================================================
     try {
+      let paymentIntentId = '';
       let chargedAmount = 0;
 
       // Check if this is SAVE CARD MODEL (has payment_method_id) or LEGACY (has payment_intent_id)
       if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
-        // SAVE CARD MODEL: Create and confirm PaymentIntent now
-        logStep("Using SAVE CARD model - charging saved card");
+        // SAVE CARD MODEL: Create PaymentIntent with destination charge
+        logStep("Using SAVE CARD model with DESTINATION CHARGE");
         
-        // Get poster's customer ID
-        const { data: posterProfile } = await supabaseClient
-          .from('profiles')
-          .select('id')
-          .eq('id', submission.Bounties.poster_id)
-          .single();
-
-        // Get customer from Stripe
-        const customers = await stripe.customers.list({ 
-          limit: 1,
-          // We need the poster's email to find their customer
-        });
-
-        // Actually we stored the customer when we created the SetupIntent
-        // Get it from the payment method
+        // Get customer from the payment method
         const paymentMethod = await stripe.paymentMethods.retrieve(escrowTx.stripe_payment_method_id);
         const customerId = paymentMethod.customer as string;
 
@@ -259,12 +251,9 @@ serve(async (req) => {
           throw new Error("No customer found for payment method");
         }
 
-        // Calculate Stripe fees and total charge
-        // Stripe fee: 2.9% + $0.30
-        const stripeFee = Math.round(bountyAmount * 0.029 * 100 + 30); // in cents
-        const totalChargeAmount = Math.round(bountyAmount * 100) + stripeFee;
-
-        // Create PaymentIntent and charge immediately
+        // Create PaymentIntent with destination charge
+        // This automatically transfers (totalChargeAmount - applicationFee) to the hunter
+        // Platform fee is tracked as "Collected fees" in Stripe dashboard
         const paymentIntent = await stripe.paymentIntents.create({
           amount: totalChargeAmount,
           currency: escrowTx.currency || 'usd',
@@ -273,10 +262,20 @@ serve(async (req) => {
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
+          // DESTINATION CHARGE: funds go to hunter's Connect account
+          transfer_data: {
+            destination: hunterProfile.stripe_connect_account_id,
+          },
+          // APPLICATION FEE: platform fee tracked in Stripe's "Collected fees"
+          application_fee_amount: platformFee,
           metadata: {
             bounty_id: submission.bounty_id,
             submission_id: submissionId,
             hunter_id: submission.hunter_id,
+            poster_id: submission.Bounties.poster_id,
+            bounty_amount: bountyAmount.toString(),
+            platform_fee: (platformFee / 100).toFixed(2),
+            stripe_fee: (stripeFee / 100).toFixed(2),
             type: 'bounty_payment'
           }
         });
@@ -285,27 +284,21 @@ serve(async (req) => {
           throw new Error(`Payment failed. Status: ${paymentIntent.status}`);
         }
 
-        logStep("Payment charged successfully (save-card model)", { 
+        logStep("Destination charge successful", { 
           paymentIntentId: paymentIntent.id,
           status: paymentIntent.status,
-          amount: totalChargeAmount / 100
+          totalCharged: totalChargeAmount / 100,
+          applicationFee: platformFee / 100,
+          hunterReceives: (totalChargeAmount - platformFee) / 100
         });
 
+        paymentIntentId = paymentIntent.id;
         chargedAmount = totalChargeAmount;
-
-        // Update escrow with the new payment intent ID
-        await supabaseClient
-          .from('escrow_transactions')
-          .update({
-            stripe_payment_intent_id: paymentIntent.id,
-            total_charged_amount: totalChargeAmount / 100,
-            charge_attempted_at: new Date().toISOString()
-          })
-          .eq('id', escrowTx.id);
 
       } else if (escrowTx.stripe_payment_intent_id && escrowTx.stripe_payment_intent_id !== '') {
         // LEGACY MODEL: Capture the existing PaymentIntent
-        logStep("Using LEGACY model - capturing authorized payment");
+        // Note: Legacy payments won't have destination charges set up
+        logStep("Using LEGACY model - capturing authorized payment (no destination charge)");
         
         const paymentIntent = await stripe.paymentIntents.retrieve(escrowTx.stripe_payment_intent_id);
         
@@ -313,9 +306,11 @@ serve(async (req) => {
           const capturedIntent = await stripe.paymentIntents.capture(escrowTx.stripe_payment_intent_id);
           logStep("PaymentIntent captured successfully", { status: capturedIntent.status });
           chargedAmount = capturedIntent.amount;
+          paymentIntentId = capturedIntent.id;
         } else if (paymentIntent.status === 'succeeded') {
           logStep("PaymentIntent already succeeded");
           chargedAmount = paymentIntent.amount;
+          paymentIntentId = paymentIntent.id;
         } else {
           throw new Error(`PaymentIntent is in invalid state: ${paymentIntent.status}`);
         }
@@ -325,16 +320,23 @@ serve(async (req) => {
 
       // ============================================================
       // SUCCESS: Mark as captured
+      // For destination charges, the transfer to hunter is automatic!
       // ============================================================
       const { error: successError } = await supabaseClient
         .from('escrow_transactions')
         .update({ 
+          stripe_payment_intent_id: paymentIntentId,
           capture_status: 'captured',
           captured_at: new Date().toISOString(),
           status: 'captured',
           payout_method: 'stripe',
           platform_fee_amount: platformFee / 100,
+          total_charged_amount: chargedAmount / 100,
+          charge_attempted_at: new Date().toISOString(),
           capture_error: null,
+          // For destination charges, transfer happens automatically
+          // Mark as 'pending' - will be 'sent' when funds actually arrive in hunter's account
+          manual_payout_status: 'pending',
           updated_at: new Date().toISOString()
         })
         .eq('id', escrowTx.id)
@@ -344,21 +346,23 @@ serve(async (req) => {
         logStep("Warning: Failed to mark as captured, but charge succeeded", { successError });
       }
 
-      logStep("Payout processing complete - funds captured", {
+      logStep("Payout processing complete - destination charge with automatic transfer", {
         escrowId: escrowTx.id,
         chargedAmount: chargedAmount / 100,
+        platformFee: platformFee / 100,
         hunterConnectId: hunterProfile.stripe_connect_account_id,
-        payoutAmount: payoutAmount / 100
+        hunterReceives: (chargedAmount - platformFee) / 100
       });
 
       return new Response(JSON.stringify({
         success: true,
-        message: 'Payment captured. Funds will be transferred to hunter after 7-day hold period.',
-        payout_method: 'stripe',
+        message: 'Payment captured with destination charge. Funds automatically transferred to hunter (subject to Stripe payout schedule).',
+        payout_method: 'stripe_destination_charge',
         escrow_captured: true,
         bounty_amount: bountyAmount,
-        amount: payoutAmount / 100,
+        total_charged: chargedAmount / 100,
         platform_fee: platformFee / 100,
+        hunter_receives: (chargedAmount - platformFee) / 100,
         hunter_connect_id: hunterProfile.stripe_connect_account_id,
         captured_at: new Date().toISOString()
       }), {
