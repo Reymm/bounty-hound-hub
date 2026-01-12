@@ -99,10 +99,12 @@ export function SendFundsDialog({
     onClose();
   };
 
-  // Calculate fee preview
+  // Calculate fee preview - includes processing + connect fees
   const amountNum = parseFloat(amount) || 0;
-  const stripeFee = amountNum > 0 ? Math.round(((amountNum + 0.30) / (1 - 0.029) - amountNum) * 100) / 100 : 0;
-  const totalCharge = amountNum > 0 ? Math.round((amountNum + stripeFee) * 100) / 100 : 0;
+  // Processing: 2.9% + $0.30, Connect cross-border: 0.5% + $0.25
+  const transferAmount = amountNum > 0 ? Math.ceil(((amountNum + 0.25) / 0.995) * 100) / 100 : 0;
+  const totalCharge = amountNum > 0 ? Math.ceil(((transferAmount + 0.30) / 0.971) * 100) / 100 : 0;
+  const totalFees = amountNum > 0 ? Math.round((totalCharge - amountNum) * 100) / 100 : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -172,8 +174,8 @@ export function SendFundsDialog({
                   <span className="font-medium">${amountNum.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Processing fee</span>
-                  <span>${stripeFee.toFixed(2)}</span>
+                  <span>Processing fees</span>
+                  <span>${totalFees.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
                   <span>Total charge</span>
