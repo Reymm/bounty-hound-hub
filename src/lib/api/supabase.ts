@@ -1056,8 +1056,9 @@ export const supabaseApi = {
     message?: string;
   }> {
     try {
+      // Always pass earlyRelease: true since this is the "Release Funds Early" button
       const { data, error } = await supabase.functions.invoke('release-funds', {
-        body: { submissionId },
+        body: { submissionId, earlyRelease: true },
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
