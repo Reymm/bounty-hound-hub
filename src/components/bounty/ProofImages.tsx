@@ -105,11 +105,13 @@ export function ProofImages({ urls }: ProofImagesProps) {
                   alt={`Proof ${index + 1}`}
                   className="w-full h-48 sm:h-56 object-cover cursor-pointer"
                   onError={(e) => {
-                    console.error('Image failed to load:', urlData.resolved);
-                    // Show as link fallback instead of hiding
+                    // Safe DOM manipulation - avoid innerHTML to prevent XSS
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
-                      parent.innerHTML = `<span class="flex items-center justify-center gap-2 text-sm text-primary p-4">📎 View file</span>`;
+                      const span = document.createElement('span');
+                      span.className = 'flex items-center justify-center gap-2 text-sm text-primary p-4';
+                      span.textContent = '📎 View file';
+                      parent.replaceChild(span, e.currentTarget);
                     }
                   }}
                 />

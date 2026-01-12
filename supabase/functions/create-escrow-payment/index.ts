@@ -135,7 +135,7 @@ serve(async (req) => {
 
     if (escrowError) {
       logStep("Database error", { error: escrowError });
-      throw new Error(`Failed to create escrow record: ${escrowError.message}`);
+      throw new Error('Failed to create escrow record');
     }
     logStep("Created escrow record", { escrowId: escrowData.id });
 
@@ -156,9 +156,14 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-escrow-payment", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // Return generic error to client, keep details in server logs
+    const isAuthError = errorMessage.includes('Authentication') || errorMessage.includes('authorization');
+    return new Response(JSON.stringify({ 
+      error: isAuthError ? 'Authentication failed' : 'Payment setup failed',
+      code: isAuthError ? 'AUTH_ERROR' : 'PAYMENT_ERROR'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isAuthError ? 401 : 500,
     });
   }
 });

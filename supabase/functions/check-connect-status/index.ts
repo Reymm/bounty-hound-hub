@@ -102,9 +102,14 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-connect-status", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // Return generic error to client, keep details in server logs
+    const isAuthError = errorMessage.includes('Authentication') || errorMessage.includes('authorization');
+    return new Response(JSON.stringify({ 
+      error: isAuthError ? 'Authentication failed' : 'Connect status check failed',
+      code: isAuthError ? 'AUTH_ERROR' : 'CONNECT_ERROR'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isAuthError ? 401 : 500,
     });
   }
 });

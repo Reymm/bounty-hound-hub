@@ -180,9 +180,15 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in cancel-bounty-with-fee", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // Return generic error to client, keep details in server logs
+    const isAuthError = errorMessage.includes('Authentication') || errorMessage.includes('authorization') || errorMessage.includes('poster');
+    const isNotFound = errorMessage.includes('not found');
+    return new Response(JSON.stringify({ 
+      error: isAuthError ? 'Authorization failed' : isNotFound ? 'Bounty not found' : 'Cancellation failed',
+      code: isAuthError ? 'AUTH_ERROR' : isNotFound ? 'NOT_FOUND' : 'CANCEL_ERROR'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isAuthError ? 403 : isNotFound ? 404 : 500,
     });
   }
 });

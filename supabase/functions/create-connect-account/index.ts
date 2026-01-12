@@ -126,7 +126,7 @@ serve(async (req) => {
 
       if (updateError) {
         logStep("Database update error", { error: updateError });
-        throw new Error(`Failed to update profile: ${updateError.message}`);
+        throw new Error('Failed to update profile');
       }
       logStep("Updated profile with Connect account ID");
     }
@@ -152,10 +152,15 @@ serve(async (req) => {
   } catch (error: any) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-connect-account", { message: errorMessage, code: error?.code, type: error?.type });
-    
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // Return generic error to client, keep details in server logs
+    const isAuthError = errorMessage.includes('Authentication') || errorMessage.includes('authorization');
+    const isCountryError = errorMessage.includes('country');
+    return new Response(JSON.stringify({ 
+      error: isAuthError ? 'Authentication failed' : isCountryError ? 'Invalid country selection' : 'Connect account setup failed',
+      code: isAuthError ? 'AUTH_ERROR' : isCountryError ? 'INVALID_COUNTRY' : 'CONNECT_ERROR'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isAuthError ? 401 : isCountryError ? 400 : 500,
     });
   }
 });
