@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { DollarSign, Loader2, AlertCircle } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { DollarSign, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,8 +15,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
-
 interface SendFundsDialogProps {
   bountyId: string;
   bountyTitle: string;
@@ -27,130 +23,6 @@ interface SendFundsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-}
-
-interface PaymentFormProps {
-  amount: number;
-  stripeFee: number;
-  totalCharge: number;
-  hunterName: string;
-  isManualPayout: boolean;
-  onSuccess: () => void;
-  onCancel: () => void;
-}
-
-function PaymentForm({ amount, stripeFee, totalCharge, hunterName, isManualPayout, onSuccess, onCancel }: PaymentFormProps) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      const { error: submitError } = await elements.submit();
-      if (submitError) {
-        throw new Error(submitError.message);
-      }
-
-      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/bounty/${window.location.pathname.split('/').pop()}`,
-        },
-        redirect: 'if_required',
-      });
-
-      if (confirmError) {
-        throw new Error(confirmError.message);
-      }
-
-      if (paymentIntent?.status === 'succeeded') {
-        toast({
-          title: "Payment sent!",
-          description: `$${amount.toFixed(2)} has been sent to ${hunterName}.${isManualPayout ? ' (Manual transfer pending)' : ''}`,
-        });
-        onSuccess();
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Payment failed';
-      setError(message);
-      toast({
-        title: "Payment failed",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-muted p-4 rounded-lg space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Amount to {hunterName}</span>
-          <span className="font-medium">${amount.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Processing fee</span>
-          <span>${stripeFee.toFixed(2)}</span>
-        </div>
-        <div className="border-t pt-2 flex justify-between font-semibold">
-          <span>Total charge</span>
-          <span>${totalCharge.toFixed(2)}</span>
-        </div>
-      </div>
-
-      {isManualPayout && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            This hunter requires manual payout. Funds will be held and transferred by an admin.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <PaymentElement 
-        options={{
-          layout: 'tabs',
-          wallets: { applePay: 'never', googlePay: 'never' },
-        }}
-      />
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="flex gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-        <Button type="submit" disabled={!stripe || isProcessing} className="flex-1">
-          {isProcessing ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <DollarSign className="h-4 w-4 mr-2" />
-              Send ${amount.toFixed(2)}
-            </>
-          )}
-        </Button>
-      </div>
-    </form>
-  );
 }
 
 export function SendFundsDialog({ 
@@ -165,17 +37,11 @@ export function SendFundsDialog({
   const [amount, setAmount] = useState<string>('');
   const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [paymentDetails, setPaymentDetails] = useState<{
-    amount: number;
-    stripeFee: number;
-    totalCharge: number;
-    isManualPayout: boolean;
-  } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{ amount: number; hunterName: string } | null>(null);
   const { toast } = useToast();
 
-  const handleCreatePayment = async () => {
+  const handleSendFunds = async () => {
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum < 1) {
       setError('Please enter an amount of at least $1');
@@ -203,18 +69,17 @@ export function SendFundsDialog({
       const data = response.data;
       if (data.error) throw new Error(data.error);
 
-      setClientSecret(data.client_secret);
-      setPaymentDetails({
-        amount: data.amount,
-        stripeFee: data.stripe_fee,
-        totalCharge: data.total_charge,
-        isManualPayout: data.is_manual_payout,
+      // Payment succeeded instantly using saved card
+      setSuccess({ amount: data.amount, hunterName: data.hunter_name });
+      toast({
+        title: "Payment sent! 💰",
+        description: `$${data.amount.toFixed(2)} has been sent to ${data.hunter_name}.`,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create payment';
+      const message = err instanceof Error ? err.message : 'Failed to send payment';
       setError(message);
       toast({
-        title: "Error",
+        title: "Payment failed",
         description: message,
         variant: "destructive",
       });
@@ -223,28 +88,21 @@ export function SendFundsDialog({
     }
   };
 
-  const handleSuccess = () => {
-    setClientSecret(null);
-    setPaymentDetails(null);
-    setAmount('');
-    setNote('');
-    onSuccess?.();
-    onClose();
-  };
-
-  const handleCancel = () => {
-    setClientSecret(null);
-    setPaymentDetails(null);
-  };
-
   const handleClose = () => {
-    setClientSecret(null);
-    setPaymentDetails(null);
+    if (success) {
+      onSuccess?.();
+    }
     setAmount('');
     setNote('');
     setError(null);
+    setSuccess(null);
     onClose();
   };
+
+  // Calculate fee preview
+  const amountNum = parseFloat(amount) || 0;
+  const stripeFee = amountNum > 0 ? Math.round(((amountNum + 0.30) / (1 - 0.029) - amountNum) * 100) / 100 : 0;
+  const totalCharge = amountNum > 0 ? Math.round((amountNum + stripeFee) * 100) / 100 : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -259,29 +117,23 @@ export function SendFundsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {clientSecret && paymentDetails ? (
-          <Elements
-            stripe={stripePromise}
-            options={{
-              clientSecret,
-              appearance: {
-                theme: 'stripe',
-                variables: {
-                  colorPrimary: '#0F172A',
-                },
-              },
-            }}
-          >
-            <PaymentForm
-              amount={paymentDetails.amount}
-              stripeFee={paymentDetails.stripeFee}
-              totalCharge={paymentDetails.totalCharge}
-              hunterName={hunterName}
-              isManualPayout={paymentDetails.isManualPayout}
-              onSuccess={handleSuccess}
-              onCancel={handleCancel}
-            />
-          </Elements>
+        {success ? (
+          <div className="space-y-4 py-4">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Payment Sent!</h3>
+                <p className="text-muted-foreground">
+                  ${success.amount.toFixed(2)} has been sent to {success.hunterName}
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleClose} className="w-full">
+              Done
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -313,6 +165,26 @@ export function SendFundsDialog({
               />
             </div>
 
+            {amountNum > 0 && (
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Amount to {hunterName}</span>
+                  <span className="font-medium">${amountNum.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Processing fee</span>
+                  <span>${stripeFee.toFixed(2)}</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span>Total charge</span>
+                  <span>${totalCharge.toFixed(2)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Your saved payment method will be charged
+                </p>
+              </div>
+            )}
+
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -325,17 +197,20 @@ export function SendFundsDialog({
                 Cancel
               </Button>
               <Button 
-                onClick={handleCreatePayment} 
-                disabled={isLoading || !amount}
+                onClick={handleSendFunds} 
+                disabled={isLoading || !amount || amountNum < 1}
                 className="flex-1"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
+                    Sending...
                   </>
                 ) : (
-                  'Continue to Payment'
+                  <>
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Send ${amountNum > 0 ? amountNum.toFixed(2) : '0.00'}
+                  </>
                 )}
               </Button>
             </div>
