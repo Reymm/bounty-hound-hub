@@ -146,8 +146,11 @@ serve(async (req) => {
       });
     }
     
+    // Track if this is an early release for notification
+    const isEarlyRelease = earlyRelease && !holdElapsed;
+    
     // If early release, log it
-    if (earlyRelease && !holdElapsed) {
+    if (isEarlyRelease) {
       logStep("Early release requested by poster - bypassing hold period");
     } else {
       logStep("Hold period elapsed or overridden");
@@ -231,17 +234,24 @@ serve(async (req) => {
     }
 
     // Create notification for hunter
+    const notificationTitle = isEarlyRelease 
+      ? 'Payment Released Early! 🎉💰' 
+      : 'Payment Released! 💰';
+    const notificationMessage = isEarlyRelease
+      ? `Great news! The poster released your payment early. $${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`
+      : `$${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`;
+    
     await supabaseClient
       .from('notifications')
       .insert({
         user_id: submission.hunter_id,
         type: 'payout_sent',
-        title: 'Payment Released! 💰',
-        message: `$${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`,
+        title: notificationTitle,
+        message: notificationMessage,
         bounty_id: submission.bounty_id,
         submission_id: submissionId,
       });
-    logStep("Hunter notification created");
+    logStep("Hunter notification created", { isEarlyRelease });
 
     return new Response(JSON.stringify({
       success: true,
