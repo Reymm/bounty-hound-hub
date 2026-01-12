@@ -40,10 +40,10 @@ serve(async (req) => {
     if (!user) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    // Get submission ID from request
-    const { submissionId } = await req.json();
+    // Get submission ID and early release flag from request
+    const { submissionId, earlyRelease } = await req.json();
     if (!submissionId) throw new Error("Submission ID is required");
-    logStep("Processing submission", { submissionId });
+    logStep("Processing submission", { submissionId, earlyRelease: !!earlyRelease });
 
     // Get submission with bounty info
     const { data: submission, error: submissionError } = await supabaseClient
@@ -121,7 +121,7 @@ serve(async (req) => {
       });
     }
 
-    // Check 7-day hold period
+    // Check 7-day hold period (unless early release requested)
     const now = new Date();
     const eligibleAt = escrow.eligible_at ? new Date(escrow.eligible_at) : null;
     
@@ -129,7 +129,10 @@ serve(async (req) => {
       throw new Error('Payout eligibility date not set');
     }
 
-    if (now < eligibleAt && !escrow.payout_hold_overridden) {
+    const holdElapsed = now >= eligibleAt;
+    const canRelease = holdElapsed || escrow.payout_hold_overridden || earlyRelease;
+
+    if (!canRelease) {
       const hoursRemaining = Math.ceil((eligibleAt.getTime() - now.getTime()) / (1000 * 60 * 60));
       return new Response(JSON.stringify({
         success: false,
@@ -142,7 +145,13 @@ serve(async (req) => {
         status: 200,
       });
     }
-    logStep("Hold period elapsed or overridden");
+    
+    // If early release, log it
+    if (earlyRelease && !holdElapsed) {
+      logStep("Early release requested by poster - bypassing hold period");
+    } else {
+      logStep("Hold period elapsed or overridden");
+    }
 
     // Get hunter's Stripe Connect account
     const { data: hunterProfile, error: hunterError } = await supabaseClient
