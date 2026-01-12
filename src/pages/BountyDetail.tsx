@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,9 @@ export default function BountyDetail() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Ref to track current status without causing subscription re-renders
+  const currentStatusRef = useRef<string | null>(null);
+
   const isOwnBounty = user?.id === bounty?.posterId;
   const canCancelBounty = isOwnBounty && bounty?.status !== BountyStatus.FULFILLED;
   const canSeeClaimsTab = isOwnBounty || hasUserSubmission;
@@ -73,12 +76,19 @@ export default function BountyDetail() {
     loadBountyDetail();
   }, [id]);
 
-  // Realtime subscription for bounty status changes - only for other user's updates
+  // Keep the ref in sync with bounty status
+  useEffect(() => {
+    if (bounty?.status) {
+      currentStatusRef.current = bounty.status;
+    }
+  }, [bounty?.status]);
+
+  // Realtime subscription for bounty status changes - stable, only depends on id
   useEffect(() => {
     if (!id) return;
     
     const channel = supabase
-      .channel('bounty-changes')
+      .channel(`bounty-changes-${id}`)
       .on(
         'postgres_changes',
         {
@@ -88,11 +98,12 @@ export default function BountyDetail() {
           filter: `id=eq.${id}`,
         },
         (payload: any) => {
-          // Only show toast and reload if the status actually changed
-          const oldStatus = bounty?.status;
           const newStatus = payload.new?.status;
+          const oldStatus = currentStatusRef.current;
           
+          // Only reload if status actually changed
           if (oldStatus && newStatus && oldStatus !== newStatus) {
+            currentStatusRef.current = newStatus; // Update ref first
             loadBountyDetail();
             toast({
               title: "Bounty Updated",
@@ -106,7 +117,7 @@ export default function BountyDetail() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, bounty?.status]);
+  }, [id]); // Only depend on id - stable subscription
 
   const loadBountyDetail = async () => {
     if (!id) return;
