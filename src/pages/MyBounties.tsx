@@ -58,6 +58,9 @@ export default function MyBounties() {
       const userSubmissions = await supabaseApi.getUserSubmissions(user.id);
       setAppliedBounties(userSubmissions);
 
+      // Load saved bounties upfront so the count shows correctly
+      await loadSavedBounties();
+
     } catch (error) {
       console.error('Error loading bounties:', error);
       toast({
