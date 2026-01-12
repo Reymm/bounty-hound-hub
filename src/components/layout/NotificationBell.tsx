@@ -243,10 +243,10 @@ export function NotificationBell() {
                   </div>
                   <button
                     onClick={(e) => deleteNotification(e, notification.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded-full flex-shrink-0"
+                    className="p-1 hover:bg-destructive/10 rounded-full flex-shrink-0"
                     aria-label="Delete notification"
                   >
-                    <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                    <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                   </button>
                 </div>
               </DropdownMenuItem>
