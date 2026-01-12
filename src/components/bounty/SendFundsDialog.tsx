@@ -63,6 +63,14 @@ function PaymentForm({ amount, stripeFee, totalCharge, hunterName, isManualPayou
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/bounty/${window.location.pathname.split('/').pop()}`,
+          payment_method_data: {
+            billing_details: {
+              address: {
+                country: 'US',
+                postal_code: '10001',
+              },
+            },
+          },
         },
         redirect: 'if_required',
       });
