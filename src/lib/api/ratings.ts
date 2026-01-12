@@ -46,6 +46,10 @@ export const createRating = async (data: CreateRatingRequest): Promise<UserRatin
     .single();
 
   if (error) throw error;
+
+  // Recalculate the rated user's average rating
+  await supabase.rpc('recalculate_user_rating', { user_id_param: data.rated_user_id });
+
   return rating;
 };
 
@@ -61,6 +65,12 @@ export const updateRating = async (
     .single();
 
   if (error) throw error;
+
+  // Recalculate the rated user's average rating if the rating value changed
+  if (updates.rating !== undefined && rating) {
+    await supabase.rpc('recalculate_user_rating', { user_id_param: rating.rated_user_id });
+  }
+
   return rating;
 };
 
