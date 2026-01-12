@@ -141,9 +141,12 @@ serve(async (req) => {
       logStep("Created new customer", { customerId: customer.id });
     }
 
-    // Calculate fees - Stripe processing fee: 2.9% + $0.30
-    const stripeFee = Math.round(((amount + 0.30) / (1 - 0.029) - amount) * 100) / 100;
-    const totalCharge = Math.round((amount + stripeFee) * 100) / 100;
+    // Calculate fees - Stripe processing fee: 3.5% + $0.30 (to cover international cards)
+    // CORRECT FORMULA: total = (amount + 0.30) / (1 - 0.035)
+    const STRIPE_FEE_RATE = 0.035;
+    const STRIPE_FIXED_FEE = 0.30;
+    const totalCharge = Math.round(((amount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE)) * 100) / 100;
+    const stripeFee = Math.round((totalCharge - amount) * 100) / 100;
     
     logStep("Fees calculated", { amount, stripeFee, totalCharge });
 
