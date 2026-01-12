@@ -98,7 +98,8 @@ serve(async (req) => {
       escrowId: escrow.id, 
       captureStatus: escrow.capture_status,
       eligibleAt: escrow.eligible_at,
-      payoutFreeze: escrow.payout_freeze
+      payoutFreeze: escrow.payout_freeze,
+      manualPayoutStatus: escrow.manual_payout_status
     });
 
     // Validate escrow state
@@ -110,7 +111,8 @@ serve(async (req) => {
       throw new Error(`Payout is frozen: ${escrow.payout_freeze_reason || 'Unknown reason'}`);
     }
 
-    if (escrow.payout_method === 'stripe' && escrow.manual_payout_status === 'sent') {
+    // Check if already fully released
+    if (escrow.manual_payout_status === 'sent') {
       return new Response(JSON.stringify({
         success: false,
         already_released: true,
@@ -149,7 +151,6 @@ serve(async (req) => {
     // Track if this is an early release for notification
     const isEarlyRelease = earlyRelease && !holdElapsed;
     
-    // If early release, log it
     if (isEarlyRelease) {
       logStep("Early release requested by poster - bypassing hold period");
     } else {
@@ -171,141 +172,223 @@ serve(async (req) => {
       throw new Error('Hunter has not set up Stripe Connect for payouts');
     }
 
-    if (!hunterProfile.stripe_connect_payouts_enabled) {
-      throw new Error('Hunter Stripe Connect account is not enabled for payouts');
-    }
-    logStep("Hunter Stripe Connect verified", { 
+    logStep("Hunter profile verified", { 
       connectAccountId: hunterProfile.stripe_connect_account_id 
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Calculate payout amount (after platform fee AND transfer fee)
-    const bountyAmount = escrow.amount;
-    const platformFee = 2 + (bountyAmount * 0.05); // $2 + 5% platform fee
-    const afterPlatformFee = bountyAmount - platformFee;
-    
-    // Stripe Connect transfer fee: 0.25% + $0.25
-    const transferFee = Math.round((afterPlatformFee * 0.0025 + 0.25) * 100) / 100;
-    const hunterPayout = Math.round((afterPlatformFee - transferFee) * 100) / 100;
-    
-    logStep("Payout calculated", { 
-      bountyAmount, 
-      platformFee: platformFee.toFixed(2),
-      transferFee: transferFee.toFixed(2),
-      hunterPayout: hunterPayout.toFixed(2) 
-    });
+    // Check if this was a destination charge (new flow) or legacy transfer flow
+    // For destination charges, the transfer already happened at capture time
+    // We just need to verify and update status
 
-    // Get the charge from the PaymentIntent to use as source for the transfer
-    // This links the transfer to the captured payment funds
     const paymentIntent = await stripe.paymentIntents.retrieve(escrow.stripe_payment_intent_id);
-    const latestChargeId = paymentIntent.latest_charge as string;
     
-    if (!latestChargeId) {
-      throw new Error('No charge found for this payment. The payment may not have been captured.');
-    }
+    // Check if this PaymentIntent has a transfer (destination charge)
+    const hasTransferData = paymentIntent.transfer_data?.destination;
     
-    // Get the charge to find the balance transaction currency and exchange rate
-    // The platform account may settle in a different currency than the charge
-    const charge = await stripe.charges.retrieve(latestChargeId);
-    const balanceTransactionId = charge.balance_transaction as string;
-    const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId);
-    const settlementCurrency = balanceTransaction.currency; // This is the actual currency in the balance
-    const exchangeRate = balanceTransaction.exchange_rate || 1; // Rate from USD to settlement currency
-    
-    logStep("Retrieved charge for transfer", { 
-      chargeId: latestChargeId, 
-      chargeCurrency: paymentIntent.currency,
-      settlementCurrency,
-      exchangeRate
-    });
-
-    // Calculate the hunter payout in settlement currency
-    // hunterPayout is in USD - we need to convert it to the settlement currency
-    const hunterPayoutInSettlement = hunterPayout * exchangeRate;
-    const platformFeeInSettlement = platformFee * exchangeRate;
-    
-    logStep("Currency conversion", {
-      hunterPayoutUSD: hunterPayout.toFixed(2),
-      exchangeRate,
-      hunterPayoutSettlement: hunterPayoutInSettlement.toFixed(2),
-      settlementCurrency: settlementCurrency.toUpperCase()
-    });
-
-    // Create transfer to hunter's Connect account using the captured charge
-    // MUST use the settlement currency (what's actually in the platform balance)
-    const transfer = await stripe.transfers.create({
-      amount: Math.round(hunterPayoutInSettlement * 100), // Convert to cents IN SETTLEMENT CURRENCY
-      currency: settlementCurrency, // Use settlement currency from balance transaction
-      destination: hunterProfile.stripe_connect_account_id,
-      source_transaction: latestChargeId, // Link to the captured payment
-      description: `BountyBay payout for: ${bounty.title}`,
-      metadata: {
-        bounty_id: submission.bounty_id,
-        submission_id: submissionId,
-        hunter_id: submission.hunter_id,
-        poster_id: bounty.poster_id,
-        platform_fee_usd: platformFee.toFixed(2),
-        platform_fee_settlement: platformFeeInSettlement.toFixed(2),
-        transfer_fee_usd: transferFee.toFixed(2),
-        original_amount_usd: bountyAmount.toString(),
-        exchange_rate: exchangeRate.toString(),
-        hunter_payout_usd: hunterPayout.toFixed(2),
-        hunter_payout_settlement: hunterPayoutInSettlement.toFixed(2),
-      },
-    });
-    logStep("Stripe transfer created", { transferId: transfer.id });
-
-    // Update escrow transaction
-    const { error: updateError } = await supabaseClient
-      .from('escrow_transactions')
-      .update({
-        payout_method: 'stripe',
-        manual_payout_status: 'sent',
-        manual_payout_sent_at: new Date().toISOString(),
-        payout_sent_amount: hunterPayout,
-        platform_fee_amount: platformFee,
-        manual_payout_reference: transfer.id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', escrow.id);
-
-    if (updateError) {
-      logStep("WARNING: Failed to update escrow record", { error: updateError });
-      // Don't fail - transfer is already done
-    }
-
-    // Create notification for hunter
-    const notificationTitle = isEarlyRelease 
-      ? 'Payment Released Early! 🎉💰' 
-      : 'Payment Released! 💰';
-    const notificationMessage = isEarlyRelease
-      ? `Great news! The poster released your payment early. $${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`
-      : `$${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`;
-    
-    await supabaseClient
-      .from('notifications')
-      .insert({
-        user_id: submission.hunter_id,
-        type: 'payout_sent',
-        title: notificationTitle,
-        message: notificationMessage,
-        bounty_id: submission.bounty_id,
-        submission_id: submissionId,
+    if (hasTransferData) {
+      // DESTINATION CHARGE FLOW: Transfer already happened at capture
+      logStep("Destination charge detected - transfer already completed at capture time");
+      
+      // Get the transfer details
+      const transfers = await stripe.transfers.list({
+        limit: 1,
+        // Filter by the charge from this payment intent
       });
-    logStep("Hunter notification created", { isEarlyRelease });
+      
+      // Find the transfer associated with this payment
+      const latestChargeId = paymentIntent.latest_charge as string;
+      let transferId = '';
+      let transferAmount = 0;
+      
+      if (latestChargeId) {
+        // Get charge to find associated transfer
+        const charge = await stripe.charges.retrieve(latestChargeId, {
+          expand: ['transfer']
+        });
+        
+        if (charge.transfer) {
+          const transfer = typeof charge.transfer === 'string' 
+            ? await stripe.transfers.retrieve(charge.transfer)
+            : charge.transfer;
+          transferId = transfer.id;
+          transferAmount = transfer.amount / 100;
+          logStep("Found associated transfer", { transferId, transferAmount });
+        }
+      }
 
-    return new Response(JSON.stringify({
-      success: true,
-      transfer_id: transfer.id,
-      amount: hunterPayout,
-      platform_fee: platformFee,
-      hunter_name: hunterProfile.username || 'Hunter',
-      message: `$${hunterPayout.toFixed(2)} transferred to hunter's Stripe account`
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+      const platformFee = escrow.platform_fee_amount || 0;
+      const hunterPayout = transferAmount || (escrow.total_charged_amount - platformFee);
+
+      // Update escrow to mark as sent
+      const { error: updateError } = await supabaseClient
+        .from('escrow_transactions')
+        .update({
+          manual_payout_status: 'sent',
+          manual_payout_sent_at: new Date().toISOString(),
+          payout_sent_amount: hunterPayout,
+          manual_payout_reference: transferId || 'destination_charge',
+          payout_hold_overridden: isEarlyRelease ? true : escrow.payout_hold_overridden,
+          payout_hold_overridden_at: isEarlyRelease ? new Date().toISOString() : escrow.payout_hold_overridden_at,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', escrow.id);
+
+      if (updateError) {
+        logStep("WARNING: Failed to update escrow record", { error: updateError });
+      }
+
+      // Create notification for hunter
+      const notificationTitle = isEarlyRelease 
+        ? 'Payment Released Early! 🎉💰' 
+        : 'Payment Released! 💰';
+      const notificationMessage = isEarlyRelease
+        ? `Great news! The poster released your payment early. $${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}"`
+        : `$${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}"`;
+      
+      await supabaseClient
+        .from('notifications')
+        .insert({
+          user_id: submission.hunter_id,
+          type: 'payout_sent',
+          title: notificationTitle,
+          message: notificationMessage,
+          bounty_id: submission.bounty_id,
+          submission_id: submissionId,
+        });
+      logStep("Hunter notification created", { isEarlyRelease });
+
+      return new Response(JSON.stringify({
+        success: true,
+        transfer_id: transferId || 'destination_charge_auto',
+        amount: hunterPayout,
+        platform_fee: platformFee,
+        hunter_name: hunterProfile.username || 'Hunter',
+        message: `$${hunterPayout.toFixed(2)} was automatically transferred to hunter via destination charge`,
+        destination_charge: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+
+    } else {
+      // LEGACY FLOW: Need to manually create transfer
+      logStep("Legacy payment detected - creating manual transfer");
+      
+      if (!hunterProfile.stripe_connect_payouts_enabled) {
+        throw new Error('Hunter Stripe Connect account is not enabled for payouts');
+      }
+
+      // Calculate payout amount (after platform fee AND transfer fee)
+      const bountyAmount = escrow.amount;
+      const platformFee = 2 + (bountyAmount * 0.05); // $2 + 5% platform fee
+      const afterPlatformFee = bountyAmount - platformFee;
+      
+      // Stripe Connect transfer fee: 0.25% + $0.25
+      const transferFee = Math.round((afterPlatformFee * 0.0025 + 0.25) * 100) / 100;
+      const hunterPayout = Math.round((afterPlatformFee - transferFee) * 100) / 100;
+      
+      logStep("Payout calculated (legacy)", { 
+        bountyAmount, 
+        platformFee: platformFee.toFixed(2),
+        transferFee: transferFee.toFixed(2),
+        hunterPayout: hunterPayout.toFixed(2) 
+      });
+
+      // Get the charge from the PaymentIntent
+      const latestChargeId = paymentIntent.latest_charge as string;
+      
+      if (!latestChargeId) {
+        throw new Error('No charge found for this payment. The payment may not have been captured.');
+      }
+      
+      // Get currency info from balance transaction
+      const charge = await stripe.charges.retrieve(latestChargeId);
+      const balanceTransactionId = charge.balance_transaction as string;
+      const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId);
+      const settlementCurrency = balanceTransaction.currency;
+      const exchangeRate = balanceTransaction.exchange_rate || 1;
+      
+      logStep("Currency info (legacy)", { 
+        settlementCurrency,
+        exchangeRate
+      });
+
+      const hunterPayoutInSettlement = hunterPayout * exchangeRate;
+
+      // Create transfer to hunter's Connect account
+      const transfer = await stripe.transfers.create({
+        amount: Math.round(hunterPayoutInSettlement * 100),
+        currency: settlementCurrency,
+        destination: hunterProfile.stripe_connect_account_id,
+        source_transaction: latestChargeId,
+        description: `BountyBay payout for: ${bounty.title}`,
+        metadata: {
+          bounty_id: submission.bounty_id,
+          submission_id: submissionId,
+          hunter_id: submission.hunter_id,
+          poster_id: bounty.poster_id,
+          platform_fee: platformFee.toFixed(2),
+          transfer_fee: transferFee.toFixed(2),
+          original_amount: bountyAmount.toString(),
+          hunter_payout: hunterPayout.toFixed(2),
+        },
+      });
+      logStep("Stripe transfer created (legacy)", { transferId: transfer.id });
+
+      // Update escrow transaction
+      const { error: updateError } = await supabaseClient
+        .from('escrow_transactions')
+        .update({
+          manual_payout_status: 'sent',
+          manual_payout_sent_at: new Date().toISOString(),
+          payout_sent_amount: hunterPayout,
+          platform_fee_amount: platformFee,
+          manual_payout_reference: transfer.id,
+          payout_hold_overridden: isEarlyRelease ? true : escrow.payout_hold_overridden,
+          payout_hold_overridden_at: isEarlyRelease ? new Date().toISOString() : escrow.payout_hold_overridden_at,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', escrow.id);
+
+      if (updateError) {
+        logStep("WARNING: Failed to update escrow record", { error: updateError });
+      }
+
+      // Create notification for hunter
+      const notificationTitle = isEarlyRelease 
+        ? 'Payment Released Early! 🎉💰' 
+        : 'Payment Released! 💰';
+      const notificationMessage = isEarlyRelease
+        ? `Great news! The poster released your payment early. $${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`
+        : `$${hunterPayout.toFixed(2)} has been transferred to your Stripe account for "${bounty.title}" (after $${platformFee.toFixed(2)} platform fee + $${transferFee.toFixed(2)} transfer fee)`;
+      
+      await supabaseClient
+        .from('notifications')
+        .insert({
+          user_id: submission.hunter_id,
+          type: 'payout_sent',
+          title: notificationTitle,
+          message: notificationMessage,
+          bounty_id: submission.bounty_id,
+          submission_id: submissionId,
+        });
+      logStep("Hunter notification created (legacy)", { isEarlyRelease });
+
+      return new Response(JSON.stringify({
+        success: true,
+        transfer_id: transfer.id,
+        amount: hunterPayout,
+        platform_fee: platformFee,
+        hunter_name: hunterProfile.username || 'Hunter',
+        message: `$${hunterPayout.toFixed(2)} transferred to hunter's Stripe account`,
+        destination_charge: false
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
