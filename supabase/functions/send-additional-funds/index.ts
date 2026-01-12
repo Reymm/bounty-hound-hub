@@ -87,6 +87,18 @@ serve(async (req) => {
     }
     logStep("Bounty ownership verified", { bountyTitle: bountyData.title });
 
+    // Get the escrow transaction for this bounty to retrieve saved payment method
+    const { data: escrow, error: escrowError } = await supabaseClient
+      .from('escrow_transactions')
+      .select('stripe_payment_method_id, stripe_payment_intent_id')
+      .eq('bounty_id', bountyId)
+      .single();
+
+    if (escrowError || !escrow?.stripe_payment_method_id) {
+      throw new Error('No saved payment method found for this bounty');
+    }
+    logStep("Found saved payment method", { paymentMethodId: escrow.stripe_payment_method_id });
+
     // Check if hunter has Stripe Connect set up
     const { data: hunterProfile, error: hunterError } = await supabaseClient
       .from('profiles')
@@ -129,11 +141,14 @@ serve(async (req) => {
     
     logStep("Fees calculated", { amount, stripeFee, totalCharge });
 
-    // Create payment intent with automatic transfer to hunter's Stripe Connect account
+    // Create payment intent using the SAVED payment method with automatic transfer
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalCharge * 100), // Convert to cents
       currency: 'usd',
       customer: customer.id,
+      payment_method: escrow.stripe_payment_method_id, // Use saved payment method
+      off_session: true, // Charge without customer present
+      confirm: true, // Immediately confirm the payment
       description: `Additional funds for bounty: ${bountyData.title}${note ? ` - ${note}` : ''}`,
       metadata: {
         type: 'additional_funds',
@@ -149,18 +164,36 @@ serve(async (req) => {
       },
     });
 
-    logStep("Payment intent created", { 
+    logStep("Payment intent created and confirmed", { 
       paymentIntentId: paymentIntent.id, 
       status: paymentIntent.status
     });
 
+    // Check if payment succeeded
+    if (paymentIntent.status !== 'succeeded') {
+      throw new Error(`Payment failed with status: ${paymentIntent.status}`);
+    }
+
+    // Create notification for hunter
+    await supabaseClient
+      .from('notifications')
+      .insert({
+        user_id: hunterId,
+        type: 'additional_funds_received',
+        title: 'Additional Payment Received! 💰',
+        message: `You received an additional $${amount.toFixed(2)} for "${bountyData.title}"${note ? ` - ${note}` : ''}`,
+        bounty_id: bountyId,
+      });
+    logStep("Hunter notification created");
+
     return new Response(JSON.stringify({
+      success: true,
       payment_intent_id: paymentIntent.id,
-      client_secret: paymentIntent.client_secret,
       amount: amount,
       stripe_fee: stripeFee,
       total_charge: totalCharge,
       hunter_name: hunterProfile.username || 'Hunter',
+      message: `$${amount.toFixed(2)} sent to ${hunterProfile.username || 'hunter'}`
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
