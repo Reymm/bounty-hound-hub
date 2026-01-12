@@ -41,6 +41,7 @@ export default function BountyDetail() {
   const [hasUserSubmission, setHasUserSubmission] = useState(false);
   const [userSubmissionStatus, setUserSubmissionStatus] = useState<string | null>(null);
   const [acceptedHunter, setAcceptedHunter] = useState<{ id: string; name: string } | null>(null);
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -69,6 +70,12 @@ export default function BountyDetail() {
     const tab = searchParams.get('tab');
     if (tab === 'claims') {
       setActiveTab('claims');
+    }
+    
+    // Check if we should show the review prompt
+    const review = searchParams.get('review');
+    if (review === 'true') {
+      setShowReviewPrompt(true);
     }
   }, [searchParams]);
 
@@ -577,6 +584,7 @@ export default function BountyDetail() {
                     posterId={bounty.posterId}
                     posterName={bounty.posterName}
                     bountyStatus={bounty.status}
+                    forceShowReviewPrompt={showReviewPrompt}
                   />
                 </div>
               </TabsContent>
