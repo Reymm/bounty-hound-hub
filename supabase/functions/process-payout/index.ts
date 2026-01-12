@@ -219,9 +219,13 @@ serve(async (req) => {
     const bountyAmount = parseFloat(submission.Bounties.amount);
     const platformFee = Math.round((PLATFORM_FEE_FLAT + bountyAmount * PLATFORM_FEE_PERCENT) * 100); // in cents
     
-    // Stripe fee: 2.9% + $0.30 (charged to poster, added to total)
-    const stripeFee = Math.round(bountyAmount * 0.029 * 100 + 30); // in cents
-    const totalChargeAmount = Math.round(bountyAmount * 100) + stripeFee; // Total to charge poster
+    // Stripe fee: Use 3.5% + $0.30 to cover international cards
+    // CORRECT FORMULA: Stripe charges fee on the TOTAL, not base amount
+    // total = (amount + 0.30) / (1 - fee_rate)
+    const STRIPE_FEE_RATE = 0.035; // 3.5% to cover international cards
+    const STRIPE_FIXED_FEE = 0.30;
+    const totalChargeAmount = Math.round(((bountyAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE)) * 100); // in cents
+    const stripeFee = totalChargeAmount - Math.round(bountyAmount * 100); // Actual fee in cents
 
     logStep("Calculated payout amounts", {
       bountyAmount,
