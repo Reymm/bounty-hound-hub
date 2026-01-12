@@ -456,9 +456,19 @@ export default function Messages() {
                         )}
                       </div>
                       
-                      <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
-                        Re: {thread.bountyTitle}
-                      </p>
+                      {thread.bountyId ? (
+                        <Link 
+                          to={`/b/${thread.bountyId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-muted-foreground hover:text-primary hover:underline mb-1 line-clamp-1 block"
+                        >
+                          Re: {thread.bountyTitle}
+                        </Link>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
+                          Re: {thread.bountyTitle}
+                        </p>
+                      )}
                       
                       {thread.lastMessage && (
                         <p className="text-sm text-muted-foreground line-clamp-1 mb-1">
