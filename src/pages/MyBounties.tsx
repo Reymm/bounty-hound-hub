@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Eye, MessageCircle, Plus, Package, Users, CheckCircle, DollarSign, Truck, Bookmark } from 'lucide-react';
+import { Eye, MessageCircle, Plus, Package, Users, CheckCircle, DollarSign, Truck, Bookmark, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,11 +18,20 @@ import { BountyCard } from '@/components/bounty/BountyCard';
 import { useSavedBounties } from '@/hooks/use-saved-bounties';
 import { ProofImages } from '@/components/bounty/ProofImages';
 
+interface PendingReview {
+  bountyId: string;
+  bountyTitle: string;
+  userToRateId: string;
+  userToRateName: string;
+  ratingType: 'poster_to_hunter' | 'hunter_to_poster';
+}
+
 export default function MyBounties() {
   const [searchParams] = useSearchParams();
   const [postedBounties, setPostedBounties] = useState<Bounty[]>([]);
   const [appliedBounties, setAppliedBounties] = useState<(Bounty & { claim: Claim })[]>([]);
   const [savedBounties, setSavedBounties] = useState<Bounty[]>([]);
+  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [savedLoading, setSavedLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('posted');
@@ -36,6 +45,8 @@ export default function MyBounties() {
       setActiveTab('applied');
     } else if (tab === 'saved') {
       setActiveTab('saved');
+    } else if (tab === 'reviews') {
+      setActiveTab('reviews');
     }
   }, [searchParams]);
 
@@ -60,6 +71,9 @@ export default function MyBounties() {
 
       // Load saved bounties upfront so the count shows correctly
       await loadSavedBounties();
+      
+      // Load pending reviews
+      await loadPendingReviews(userBountiesData, userSubmissions);
 
     } catch (error) {
       console.error('Error loading bounties:', error);
@@ -70,6 +84,88 @@ export default function MyBounties() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPendingReviews = async (
+    postedBountiesData: Bounty[], 
+    appliedData: (Bounty & { claim: Claim })[]
+  ) => {
+    if (!user) return;
+    
+    const reviews: PendingReview[] = [];
+    
+    try {
+      // Get all ratings the user has already given
+      const { data: existingRatings } = await supabase
+        .from('user_ratings')
+        .select('bounty_id, rated_user_id, rating_type')
+        .eq('rater_id', user.id);
+      
+      const ratedSet = new Set(
+        (existingRatings || []).map(r => `${r.bounty_id}-${r.rated_user_id}-${r.rating_type}`)
+      );
+      
+      // Check posted bounties that are fulfilled - poster needs to rate hunter
+      for (const bounty of postedBountiesData) {
+        if (bounty.status === BountyStatus.FULFILLED) {
+          // Find the accepted submission
+          const { data: acceptedSubmission } = await supabase
+            .from('Submissions')
+            .select('hunter_id')
+            .eq('bounty_id', bounty.id)
+            .eq('status', 'accepted')
+            .limit(1)
+            .maybeSingle();
+          
+          if (acceptedSubmission) {
+            const key = `${bounty.id}-${acceptedSubmission.hunter_id}-poster_to_hunter`;
+            if (!ratedSet.has(key)) {
+              // Get hunter name
+              const { data: hunterProfile } = await supabase
+                .from('profiles')
+                .select('username, full_name')
+                .eq('id', acceptedSubmission.hunter_id)
+                .maybeSingle();
+              
+              reviews.push({
+                bountyId: bounty.id,
+                bountyTitle: bounty.title,
+                userToRateId: acceptedSubmission.hunter_id,
+                userToRateName: hunterProfile?.username || hunterProfile?.full_name || 'Hunter',
+                ratingType: 'poster_to_hunter'
+              });
+            }
+          }
+        }
+      }
+      
+      // Check applied bounties that are accepted - hunter needs to rate poster
+      for (const item of appliedData) {
+        if (item.claim.status === ClaimStatus.ACCEPTED || item.status === BountyStatus.FULFILLED) {
+          const key = `${item.id}-${item.posterId}-hunter_to_poster`;
+          if (!ratedSet.has(key)) {
+            // Get poster name
+            const { data: posterProfile } = await supabase
+              .from('profiles')
+              .select('username, full_name')
+              .eq('id', item.posterId)
+              .maybeSingle();
+            
+            reviews.push({
+              bountyId: item.id,
+              bountyTitle: item.title,
+              userToRateId: item.posterId,
+              userToRateName: posterProfile?.username || posterProfile?.full_name || 'Poster',
+              ratingType: 'hunter_to_poster'
+            });
+          }
+        }
+      }
+      
+      setPendingReviews(reviews);
+    } catch (error) {
+      console.error('Error loading pending reviews:', error);
     }
   };
 
@@ -179,12 +275,21 @@ export default function MyBounties() {
         defaultValue="posted" 
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="posted">
             Posted ({postedBounties.length})
           </TabsTrigger>
           <TabsTrigger value="applied">
             Applied ({appliedBounties.length})
+          </TabsTrigger>
+          <TabsTrigger value="reviews" className="relative">
+            <Star className="h-4 w-4 mr-1" />
+            Reviews
+            {pendingReviews.length > 0 && (
+              <Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
+                {pendingReviews.length}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="saved">
             <Bookmark className="h-4 w-4 mr-1" />
@@ -411,6 +516,61 @@ export default function MyBounties() {
                           </Link>
                         </Button>
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="reviews" className="space-y-6">
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <LoadingSkeleton key={i} className="h-24" />
+              ))}
+            </div>
+          ) : pendingReviews.length === 0 ? (
+            <EmptyState
+              icon={Star}
+              title="No pending reviews"
+              description="You're all caught up! Reviews help build trust in the community."
+            />
+          ) : (
+            <div className="space-y-4">
+              <Alert>
+                <Star className="h-4 w-4" />
+                <AlertTitle>Leave reviews for better community trust</AlertTitle>
+                <AlertDescription>
+                  Rating other users helps build a trustworthy marketplace and improves your own reputation.
+                </AlertDescription>
+              </Alert>
+              
+              {pendingReviews.map((review) => (
+                <Card key={`${review.bountyId}-${review.userToRateId}`} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {review.ratingType === 'poster_to_hunter' ? 'Rate Hunter' : 'Rate Poster'}
+                          </Badge>
+                        </div>
+                        <h3 className="font-semibold text-foreground">
+                          Rate {review.userToRateName}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          For bounty: "{review.bountyTitle}"
+                        </p>
+                      </div>
+                      
+                      <Button asChild className="bg-primary hover:bg-primary-hover text-primary-foreground">
+                        <Link to={`/b/${review.bountyId}`}>
+                          <Star className="h-4 w-4 mr-2" />
+                          Leave Review
+                        </Link>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

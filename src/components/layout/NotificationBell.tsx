@@ -128,6 +128,15 @@ export function NotificationBell() {
           navigate('/me/bounties?tab=applied');
           break;
           
+        // Rating notifications - go directly to the bounty to rate
+        case 'rate_user':
+          if (notification.bounty_id) {
+            navigate(`/b/${notification.bounty_id}`);
+          } else {
+            navigate('/me/bounties?tab=applied');
+          }
+          break;
+          
         // Poster receives these - go to bounty claims tab
         case 'submission_received':
           if (notification.bounty_id) {
