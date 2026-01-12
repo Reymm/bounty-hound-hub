@@ -113,7 +113,7 @@ serve(async (req) => {
         supabase_user_id: user.id,
         type: 'bounty_escrow',
         bounty_amount: amount.toString(),
-        platform_fee: platformFee.toString()
+        platform_fee: hunterFee.toString()
       }
     });
     logStep("Created SetupIntent", { setupIntentId: setupIntent.id, status: setupIntent.status });
