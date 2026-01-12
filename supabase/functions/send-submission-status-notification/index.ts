@@ -75,9 +75,10 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Failed to create in-app notification for hunter:', notificationError);
     }
 
-    // If accepted, also create a "rate the poster" notification for the hunter
+    // If accepted, create rating notifications for both parties
     if (newStatus === 'accepted') {
-      const { error: ratingNotifError } = await supabase
+      // Notification for hunter to rate the poster
+      const { error: hunterRatingNotifError } = await supabase
         .from('notifications')
         .insert({
           user_id: submission.hunter_id,
@@ -89,8 +90,25 @@ const handler = async (req: Request): Promise<Response> => {
           is_read: false,
         });
 
-      if (ratingNotifError) {
-        console.error('Failed to create rating notification for hunter:', ratingNotifError);
+      if (hunterRatingNotifError) {
+        console.error('Failed to create rating notification for hunter:', hunterRatingNotifError);
+      }
+
+      // Notification for POSTER to rate the hunter
+      const { error: posterRatingNotifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: bounty.poster_id,
+          type: 'rate_user',
+          title: 'Leave a Review',
+          message: `How was your experience with ${hunterProfile?.username || 'the hunter'}? Rate them for "${bounty.title}".`,
+          bounty_id: submission.bounty_id,
+          submission_id: submissionId,
+          is_read: false,
+        });
+
+      if (posterRatingNotifError) {
+        console.error('Failed to create rating notification for poster:', posterRatingNotifError);
       }
     }
 
