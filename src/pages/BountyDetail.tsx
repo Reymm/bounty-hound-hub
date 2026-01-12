@@ -73,7 +73,7 @@ export default function BountyDetail() {
     loadBountyDetail();
   }, [id]);
 
-  // Realtime subscription for bounty status changes
+  // Realtime subscription for bounty status changes - only for other user's updates
   useEffect(() => {
     if (!id) return;
     
@@ -88,12 +88,17 @@ export default function BountyDetail() {
           filter: `id=eq.${id}`,
         },
         (payload: any) => {
-          // Reload bounty when status changes
-          loadBountyDetail();
-          toast({
-            title: "Bounty Updated",
-            description: "This bounty has been updated.",
-          });
+          // Only show toast and reload if the status actually changed
+          const oldStatus = bounty?.status;
+          const newStatus = payload.new?.status;
+          
+          if (oldStatus && newStatus && oldStatus !== newStatus) {
+            loadBountyDetail();
+            toast({
+              title: "Bounty Updated",
+              description: `Status changed to ${newStatus}.`,
+            });
+          }
         }
       )
       .subscribe();
@@ -101,7 +106,7 @@ export default function BountyDetail() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id]);
+  }, [id, bounty?.status]);
 
   const loadBountyDetail = async () => {
     if (!id) return;
