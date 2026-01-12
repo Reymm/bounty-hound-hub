@@ -563,6 +563,15 @@ export default function BountyDetail() {
                       onProvideShipping={() => setIsShippingDialogOpen(true)}
                     />
                   )}
+
+                  {/* Rating Section - Show BEFORE submissions for better visibility */}
+                  <BountyRatingSection
+                    bountyId={bounty.id}
+                    posterId={bounty.posterId}
+                    posterName={bounty.posterName}
+                    bountyStatus={bounty.status}
+                    forceShowReviewPrompt={showReviewPrompt}
+                  />
                   
                   <SubmissionsList 
                     key={refreshKey}
@@ -576,15 +585,6 @@ export default function BountyDetail() {
                       loadBountyDetail();
                     }}
                     onEditSubmission={() => setIsClaimDialogOpen(true)}
-                  />
-                  
-                  {/* Rating Section - Show after bounty completion */}
-                  <BountyRatingSection
-                    bountyId={bounty.id}
-                    posterId={bounty.posterId}
-                    posterName={bounty.posterName}
-                    bountyStatus={bounty.status}
-                    forceShowReviewPrompt={showReviewPrompt}
                   />
                 </div>
               </TabsContent>
