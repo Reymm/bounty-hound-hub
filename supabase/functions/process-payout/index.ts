@@ -390,15 +390,17 @@ serve(async (req) => {
         .eq('id', escrowTx.id)
         .eq('capture_lock_id', lockId);
 
-      throw new Error(`Failed to charge payment: ${chargeError.message}`);
+      throw new Error('Payment charge failed');
     }
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-payout", { message: errorMessage });
+    // Return generic error to client, keep details in server logs
     return new Response(JSON.stringify({ 
       success: false,
-      error: errorMessage 
+      error: 'Payout processing failed',
+      code: 'PAYOUT_ERROR'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

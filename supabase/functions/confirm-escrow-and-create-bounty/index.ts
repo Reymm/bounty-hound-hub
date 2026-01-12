@@ -130,7 +130,7 @@ serve(async (req) => {
 
     if (bountyError) {
       logStep("Bounty creation error", { error: bountyError });
-      throw new Error(`Failed to create bounty: ${bountyError.message}`);
+      throw new Error('Failed to create bounty');
     }
     logStep("Bounty created successfully", { 
       bountyId: bountyData.id,
@@ -155,7 +155,7 @@ serve(async (req) => {
 
     if (updateError) {
       logStep("Escrow update error", { error: updateError });
-      throw new Error(`Failed to update escrow: ${updateError.message}`);
+      throw new Error('Failed to update escrow');
     }
     logStep("Escrow transaction updated");
 
@@ -173,9 +173,15 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in confirm-escrow-and-create-bounty", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // Return generic error to client, keep details in server logs
+    const isAuthError = errorMessage.includes('Authentication') || errorMessage.includes('authorization');
+    const isNotFound = errorMessage.includes('not found');
+    return new Response(JSON.stringify({ 
+      error: isAuthError ? 'Authentication failed' : isNotFound ? 'Transaction not found' : 'Bounty creation failed',
+      code: isAuthError ? 'AUTH_ERROR' : isNotFound ? 'NOT_FOUND' : 'CREATE_ERROR'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isAuthError ? 401 : isNotFound ? 404 : 500,
     });
   }
 });
