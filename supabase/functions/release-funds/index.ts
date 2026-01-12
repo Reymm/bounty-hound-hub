@@ -200,18 +200,29 @@ serve(async (req) => {
     // This links the transfer to the captured payment funds
     const paymentIntent = await stripe.paymentIntents.retrieve(escrow.stripe_payment_intent_id);
     const latestChargeId = paymentIntent.latest_charge as string;
-    const chargeCurrency = paymentIntent.currency; // Use the original charge currency
     
     if (!latestChargeId) {
       throw new Error('No charge found for this payment. The payment may not have been captured.');
     }
-    logStep("Retrieved charge for transfer", { chargeId: latestChargeId, currency: chargeCurrency });
+    
+    // Get the charge to find the balance transaction currency
+    // The platform account may settle in a different currency than the charge
+    const charge = await stripe.charges.retrieve(latestChargeId);
+    const balanceTransactionId = charge.balance_transaction as string;
+    const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId);
+    const settlementCurrency = balanceTransaction.currency; // This is the actual currency in the balance
+    
+    logStep("Retrieved charge for transfer", { 
+      chargeId: latestChargeId, 
+      chargeCurrency: paymentIntent.currency,
+      settlementCurrency 
+    });
 
     // Create transfer to hunter's Connect account using the captured charge
-    // MUST use the same currency as the original charge
+    // MUST use the settlement currency (what's actually in the platform balance)
     const transfer = await stripe.transfers.create({
       amount: Math.round(hunterPayout * 100), // Convert to cents
-      currency: chargeCurrency, // Use charge currency, not escrow.currency
+      currency: settlementCurrency, // Use settlement currency from balance transaction
       destination: hunterProfile.stripe_connect_account_id,
       source_transaction: latestChargeId, // Link to the captured payment
       description: `BountyBay payout for: ${bounty.title}`,
