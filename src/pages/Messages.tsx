@@ -52,7 +52,9 @@ export default function Messages() {
 
   // Handle incoming state from bounty detail page
   useEffect(() => {
-    if (stateData?.recipientId && stateData?.bountyId && user && threads.length > 0) {
+    const initNewConversation = async () => {
+      if (!stateData?.recipientId || !stateData?.bountyId || !user || threads.length === 0) return;
+      
       // Find existing conversation with this user for this bounty
       const existingThread = threads.find(t => 
         t.bountyId === stateData.bountyId &&
@@ -64,6 +66,15 @@ export default function Messages() {
         // Use existing conversation
         setSelectedThread(existingThread);
       } else {
+        // Fetch the recipient's profile to get their name
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('username, full_name')
+          .eq('id', stateData.recipientId)
+          .maybeSingle();
+        
+        const recipientName = profileData?.username || profileData?.full_name || 'User';
+        
         // Create new thread object using same format as getMessageThreads
         const threadId = [user.id, stateData.recipientId].sort().join('___');
         const newThread: MessageThread = {
@@ -71,6 +82,7 @@ export default function Messages() {
           bountyId: stateData.bountyId,
           bountyTitle: stateData.bountyTitle || 'New Conversation',
           participants: [user.id, stateData.recipientId],
+          otherParticipantName: recipientName,
           lastMessage: null,
           unreadCount: 0,
           updatedAt: new Date()
@@ -82,7 +94,9 @@ export default function Messages() {
       
       // Clear the state after handling it
       window.history.replaceState({}, document.title);
-    }
+    };
+    
+    initNewConversation();
   }, [stateData, user, threads.length]); // Depend on threads.length instead of threads array
 
   useEffect(() => {
