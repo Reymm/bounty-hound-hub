@@ -346,7 +346,7 @@ export default function BountyDetail() {
                 </div>
               )}
               
-              {isOwnBounty && bounty.status === BountyStatus.OPEN && (
+              {isOwnBounty && bounty.status === BountyStatus.OPEN && !acceptedHunter && (
                 <div className="flex gap-2 mt-4">
                   <Button
                     variant="outline"
@@ -564,7 +564,10 @@ export default function BountyDetail() {
                     posterId={bounty.posterId}
                     currentUserId={user?.id}
                     requiresShipping={bounty.requires_shipping}
-                    onRefresh={() => setRefreshKey(prev => prev + 1)}
+                    onRefresh={() => {
+                      setRefreshKey(prev => prev + 1);
+                      loadBountyDetail();
+                    }}
                     onEditSubmission={() => setIsClaimDialogOpen(true)}
                   />
                   

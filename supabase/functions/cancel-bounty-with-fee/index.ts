@@ -57,7 +57,7 @@ serve(async (req) => {
       throw new Error("Only the bounty poster can cancel");
     }
 
-    if (bounty.status === 'cancelled' || bounty.status === 'completed') {
+    if (bounty.status === 'cancelled' || bounty.status === 'completed' || bounty.status === 'fulfilled') {
       throw new Error("Bounty cannot be cancelled in current status");
     }
 
