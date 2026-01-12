@@ -200,16 +200,18 @@ serve(async (req) => {
     // This links the transfer to the captured payment funds
     const paymentIntent = await stripe.paymentIntents.retrieve(escrow.stripe_payment_intent_id);
     const latestChargeId = paymentIntent.latest_charge as string;
+    const chargeCurrency = paymentIntent.currency; // Use the original charge currency
     
     if (!latestChargeId) {
       throw new Error('No charge found for this payment. The payment may not have been captured.');
     }
-    logStep("Retrieved charge for transfer", { chargeId: latestChargeId });
+    logStep("Retrieved charge for transfer", { chargeId: latestChargeId, currency: chargeCurrency });
 
     // Create transfer to hunter's Connect account using the captured charge
+    // MUST use the same currency as the original charge
     const transfer = await stripe.transfers.create({
       amount: Math.round(hunterPayout * 100), // Convert to cents
-      currency: escrow.currency || 'usd',
+      currency: chargeCurrency, // Use charge currency, not escrow.currency
       destination: hunterProfile.stripe_connect_account_id,
       source_transaction: latestChargeId, // Link to the captured payment
       description: `BountyBay payout for: ${bounty.title}`,
