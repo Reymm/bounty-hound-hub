@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X, LogOut, Settings, Bug } from 'lucide-react';
+import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -199,7 +199,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/me/bounties">
-                        <Settings className="mr-2 h-4 w-4" />
+                        <FolderOpen className="mr-2 h-4 w-4" />
                         My Bounties
                       </Link>
                     </DropdownMenuItem>
@@ -319,7 +319,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                   </Button>
                   <Button asChild variant="ghost" className="w-full justify-start">
                     <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Settings className="h-4 w-4 mr-2" />
+                      <FolderOpen className="h-4 w-4 mr-2" />
                       My Bounties
                     </Link>
                   </Button>
