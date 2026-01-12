@@ -201,11 +201,12 @@ serve(async (req) => {
       const latestChargeId = paymentIntent.latest_charge as string;
       let transferId = '';
       let transferAmount = 0;
+      let applicationFeeAmount = 0;
       
       if (latestChargeId) {
-        // Get charge to find associated transfer
+        // Get charge to find associated transfer and application fee
         const charge = await stripe.charges.retrieve(latestChargeId, {
-          expand: ['transfer']
+          expand: ['transfer', 'application_fee']
         });
         
         if (charge.transfer) {
@@ -213,13 +214,28 @@ serve(async (req) => {
             ? await stripe.transfers.retrieve(charge.transfer)
             : charge.transfer;
           transferId = transfer.id;
+          // transfer.amount is the GROSS amount before application fee
           transferAmount = transfer.amount / 100;
-          logStep("Found associated transfer", { transferId, transferAmount });
         }
+        
+        // Get the application fee to calculate what hunter actually receives
+        if (charge.application_fee) {
+          const appFee = typeof charge.application_fee === 'string'
+            ? await stripe.applicationFees.retrieve(charge.application_fee)
+            : charge.application_fee;
+          applicationFeeAmount = appFee.amount / 100;
+          logStep("Found application fee", { applicationFeeAmount });
+        }
+        
+        logStep("Found associated transfer", { transferId, transferAmount, applicationFeeAmount });
       }
 
-      const platformFee = escrow.platform_fee_amount || 0;
-      const hunterPayout = transferAmount || (escrow.total_charged_amount - platformFee);
+      // Calculate hunter payout: transfer amount MINUS application fee
+      // The platform fee was already deducted by Stripe from the transfer
+      const platformFee = applicationFeeAmount || escrow.platform_fee_amount || 0;
+      const hunterPayout = transferAmount > 0 
+        ? (transferAmount - applicationFeeAmount)  // Net amount after platform fee
+        : (escrow.amount - platformFee);           // Fallback: bounty amount minus fee
 
       // Update escrow to mark as sent
       const { error: updateError } = await supabaseClient
