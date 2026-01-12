@@ -684,8 +684,8 @@ function PostBountyForm() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold mb-2">Processing Your Bounty</h2>
-          <p className="text-muted-foreground">Please wait while we secure your funds and create your bounty...</p>
+          <h2 className="text-2xl font-bold mb-2">Creating Your Bounty</h2>
+          <p className="text-muted-foreground">Please wait while we save your payment method and post your bounty...</p>
         </div>
       </div>
     );
