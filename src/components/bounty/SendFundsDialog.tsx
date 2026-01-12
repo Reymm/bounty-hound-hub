@@ -117,7 +117,20 @@ function PaymentForm({ amount, stripeFee, totalCharge, hunterName, isManualPayou
         </Alert>
       )}
 
-      <PaymentElement />
+      <PaymentElement 
+        options={{
+          layout: 'tabs',
+          wallets: { applePay: 'never', googlePay: 'never' },
+          fields: {
+            billingDetails: {
+              address: {
+                country: 'never',
+                postalCode: 'never',
+              },
+            },
+          },
+        }}
+      />
 
       {error && (
         <Alert variant="destructive">
@@ -243,7 +256,7 @@ export function SendFundsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
