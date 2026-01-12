@@ -340,11 +340,27 @@ export default function Messages() {
       
       if (error) throw error;
       
-      // Remove from threads list
-      setThreads(prev => prev.filter(t => t.id !== thread.id));
+      // Remove from threads list - match by bountyId AND participants since thread.id format may vary
+      setThreads(prev => prev.filter(t => {
+        // If it's the exact same thread ID, remove it
+        if (t.id === thread.id) return false;
+        
+        // Also check if it's the same conversation by bountyId and participants
+        if (t.bountyId === thread.bountyId) {
+          const tParticipants = t.participants || [];
+          const threadParticipants = thread.participants || [];
+          const sameParticipants = tParticipants.length === threadParticipants.length &&
+            tParticipants.every(p => threadParticipants.includes(p));
+          if (sameParticipants) return false;
+        }
+        
+        return true;
+      }));
       
       // Clear selection if this was the selected thread
-      if (selectedThread?.id === thread.id) {
+      if (selectedThread?.id === thread.id || 
+          (selectedThread?.bountyId === thread.bountyId && 
+           selectedThread?.participants?.every(p => thread.participants?.includes(p)))) {
         setSelectedThread(null);
         setMessages([]);
       }
