@@ -52,6 +52,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [withdrawingClaim, setWithdrawingClaim] = useState(false);
   const [releasingFunds, setReleasingFunds] = useState(false);
+  const [fundsReleased, setFundsReleased] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -64,6 +65,15 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       setLoading(true);
       const claims = await supabaseApi.getClaims(bountyId);
       setSubmissions(claims);
+      
+      // Check if funds have already been released for this bounty
+      const { data: escrowData } = await supabase
+        .from('escrow_transactions')
+        .select('manual_payout_status')
+        .eq('bounty_id', bountyId)
+        .single();
+      
+      setFundsReleased(escrowData?.manual_payout_status === 'sent');
     } catch (error) {
       console.error('Error loading submissions:', error);
     } finally {
@@ -528,8 +538,8 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       Confirm Delivery
                     </Button>
                   )}
-                  {/* Release Funds button - shown for poster on accepted submissions */}
-                  {submission.status === ClaimStatus.ACCEPTED && isOwner && (
+                  {/* Release Funds button - shown for poster on accepted submissions, hidden if already released */}
+                  {submission.status === ClaimStatus.ACCEPTED && isOwner && !fundsReleased && (
                     <Button 
                       size="sm" 
                       variant="default"
