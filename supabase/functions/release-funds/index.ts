@@ -205,23 +205,37 @@ serve(async (req) => {
       throw new Error('No charge found for this payment. The payment may not have been captured.');
     }
     
-    // Get the charge to find the balance transaction currency
+    // Get the charge to find the balance transaction currency and exchange rate
     // The platform account may settle in a different currency than the charge
     const charge = await stripe.charges.retrieve(latestChargeId);
     const balanceTransactionId = charge.balance_transaction as string;
     const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransactionId);
     const settlementCurrency = balanceTransaction.currency; // This is the actual currency in the balance
+    const exchangeRate = balanceTransaction.exchange_rate || 1; // Rate from USD to settlement currency
     
     logStep("Retrieved charge for transfer", { 
       chargeId: latestChargeId, 
       chargeCurrency: paymentIntent.currency,
-      settlementCurrency 
+      settlementCurrency,
+      exchangeRate
+    });
+
+    // Calculate the hunter payout in settlement currency
+    // hunterPayout is in USD - we need to convert it to the settlement currency
+    const hunterPayoutInSettlement = hunterPayout * exchangeRate;
+    const platformFeeInSettlement = platformFee * exchangeRate;
+    
+    logStep("Currency conversion", {
+      hunterPayoutUSD: hunterPayout.toFixed(2),
+      exchangeRate,
+      hunterPayoutSettlement: hunterPayoutInSettlement.toFixed(2),
+      settlementCurrency: settlementCurrency.toUpperCase()
     });
 
     // Create transfer to hunter's Connect account using the captured charge
     // MUST use the settlement currency (what's actually in the platform balance)
     const transfer = await stripe.transfers.create({
-      amount: Math.round(hunterPayout * 100), // Convert to cents
+      amount: Math.round(hunterPayoutInSettlement * 100), // Convert to cents IN SETTLEMENT CURRENCY
       currency: settlementCurrency, // Use settlement currency from balance transaction
       destination: hunterProfile.stripe_connect_account_id,
       source_transaction: latestChargeId, // Link to the captured payment
@@ -231,9 +245,13 @@ serve(async (req) => {
         submission_id: submissionId,
         hunter_id: submission.hunter_id,
         poster_id: bounty.poster_id,
-        platform_fee: platformFee.toFixed(2),
-        transfer_fee: transferFee.toFixed(2),
-        original_amount: bountyAmount.toString(),
+        platform_fee_usd: platformFee.toFixed(2),
+        platform_fee_settlement: platformFeeInSettlement.toFixed(2),
+        transfer_fee_usd: transferFee.toFixed(2),
+        original_amount_usd: bountyAmount.toString(),
+        exchange_rate: exchangeRate.toString(),
+        hunter_payout_usd: hunterPayout.toFixed(2),
+        hunter_payout_settlement: hunterPayoutInSettlement.toFixed(2),
       },
     });
     logStep("Stripe transfer created", { transferId: transfer.id });
