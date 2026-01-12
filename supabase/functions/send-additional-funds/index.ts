@@ -87,17 +87,23 @@ serve(async (req) => {
     }
     logStep("Bounty ownership verified", { bountyTitle: bountyData.title });
 
-    // Get the escrow transaction for this bounty to retrieve saved payment method
+    // Get the escrow transaction for this bounty to retrieve saved payment method and currency
     const { data: escrow, error: escrowError } = await supabaseClient
       .from('escrow_transactions')
-      .select('stripe_payment_method_id, stripe_payment_intent_id')
+      .select('stripe_payment_method_id, stripe_payment_intent_id, currency')
       .eq('bounty_id', bountyId)
       .single();
 
     if (escrowError || !escrow?.stripe_payment_method_id) {
       throw new Error('No saved payment method found for this bounty');
     }
-    logStep("Found saved payment method", { paymentMethodId: escrow.stripe_payment_method_id });
+    
+    // Use the same currency as the original bounty payment
+    const paymentCurrency = escrow.currency || 'usd';
+    logStep("Found saved payment method", { 
+      paymentMethodId: escrow.stripe_payment_method_id,
+      currency: paymentCurrency 
+    });
 
     // Check if hunter has Stripe Connect set up
     const { data: hunterProfile, error: hunterError } = await supabaseClient
@@ -142,9 +148,10 @@ serve(async (req) => {
     logStep("Fees calculated", { amount, stripeFee, totalCharge });
 
     // Create payment intent using the SAVED payment method with automatic transfer
+    // Use the same currency as the original bounty payment to avoid conversion issues
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalCharge * 100), // Convert to cents
-      currency: 'usd',
+      currency: paymentCurrency, // Use the original bounty's currency
       customer: customer.id,
       payment_method: escrow.stripe_payment_method_id, // Use saved payment method
       off_session: true, // Charge without customer present
@@ -157,10 +164,11 @@ serve(async (req) => {
         poster_id: user.id,
         note: note || '',
         hunter_amount: amount.toString(),
+        currency: paymentCurrency,
       },
       transfer_data: {
         destination: hunterProfile.stripe_connect_account_id,
-        amount: Math.round(amount * 100), // Transfer the full amount to hunter
+        amount: Math.round(amount * 100), // Transfer the full amount to hunter (Stripe handles FX if needed)
       },
     });
 
