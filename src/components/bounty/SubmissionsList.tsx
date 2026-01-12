@@ -538,7 +538,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       className="bg-green-600 hover:bg-green-700 text-white"
                     >
                       <DollarSign className="h-3 w-3 mr-1" />
-                      {releasingFunds ? 'Releasing...' : 'Release Funds'}
+                      {releasingFunds ? 'Releasing...' : 'Release Funds Early'}
                     </Button>
                   )}
                   <Button 
