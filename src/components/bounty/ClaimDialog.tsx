@@ -9,7 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X, CreditCard, Loader2, CheckCircle } from 'lucide-react';
+import { Plus, X, CreditCard, Loader2, CheckCircle, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile, resolveStorageUrls } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
@@ -409,6 +410,44 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
               Identity verified — ready to claim
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Payout Breakdown - Show what hunter will receive */}
+        {!stripeConnectChecking && !stripeConnectRequired && bountyAmount > 0 && (
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Your Estimated Payout</span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>Platform fee: $2 + 5% of bounty amount. Stripe may also charge a small fee ($0.25) when you withdraw to your bank.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Bounty Amount</span>
+                <span>${bountyAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Platform Fee ($2 + 5%)</span>
+                <span>-${(2 + bountyAmount * 0.05).toFixed(2)}</span>
+              </div>
+              <div className="border-t pt-1 flex justify-between font-medium">
+                <span>You Receive</span>
+                <span className="text-green-600 dark:text-green-400">
+                  ${(bountyAmount - 2 - bountyAmount * 0.05).toFixed(2)}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground pt-1">
+                *Stripe may charge ~$0.25 when you withdraw to your bank
+              </p>
+            </div>
+          </div>
         )}
 
         <div className="space-y-6">
