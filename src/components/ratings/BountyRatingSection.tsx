@@ -17,13 +17,15 @@ interface BountyRatingSectionProps {
   posterId: string;
   posterName: string;
   bountyStatus: string;
+  forceShowReviewPrompt?: boolean;
 }
 
 export function BountyRatingSection({ 
   bountyId, 
   posterId, 
   posterName, 
-  bountyStatus 
+  bountyStatus,
+  forceShowReviewPrompt = false
 }: BountyRatingSectionProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,13 @@ export function BountyRatingSection({
       loadRatingData();
     }
   }, [user, bountyId, bountyStatus]);
+
+  // Handle force show review prompt from URL param
+  useEffect(() => {
+    if (forceShowReviewPrompt && !loading && canRatePoster && !myRatingToPoster) {
+      setShowHunterRatingPrompt(true);
+    }
+  }, [forceShowReviewPrompt, loading, canRatePoster, myRatingToPoster]);
 
   const loadRatingData = async () => {
     if (!user) return;

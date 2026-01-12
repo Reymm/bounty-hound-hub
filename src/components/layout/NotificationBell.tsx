@@ -128,10 +128,12 @@ export function NotificationBell() {
           navigate('/me/bounties?tab=applied');
           break;
           
-        // Rating notifications - go directly to the bounty to rate
+        // Rating notifications - go directly to the bounty with review param to trigger rating dialog
         case 'rate_user':
+        case 'rate_poster':
+        case 'rate_hunter':
           if (notification.bounty_id) {
-            navigate(`/b/${notification.bounty_id}`);
+            navigate(`/b/${notification.bounty_id}?review=true`);
           } else {
             navigate('/me/bounties?tab=applied');
           }
