@@ -35,7 +35,8 @@ export function BountyRatingSection({
   const [myRatingToHunter, setMyRatingToHunter] = useState<UserRating | null>(null);
   const [myRatingToPoster, setMyRatingToPoster] = useState<UserRating | null>(null);
   const [allRatings, setAllRatings] = useState<UserRating[]>([]);
-  const [showHunterRatingPrompt, setShowHunterRatingPrompt] = useState(false);
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
+  const [ratingPromptTarget, setRatingPromptTarget] = useState<'hunter' | 'poster' | null>(null);
   const [hasShownPrompt, setHasShownPrompt] = useState(false);
 
   useEffect(() => {
@@ -44,12 +45,23 @@ export function BountyRatingSection({
     }
   }, [user, bountyId, bountyStatus]);
 
-  // Handle force show review prompt from URL param
+  // Handle force show review prompt from URL param - works for BOTH poster and hunter
   useEffect(() => {
-    if (forceShowReviewPrompt && !loading && canRatePoster && !myRatingToPoster) {
-      setShowHunterRatingPrompt(true);
+    if (forceShowReviewPrompt && !loading && !hasShownPrompt) {
+      // For poster: show prompt to rate hunter
+      if (canRateHunter && !myRatingToHunter && hunterInfo) {
+        setRatingPromptTarget('hunter');
+        setShowRatingPrompt(true);
+        setHasShownPrompt(true);
+      }
+      // For hunter: show prompt to rate poster  
+      else if (canRatePoster && !myRatingToPoster) {
+        setRatingPromptTarget('poster');
+        setShowRatingPrompt(true);
+        setHasShownPrompt(true);
+      }
     }
-  }, [forceShowReviewPrompt, loading, canRatePoster, myRatingToPoster]);
+  }, [forceShowReviewPrompt, loading, canRateHunter, canRatePoster, myRatingToHunter, myRatingToPoster, hunterInfo, hasShownPrompt]);
 
   const loadRatingData = async () => {
     if (!user) return;
@@ -105,7 +117,8 @@ export function BountyRatingSection({
       // Auto-prompt hunter to rate poster if they haven't rated yet
       if (canRatePosterResult && !myPosterRating && !hasShownPrompt) {
         setTimeout(() => {
-          setShowHunterRatingPrompt(true);
+          setRatingPromptTarget('poster');
+          setShowRatingPrompt(true);
           setHasShownPrompt(true);
         }, 500);
       }
@@ -233,18 +246,33 @@ export function BountyRatingSection({
         )}
       </CardContent>
 
-      {/* Hunter Rating Prompt Dialog */}
-      <RatingPromptDialog
-        open={showHunterRatingPrompt}
-        onOpenChange={setShowHunterRatingPrompt}
-        bountyId={bountyId}
-        ratedUserId={posterId}
-        ratedUserName={posterName}
-        ratingType="hunter_to_poster"
-        onComplete={() => {
-          loadRatingData();
-        }}
-      />
+      {/* Rating Prompt Dialog - dynamic based on who needs to rate */}
+      {ratingPromptTarget === 'poster' && (
+        <RatingPromptDialog
+          open={showRatingPrompt}
+          onOpenChange={setShowRatingPrompt}
+          bountyId={bountyId}
+          ratedUserId={posterId}
+          ratedUserName={posterName}
+          ratingType="hunter_to_poster"
+          onComplete={() => {
+            loadRatingData();
+          }}
+        />
+      )}
+      {ratingPromptTarget === 'hunter' && hunterInfo && (
+        <RatingPromptDialog
+          open={showRatingPrompt}
+          onOpenChange={setShowRatingPrompt}
+          bountyId={bountyId}
+          ratedUserId={hunterInfo.id}
+          ratedUserName={hunterInfo.name}
+          ratingType="poster_to_hunter"
+          onComplete={() => {
+            loadRatingData();
+          }}
+        />
+      )}
     </Card>
   );
 }
