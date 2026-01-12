@@ -214,28 +214,32 @@ serve(async (req) => {
             ? await stripe.transfers.retrieve(charge.transfer)
             : charge.transfer;
           transferId = transfer.id;
-          // transfer.amount is the GROSS amount before application fee
+          // IMPORTANT: For destination charges with application_fee_amount,
+          // transfer.amount is ALREADY the NET amount (after application fee deducted)
+          // So hunter receives exactly transfer.amount, no further subtraction needed!
           transferAmount = transfer.amount / 100;
+          logStep("Transfer amount (NET to hunter)", { transferAmount });
         }
         
-        // Get the application fee to calculate what hunter actually receives
+        // Get the application fee for logging/display (already deducted from transfer)
         if (charge.application_fee) {
           const appFee = typeof charge.application_fee === 'string'
             ? await stripe.applicationFees.retrieve(charge.application_fee)
             : charge.application_fee;
           applicationFeeAmount = appFee.amount / 100;
-          logStep("Found application fee", { applicationFeeAmount });
+          logStep("Application fee (platform fee)", { applicationFeeAmount });
         }
         
-        logStep("Found associated transfer", { transferId, transferAmount, applicationFeeAmount });
+        logStep("Transfer details", { transferId, transferAmount, applicationFeeAmount });
       }
 
-      // Calculate hunter payout: transfer amount MINUS application fee
-      // The platform fee was already deducted by Stripe from the transfer
+      // Hunter receives the transfer amount directly
+      // For destination charges: transfer.amount is ALREADY net of application fee
+      // DO NOT subtract applicationFeeAmount again - Stripe already did that!
       const platformFee = applicationFeeAmount || escrow.platform_fee_amount || 0;
       const hunterPayout = transferAmount > 0 
-        ? (transferAmount - applicationFeeAmount)  // Net amount after platform fee
-        : (escrow.amount - platformFee);           // Fallback: bounty amount minus fee
+        ? transferAmount  // Transfer amount IS the net payout (app fee already deducted by Stripe)
+        : (escrow.amount - platformFee);  // Fallback for legacy
 
       // Update escrow to mark as sent
       const { error: updateError } = await supabaseClient
