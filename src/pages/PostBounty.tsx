@@ -958,7 +958,12 @@ function PostBountyForm() {
                   className={`pl-10 ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
                   {...register('bountyAmount', { 
                     valueAsNumber: true,
-                    setValueAs: (v) => v === '' ? undefined : Math.round(Number(v))
+                    setValueAs: (v) => {
+                      if (v === '' || v === undefined || v === null) return undefined;
+                      // Parse as number - don't round, just use the exact integer value
+                      const num = parseInt(String(v), 10);
+                      return isNaN(num) ? undefined : num;
+                    }
                   })}
                 />
               </div>
@@ -1121,9 +1126,15 @@ function PostBountyForm() {
                 {verificationRequirements.map((requirement, index) => (
                   <div key={index} className="flex gap-2">
                     <Input
-                      placeholder={`Requirement ${index + 1} (e.g., "High-quality photos from multiple angles")`}
+                      placeholder={index === 0 ? "e.g., High-quality photos from multiple angles" : "Add another requirement..."}
                       value={requirement}
                       onChange={(e) => updateVerificationRequirement(index, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault(); // Prevent form submission
+                        }
+                      }}
+                      className="placeholder:text-muted-foreground/50"
                     />
                     {verificationRequirements.length > 1 && (
                       <Button
