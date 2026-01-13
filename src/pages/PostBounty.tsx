@@ -952,13 +952,7 @@ function PostBountyForm() {
                   placeholder="500"
                   className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
                   {...register('bountyAmount', { 
-                    valueAsNumber: true,
-                    setValueAs: (v) => {
-                      if (v === '' || v === undefined || v === null) return undefined;
-                      // Parse as number - don't round, just use the exact integer value
-                      const num = parseInt(String(v), 10);
-                      return isNaN(num) ? undefined : num;
-                    }
+                    valueAsNumber: true
                   })}
                 />
               </div>
