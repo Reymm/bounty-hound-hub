@@ -72,11 +72,10 @@ export default function BountyDetail() {
       setActiveTab('claims');
     }
     
-    // Check if we should show the review prompt
+    // Check if we should show the review prompt (no need to switch tabs anymore - rating section is on Details tab)
     const review = searchParams.get('review');
     if (review === 'true') {
       setShowReviewPrompt(true);
-      setActiveTab('claims'); // Switch to claims tab so BountyRatingSection mounts
     }
   }, [searchParams]);
 
@@ -460,6 +459,17 @@ export default function BountyDetail() {
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
+              {/* Rating Section - Show on Details tab for fulfilled bounties so it's always visible */}
+              {bounty.status === BountyStatus.FULFILLED && (
+                <BountyRatingSection
+                  bountyId={bounty.id}
+                  posterId={bounty.posterId}
+                  posterName={bounty.posterName}
+                  bountyStatus={bounty.status}
+                  forceShowReviewPrompt={showReviewPrompt}
+                />
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle>Description</CardTitle>
@@ -565,14 +575,6 @@ export default function BountyDetail() {
                     />
                   )}
 
-                  {/* Rating Section - Show BEFORE submissions for better visibility */}
-                  <BountyRatingSection
-                    bountyId={bounty.id}
-                    posterId={bounty.posterId}
-                    posterName={bounty.posterName}
-                    bountyStatus={bounty.status}
-                    forceShowReviewPrompt={showReviewPrompt}
-                  />
                   
                   <SubmissionsList 
                     key={refreshKey}
