@@ -553,8 +553,8 @@ export default function BountyDetail() {
                     </Card>
                   )}
 
-                  {/* Show shipping info for hunters with accepted claims or for poster */}
-                  {bounty.requires_shipping && (isOwnBounty || isClaimAccepted) && (
+                  {/* Show shipping info only when there's an accepted claim */}
+                  {bounty.requires_shipping && ((isOwnBounty && acceptedHunter) || isClaimAccepted) && (
                     <ShippingInfoCard
                       shippingDetails={bounty.shippingDetails}
                       shippingStatus={bounty.shippingStatus}
