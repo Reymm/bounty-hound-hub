@@ -950,7 +950,7 @@ function PostBountyForm() {
                   max="10000"
                   step="1"
                   placeholder="500"
-                  className={`pl-10 ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
+                  className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
                   {...register('bountyAmount', { 
                     valueAsNumber: true,
                     setValueAs: (v) => {
@@ -1008,7 +1008,7 @@ function PostBountyForm() {
                       type="number"
                       min="1"
                       placeholder="Min price"
-                      className={`pl-10 ${errors.targetPriceMin ? 'border-destructive' : ''}`}
+                      className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.targetPriceMin ? 'border-destructive' : ''}`}
                       {...register('targetPriceMin', { 
                         setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
                       })}
@@ -1028,7 +1028,7 @@ function PostBountyForm() {
                       type="number"
                       min="1"
                       placeholder="Max price"
-                      className={`pl-10 ${errors.targetPriceMax ? 'border-destructive' : ''}`}
+                      className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.targetPriceMax ? 'border-destructive' : ''}`}
                       {...register('targetPriceMax', { 
                         setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
                       })}
