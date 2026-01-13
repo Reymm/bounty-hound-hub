@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Process payout function started - DESTINATION CHARGE WITH ON_BEHALF_OF MODEL");
+    logStep("Process payout function started - DESTINATION CHARGE WITH EXPLICIT TRANSFER AMOUNT");
 
     const { submissionId } = await req.json();
     if (!submissionId) throw new Error("submissionId is required");
@@ -247,7 +247,7 @@ serve(async (req) => {
 
       // Check if this is SAVE CARD MODEL (has payment_method_id) or LEGACY (has payment_intent_id)
       if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
-        logStep("Using SAVE CARD model with DESTINATION CHARGE + ON_BEHALF_OF");
+        logStep("Using SAVE CARD model with DESTINATION CHARGE + EXPLICIT AMOUNT");
         
         // Get customer from the payment method
         const paymentMethod = await stripe.paymentMethods.retrieve(escrowTx.stripe_payment_method_id);
@@ -287,8 +287,10 @@ serve(async (req) => {
           stripeFeeEstimate: (totalNeeded * STRIPE_FEE_RATE + STRIPE_FIXED_FEE) / 100
         });
 
-        // Create PaymentIntent with destination charge + on_behalf_of
-        // This puts YOUR platform fee in "Collected fees" and Stripe fees come from hunter's portion
+        // Create PaymentIntent with destination charge + EXPLICIT transfer amount
+        // - application_fee_amount = YOUR platform fee (shows in Collected fees!)
+        // - transfer_data.amount = EXPLICIT amount hunter receives (no overpayment!)
+        // - NO on_behalf_of (it causes full amount transfer issues)
         const paymentIntent = await stripe.paymentIntents.create({
           amount: totalNeeded, // Total charge to poster
           currency: escrowTx.currency || 'usd',
@@ -299,11 +301,10 @@ serve(async (req) => {
           description: `Bounty payment: ${submission.Bounties.title}`,
           // YOUR platform fee - this goes to "Collected fees" in Stripe!
           application_fee_amount: platformFee,
-          // on_behalf_of makes Stripe fees come from connected account's portion
-          on_behalf_of: hunterProfile.stripe_connect_account_id,
-          // Destination for the funds
+          // Destination charge with EXPLICIT amount - hunter gets exactly this
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
+            amount: hunterPayout, // THE FIX: Explicit amount hunter receives!
           },
           metadata: {
             bounty_id: submission.bounty_id,
@@ -328,12 +329,12 @@ serve(async (req) => {
         });
         transferId = transfers.data[0]?.id || '';
 
-        logStep("Destination charge with on_behalf_of successful", { 
+        logStep("Destination charge with explicit amount successful", { 
           paymentIntentId: paymentIntent.id,
           status: paymentIntent.status,
           totalCharged: totalNeeded / 100,
           applicationFee: platformFee / 100, // YOUR fee in Collected fees!
-          hunterGets: (totalNeeded - platformFee) / 100, // Before Stripe fee
+          hunterGetsExact: hunterPayout / 100, // Explicit transfer amount!
           transferId
         });
 
@@ -365,7 +366,7 @@ serve(async (req) => {
 
       // ============================================================
       // SUCCESS: Mark as captured
-      // Destination charge with on_behalf_of: platform fee in Collected fees!
+      // Destination charge with explicit amount: platform fee in Collected fees!
       // ============================================================
       const { error: successError } = await supabaseClient
         .from('escrow_transactions')
@@ -374,7 +375,7 @@ serve(async (req) => {
           capture_status: 'captured',
           captured_at: new Date().toISOString(),
           status: 'captured',
-          payout_method: 'stripe_destination_on_behalf_of',
+          payout_method: 'stripe_destination_explicit',
           platform_fee_amount: platformFee / 100, // YOUR platform fee (in Collected fees!)
           payout_sent_amount: hunterPayout / 100, // What hunter nets after Stripe fee
           total_charged_amount: chargedAmount / 100, // What poster paid
@@ -391,7 +392,7 @@ serve(async (req) => {
         logStep("Warning: Failed to mark as captured, but charge succeeded", { successError });
       }
 
-      logStep("Payout processing complete - ON_BEHALF_OF MODEL", {
+      logStep("Payout processing complete - EXPLICIT AMOUNT MODEL", {
         escrowId: escrowTx.id,
         chargedAmount: chargedAmount / 100,
         platformFee: platformFee / 100, // YOUR fee (in Collected fees!)
