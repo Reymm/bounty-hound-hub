@@ -894,7 +894,7 @@ function PostBountyForm() {
                     <span>Lead Only</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Hunter tells you where to find the item. You'll go get it yourself.
+                    Hunter locates the item for you. You'll arrange how to acquire it — whether that's picking it up, contacting the seller, or working out a deal.
                   </p>
                 </div>
               </div>
