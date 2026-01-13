@@ -13,7 +13,6 @@ import { ClaimDialog } from '@/components/bounty/ClaimDialog';
 import { CancelBountyDialog } from '@/components/bounty/CancelBountyDialog';
 import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
-import { BountyRatingSection } from '@/components/ratings/BountyRatingSection';
 import { ShippingInfoCard } from '@/components/bounty/ShippingInfoCard';
 import { ShippingDetailsDialog } from '@/components/bounty/ShippingDetailsDialog';
 import { SendFundsDialog } from '@/components/bounty/SendFundsDialog';
@@ -41,7 +40,6 @@ export default function BountyDetail() {
   const [hasUserSubmission, setHasUserSubmission] = useState(false);
   const [userSubmissionStatus, setUserSubmissionStatus] = useState<string | null>(null);
   const [acceptedHunter, setAcceptedHunter] = useState<{ id: string; name: string } | null>(null);
-  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -70,12 +68,6 @@ export default function BountyDetail() {
     const tab = searchParams.get('tab');
     if (tab === 'claims') {
       setActiveTab('claims');
-    }
-    
-    // Check if we should show the review prompt (no need to switch tabs anymore - rating section is on Details tab)
-    const review = searchParams.get('review');
-    if (review === 'true') {
-      setShowReviewPrompt(true);
     }
   }, [searchParams]);
 
@@ -459,17 +451,6 @@ export default function BountyDetail() {
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
-              {/* Rating Section - Show on Details tab for fulfilled bounties so it's always visible */}
-              {bounty.status === BountyStatus.FULFILLED && (
-                <BountyRatingSection
-                  bountyId={bounty.id}
-                  posterId={bounty.posterId}
-                  posterName={bounty.posterName}
-                  bountyStatus={bounty.status}
-                  forceShowReviewPrompt={showReviewPrompt}
-                />
-              )}
-
               <Card>
                 <CardHeader>
                   <CardTitle>Description</CardTitle>

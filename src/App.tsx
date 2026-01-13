@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ReviewModalProvider } from "@/contexts/ReviewModalContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { TopNav } from "@/components/layout/TopNav";
 import { Footer } from "@/components/layout/Footer";
@@ -45,7 +46,7 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
-          
+          <ReviewModalProvider>
           <div className="min-h-screen flex flex-col bg-background">
             <Routes>
               {/* Public routes */}
@@ -148,6 +149,7 @@ const App = () => (
             </Routes>
             <CookieConsent />
           </div>
+          </ReviewModalProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
