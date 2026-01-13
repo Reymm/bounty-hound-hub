@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Process payout function started - DESTINATION CHARGE WITH EXPLICIT TRANSFER AMOUNT");
+    logStep("Process payout function started - SIMPLE DESTINATION CHARGE MODEL");
 
     const { submissionId } = await req.json();
     if (!submissionId) throw new Error("submissionId is required");
@@ -235,10 +235,11 @@ serve(async (req) => {
     });
 
     // ============================================================
-    // DESTINATION CHARGE WITH ON_BEHALF_OF MODEL
-    // - application_fee_amount = YOUR platform fee (shows in Collected fees!)
-    // - on_behalf_of = connected account (Stripe fees come from hunter's portion)
-    // - Hunter gets: total charge - application_fee - Stripe's processing fee
+    // DESTINATION CHARGE MODEL (SIMPLE)
+    // - Charge poster the bounty amount
+    // - application_fee_amount = platform fee (shows in Collected fees!)
+    // - Hunter gets: charge - application_fee = bounty - platform_fee
+    // - Platform pays Stripe fees from the application_fee
     // ============================================================
     try {
       let paymentIntentId = '';
@@ -247,7 +248,7 @@ serve(async (req) => {
 
       // Check if this is SAVE CARD MODEL (has payment_method_id) or LEGACY (has payment_intent_id)
       if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
-        logStep("Using SAVE CARD model with DESTINATION CHARGE + EXPLICIT AMOUNT");
+        logStep("Using SAVE CARD model with SIMPLE DESTINATION CHARGE");
         
         // Get customer from the payment method
         const paymentMethod = await stripe.paymentMethods.retrieve(escrowTx.stripe_payment_method_id);
@@ -257,54 +258,35 @@ serve(async (req) => {
           throw new Error("No customer found for payment method");
         }
 
-        // Calculate what we need to charge so hunter nets exactly hunterPayout after Stripe takes their fee
-        // With on_behalf_of, Stripe fee is taken from (total - application_fee)
-        // Hunter gets: (total - application_fee) - stripe_fee
-        // We want hunter to get hunterPayout, so:
-        // hunterPayout = (total - platformFee) - stripe_fee
-        // total - platformFee = hunterPayout + stripe_fee
-        // But stripe_fee depends on total... so we need to solve for total
+        // SIMPLE MODEL: Charge bounty amount, application_fee = platform fee
+        // Hunter receives: bountyAmount - platformFee
+        // Platform fee shows in "Collected fees" in Stripe!
+        const chargeAmount = Math.round(bountyAmount * 100); // bounty in cents
         
-        // Stripe fee formula: 2.9% + $0.30 (standard) or 2.9% + 0.5% (Connect) + $0.30
-        // Let's use 3.4% + $0.30 to be safe (includes Connect fee)
-        // stripe_fee = 0.034 * total + 0.30
-        // hunterPayout = total - platformFee - (0.034 * total + 0.30)
-        // hunterPayout = total - platformFee - 0.034 * total - 0.30
-        // hunterPayout = total * (1 - 0.034) - platformFee - 0.30
-        // hunterPayout = total * 0.966 - platformFee - 0.30
-        // total = (hunterPayout + platformFee + 0.30) / 0.966
-        
-        const STRIPE_FEE_RATE = 0.034; // 3.4% (2.9% + 0.5% Connect)
-        const STRIPE_FIXED_FEE = 30; // 30 cents
-        
-        // Calculate total charge needed for hunter to net exactly hunterPayout
-        const totalNeeded = Math.ceil((hunterPayout + platformFee + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE));
-        
-        logStep("Calculated charge with on_behalf_of", {
-          hunterPayout: hunterPayout / 100,
+        logStep("Calculated simple destination charge", {
+          chargeAmount: chargeAmount / 100,
           platformFee: platformFee / 100,
-          totalNeeded: totalNeeded / 100,
-          stripeFeeEstimate: (totalNeeded * STRIPE_FEE_RATE + STRIPE_FIXED_FEE) / 100
+          hunterWillReceive: (chargeAmount - platformFee) / 100
         });
 
-        // Create PaymentIntent with destination charge + EXPLICIT transfer amount
-        // - application_fee_amount = YOUR platform fee (shows in Collected fees!)
-        // - transfer_data.amount = EXPLICIT amount hunter receives (no overpayment!)
-        // - NO on_behalf_of (it causes full amount transfer issues)
+        // Create PaymentIntent with destination charge
+        // - application_fee_amount = platform fee (shows in Collected fees!)
+        // - Hunter gets: charge - application_fee automatically
+        // - NO transfer_data.amount (mutually exclusive with application_fee_amount)
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: totalNeeded, // Total charge to poster
+          amount: chargeAmount, // Bounty amount in cents
           currency: escrowTx.currency || 'usd',
           customer: customerId,
           payment_method: escrowTx.stripe_payment_method_id,
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
-          // YOUR platform fee - this goes to "Collected fees" in Stripe!
+          // Platform fee - this goes to "Collected fees" in Stripe!
           application_fee_amount: platformFee,
-          // Destination charge with EXPLICIT amount - hunter gets exactly this
+          // Destination for the funds (hunter gets charge - application_fee)
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
-            amount: hunterPayout, // THE FIX: Explicit amount hunter receives!
+            // NO amount field - let Stripe calculate: charge - application_fee
           },
           metadata: {
             bounty_id: submission.bounty_id,
@@ -329,17 +311,20 @@ serve(async (req) => {
         });
         transferId = transfers.data[0]?.id || '';
 
-        logStep("Destination charge with explicit amount successful", { 
+        // Calculate what hunter actually receives (charge - app fee)
+        const actualHunterPayout = chargeAmount - platformFee;
+
+        logStep("Simple destination charge successful", { 
           paymentIntentId: paymentIntent.id,
           status: paymentIntent.status,
-          totalCharged: totalNeeded / 100,
-          applicationFee: platformFee / 100, // YOUR fee in Collected fees!
-          hunterGetsExact: hunterPayout / 100, // Explicit transfer amount!
+          chargedAmount: chargeAmount / 100,
+          applicationFee: platformFee / 100, // Shows in Collected fees!
+          hunterReceives: actualHunterPayout / 100,
           transferId
         });
 
         paymentIntentId = paymentIntent.id;
-        chargedAmount = totalNeeded;
+        chargedAmount = chargeAmount;
 
       } else if (escrowTx.stripe_payment_intent_id && escrowTx.stripe_payment_intent_id !== '') {
         // LEGACY MODEL: Capture the existing PaymentIntent
@@ -375,9 +360,9 @@ serve(async (req) => {
           capture_status: 'captured',
           captured_at: new Date().toISOString(),
           status: 'captured',
-          payout_method: 'stripe_destination_explicit',
-          platform_fee_amount: platformFee / 100, // YOUR platform fee (in Collected fees!)
-          payout_sent_amount: hunterPayout / 100, // What hunter nets after Stripe fee
+          payout_method: 'stripe_destination_simple',
+          platform_fee_amount: platformFee / 100, // Platform fee (in Collected fees!)
+          payout_sent_amount: (chargedAmount - platformFee) / 100, // Hunter gets charge - app_fee
           total_charged_amount: chargedAmount / 100, // What poster paid
           charge_attempted_at: new Date().toISOString(),
           capture_error: null,
@@ -392,11 +377,11 @@ serve(async (req) => {
         logStep("Warning: Failed to mark as captured, but charge succeeded", { successError });
       }
 
-      logStep("Payout processing complete - EXPLICIT AMOUNT MODEL", {
+      logStep("Payout processing complete - SIMPLE DESTINATION CHARGE", {
         escrowId: escrowTx.id,
         chargedAmount: chargedAmount / 100,
-        platformFee: platformFee / 100, // YOUR fee (in Collected fees!)
-        hunterPayout: hunterPayout / 100,
+        platformFee: platformFee / 100, // Shows in Collected fees!
+        hunterReceives: (chargedAmount - platformFee) / 100,
         transferId: transferId,
         hunterConnectId: hunterProfile.stripe_connect_account_id
       });
