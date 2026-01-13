@@ -40,6 +40,7 @@ export function BountyRatingSection({
   const [hasShownPrompt, setHasShownPrompt] = useState(false);
 
   useEffect(() => {
+    console.log('[BountyRatingSection] Mounting with:', { bountyId, bountyStatus, forceShowReviewPrompt });
     if (user && (bountyStatus === 'fulfilled' || bountyStatus === 'completed')) {
       loadRatingData();
     }
@@ -47,18 +48,33 @@ export function BountyRatingSection({
 
   // Handle force show review prompt from URL param - works for BOTH poster and hunter
   useEffect(() => {
+    console.log('[BountyRatingSection] Prompt check:', { 
+      forceShowReviewPrompt, 
+      loading, 
+      hasShownPrompt, 
+      canRateHunter, 
+      canRatePoster,
+      myRatingToHunter: !!myRatingToHunter,
+      myRatingToPoster: !!myRatingToPoster,
+      hunterInfo: !!hunterInfo
+    });
+    
     if (forceShowReviewPrompt && !loading && !hasShownPrompt) {
       // For poster: show prompt to rate hunter
       if (canRateHunter && !myRatingToHunter && hunterInfo) {
+        console.log('[BountyRatingSection] Showing hunter rating prompt');
         setRatingPromptTarget('hunter');
         setShowRatingPrompt(true);
         setHasShownPrompt(true);
       }
       // For hunter: show prompt to rate poster  
       else if (canRatePoster && !myRatingToPoster) {
+        console.log('[BountyRatingSection] Showing poster rating prompt');
         setRatingPromptTarget('poster');
         setShowRatingPrompt(true);
         setHasShownPrompt(true);
+      } else {
+        console.log('[BountyRatingSection] No rating prompt to show - already rated or cannot rate');
       }
     }
   }, [forceShowReviewPrompt, loading, canRateHunter, canRatePoster, myRatingToHunter, myRatingToPoster, hunterInfo, hasShownPrompt]);
