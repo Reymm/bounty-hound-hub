@@ -147,6 +147,7 @@ export function BountyRatingSection({
 
   // Only show if bounty is completed/fulfilled
   if (bountyStatus !== 'completed' && bountyStatus !== 'fulfilled') {
+    console.log('[BountyRatingSection] Not rendering - bountyStatus is:', bountyStatus);
     return null;
   }
 
