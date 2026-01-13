@@ -66,10 +66,10 @@ const BOUNTYBAY_KNOWLEDGE = `You are BountyBot, the official AI support assistan
 - "What if the item isn't what I wanted?" - You can request revision or reject with explanation
 
 ### For Hunters
-- "How do I get paid?" - Funds are released to your payout method after poster approval
-- "How long until I receive payment?" - Usually 3-5 business days after approval
+- "How do I get paid?" - Funds are released to your Stripe Connect account after poster approval
+- "How long until I receive payment?" - Typically 2-7 business days after approval. This timing is controlled by Stripe based on your account verification status, not by BountyBay. New Stripe accounts often have a 7-day delay which decreases over time. You can adjust your payout schedule in your Stripe Dashboard.
 - "What if my submission is rejected?" - You can submit again or contact support
-- "How do I set up payouts?" - Go to Profile and add your payout information
+- "How do I set up payouts?" - Go to Profile > Verification tab and set up your payout method via Stripe Connect
 
 ### Account Issues
 - Password reset: Use "Forgot Password" on login page
