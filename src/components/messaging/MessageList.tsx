@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Paperclip } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,6 +36,10 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -113,22 +117,104 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
     if (error) console.error('Error marking message as read:', error);
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a JPG, PNG, WebP, or GIF image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearSelectedImage = () => {
+    setSelectedImage(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUserId}/${recipientId}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('message-attachments')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error('Failed to upload image');
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('message-attachments')
+      .getPublicUrl(fileName);
+
+    // Since bucket is private, we need to create a signed URL
+    const { data: signedUrlData, error: signedError } = await supabase.storage
+      .from('message-attachments')
+      .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
+
+    if (signedError) {
+      console.error('Signed URL error:', signedError);
+      // Fallback to stored path - we'll handle viewing differently
+      return fileName;
+    }
+
+    return signedUrlData.signedUrl;
+  };
+
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !selectedImage) return;
 
     setIsSending(true);
+    setIsUploading(!!selectedImage);
+    
     try {
+      let attachmentUrl: string | null = null;
+
+      if (selectedImage) {
+        attachmentUrl = await uploadImage(selectedImage);
+      }
+
       const { error } = await supabase
         .from('messages')
         .insert({
           sender_id: currentUserId,
           recipient_id: recipientId,
           bounty_id: bountyId,
-          content: newMessage.trim()
+          content: newMessage.trim() || (attachmentUrl ? '📷 Image' : ''),
+          attachment_url: attachmentUrl
         });
 
       if (error) throw error;
+      
       setNewMessage('');
+      clearSelectedImage();
     } catch (error: any) {
       toast({
         title: "Error sending message",
@@ -137,6 +223,7 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
       });
     } finally {
       setIsSending(false);
+      setIsUploading(false);
     }
   };
 
@@ -192,17 +279,32 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
                         : 'bg-muted'
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    {message.content !== '📷 Image' && (
+                      <p className="text-sm">{message.content}</p>
+                    )}
                     {message.attachment_url && (
                       <div className="mt-2">
+                        <img 
+                          src={message.attachment_url} 
+                          alt="Attachment"
+                          className="rounded-md max-w-full max-h-48 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(message.attachment_url, '_blank')}
+                          onError={(e) => {
+                            // Hide image on error, show fallback link
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-auto p-1 text-xs"
+                          className="h-auto p-1 text-xs hidden items-center"
                           onClick={() => window.open(message.attachment_url, '_blank')}
                         >
-                          <Paperclip className="h-3 w-3 mr-1" />
-                          Attachment
+                          <ImageIcon className="h-3 w-3 mr-1" />
+                          View Image
                         </Button>
                       </div>
                     )}
@@ -216,7 +318,42 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 mt-4">
+        {/* Image preview */}
+        {imagePreview && (
+          <div className="relative inline-block mt-2 mb-2">
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              className="max-h-24 rounded-md border"
+            />
+            <Button
+              size="icon"
+              variant="destructive"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+              onClick={clearSelectedImage}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+
+        <div className="flex gap-2 mt-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageSelect}
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSending}
+            title="Attach image"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -227,10 +364,14 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
           />
           <Button
             onClick={sendMessage}
-            disabled={isSending || !newMessage.trim()}
+            disabled={isSending || (!newMessage.trim() && !selectedImage)}
             size="icon"
           >
-            <Send className="h-4 w-4" />
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </CardContent>
