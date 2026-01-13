@@ -110,12 +110,14 @@ export function SendFundsDialog({
     onClose();
   };
 
-  // Calculate fee preview - includes processing + connect fees
+  // Calculate fee preview - hunter receives EXACTLY amountNum
   const amountNum = parseFloat(amount) || 0;
-  // Processing: 2.9% + $0.30, Connect cross-border: 0.5% + $0.25
-  const transferAmount = amountNum > 0 ? Math.ceil(((amountNum + 0.25) / 0.995) * 100) / 100 : 0;
-  const totalCharge = amountNum > 0 ? Math.ceil(((transferAmount + 0.30) / 0.971) * 100) / 100 : 0;
-  const totalFees = amountNum > 0 ? Math.round((totalCharge - amountNum) * 100) / 100 : 0;
+  const transferAmountCents = Math.round(amountNum * 100);
+  const connectFeeCents = amountNum > 0 ? Math.ceil(transferAmountCents * 0.005) + 25 : 0; // 0.5% + $0.25
+  const minAmountNeeded = transferAmountCents + connectFeeCents + 30; // + $0.30 processing fixed
+  const totalChargeCents = amountNum > 0 ? Math.ceil(minAmountNeeded / 0.971) : 0; // / (1 - 2.9%)
+  const totalCharge = totalChargeCents / 100;
+  const totalFees = amountNum > 0 ? Math.round(totalChargeCents - transferAmountCents) / 100 : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
