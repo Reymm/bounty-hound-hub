@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -91,18 +91,24 @@ function PostBountyForm() {
   const watchedTargetMax = watch('targetPriceMax');
   const selectedCategory = watch('category');
 
-  // Load saved form data on mount
+  // Track if draft has already been loaded (prevents overwrites)
+  const draftLoadedRef = useRef(false);
+
+  // Load saved form data ONCE on mount only
   useEffect(() => {
+    if (draftLoadedRef.current) return;
+    draftLoadedRef.current = true;
+    
     const savedData = sessionStorage.getItem('bounty_draft');
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        // Restore form fields
+        // Restore form fields - use shouldValidate: false to prevent side effects
         Object.keys(parsed.formData).forEach(key => {
           if (key === 'deadline') {
-            setValue(key as any, new Date(parsed.formData[key]));
+            setValue(key as any, new Date(parsed.formData[key]), { shouldValidate: false });
           } else {
-            setValue(key as any, parsed.formData[key], { shouldValidate: true });
+            setValue(key as any, parsed.formData[key], { shouldValidate: false });
           }
         });
         // Restore other state
