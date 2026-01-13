@@ -155,21 +155,22 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           });
         } else if (payoutResult.success) {
           toast({
-            title: "Bounty completed",
-            description: "Claim accepted. Payout will be processed once hunter completes verification.",
+            title: "Bounty completed!",
+            description: `Payment processed successfully. Hunter will receive their payout shortly.`,
           });
         } else {
           toast({
-            title: "Bounty completed",
-            description: payoutResult.error || "Claim accepted. Payout processing pending.",
+            title: "Claim accepted",
+            description: payoutResult.error || "Payment is being processed.",
             variant: payoutResult.error ? "destructive" : "default",
           });
         }
       } catch (payoutError) {
         console.error('Payout error:', payoutError);
         toast({
-          title: "Bounty completed",
-          description: "Claim accepted successfully. Payout will be processed when hunter is verified.",
+          title: "Claim accepted",
+          description: "There was an issue processing the payout. Please contact support if needed.",
+          variant: "destructive",
         });
       }
       
