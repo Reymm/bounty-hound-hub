@@ -57,7 +57,8 @@ function PostBountyForm() {
   const [totalCharge, setTotalCharge] = useState(0);
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
-  const [verificationRequirements, setVerificationRequirements] = useState<string[]>(['']);
+  const [verificationRequirements, setVerificationRequirements] = useState<string[]>([]);
+  const [currentRequirement, setCurrentRequirement] = useState('');
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
   const [bountyType, setBountyType] = useState<'lead-only' | 'find-and-ship'>('lead-only');
@@ -174,25 +175,18 @@ function PostBountyForm() {
   };
 
   const addVerificationRequirement = () => {
-    if (verificationRequirements.length < 10) {
-      const newRequirements = [...verificationRequirements, ''];
+    if (currentRequirement.trim() && !verificationRequirements.includes(currentRequirement.trim()) && verificationRequirements.length < 10) {
+      const newRequirements = [...verificationRequirements, currentRequirement.trim()];
       setVerificationRequirements(newRequirements);
+      setValue('verificationRequirements', newRequirements);
+      setCurrentRequirement('');
     }
   };
 
-  const updateVerificationRequirement = (index: number, value: string) => {
-    const newRequirements = [...verificationRequirements];
-    newRequirements[index] = value;
+  const removeVerificationRequirement = (reqToRemove: string) => {
+    const newRequirements = verificationRequirements.filter(req => req !== reqToRemove);
     setVerificationRequirements(newRequirements);
-    setValue('verificationRequirements', newRequirements.filter(req => req.trim()));
-  };
-
-  const removeVerificationRequirement = (index: number) => {
-    if (verificationRequirements.length > 1) {
-      const newRequirements = verificationRequirements.filter((_, i) => i !== index);
-      setVerificationRequirements(newRequirements);
-      setValue('verificationRequirements', newRequirements.filter(req => req.trim()));
-    }
+    setValue('verificationRequirements', newRequirements);
   };
 
   const handleImageUpload = async (files: File[], onProgress?: (fileName: string, progress: number) => void) => {
@@ -1122,51 +1116,56 @@ function PostBountyForm() {
                 Specify what hunters need to provide as proof of finding your item
               </p>
               
-              <div className="space-y-2">
-                {verificationRequirements.map((requirement, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      placeholder={index === 0 ? "e.g., High-quality photos from multiple angles" : "Add another requirement..."}
-                      value={requirement}
-                      onChange={(e) => updateVerificationRequirement(index, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault(); // Prevent form submission
-                        }
-                      }}
-                      className="placeholder:text-muted-foreground/50"
-                    />
-                    {verificationRequirements.length > 1 && (
+              {/* Show added requirements as badges */}
+              {verificationRequirements.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {verificationRequirements.map((req) => (
+                    <Badge key={req} variant="secondary" className="text-sm py-1 px-3">
+                      {req}
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeVerificationRequirement(index)}
-                        className="flex-shrink-0"
+                        className="h-auto p-0 ml-2 hover:bg-transparent"
+                        onClick={() => removeVerificationRequirement(req)}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3 w-3" />
                       </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
-              {verificationRequirements.length < 10 && (
+              {/* Input with Add button inline */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g., High-quality photos from multiple angles"
+                  value={currentRequirement}
+                  onChange={(e) => setCurrentRequirement(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addVerificationRequirement();
+                    }
+                  }}
+                  disabled={verificationRequirements.length >= 10}
+                />
                 <Button
                   type="button"
-                  variant="outline"
-                  size="default"
                   onClick={addVerificationRequirement}
-                  className="mt-3 w-full border-dashed border-2 border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
+                  disabled={!currentRequirement.trim() || verificationRequirements.length >= 10 || verificationRequirements.includes(currentRequirement.trim())}
+                  variant="outline"
                 >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Add Requirement
+                  Add
                 </Button>
-              )}
+              </div>
 
               {errors.verificationRequirements && (
                 <p className="text-sm text-destructive">{errors.verificationRequirements.message}</p>
               )}
+              <p className="text-xs text-muted-foreground">
+                Add up to 10 verification requirements
+              </p>
             </div>
           </CardContent>
         </Card>
