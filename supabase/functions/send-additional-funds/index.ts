@@ -141,39 +141,53 @@ serve(async (req) => {
       logStep("Created new customer", { customerId: customer.id });
     }
 
-    // Calculate fees properly:
-    // 1. Stripe processing fee on the charge: 2.9% + $0.30
-    // 2. Stripe Connect destination fee for cross-border: 0.5% + $0.25
-    // We charge the poster for processing fees, AND we send more to cover Connect fees
+    // Calculate fees properly for destination charges:
+    // With destination charges, the transfer_data.amount is what gets sent to the connected account
+    // Stripe takes processing fees from the TOTAL charge, not the transfer
+    // So we need: totalCharge - processingFees >= transferAmount
     
-    const STRIPE_PROCESSING_RATE = 0.029;
-    const STRIPE_PROCESSING_FIXED = 0.30;
-    const STRIPE_CONNECT_RATE = 0.005; // 0.5% cross-border fee
-    const STRIPE_CONNECT_FIXED = 0.25;
+    // We want hunter to receive EXACTLY 'amount'
+    // transfer_data.amount = amount (hunter receives this directly)
+    // Total charge needs to cover: transfer + all Stripe fees
     
-    // Calculate what we need to transfer so hunter receives exactly 'amount' after Connect fees
-    // hunterReceives = transferAmount - (transferAmount * 0.005 + 0.25)
-    // hunterReceives = transferAmount * (1 - 0.005) - 0.25
-    // amount = transferAmount * 0.995 - 0.25
-    // transferAmount = (amount + 0.25) / 0.995
-    const transferAmount = Math.ceil(((amount + STRIPE_CONNECT_FIXED) / (1 - STRIPE_CONNECT_RATE)) * 100) / 100;
+    const STRIPE_PROCESSING_RATE = 0.029; // 2.9%
+    const STRIPE_PROCESSING_FIXED = 30; // $0.30 in cents
+    const STRIPE_CONNECT_RATE = 0.005; // 0.5% cross-border fee on transfer
+    const STRIPE_CONNECT_FIXED = 25; // $0.25 in cents
     
-    // Now calculate the total charge to the poster (transferAmount + processing fee)
-    // totalCharge = (transferAmount + 0.30) / (1 - 0.029)
-    const totalCharge = Math.ceil(((transferAmount + STRIPE_PROCESSING_FIXED) / (1 - STRIPE_PROCESSING_RATE)) * 100) / 100;
-    const totalFees = Math.round((totalCharge - amount) * 100) / 100;
+    // Amount to transfer (what hunter will receive) - in cents
+    const transferAmountCents = Math.round(amount * 100);
+    
+    // Connect fee Stripe will take from the platform (based on transfer amount)
+    const connectFeeCents = Math.ceil(transferAmountCents * STRIPE_CONNECT_RATE) + STRIPE_CONNECT_FIXED;
+    
+    // Now calculate total charge: we need to cover transfer + connect fees, THEN account for processing fees
+    // Let X = total charge in cents
+    // Processing fee = X * 0.029 + 30
+    // Net after processing = X - (X * 0.029 + 30) = X * 0.971 - 30
+    // We need: X * 0.971 - 30 >= transferAmountCents + connectFeeCents (to cover transfer AND connect fees)
+    // X * 0.971 >= transferAmountCents + connectFeeCents + 30
+    // X >= (transferAmountCents + connectFeeCents + 30) / 0.971
+    
+    const minAmountNeeded = transferAmountCents + connectFeeCents + STRIPE_PROCESSING_FIXED;
+    const totalChargeCents = Math.ceil(minAmountNeeded / (1 - STRIPE_PROCESSING_RATE));
+    
+    const totalCharge = totalChargeCents / 100;
+    const totalFees = Math.round((totalChargeCents - transferAmountCents)) / 100;
     
     logStep("Fees calculated", { 
       hunterReceives: amount, 
-      transferAmount, 
-      totalCharge, 
+      transferAmountCents, 
+      connectFeeCents,
+      totalChargeCents,
+      totalCharge,
       totalFees 
     });
 
     // Create payment intent using the SAVED payment method with automatic transfer
     // Use the same currency as the original bounty payment to avoid conversion issues
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(totalCharge * 100), // Convert to cents - total poster pays
+      amount: totalChargeCents, // Total poster pays in cents
       currency: paymentCurrency, // Use the original bounty's currency
       customer: customer.id,
       payment_method: escrow.stripe_payment_method_id, // Use saved payment method
@@ -187,12 +201,11 @@ serve(async (req) => {
         poster_id: user.id,
         note: note || '',
         hunter_amount: amount.toString(),
-        transfer_amount: transferAmount.toString(),
         currency: paymentCurrency,
       },
       transfer_data: {
         destination: hunterProfile.stripe_connect_account_id,
-        amount: Math.round(transferAmount * 100), // Transfer extra to cover Connect fees
+        amount: transferAmountCents, // EXACTLY what hunter receives - in cents
       },
     });
 
