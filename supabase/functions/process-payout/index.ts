@@ -260,6 +260,8 @@ serve(async (req) => {
         // CRITICAL: Use transfer_data.amount to specify EXACTLY how much hunter gets
         // Hunter receives: bounty - platform fee = $93 for a $100 bounty
         // Poster pays: bounty + Stripe fee = ~$104
+        // CRITICAL: Use application_fee_amount to get fees in Stripe's "Collected fees" section
+        // This is the ONLY way Stripe tracks your platform fees properly
         const paymentIntent = await stripe.paymentIntents.create({
           amount: totalChargeAmount, // What poster pays (bounty + Stripe fee)
           currency: escrowTx.currency || 'usd',
@@ -268,13 +270,13 @@ serve(async (req) => {
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
-          // DESTINATION CHARGE with explicit transfer amount
+          // DESTINATION CHARGE: Hunter receives the payment minus application_fee
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
-            amount: hunterPayout, // EXACTLY $93 for $100 bounty (bounty - platform fee)
           },
-          // Note: Don't use application_fee_amount with transfer_data.amount
-          // The platform keeps: totalCharge - hunterPayout - Stripe fees
+          // APPLICATION FEE: This is what shows in "Collected fees" in Stripe dashboard
+          // Hunter receives: totalChargeAmount - application_fee_amount - Stripe's processing fee
+          application_fee_amount: platformFee, // Platform fee in cents ($7 for $100 bounty = 700)
           metadata: {
             bounty_id: submission.bounty_id,
             submission_id: submissionId,
