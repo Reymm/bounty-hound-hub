@@ -7,6 +7,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,6 +49,7 @@ export function SendFundsDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ amount: number; hunterName: string } | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { toast } = useToast();
 
   const handleSendFunds = async () => {
@@ -199,7 +210,7 @@ export function SendFundsDialog({
                 Cancel
               </Button>
               <Button 
-                onClick={handleSendFunds} 
+                onClick={() => setShowConfirmation(true)} 
                 disabled={isLoading || !amount || amountNum < 1}
                 className="flex-1"
               >
@@ -219,6 +230,34 @@ export function SendFundsDialog({
           </div>
         )}
       </DialogContent>
+
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to send <span className="font-semibold text-foreground">${amountNum.toFixed(2)}</span> to {hunterName}? 
+              Your payment method will be charged <span className="font-semibold text-foreground">${totalCharge.toFixed(2)}</span> (includes processing fees).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleSendFunds}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Yes, send payment'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
