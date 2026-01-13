@@ -87,6 +87,21 @@ serve(async (req) => {
     }
     logStep("Bounty ownership verified", { bountyTitle: bountyData.title });
 
+    // Verify there's an accepted submission for this bounty with this hunter
+    const { data: acceptedSubmission, error: submissionError } = await supabaseClient
+      .from('Submissions')
+      .select('id, status')
+      .eq('bounty_id', bountyId)
+      .eq('hunter_id', hunterId)
+      .eq('status', 'accepted')
+      .single();
+
+    if (submissionError || !acceptedSubmission) {
+      logStep("No accepted submission found", { bountyId, hunterId });
+      throw new Error('Additional funds can only be sent after a submission has been accepted');
+    }
+    logStep("Accepted submission verified", { submissionId: acceptedSubmission.id });
+
     // Get the escrow transaction for this bounty to retrieve saved payment method and currency
     const { data: escrow, error: escrowError } = await supabaseClient
       .from('escrow_transactions')
