@@ -133,7 +133,17 @@ export function NotificationBell() {
         case 'rate_poster':
         case 'rate_hunter':
           if (notification.bounty_id) {
-            navigate(`/b/${notification.bounty_id}?review=true`);
+            const targetUrl = `/b/${notification.bounty_id}?review=true`;
+            const currentPath = window.location.pathname + window.location.search;
+            
+            // If already on the same URL, force a page reload to re-trigger the review prompt
+            if (currentPath === targetUrl || currentPath.startsWith(`/b/${notification.bounty_id}`)) {
+              // Navigate away briefly then back, or use replace + reload
+              navigate(targetUrl, { replace: true });
+              window.location.reload();
+            } else {
+              navigate(targetUrl);
+            }
           } else {
             navigate('/me/bounties?tab=applied');
           }
