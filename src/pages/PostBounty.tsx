@@ -845,7 +845,7 @@ function PostBountyForm() {
                     }
                   }}
                   disabled={tags.length >= 10}
-                  className="placeholder:text-foreground/70"
+                  className="placeholder:text-foreground/70 border-foreground/30"
                 />
                 <Button
                   type="button"
