@@ -268,17 +268,16 @@ serve(async (req) => {
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
-          // DESTINATION CHARGE: Hunter receives the payment minus application_fee
-          transfer_data: {
-            destination: hunterProfile.stripe_connect_account_id,
-          },
-          // APPLICATION FEE: Set to totalCharge - hunterPayout so hunter gets EXACTLY the right amount
-          // With destination charges: hunter receives = totalCharge - application_fee
-          // So application_fee = totalCharge - hunterPayout ensures hunter gets hunterPayout
-          // Example: $200 bounty → totalCharge=$207.56, hunterPayout=$188, application_fee=$19.56
-          // Hunter receives: $207.56 - $19.56 = $188 ✓
-          // Platform gross: $19.56, minus Stripe fee ~$7.56, net ~$12 ✓
-          application_fee_amount: totalChargeAmount - hunterPayout, // Ensures hunter gets exactly hunterPayout
+        // DESTINATION CHARGE: Explicitly set amount hunter receives
+        // Using transfer_data.amount is more reliable than application_fee_amount
+        transfer_data: {
+          destination: hunterProfile.stripe_connect_account_id,
+          amount: hunterPayout, // Explicitly set: hunter receives EXACTLY this amount in cents
+        },
+        // Platform keeps: totalChargeAmount - hunterPayout (includes our $2+5% fee + Stripe processing)
+        // Example: $300 bounty → totalCharge=$310.80, hunterPayout=$283 (28300 cents)
+        // Hunter receives: $283 ✓
+        // Platform gross: $27.80, minus Stripe fee ~$10.80, net ~$17 ✓
           metadata: {
             bounty_id: submission.bounty_id,
             submission_id: submissionId,
