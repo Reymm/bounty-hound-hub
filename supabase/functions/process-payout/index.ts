@@ -364,6 +364,37 @@ serve(async (req) => {
         hunterConnectId: hunterProfile.stripe_connect_account_id
       });
 
+      // ============================================================
+      // UPDATE REFERRAL STATUS: Mark hunter's referral as 'converted'
+      // This enables partner earnings to be calculated
+      // ============================================================
+      try {
+        const { data: hunterReferral } = await supabaseClient
+          .from('referrals')
+          .select('id, status')
+          .eq('referred_id', submission.hunter_id)
+          .maybeSingle();
+
+        if (hunterReferral && hunterReferral.status === 'signed_up') {
+          await supabaseClient
+            .from('referrals')
+            .update({
+              status: 'converted',
+              converted_at: new Date().toISOString(),
+              first_bounty_completed_at: new Date().toISOString()
+            })
+            .eq('id', hunterReferral.id);
+
+          logStep("Referral converted to 'converted' status", { 
+            hunterId: submission.hunter_id,
+            referralId: hunterReferral.id 
+          });
+        }
+      } catch (referralError) {
+        // Don't fail payout if referral update fails - just log it
+        logStep("Warning: Failed to update referral status", { error: referralError });
+      }
+
       return new Response(JSON.stringify({
         success: true,
         message: 'Payment captured. Hunter receives exactly bounty minus platform fee.',
