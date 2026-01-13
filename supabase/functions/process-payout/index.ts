@@ -274,9 +274,13 @@ serve(async (req) => {
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
           },
-          // APPLICATION FEE: This is what shows in "Collected fees" in Stripe dashboard
-          // Hunter receives: totalChargeAmount - application_fee_amount - Stripe's processing fee
-          application_fee_amount: platformFee, // Platform fee in cents ($7 for $100 bounty = 700)
+          // APPLICATION FEE: Set to totalCharge - hunterPayout so hunter gets EXACTLY the right amount
+          // With destination charges: hunter receives = totalCharge - application_fee
+          // So application_fee = totalCharge - hunterPayout ensures hunter gets hunterPayout
+          // Example: $200 bounty → totalCharge=$207.56, hunterPayout=$188, application_fee=$19.56
+          // Hunter receives: $207.56 - $19.56 = $188 ✓
+          // Platform gross: $19.56, minus Stripe fee ~$7.56, net ~$12 ✓
+          application_fee_amount: totalChargeAmount - hunterPayout, // Ensures hunter gets exactly hunterPayout
           metadata: {
             bounty_id: submission.bounty_id,
             submission_id: submissionId,
