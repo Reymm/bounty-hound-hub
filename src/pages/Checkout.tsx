@@ -389,33 +389,29 @@ export default function Checkout() {
               <p className="text-xs text-muted-foreground mb-2">Example: $100 bounty</p>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Poster pays</span>
-                <span className="font-medium">$103.20</span>
+                <span className="font-medium">$103.94</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground pl-2">
                 <span>↳ Bounty reward</span>
                 <span>$100.00</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground pl-2">
-                <span>↳ Stripe fee (2.9% + $0.30)</span>
-                <span>$3.20</span>
+                <span>↳ Stripe fee (3.5% + $0.30)</span>
+                <span>$3.94</span>
               </div>
               <Separator />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Hunter receives</span>
-                <span className="font-medium">~$92</span>
+                <span className="font-medium">$93.00</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground pl-2">
                 <span>↳ Platform fee ($2 + 5%)</span>
                 <span>-$7.00</span>
               </div>
-              <div className="flex justify-between text-xs text-muted-foreground pl-2">
-                <span>↳ Transfer fee (~0.25% + $0.25)</span>
-                <span>-$0.48</span>
-              </div>
               <Separator />
               <div className="flex justify-between text-sm font-medium text-primary">
                 <span>Platform keeps</span>
-                <span>$7.00</span>
+                <span>~$7.00</span>
               </div>
             </CardContent>
           </Card>
