@@ -246,7 +246,7 @@ export default function Messages() {
         .filter(msg => msg.senderId === otherParticipant && !msg.isRead)
         .map(msg => msg.id);
       
-      if (unreadMessageIds.length > 0 && selectedThread) {
+      if (unreadMessageIds.length > 0) {
         const { error: markReadError } = await supabase
           .from('messages')
           .update({ is_read: true })
@@ -256,15 +256,20 @@ export default function Messages() {
           console.error('Error marking messages as read:', markReadError);
         } else {
           console.log('Marked', unreadMessageIds.length, 'messages as read');
-          
-          // Update thread list to clear unread count
-          setThreads(prev => prev.map(thread => 
-            thread.id === threadId 
-              ? { ...thread, unreadCount: 0 }
-              : thread
-          ));
         }
       }
+      
+      // Always update thread list to clear unread count when we load messages
+      // This ensures the UI reflects that we've viewed this conversation
+      setThreads(prev => prev.map(thread => {
+        // Match by thread ID or by bountyId + participant combination
+        const isMatch = thread.id === threadId || 
+          (thread.bountyId === bountyId && 
+           thread.participants?.includes(otherParticipant) && 
+           thread.participants?.includes(user.id));
+        
+        return isMatch ? { ...thread, unreadCount: 0 } : thread;
+      }));
     } catch (error) {
       console.error('Error loading messages:', error);
       toast({
@@ -545,9 +550,22 @@ export default function Messages() {
                       selectedThread?.id === thread.id ? 'bg-muted/70' : ''
                     }`}
                   >
+                    {/* Delete button - appears on hover, positioned to avoid badge */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setThreadToDelete(thread);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    
                     <button
                       onClick={() => setSelectedThread(thread)}
-                      className="w-full text-left focus:outline-none"
+                      className="w-full text-left focus:outline-none pl-8"
                     >
                       <div className="flex items-start justify-between mb-1">
                         <h3 className="font-medium text-foreground truncate flex-1 pr-2">
@@ -584,19 +602,6 @@ export default function Messages() {
                         {formatDistanceToNow(thread.updatedAt, { addSuffix: true })}
                       </p>
                     </button>
-                    
-                    {/* Delete button - appears on hover */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setThreadToDelete(thread);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
               </div>
