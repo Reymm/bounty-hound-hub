@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Search, Send, Paperclip, ArrowLeft, Trash2 } from 'lucide-react';
+import { Search, Send, Paperclip, ArrowLeft, Trash2, X, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +41,11 @@ export default function Messages() {
   const [otherParticipantAvatar, setOtherParticipantAvatar] = useState<string>('');
   const [threadToDelete, setThreadToDelete] = useState<MessageThread | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -273,21 +277,120 @@ export default function Messages() {
     }
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a JPG, PNG, WebP, or GIF image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearSelectedImage = () => {
+    setSelectedImage(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (file: File, recipientId: string): Promise<string | null> => {
+    if (!user) return null;
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${recipientId}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('message-attachments')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error('Failed to upload image');
+    }
+
+    const { data: signedUrlData, error: signedError } = await supabase.storage
+      .from('message-attachments')
+      .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
+
+    if (signedError) {
+      console.error('Signed URL error:', signedError);
+      return fileName;
+    }
+
+    return signedUrlData.signedUrl;
+  };
+
   const sendMessage = async () => {
-    if (!user || !selectedThread || !newMessage.trim()) return;
+    if (!user || !selectedThread || (!newMessage.trim() && !selectedImage)) return;
     
     try {
       setSendingMessage(true);
+      setIsUploading(!!selectedImage);
       
-      // Extract participant IDs from threadId (format: participant1___participant2:::bountyId)
       const [participantPart] = selectedThread.id.split(':::');
       const participants = participantPart.split('___');
       const recipientId = participants.find(p => p !== user.id);
       if (!recipientId) return;
-      
-      const message = await supabaseApi.sendMessage(recipientId, selectedThread.bountyId, newMessage.trim());
+
+      let attachmentUrl: string | null = null;
+
+      if (selectedImage) {
+        attachmentUrl = await uploadImage(selectedImage, recipientId);
+      }
+
+      // Send message with attachment
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: recipientId,
+          bounty_id: selectedThread.bountyId,
+          content: newMessage.trim() || (attachmentUrl ? '📷 Image' : ''),
+          attachment_url: attachmentUrl
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add the message to local state
+      const message: Message = {
+        id: data.id,
+        threadId: selectedThread.id,
+        bountyId: data.bounty_id,
+        senderId: data.sender_id,
+        senderName: user.email?.split('@')[0] || 'You',
+        body: data.content,
+        attachments: data.attachment_url ? [data.attachment_url] : [],
+        timestamp: new Date(data.created_at),
+        isRead: data.is_read
+      };
+
       setMessages(prev => [...prev, message]);
       setNewMessage('');
+      clearSelectedImage();
 
       // Update thread list
       setThreads(prev => prev.map(thread => 
@@ -305,6 +408,7 @@ export default function Messages() {
       });
     } finally {
       setSendingMessage(false);
+      setIsUploading(false);
     }
   };
 
@@ -592,7 +696,19 @@ export default function Messages() {
                               {message.senderName}
                             </p>
                           )}
-                          <p className="text-sm break-words">{message.body}</p>
+                          {message.body !== '📷 Image' && (
+                            <p className="text-sm break-words">{message.body}</p>
+                          )}
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className="mt-2">
+                              <img 
+                                src={message.attachments[0]} 
+                                alt="Attachment"
+                                className="rounded-md max-w-full max-h-48 cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => window.open(message.attachments[0], '_blank')}
+                              />
+                            </div>
+                          )}
                           <p
                             className={`text-xs mt-1 ${
                               message.senderId === user?.id
@@ -612,7 +728,33 @@ export default function Messages() {
 
               {/* Message Composer */}
               <div className="p-4 border-t border-border bg-background">
+                {/* Image preview */}
+                {imagePreview && (
+                  <div className="relative inline-block mb-3">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="max-h-24 rounded-md border"
+                    />
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={clearSelectedImage}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+
                 <div className="flex items-end gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageSelect}
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                  />
                   <div className="flex-1">
                     <Textarea
                       placeholder="Type your message..."
@@ -630,16 +772,26 @@ export default function Messages() {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" disabled>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={sendingMessage}
+                      title="Attach image"
+                    >
                       <Paperclip className="h-4 w-4" />
                     </Button>
                     <Button 
                       onClick={sendMessage}
-                      disabled={sendingMessage || !newMessage.trim()}
+                      disabled={sendingMessage || (!newMessage.trim() && !selectedImage)}
                       size="sm"
                       className="bg-primary hover:bg-primary-hover text-primary-foreground"
                     >
-                      <Send className="h-4 w-4" />
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
