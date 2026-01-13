@@ -584,11 +584,14 @@ export default function Profile() {
                 <h4 className="font-medium mb-2">Payout Information</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Payments processed via Stripe Connect</li>
-                  <li>• Funds released when bounty poster approves (after 7-day hold)</li>
                   <li>• Platform fee: $2 + 5% deducted from payout</li>
-                  <li>• Payouts typically arrive in 2-7 business days</li>
-                  <li>• Maximum hold period: 90 days per Stripe policy</li>
+                  <li>• Payouts typically arrive in 2-7 business days (set by Stripe, not BountyBay)</li>
+                  <li>• You can adjust your payout schedule in your Stripe Dashboard</li>
                 </ul>
+                <p className="text-xs text-muted-foreground mt-3 italic">
+                  Payout timing is controlled by Stripe based on your account verification status. 
+                  New accounts typically have a 7-day payout delay which can be reduced over time.
+                </p>
               </div>
             </CardContent>
           </Card>
