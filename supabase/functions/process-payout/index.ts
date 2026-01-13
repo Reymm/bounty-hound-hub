@@ -288,9 +288,9 @@ serve(async (req) => {
         });
 
         // Create PaymentIntent with destination charge
-        // - application_fee_amount = platform fee (shows in Collected fees!)
-        // - Hunter gets: charge - application_fee automatically
-        // - NO transfer_data.amount (mutually exclusive with application_fee_amount)
+        // CRITICAL FIX: Use transfer_data.amount to explicitly set hunter payout
+        // application_fee_amount and transfer_data.amount are NOT mutually exclusive
+        // application_fee_amount comes from the platform's portion after the transfer
         const paymentIntent = await stripe.paymentIntents.create({
           amount: totalChargeCents, // Bounty + Stripe fees (poster pays Stripe fees)
           currency: escrowTx.currency || 'usd',
@@ -299,13 +299,15 @@ serve(async (req) => {
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
-          // Application fee = platform fee + Stripe fee (Stripe takes their cut, platform nets $52)
-          application_fee_amount: applicationFeeCents,
-          // Destination for the funds (hunter gets charge - application_fee = exactly $948)
+          // Destination for the funds - EXPLICIT amount for hunter
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
-            // NO amount field - Stripe calculates: totalCharge - applicationFee = hunterPayout
+            amount: hunterPayoutCents, // Hunter receives EXACTLY $948 (bounty - platform fee)
           },
+          // Application fee is taken from the REMAINING amount after transfer (platform's portion)
+          // Platform receives: totalCharge - hunterPayout = $1030.18 - $948 = $82.18
+          // Stripe takes their fee (~$30) from platform's portion
+          // Platform nets: $82.18 - $30.18 = $52
           metadata: {
             bounty_id: submission.bounty_id,
             submission_id: submissionId,
