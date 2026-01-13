@@ -51,8 +51,6 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [ratingPromptData, setRatingPromptData] = useState<{ hunterId: string; hunterName: string } | null>(null);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [withdrawingClaim, setWithdrawingClaim] = useState(false);
-  const [releasingFunds, setReleasingFunds] = useState(false);
-  const [fundsReleased, setFundsReleased] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -65,15 +63,6 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       setLoading(true);
       const claims = await supabaseApi.getClaims(bountyId);
       setSubmissions(claims);
-      
-      // Check if funds have already been released for this bounty
-      const { data: escrowData } = await supabase
-        .from('escrow_transactions')
-        .select('manual_payout_status')
-        .eq('bounty_id', bountyId)
-        .single();
-      
-      setFundsReleased(escrowData?.manual_payout_status === 'sent');
     } catch (error) {
       console.error('Error loading submissions:', error);
     } finally {
@@ -323,48 +312,8 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
     }
   };
 
-  const handleReleaseFunds = async (submissionId: string) => {
-    try {
-      setReleasingFunds(true);
-      
-      const result = await supabaseApi.releaseFunds(submissionId);
-      
-      if (result.success) {
-        toast({
-          title: "Funds Released! 💰",
-          description: `Payment sent to ${result.hunter_name}`,
-        });
-        await loadSubmissions();
-        onRefresh?.();
-      } else if (result.already_released) {
-        toast({
-          title: "Already Released",
-          description: "Funds have already been transferred to the hunter.",
-        });
-      } else if (result.hold_not_elapsed) {
-        toast({
-          title: "Hold Period Active",
-          description: result.message || `Funds can be released in ${result.hours_remaining} hours`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to release funds",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error releasing funds:', error);
-      toast({
-        title: "Error",
-        description: "Failed to release funds. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setReleasingFunds(false);
-    }
-  };
+  // Note: With destination charges, funds are automatically transferred to hunter's Stripe Connect account
+  // No manual release needed - Stripe handles this automatically
 
   const isOwner = currentUserId === posterId;
 
@@ -545,19 +494,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                       Confirm Delivery
                     </Button>
                   )}
-                  {/* Release Funds button - shown for poster on accepted submissions, hidden if already released */}
-                  {submission.status === ClaimStatus.ACCEPTED && isOwner && !fundsReleased && (
-                    <Button 
-                      size="sm" 
-                      variant="default"
-                      onClick={() => handleReleaseFunds(submission.id)}
-                      disabled={releasingFunds}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      {releasingFunds ? 'Releasing...' : 'Release Funds Early'}
-                    </Button>
-                  )}
+                  {/* Note: With destination charges, funds are automatically transferred to hunter's Stripe Connect account */}
                   <Button 
                     size="sm" 
                     variant="outline"
