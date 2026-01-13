@@ -132,7 +132,7 @@ export const canUserRate = async (
       id,
       poster_id,
       status,
-      Submissions!inner(
+      Submissions!Submissions_bounty_id_fkey!inner(
         hunter_id,
         status
       )
