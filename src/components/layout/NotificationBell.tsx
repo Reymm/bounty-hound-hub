@@ -10,6 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useReviewModal } from '@/contexts/ReviewModalContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,6 +32,7 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
+  const { openReviewModal } = useReviewModal();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -128,22 +130,12 @@ export function NotificationBell() {
           navigate('/me/bounties?tab=applied');
           break;
           
-        // Rating notifications - go directly to the bounty with review param to trigger rating dialog
+        // Rating notifications - open the focused review modal directly
         case 'rate_user':
         case 'rate_poster':
         case 'rate_hunter':
           if (notification.bounty_id) {
-            const targetUrl = `/b/${notification.bounty_id}?review=true`;
-            const currentPath = window.location.pathname + window.location.search;
-            
-            // If already on the same URL, force a page reload to re-trigger the review prompt
-            if (currentPath === targetUrl || currentPath.startsWith(`/b/${notification.bounty_id}`)) {
-              // Navigate away briefly then back, or use replace + reload
-              navigate(targetUrl, { replace: true });
-              window.location.reload();
-            } else {
-              navigate(targetUrl);
-            }
+            openReviewModal(notification.bounty_id);
           } else {
             navigate('/me/bounties?tab=applied');
           }
