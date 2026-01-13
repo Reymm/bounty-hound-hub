@@ -221,7 +221,7 @@ serve(async (req) => {
     const hunterPayout = Math.round(bountyAmount * 100) - platformFee; // HUNTER GETS: bounty - platform fee (in cents)
     
     // Stripe fee: 3.5% + $0.30 (simple calculation to match frontend display)
-    const STRIPE_FEE_RATE = 0.035; // 3.5% to cover international cards
+    const STRIPE_FEE_RATE = 0.035; // 3.5% = 2.9% Stripe + 0.5% Connect fee + buffer
     const STRIPE_FIXED_FEE = 0.30;
     const stripeFee = Math.round((bountyAmount * STRIPE_FEE_RATE + STRIPE_FIXED_FEE) * 100); // in cents
     const totalChargeAmount = Math.round(bountyAmount * 100) + stripeFee; // bounty + stripe fee in cents
