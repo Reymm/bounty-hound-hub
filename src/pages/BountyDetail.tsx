@@ -76,6 +76,7 @@ export default function BountyDetail() {
     const review = searchParams.get('review');
     if (review === 'true') {
       setShowReviewPrompt(true);
+      setActiveTab('claims'); // Switch to claims tab so BountyRatingSection mounts
     }
   }, [searchParams]);
 
