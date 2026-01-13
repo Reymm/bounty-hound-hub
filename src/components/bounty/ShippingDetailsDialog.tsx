@@ -122,9 +122,21 @@ export function ShippingDetailsDialog({
     }
   };
 
+  // Prevent closing dialog by clicking outside or pressing Escape - user must submit or skip
+  const handleOpenChange = (open: boolean) => {
+    // Only allow closing if not currently submitting
+    if (!open && !isSubmitting) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Shipping Details Required</DialogTitle>
           <DialogDescription>

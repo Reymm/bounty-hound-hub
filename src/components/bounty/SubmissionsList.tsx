@@ -103,7 +103,15 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       const claim = submissions.find(s => s.id === submissionId);
       if (claim) {
         setAcceptedClaim(claim);
+        
+        // Set up rating prompt data for after shipping dialog or immediately
+        setRatingPromptData({
+          hunterId: claim.hunterId,
+          hunterName: claim.hunterName,
+        });
+        
         // Only show shipping dialog if bounty requires shipping
+        // IMPORTANT: If showing shipping dialog, DON'T refresh yet - wait until dialog closes
         if (requiresShipping) {
           // Update shipping status to 'requested' so hunter knows to wait for details
           await supabase
@@ -112,13 +120,8 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
             .eq('id', bountyId);
             
           setShippingDialogOpen(true);
+          // Don't call onRefresh here - it will be called when shipping dialog closes
         }
-        
-        // Set up rating prompt data for after shipping dialog or immediately
-        setRatingPromptData({
-          hunterId: claim.hunterId,
-          hunterName: claim.hunterName,
-        });
       }
       
       // Update bounty status to fulfilled (completed)
@@ -181,14 +184,18 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         });
       }
       
-      await loadSubmissions();
-      onRefresh?.();
-      
-      // Show rating prompt after a short delay if not showing shipping dialog
-      if (!requiresShipping && claim) {
-        setTimeout(() => {
-          setRatingPromptOpen(true);
-        }, 500);
+      // Only refresh immediately if NOT showing shipping dialog
+      // If shipping dialog is open, refresh will happen when it closes
+      if (!requiresShipping) {
+        await loadSubmissions();
+        onRefresh?.();
+        
+        // Show rating prompt after a short delay
+        if (claim) {
+          setTimeout(() => {
+            setRatingPromptOpen(true);
+          }, 500);
+        }
       }
     } else {
       toast({
@@ -623,6 +630,9 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           onClose={() => {
             setShippingDialogOpen(false);
             setAcceptedClaim(null);
+            // Refresh data after dialog closes
+            loadSubmissions();
+            onRefresh?.();
             // Show rating prompt after shipping dialog closes
             setTimeout(() => {
               setRatingPromptOpen(true);
@@ -631,6 +641,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
           onShippingDetailsProvided={() => {
             setShippingDialogOpen(false);
             setAcceptedClaim(null);
+            loadSubmissions();
             onRefresh?.();
             // Show rating prompt after shipping details provided
             setTimeout(() => {
