@@ -466,7 +466,7 @@ function PostBountyForm() {
 
         toast({
           title: "Bounty posted successfully!",
-          description: "Your bounty is now live with funds secured in escrow.",
+          description: "Your bounty is now live. Your card will be charged when you accept a submission.",
         });
 
         // Clear the bounty posting flag and draft
