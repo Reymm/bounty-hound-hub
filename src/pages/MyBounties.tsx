@@ -566,7 +566,7 @@ export default function MyBounties() {
                       </div>
                       
                       <Button asChild className="bg-primary hover:bg-primary-hover text-primary-foreground">
-                        <Link to={`/b/${review.bountyId}`}>
+                        <Link to={`/b/${review.bountyId}?review=true`}>
                           <Star className="h-4 w-4 mr-2" />
                           Leave Review
                         </Link>

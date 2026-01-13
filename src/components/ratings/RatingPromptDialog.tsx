@@ -92,8 +92,8 @@ export function RatingPromptDialog({
   const handleSkip = () => {
     onOpenChange(false);
     toast({
-      title: "Rating skipped",
-      description: "You can rate this user later from the bounty page.",
+      title: "Review saved for later",
+      description: "You can leave your review anytime from My Bounties → Reviews tab.",
     });
     onComplete?.();
   };
@@ -144,7 +144,7 @@ export function RatingPromptDialog({
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="ghost" onClick={handleSkip} disabled={loading}>
-            Skip for now
+            Leave Review Later
           </Button>
           <Button onClick={handleSubmit} disabled={loading || rating === 0}>
             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
