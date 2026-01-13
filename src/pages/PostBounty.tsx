@@ -1144,11 +1144,11 @@ function PostBountyForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="default"
                   onClick={addVerificationRequirement}
-                  className="mt-2"
+                  className="mt-3 w-full border-dashed border-2 border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-5 w-5 mr-2" />
                   Add Requirement
                 </Button>
               )}
