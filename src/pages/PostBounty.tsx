@@ -1154,7 +1154,7 @@ function PostBountyForm() {
                   type="button"
                   onClick={addVerificationRequirement}
                   disabled={!currentRequirement.trim() || verificationRequirements.length >= 10 || verificationRequirements.includes(currentRequirement.trim())}
-                  variant="outline"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6"
                 >
                   Add
                 </Button>
