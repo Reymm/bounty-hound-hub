@@ -845,12 +845,13 @@ function PostBountyForm() {
                     }
                   }}
                   disabled={tags.length >= 10}
+                  className="placeholder:text-foreground/70"
                 />
                 <Button
                   type="button"
                   onClick={addTag}
                   disabled={!currentTag.trim() || tags.length >= 10 || tags.includes(currentTag.trim())}
-                  variant="outline"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6"
                 >
                   Add
                 </Button>
