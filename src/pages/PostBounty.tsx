@@ -144,12 +144,11 @@ function PostBountyForm() {
   // But we show poster what they'll pay on approval (bounty + Stripe processing fee)
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      // Calculate Stripe processing fee: 3.5% + $0.30
-      // Formula: total = (bounty + $0.30) / (1 - 0.035) to cover the fee
+      // Calculate Stripe processing fee: 3.5% + $0.30 (simple calculation)
       const STRIPE_FEE_RATE = 0.035;
       const STRIPE_FIXED_FEE = 0.30;
-      const total = Math.round(((watchedBountyAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE)) * 100) / 100;
-      const stripeFee = Math.round((total - watchedBountyAmount) * 100) / 100;
+      const stripeFee = Math.round((watchedBountyAmount * STRIPE_FEE_RATE + STRIPE_FIXED_FEE) * 100) / 100;
+      const total = Math.round((watchedBountyAmount + stripeFee) * 100) / 100;
       
       setPlatformFee(stripeFee);
       setTotalCharge(total);
@@ -954,11 +953,12 @@ function PostBountyForm() {
                   type="number"
                   min="10"
                   max="10000"
+                  step="1"
                   placeholder="500"
                   className={`pl-10 ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 5) ? 'border-destructive' : ''}`}
                   {...register('bountyAmount', { 
                     valueAsNumber: true,
-                    setValueAs: (v) => v === '' ? undefined : parseFloat(v)
+                    setValueAs: (v) => v === '' ? undefined : Math.round(Number(v))
                   })}
                 />
               </div>
