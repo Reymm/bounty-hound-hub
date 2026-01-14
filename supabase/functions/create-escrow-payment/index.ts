@@ -130,7 +130,9 @@ serve(async (req) => {
         stripe_setup_intent_id: setupIntent.id,
         stripe_payment_intent_id: `setup_${setupIntent.id}`, // Unique placeholder until we charge
         amount: amount,
-        platform_fee_amount: hunterFee, // This is the hunter's fee (stored for payout calculation)
+        total_charge_amount: totalCharge, // Pre-calculated: bounty + Stripe processing fee
+        stripe_fee_amount: stripeFee, // Pre-calculated Stripe fee (3.7% + $0.30)
+        platform_fee_amount: hunterFee, // Hunter's fee (5% + $2) - stored for payout calculation
         currency: currency.toLowerCase(),
         status: 'card_pending' // New status for save-card model
       })

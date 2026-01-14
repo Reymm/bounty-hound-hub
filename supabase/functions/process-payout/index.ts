@@ -215,37 +215,57 @@ serve(async (req) => {
 
     logStep("Acquired capture lock via RPC", { lockId });
 
-    // Calculate payout amounts
-    // POSTER PAYS STRIPE FEES - Platform keeps full $52, hunter gets exactly bounty - platform fee
+    // ============================================================
+    // USE PRE-CALCULATED AMOUNTS FROM ESCROW (FIX: No double fee calc)
+    // At checkout, poster was shown total = (bounty + 0.30) / 0.963
+    // For $1000 bounty: total = $1038.73, Stripe fee = $38.73
+    // We use these stored values instead of recalculating
+    // ============================================================
     const bountyAmount = parseFloat(submission.Bounties.amount);
+    const bountyAmountCents = Math.round(bountyAmount * 100);
+    
+    // Platform fee: $2 + 5% from hunter's payout
     const platformFeeDollars = PLATFORM_FEE_FLAT + bountyAmount * PLATFORM_FEE_PERCENT; // $52 for $1000 bounty
-    const platformFeeCents = Math.round(platformFeeDollars * 100); // Platform's $52 in cents
-    const hunterPayoutCents = Math.round(bountyAmount * 100) - platformFeeCents; // Hunter gets: $1000 - $52 = $948 in cents
+    const platformFeeCents = Math.round(platformFeeDollars * 100);
     
-    // Stripe fee calculation for DESTINATION CHARGES:
-    // - Base rate: 2.9% + $0.30
-    // - International card fee: 0.8%
-    // Using 3.7% + $0.30 based on actual Stripe pricing
-    const STRIPE_PERCENT = 0.037; // 3.7% = 2.9% base + 0.8% international
-    const STRIPE_FLAT_CENTS = 30;
+    // Hunter gets: bounty - platform fee = $948 for $1000 bounty
+    const hunterPayoutCents = bountyAmountCents - platformFeeCents;
     
-    // Calculate total charge so poster covers ALL Stripe fees
-    // Formula: total = (amount + fixed) / (1 - rate) to net exactly 'amount' after Stripe takes their cut
-    const baseAmountCents = hunterPayoutCents + platformFeeCents; // $1000 in cents
-    const totalChargeCents = Math.ceil((baseAmountCents + STRIPE_FLAT_CENTS) / (1 - STRIPE_PERCENT));
-    const stripeFeeCents = Math.ceil(totalChargeCents * STRIPE_PERCENT + STRIPE_FLAT_CENTS);
+    // USE PRE-CALCULATED values from escrow (set at checkout time)
+    // If not available (legacy), calculate as fallback
+    let totalChargeCents: number;
+    let stripeFeeCents: number;
     
-    // Application fee = platform fee + Stripe fee (so Stripe takes from this, platform nets $52)
-    const applicationFeeCents = platformFeeCents + stripeFeeCents;
+    if (escrowTx.total_charge_amount && escrowTx.stripe_fee_amount) {
+      // FIX: Use pre-calculated amounts from checkout
+      totalChargeCents = Math.round(parseFloat(escrowTx.total_charge_amount) * 100);
+      stripeFeeCents = Math.round(parseFloat(escrowTx.stripe_fee_amount) * 100);
+      logStep("Using PRE-CALCULATED amounts from escrow (no double fee)", {
+        source: 'escrow_record',
+        totalCharge: totalChargeCents / 100,
+        stripeFee: stripeFeeCents / 100
+      });
+    } else {
+      // FALLBACK for legacy records: calculate Stripe fee
+      // Formula: total = (bounty + 0.30) / 0.963
+      const STRIPE_PERCENT = 0.037;
+      const STRIPE_FLAT_CENTS = 30;
+      totalChargeCents = Math.ceil((bountyAmountCents + STRIPE_FLAT_CENTS) / (1 - STRIPE_PERCENT));
+      stripeFeeCents = totalChargeCents - bountyAmountCents;
+      logStep("FALLBACK: Calculated Stripe fee (legacy escrow record)", {
+        source: 'calculated_fallback',
+        totalCharge: totalChargeCents / 100,
+        stripeFee: stripeFeeCents / 100
+      });
+    }
 
-    logStep("Calculated payout amounts - POSTER PAYS STRIPE FEES", {
+    logStep("Payout amounts - USING PRE-CALCULATED ESCROW VALUES", {
       bountyAmount,
-      platformFee: platformFeeCents / 100,
-      stripeFee: stripeFeeCents / 100,
       totalCharge: totalChargeCents / 100,
-      applicationFee: applicationFeeCents / 100,
+      stripeFee: stripeFeeCents / 100,
+      platformFee: platformFeeCents / 100,
       hunterPayout: hunterPayoutCents / 100,
-      platformNets: (applicationFeeCents - stripeFeeCents) / 100
+      source: escrowTx.total_charge_amount ? 'escrow_precalc' : 'legacy_fallback'
     });
 
     // ============================================================
