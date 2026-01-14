@@ -287,27 +287,25 @@ serve(async (req) => {
         });
 
         // DESTINATION CHARGE MODEL (without on_behalf_of):
-        // - Charge poster: bounty amount only ($1000)
+        // - Charge poster: bounty + Stripe fees (~$1030)
         // - transfer_data.destination: hunter's connect account
         // - transfer_data.amount: explicit amount hunter receives ($948)
-        // - application_fee_amount: platform's cut ($52)
-        // - Platform is merchant of record, Stripe fees come from platform's portion
+        // - Platform receives: totalCharge - hunterPayout - stripeFee = $52
         // 
         // With explicit transfer_data.amount:
-        // - Poster pays: $1000
-        // - Platform receives: $1000 - $948 = $52 (before Stripe fees)
+        // - Poster pays: $1030.18 (covers bounty + Stripe fees)
+        // - Stripe takes: ~$30.18
         // - Hunter receives: $948 exactly
-        // - Stripe takes ~2.9% + $0.30 from the platform's portion
+        // - Platform keeps: $52 (the difference after hunter payout and Stripe fee)
         
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: Math.round(bountyAmount * 100), // Charge exactly the bounty amount ($1000)
+          amount: totalChargeCents, // Charge poster bounty + Stripe fees (~$1030)
           currency: escrowTx.currency || 'usd',
           customer: customerId,
           payment_method: escrowTx.stripe_payment_method_id,
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
-          // NO on_behalf_of - platform is merchant of record
           // Destination charge with explicit transfer amount
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
@@ -319,6 +317,8 @@ serve(async (req) => {
             hunter_id: submission.hunter_id,
             poster_id: submission.Bounties.poster_id,
             bounty_amount: bountyAmount.toString(),
+            poster_charged: (totalChargeCents / 100).toFixed(2),
+            stripe_fee: (stripeFeeCents / 100).toFixed(2),
             platform_fee: (platformFeeCents / 100).toFixed(2),
             hunter_payout: (hunterPayoutCents / 100).toFixed(2),
             type: 'bounty_payment'
@@ -332,13 +332,14 @@ serve(async (req) => {
         logStep("Destination charge successful", { 
           paymentIntentId: paymentIntent.id,
           status: paymentIntent.status,
-          posterCharged: bountyAmount,
+          posterCharged: totalChargeCents / 100,
+          stripeFee: stripeFeeCents / 100,
           platformKeeps: platformFeeCents / 100,
           hunterReceives: hunterPayoutCents / 100
         });
 
         paymentIntentId = paymentIntent.id;
-        chargedAmount = Math.round(bountyAmount * 100);
+        chargedAmount = totalChargeCents;
 
       } else if (escrowTx.stripe_payment_intent_id && escrowTx.stripe_payment_intent_id !== '') {
         // LEGACY MODEL: Capture the existing PaymentIntent
