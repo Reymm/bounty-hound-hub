@@ -146,22 +146,21 @@ function PostBountyForm() {
     return () => clearTimeout(timeoutId);
   }, [watch(), tags, verificationRequirements, uploadedImages, hasDeadline]);
 
+  // FEE CALCULATION v2 - 3.7% + $0.30 - UPDATED JAN 14 2026
   // Calculate fees when bounty amount changes
   // With save-card model, we don't charge upfront - just save the card
   // But we show poster what they'll pay on approval (bounty + Stripe processing fee)
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      // Calculate Stripe processing fee: 3.7% + $0.30 (2.9% base + 0.8% international card fee)
-      // Formula: total = (amount + fixed) / (1 - rate) to net exactly 'amount' after Stripe takes their cut
-      const STRIPE_FEE_RATE = 0.037;
-      const STRIPE_FIXED_FEE = 0.30;
-      const rawTotal = (watchedBountyAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE);
-      const total = Math.round(rawTotal * 100) / 100;
-      const stripeFee = Math.round((total - watchedBountyAmount) * 100) / 100;
+      // 3.7% + $0.30 - Stripe fee (2.9% base + 0.8% international)
+      // Formula: total = (bounty + 0.30) / 0.963
+      // For $2000: total = 2000.30 / 0.963 = $2077.26, fee = $77.26
+      const total = Math.round(((watchedBountyAmount + 0.30) / 0.963) * 100) / 100;
+      const fee = Math.round((total - watchedBountyAmount) * 100) / 100;
       
-      console.log('[FEE CALC] amount:', watchedBountyAmount, 'rawTotal:', rawTotal, 'total:', total, 'fee:', stripeFee);
+      console.log('[FEE v2] bounty:', watchedBountyAmount, '-> total:', total, 'fee:', fee);
       
-      setPlatformFee(stripeFee);
+      setPlatformFee(fee);
       setTotalCharge(total);
     } else {
       setPlatformFee(0);
