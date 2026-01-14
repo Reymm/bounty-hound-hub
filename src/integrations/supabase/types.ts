@@ -240,9 +240,11 @@ export type Database = {
           refund_reference: string | null
           refunded_at: string | null
           status: string
+          stripe_fee_amount: number | null
           stripe_payment_intent_id: string
           stripe_payment_method_id: string | null
           stripe_setup_intent_id: string | null
+          total_charge_amount: number | null
           total_charged_amount: number | null
           updated_at: string
         }
@@ -282,9 +284,11 @@ export type Database = {
           refund_reference?: string | null
           refunded_at?: string | null
           status?: string
+          stripe_fee_amount?: number | null
           stripe_payment_intent_id: string
           stripe_payment_method_id?: string | null
           stripe_setup_intent_id?: string | null
+          total_charge_amount?: number | null
           total_charged_amount?: number | null
           updated_at?: string
         }
@@ -324,9 +328,11 @@ export type Database = {
           refund_reference?: string | null
           refunded_at?: string | null
           status?: string
+          stripe_fee_amount?: number | null
           stripe_payment_intent_id?: string
           stripe_payment_method_id?: string | null
           stripe_setup_intent_id?: string | null
+          total_charge_amount?: number | null
           total_charged_amount?: number | null
           updated_at?: string
         }
