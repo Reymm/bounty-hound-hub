@@ -367,13 +367,13 @@ serve(async (req) => {
           capture_status: 'captured',
           captured_at: new Date().toISOString(),
           status: 'captured',
-          payout_method: 'stripe_destination_explicit',
+          payout_method: 'stripe_destination_poster_pays_fees', // Destination charge with transfer_data.amount
           platform_fee_amount: platformFeeCents / 100, // Platform keeps exactly $52
           payout_sent_amount: hunterPayoutCents / 100, // Hunter receives exactly $948
-          total_charged_amount: chargedAmount / 100, // Poster paid bounty amount
+          total_charged_amount: chargedAmount / 100, // Poster paid bounty + Stripe fees
           charge_attempted_at: new Date().toISOString(),
           capture_error: null,
-          manual_payout_status: 'completed',
+          manual_payout_status: 'confirmed', // Payout was automatically done via destination charge
           updated_at: new Date().toISOString()
         })
         .eq('id', escrowTx.id)
