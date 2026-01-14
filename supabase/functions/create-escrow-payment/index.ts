@@ -76,11 +76,12 @@ serve(async (req) => {
     const hunterFeePercent = 0.05; // 5%
     const hunterFee = Math.round((hunterFeeFlat + amount * hunterFeePercent) * 100) / 100;
     
-    // Stripe processing fee: 3.9% + $0.30 (covers base 2.9% + destination fee + cross-border buffer)
-    const STRIPE_FEE_RATE = 0.039; // 3.9% to ensure platform keeps full fee after actual Stripe charges
+    // Stripe processing fee: 3.7% + $0.30 (2.9% base + 0.8% international card fee)
+    // Formula: total = (amount + fixed) / (1 - rate) to net exactly 'amount' after Stripe takes their cut
+    const STRIPE_FEE_RATE = 0.037; // 3.7% covers base + international card fees
     const STRIPE_FIXED_FEE = 0.30;
-    const stripeFee = Math.round((amount * STRIPE_FEE_RATE + STRIPE_FIXED_FEE) * 100) / 100;
-    const totalCharge = Math.round((amount + stripeFee) * 100) / 100;
+    const totalCharge = Math.round(((amount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE)) * 100) / 100;
+    const stripeFee = Math.round((totalCharge - amount) * 100) / 100;
     
     logStep("Amount calculated (save-card model)", {
       bountyAmount: amount, 
