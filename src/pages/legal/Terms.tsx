@@ -127,7 +127,18 @@ export default function Terms() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">5.2 Fee Schedule</h3>
+                  <h3 className="font-medium mb-2">5.2 Finality of Acceptance</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    <strong>IMPORTANT:</strong> Acceptance of a submission by the Poster constitutes final 
+                    approval of the Hunter's work. Once the Poster clicks "Accept" and funds are released 
+                    to the Hunter, the transaction is complete and irreversible. No refunds will be issued 
+                    after payout has been processed. Posters are responsible for thoroughly reviewing all 
+                    proof and evidence before accepting a submission. BountyBay strongly recommends using 
+                    the 7-day hold period to verify delivery before early release of funds.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">5.3 Fee Schedule</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li><strong>Posters:</strong> No platform fee. Only the bounty reward amount plus Stripe processing fees (approximately 2.9% + $0.30 per transaction)</li>
                     <li><strong>Hunters:</strong> Platform fee of $2 + 5% of bounty amount, plus Stripe transfer fees (approximately 0.25% + $0.25), deducted from payout</li>
@@ -135,7 +146,7 @@ export default function Terms() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">5.3 Cancellation Policy</h3>
+                  <h3 className="font-medium mb-2">5.4 Cancellation Policy</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Bounties can be cancelled at any time before a submission is approved</li>
                     <li>No cancellation fees apply - your card is only charged when you approve a submission</li>
@@ -143,7 +154,7 @@ export default function Terms() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">5.4 Payout Timing</h3>
+                  <h3 className="font-medium mb-2">5.5 Payout Timing</h3>
                   <p className="text-muted-foreground leading-relaxed">
                     Following approval of a claim, payouts are processed through Stripe Connect and typically 
                     arrive within 2-7 business days depending on your location and banking institution. 
