@@ -151,8 +151,8 @@ function PostBountyForm() {
   // But we show poster what they'll pay on approval (bounty + Stripe processing fee)
   useEffect(() => {
     if (watchedBountyAmount && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0) {
-      // Calculate Stripe processing fee: 3.5% + $0.30 (simple calculation)
-      const STRIPE_FEE_RATE = 0.035;
+      // Calculate Stripe processing fee: 3.9% + $0.30 (covers base + destination + cross-border fees)
+      const STRIPE_FEE_RATE = 0.039;
       const STRIPE_FIXED_FEE = 0.30;
       const stripeFee = Math.round((watchedBountyAmount * STRIPE_FEE_RATE + STRIPE_FIXED_FEE) * 100) / 100;
       const total = Math.round((watchedBountyAmount + stripeFee) * 100) / 100;
@@ -528,7 +528,7 @@ function PostBountyForm() {
                   <span className="font-medium">${watchedBountyAmount?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Stripe processing fee (2.9% + $0.30):</span>
+                  <span className="text-muted-foreground">Stripe processing fee (~3.9% + $0.30):</span>
                   <span>${platformFee.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">

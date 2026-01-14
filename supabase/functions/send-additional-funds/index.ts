@@ -165,7 +165,7 @@ serve(async (req) => {
     // transfer_data.amount = amount (hunter receives this directly)
     // Total charge needs to cover: transfer + all Stripe fees
     
-    const STRIPE_PROCESSING_RATE = 0.029; // 2.9%
+    const STRIPE_PROCESSING_RATE = 0.039; // 3.9% to cover base + destination + cross-border fees
     const STRIPE_PROCESSING_FIXED = 30; // $0.30 in cents
     const STRIPE_CONNECT_RATE = 0.005; // 0.5% cross-border fee on transfer
     const STRIPE_CONNECT_FIXED = 25; // $0.25 in cents
@@ -178,11 +178,11 @@ serve(async (req) => {
     
     // Now calculate total charge: we need to cover transfer + connect fees, THEN account for processing fees
     // Let X = total charge in cents
-    // Processing fee = X * 0.029 + 30
-    // Net after processing = X - (X * 0.029 + 30) = X * 0.971 - 30
-    // We need: X * 0.971 - 30 >= transferAmountCents + connectFeeCents (to cover transfer AND connect fees)
-    // X * 0.971 >= transferAmountCents + connectFeeCents + 30
-    // X >= (transferAmountCents + connectFeeCents + 30) / 0.971
+    // Processing fee = X * 0.039 + 30
+    // Net after processing = X - (X * 0.039 + 30) = X * 0.961 - 30
+    // We need: X * 0.961 - 30 >= transferAmountCents + connectFeeCents (to cover transfer AND connect fees)
+    // X * 0.961 >= transferAmountCents + connectFeeCents + 30
+    // X >= (transferAmountCents + connectFeeCents + 30) / 0.961
     
     const minAmountNeeded = transferAmountCents + connectFeeCents + STRIPE_PROCESSING_FIXED;
     const totalChargeCents = Math.ceil(minAmountNeeded / (1 - STRIPE_PROCESSING_RATE));

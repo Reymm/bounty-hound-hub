@@ -76,8 +76,8 @@ serve(async (req) => {
     const hunterFeePercent = 0.05; // 5%
     const hunterFee = Math.round((hunterFeeFlat + amount * hunterFeePercent) * 100) / 100;
     
-    // Stripe processing fee: 3.5% + $0.30 (simple calculation to match frontend display)
-    const STRIPE_FEE_RATE = 0.035; // 3.5% = 2.9% Stripe + 0.5% Connect fee + buffer
+    // Stripe processing fee: 3.9% + $0.30 (covers base 2.9% + destination fee + cross-border buffer)
+    const STRIPE_FEE_RATE = 0.039; // 3.9% to ensure platform keeps full fee after actual Stripe charges
     const STRIPE_FIXED_FEE = 0.30;
     const stripeFee = Math.round((amount * STRIPE_FEE_RATE + STRIPE_FIXED_FEE) * 100) / 100;
     const totalCharge = Math.round((amount + stripeFee) * 100) / 100;
