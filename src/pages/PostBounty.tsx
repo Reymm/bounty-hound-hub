@@ -155,8 +155,11 @@ function PostBountyForm() {
       // Formula: total = (amount + fixed) / (1 - rate) to net exactly 'amount' after Stripe takes their cut
       const STRIPE_FEE_RATE = 0.037;
       const STRIPE_FIXED_FEE = 0.30;
-      const total = Math.round(((watchedBountyAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE)) * 100) / 100;
+      const rawTotal = (watchedBountyAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE);
+      const total = Math.round(rawTotal * 100) / 100;
       const stripeFee = Math.round((total - watchedBountyAmount) * 100) / 100;
+      
+      console.log('[FEE CALC] amount:', watchedBountyAmount, 'rawTotal:', rawTotal, 'total:', total, 'fee:', stripeFee);
       
       setPlatformFee(stripeFee);
       setTotalCharge(total);
@@ -529,7 +532,7 @@ function PostBountyForm() {
                   <span className="font-medium">${watchedBountyAmount?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Stripe processing fee (~3.9% + $0.30):</span>
+                  <span className="text-muted-foreground">Stripe processing fee (~3.7% + $0.30):</span>
                   <span>${platformFee.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
