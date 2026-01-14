@@ -224,14 +224,13 @@ serve(async (req) => {
     
     // Stripe fee calculation for DESTINATION CHARGES:
     // - Base rate: 2.9% + $0.30
-    // - Connected account destination fee: ~0.25-0.5%
-    // - Cross-border fee (if applicable): ~1-1.5%
-    // Using 3.9% + $0.30 as conservative estimate to ensure platform keeps full $52
-    // This protects against actual fees eating into platform revenue
-    const STRIPE_PERCENT = 0.039; // 3.9% to cover base + destination + cross-border fees
+    // - International card fee: 0.8%
+    // Using 3.7% + $0.30 based on actual Stripe pricing
+    const STRIPE_PERCENT = 0.037; // 3.7% = 2.9% base + 0.8% international
     const STRIPE_FLAT_CENTS = 30;
     
     // Calculate total charge so poster covers ALL Stripe fees
+    // Formula: total = (amount + fixed) / (1 - rate) to net exactly 'amount' after Stripe takes their cut
     const baseAmountCents = hunterPayoutCents + platformFeeCents; // $1000 in cents
     const totalChargeCents = Math.ceil((baseAmountCents + STRIPE_FLAT_CENTS) / (1 - STRIPE_PERCENT));
     const stripeFeeCents = Math.ceil(totalChargeCents * STRIPE_PERCENT + STRIPE_FLAT_CENTS);

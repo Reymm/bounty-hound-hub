@@ -110,7 +110,7 @@ const faqData = [
     questions: [
       {
         q: "What are the fees?",
-        a: "POSTERS: No platform fee. You pay the bounty reward + Stripe processing (~3.9% + $0.30). HUNTERS: $2 + 5% platform fee, deducted from your payout. Example: $100 bounty → hunter receives $93."
+        a: "POSTERS: No platform fee. You pay the bounty reward + Stripe processing (~3.7% + $0.30). HUNTERS: $2 + 5% platform fee, deducted from your payout. Example: $100 bounty → hunter receives $93."
       },
       {
         q: "Why do hunters pay fees but not posters?",

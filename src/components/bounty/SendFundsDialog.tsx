@@ -111,11 +111,12 @@ export function SendFundsDialog({
   };
 
   // Calculate fee preview - hunter receives EXACTLY amountNum
+  // Using 3.7% + $0.30 (2.9% base + 0.8% international)
   const amountNum = parseFloat(amount) || 0;
   const transferAmountCents = Math.round(amountNum * 100);
   const connectFeeCents = amountNum > 0 ? Math.ceil(transferAmountCents * 0.005) + 25 : 0; // 0.5% + $0.25
   const minAmountNeeded = transferAmountCents + connectFeeCents + 30; // + $0.30 processing fixed
-  const totalChargeCents = amountNum > 0 ? Math.ceil(minAmountNeeded / 0.961) : 0; // / (1 - 3.9%)
+  const totalChargeCents = amountNum > 0 ? Math.ceil(minAmountNeeded / 0.963) : 0; // / (1 - 3.7%)
   const totalCharge = totalChargeCents / 100;
   const totalFees = amountNum > 0 ? Math.round(totalChargeCents - transferAmountCents) / 100 : 0;
 
