@@ -984,7 +984,7 @@ function PostBountyForm() {
                     <span className="font-medium">${watchedBountyAmount.toFixed(2)} USD</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Payment Processing (3.5% + $0.30):</span>
+                    <span>Payment Processing (3.7% + $0.30):</span>
                     <span>${platformFee.toFixed(2)}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between font-semibold text-base">

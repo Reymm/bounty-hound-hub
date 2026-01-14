@@ -396,8 +396,8 @@ export default function Checkout() {
                 <span>$100.00</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground pl-2">
-                <span>↳ Stripe fee (3.5% + $0.30)</span>
-                <span>$3.94</span>
+                <span>↳ Stripe fee (3.7% + $0.30)</span>
+                <span>$4.15</span>
               </div>
               <Separator />
               <div className="flex justify-between text-sm">
