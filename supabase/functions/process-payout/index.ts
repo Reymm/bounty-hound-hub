@@ -298,9 +298,11 @@ serve(async (req) => {
           on_behalf_of: hunterProfile.stripe_connect_account_id,
           // application_fee_amount: JUST the platform fee ($52) - shows in Collected fees!
           application_fee_amount: platformFeeCents,
-          // Transfer data to move funds to hunter's connect account
+          // Transfer data: MUST specify amount explicitly or Stripe sends full amount!
+          // Hunter receives: totalCharge - Stripe fees - platform fee = $948
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
+            amount: hunterPayoutCents, // CRITICAL: Explicitly set hunter's payout ($948)
           },
           metadata: {
             bounty_id: submission.bounty_id,
