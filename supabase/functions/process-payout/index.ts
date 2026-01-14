@@ -222,15 +222,16 @@ serve(async (req) => {
     const platformFeeCents = Math.round(platformFeeDollars * 100); // Platform's $52 in cents
     const hunterPayoutCents = Math.round(bountyAmount * 100) - platformFeeCents; // Hunter gets: $1000 - $52 = $948 in cents
     
-    // Stripe fee: 2.9% + $0.30 on total charge
-    // We need to gross up so that after Stripe takes their fee, we have exactly:
-    // - platformFeeCents for platform
-    // - hunterPayoutCents for hunter
-    // Formula: totalCharge = (hunterPayout + platformFee + 0.30) / (1 - 0.029)
-    const STRIPE_PERCENT = 0.029;
+    // Stripe fee calculation for DESTINATION CHARGES:
+    // - Base rate: 2.9% + $0.30
+    // - Connected account destination fee: ~0.25-0.5%
+    // - Cross-border fee (if applicable): ~1-1.5%
+    // Using 3.9% + $0.30 as conservative estimate to ensure platform keeps full $52
+    // This protects against actual fees eating into platform revenue
+    const STRIPE_PERCENT = 0.039; // 3.9% to cover base + destination + cross-border fees
     const STRIPE_FLAT_CENTS = 30;
     
-    // Calculate total charge so poster covers Stripe fees
+    // Calculate total charge so poster covers ALL Stripe fees
     const baseAmountCents = hunterPayoutCents + platformFeeCents; // $1000 in cents
     const totalChargeCents = Math.ceil((baseAmountCents + STRIPE_FLAT_CENTS) / (1 - STRIPE_PERCENT));
     const stripeFeeCents = Math.ceil(totalChargeCents * STRIPE_PERCENT + STRIPE_FLAT_CENTS);
