@@ -249,11 +249,11 @@ serve(async (req) => {
     });
 
     // ============================================================
-    // ON_BEHALF_OF MODEL
-    // - Poster pays Stripe fees
-    // - Hunter pays BountyBay fees ($52)
-    // - application_fee_amount = $52 (shows as "Collected fees")
-    // - Hunter receives $948
+    // DESTINATION CHARGE MODEL with transfer_data.amount
+    // - Poster pays: bounty + Stripe fees (~$1030.18)
+    // - Hunter receives: $948 exactly (via explicit transfer_data.amount)
+    // - Platform keeps: $52 (shows in "Destination Platform Fee" exports)
+    // - Stripe takes: ~$30.18 processing fee
     // ============================================================
     try {
       let paymentIntentId = '';
@@ -261,7 +261,7 @@ serve(async (req) => {
 
       // Check if this is SAVE CARD MODEL (has payment_method_id) or LEGACY (has payment_intent_id)
       if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
-        logStep("Using SAVE CARD model with ON_BEHALF_OF");
+        logStep("Using SAVE CARD model with DESTINATION CHARGE");
         
         // Get customer from the payment method
         const paymentMethod = await stripe.paymentMethods.retrieve(escrowTx.stripe_payment_method_id);
@@ -271,15 +271,7 @@ serve(async (req) => {
           throw new Error("No customer found for payment method");
         }
 
-        // ON_BEHALF_OF MODEL:
-        // - Charge poster: bounty + Stripe fees (~$1030)
-        // - on_behalf_of: hunter's connect account (they're merchant of record)
-        // - application_fee_amount: $52 (BountyBay's cut - shows in Collected fees!)
-        // - Stripe takes ~$30 from the charge (poster covered it via gross-up)
-        // - Hunter receives: charge - Stripe fee - app fee = $1030 - $30 - $52 = $948
-        // - Platform receives: $52 (clean, separate from Stripe fees)
-        
-        logStep("on_behalf_of model - poster pays Stripe, hunter pays BountyBay", {
+        logStep("Destination charge - poster pays Stripe fees, explicit hunter transfer", {
           chargeAmount: totalChargeCents / 100,
           stripeFee: stripeFeeCents / 100,
           platformFee: platformFeeCents / 100,
