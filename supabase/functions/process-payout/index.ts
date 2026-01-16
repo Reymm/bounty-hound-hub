@@ -298,17 +298,17 @@ serve(async (req) => {
           hunterReceives: hunterPayoutCents / 100
         });
 
-        // DESTINATION CHARGE MODEL with APPLICATION FEE:
+        // DESTINATION CHARGE MODEL (without on_behalf_of):
         // - Charge poster: bounty + Stripe fees (~$1030)
         // - transfer_data.destination: hunter's connect account
-        // - application_fee_amount: platform fee that shows in "Collected fees" ($52)
-        // - Hunter receives: totalCharge - applicationFee - stripeFee
+        // - transfer_data.amount: explicit amount hunter receives ($948)
+        // - Platform receives: totalCharge - hunterPayout - stripeFee = $52
         // 
-        // With application_fee_amount:
+        // With explicit transfer_data.amount:
         // - Poster pays: $1030.18 (covers bounty + Stripe fees)
         // - Stripe takes: ~$30.18
-        // - Platform collects: $52 (shows in "Collected fees" tab!)
         // - Hunter receives: $948 exactly
+        // - Platform keeps: $52 (the difference after hunter payout and Stripe fee)
         
         const paymentIntent = await stripe.paymentIntents.create({
           amount: totalChargeCents, // Charge poster bounty + Stripe fees (~$1030)
@@ -318,12 +318,11 @@ serve(async (req) => {
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
-          // Destination charge with application fee (shows in Stripe dashboard)
+          // Destination charge with explicit transfer amount
           transfer_data: {
             destination: hunterProfile.stripe_connect_account_id,
+            amount: hunterPayoutCents, // Hunter receives exactly this amount
           },
-          // Application fee shows up in "Collected fees" tab in Stripe!
-          application_fee_amount: platformFeeCents,
           metadata: {
             bounty_id: submission.bounty_id,
             submission_id: submissionId,
