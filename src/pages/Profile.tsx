@@ -165,7 +165,15 @@ export default function Profile() {
     try {
       setUpdating(true);
       
-      const updatedProfile = await supabaseApi.updateProfile(user.id, data);
+      // Only include username if user doesn't have one yet (usernames are permanent)
+      const updateData = {
+        displayName: data.displayName,
+        bio: data.bio,
+        region: data.region,
+        ...(profile.username ? {} : { username: data.username })
+      };
+      
+      const updatedProfile = await supabaseApi.updateProfile(user.id, updateData);
       
       if (updatedProfile) {
         setProfile(updatedProfile);
@@ -374,15 +382,18 @@ export default function Profile() {
                         <Label htmlFor="username">Username</Label>
                         <Input
                           id="username"
-                          placeholder="Optional username"
+                          placeholder="Choose your username"
                           {...register('username')}
-                          className={errors.username ? 'border-destructive' : ''}
+                          disabled={!!profile.username}
+                          className={`${errors.username ? 'border-destructive' : ''} ${profile.username ? 'bg-muted cursor-not-allowed' : ''}`}
                         />
                         {errors.username && (
                           <p className="text-sm text-destructive">{errors.username.message}</p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          This will be your unique identifier on the platform
+                          {profile.username 
+                            ? "Your username cannot be changed" 
+                            : "Choose your unique username (cannot be changed later)"}
                         </p>
                       </div>
                     </div>
