@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AdminTicketList } from '@/components/admin/AdminTicketList';
 import { AdminUserReportsList } from '@/components/admin/AdminUserReportsList';
+import { AdminFinances } from '@/components/admin/AdminFinances';
 import { adminSupportApi } from '@/lib/api/admin-support';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +13,8 @@ import {
   BarChart3, 
   MessageSquare, 
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  DollarSign
 } from 'lucide-react';
 
 export function AdminSupport() {
@@ -87,10 +89,14 @@ export function AdminSupport() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="finances" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Finances
           </TabsTrigger>
           <TabsTrigger value="tickets" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
@@ -108,6 +114,10 @@ export function AdminSupport() {
 
         <TabsContent value="dashboard" className="space-y-6">
           <AdminDashboard />
+        </TabsContent>
+
+        <TabsContent value="finances" className="space-y-6">
+          <AdminFinances />
         </TabsContent>
 
         <TabsContent value="tickets" className="space-y-6">
