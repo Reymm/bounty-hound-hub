@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatUSD } from '@/components/ui/currency-display';
-import { DollarSign, Send, Check, Clock, AlertCircle, Loader2, Plus } from 'lucide-react';
+import { DollarSign, Send, Check, Clock, AlertCircle, Loader2, Plus, TrendingUp, Wallet, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Partner {
@@ -57,9 +57,29 @@ interface PayoutFormData {
   notes: string;
 }
 
+interface PlatformRevenue {
+  totalPlatformFees: number;
+  totalBounties: number;
+  totalOwedToPartners: number;
+  totalPaidToPartners: number;
+  netRevenue: number;
+}
+
+interface CompletedBountyFee {
+  bountyId: string;
+  bountyTitle: string;
+  bountyAmount: number;
+  platformFee: number;
+  capturedAt: string;
+  partnerName: string | null;
+  partnerEarning: number;
+}
+
 export function AdminPartnerPayouts() {
   const [partners, setPartners] = useState<(Partner & { earnings?: PartnerEarnings })[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [revenue, setRevenue] = useState<PlatformRevenue | null>(null);
+  const [bountyFees, setBountyFees] = useState<CompletedBountyFee[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<(Partner & { earnings?: PartnerEarnings }) | null>(null);
@@ -104,6 +124,12 @@ export function AdminPartnerPayouts() {
 
       setPartners(partnersWithEarnings);
 
+      // Calculate total owed to partners
+      const totalOwedToPartners = partnersWithEarnings.reduce(
+        (sum, p) => sum + (p.earnings?.pending_earnings || 0), 
+        0
+      );
+
       // Load recent payouts
       const { data: payoutsData, error: payoutsError } = await supabase
         .from('partner_payouts')
@@ -113,6 +139,66 @@ export function AdminPartnerPayouts() {
 
       if (payoutsError) throw payoutsError;
       setPayouts(payoutsData || []);
+
+      // Calculate total paid to partners
+      const totalPaidToPartners = (payoutsData || [])
+        .filter(p => p.status === 'sent' || p.status === 'confirmed')
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      // Load platform fees from escrow transactions
+      const { data: escrowData, error: escrowError } = await supabase
+        .from('escrow_transactions')
+        .select('id, bounty_id, amount, platform_fee_amount, captured_at')
+        .eq('capture_status', 'captured')
+        .not('platform_fee_amount', 'is', null)
+        .order('captured_at', { ascending: false });
+
+      if (escrowError) throw escrowError;
+
+      const totalPlatformFees = (escrowData || []).reduce(
+        (sum, e) => sum + (e.platform_fee_amount || 0), 
+        0
+      );
+
+      // Load bounty details for the fee breakdown
+      const bountyIds = (escrowData || []).map(e => e.bounty_id).filter(Boolean);
+      let bountyMap: Record<string, string> = {};
+      
+      if (bountyIds.length > 0) {
+        const { data: bountiesData } = await supabase
+          .from('Bounties')
+          .select('id, title')
+          .in('id', bountyIds);
+        
+        bountyMap = (bountiesData || []).reduce((acc, b) => {
+          acc[b.id] = b.title;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+
+      // Build bounty fee breakdown
+      // Note: For now, we don't have direct partner-bounty linking, 
+      // so partner earnings are calculated from the RPC function
+      const fees: CompletedBountyFee[] = (escrowData || []).map(e => ({
+        bountyId: e.bounty_id || '',
+        bountyTitle: bountyMap[e.bounty_id || ''] || 'Unknown Bounty',
+        bountyAmount: e.amount,
+        platformFee: e.platform_fee_amount || 0,
+        capturedAt: e.captured_at || '',
+        partnerName: null, // Would need referral tracking to show this
+        partnerEarning: 0
+      }));
+
+      setBountyFees(fees);
+
+      // Set revenue summary
+      setRevenue({
+        totalPlatformFees,
+        totalBounties: (escrowData || []).length,
+        totalOwedToPartners,
+        totalPaidToPartners,
+        netRevenue: totalPlatformFees - totalOwedToPartners - totalPaidToPartners
+      });
 
     } catch (error) {
       console.error('Error loading payout data:', error);
@@ -262,6 +348,148 @@ export function AdminPartnerPayouts() {
 
   return (
     <div className="space-y-6">
+      {/* Revenue Summary Cards */}
+      {revenue && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                  <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Platform Fees</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {formatUSD(revenue.totalPlatformFees)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    from {revenue.totalBounties} bounties
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                  <Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Owed to Partners</p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {formatUSD(revenue.totalOwedToPartners)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    pending payout
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                  <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Paid to Partners</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {formatUSD(revenue.totalPaidToPartners)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    sent/confirmed
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Your Net Revenue</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {formatUSD(revenue.netRevenue)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    after partner payouts
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Fee Breakdown by Bounty */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Platform Fee Breakdown
+          </CardTitle>
+          <CardDescription>
+            Fees collected from each completed bounty
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {bountyFees.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No completed bounties yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-2 font-medium">Bounty</th>
+                    <th className="text-right py-2 px-2 font-medium">Amount</th>
+                    <th className="text-right py-2 px-2 font-medium">Platform Fee</th>
+                    <th className="text-right py-2 px-2 font-medium">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bountyFees.map((fee) => (
+                    <tr key={fee.bountyId} className="border-b border-muted">
+                      <td className="py-3 px-2">
+                        <span className="font-medium">{fee.bountyTitle}</span>
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {formatUSD(fee.bountyAmount)}
+                      </td>
+                      <td className="py-3 px-2 text-right font-medium text-green-600 dark:text-green-400">
+                        {formatUSD(fee.platformFee)}
+                      </td>
+                      <td className="py-3 px-2 text-right text-muted-foreground">
+                        {fee.capturedAt ? format(new Date(fee.capturedAt), 'MMM d, yyyy') : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-muted/50">
+                    <td className="py-3 px-2 font-bold">Total</td>
+                    <td className="py-3 px-2 text-right font-bold">
+                      {formatUSD(bountyFees.reduce((sum, f) => sum + f.bountyAmount, 0))}
+                    </td>
+                    <td className="py-3 px-2 text-right font-bold text-green-600 dark:text-green-400">
+                      {formatUSD(bountyFees.reduce((sum, f) => sum + f.platformFee, 0))}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Eligible for Payout */}
       <Card>
         <CardHeader>
@@ -289,6 +517,7 @@ export function AdminPartnerPayouts() {
                     <p className="font-medium">{getPartnerName(partner)}</p>
                     <p className="text-sm text-muted-foreground">
                       {partner.earnings?.bounties_count || 0} bounties • {partner.partner_commission_percent || 20}% commission
+                      {partner.partner_flat_fee_cents ? ` + ${formatUSD(partner.partner_flat_fee_cents / 100)} flat` : ''}
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
@@ -309,6 +538,62 @@ export function AdminPartnerPayouts() {
           )}
         </CardContent>
       </Card>
+
+      {/* All Partners Summary */}
+      {partners.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>All Partners</CardTitle>
+            <CardDescription>
+              Overview of all partner earnings
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-2 font-medium">Partner</th>
+                    <th className="text-right py-2 px-2 font-medium">Commission</th>
+                    <th className="text-right py-2 px-2 font-medium">Bounties</th>
+                    <th className="text-right py-2 px-2 font-medium">Total Earned</th>
+                    <th className="text-right py-2 px-2 font-medium">Paid</th>
+                    <th className="text-right py-2 px-2 font-medium">Pending</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {partners.map((partner) => (
+                    <tr key={partner.id} className="border-b border-muted">
+                      <td className="py-3 px-2">
+                        <span className="font-medium">{getPartnerName(partner)}</span>
+                        {partner.payout_email && (
+                          <span className="block text-xs text-muted-foreground">{partner.payout_email}</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {partner.partner_flat_fee_cents ? `${formatUSD(partner.partner_flat_fee_cents / 100)} + ` : ''}
+                        {partner.partner_commission_percent || 20}%
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {partner.earnings?.bounties_count || 0}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {formatUSD(partner.earnings?.total_earnings || 0)}
+                      </td>
+                      <td className="py-3 px-2 text-right text-blue-600">
+                        {formatUSD(partner.earnings?.paid_earnings || 0)}
+                      </td>
+                      <td className="py-3 px-2 text-right font-medium text-green-600">
+                        {formatUSD(partner.earnings?.pending_earnings || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Payouts */}
       <Card>
