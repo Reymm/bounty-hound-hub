@@ -156,7 +156,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         } else if (payoutResult.success) {
           toast({
             title: "Bounty completed!",
-            description: `Payment processed successfully. Hunter has been paid.`,
+            description: `Payment processed successfully. Hunter will receive their payout after the 7-day security hold.`,
           });
         } else {
           toast({
