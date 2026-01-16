@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Process payout function started - SEPARATE CHARGE + TRANSFER MODEL");
+    logStep("Process payout function started - DESTINATION CHARGE WITH APPLICATION FEE MODEL");
 
     const { submissionId } = await req.json();
     if (!submissionId) throw new Error("submissionId is required");
@@ -282,7 +282,7 @@ serve(async (req) => {
 
       // Check if this is SAVE CARD MODEL (has payment_method_id) or LEGACY (has payment_intent_id)
       if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
-        logStep("Using SEPARATE CHARGE + TRANSFER model");
+        logStep("Using DESTINATION CHARGE with APPLICATION FEE model");
         
         // Get customer from the payment method
         const paymentMethod = await stripe.paymentMethods.retrieve(escrowTx.stripe_payment_method_id);
@@ -300,21 +300,40 @@ serve(async (req) => {
         });
 
         // ============================================================
-        // STEP 1: CHARGE THE POSTER - NO TRANSFER_DATA
-        // Funds stay in YOUR platform Stripe account
-        // Application fee is collected here (shows in "Collected fees")
+        // DESTINATION CHARGE WITH APPLICATION FEE
+        // 
+        // How it works:
+        // - Charge poster: $104.15 (totalChargeCents)
+        // - application_fee_amount: $7.00 (shows in "Collected fees" tab!)
+        // - transfer_data.destination: sends remainder to hunter
+        // - Stripe auto-calculates: $104.15 - $4.15 stripe fee - $7.00 app fee = $93.00 to hunter
+        // 
+        // IMPORTANT: Do NOT set transfer_data.amount - let Stripe calculate it!
         // ============================================================
+        
+        logStep("Creating DESTINATION CHARGE with application_fee", {
+          chargeAmount: totalChargeCents / 100,
+          applicationFee: platformFeeCents / 100,
+          expectedHunterReceives: hunterPayoutCents / 100,
+          destination: hunterProfile.stripe_connect_account_id
+        });
+        
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: totalChargeCents, // Charge poster bounty + Stripe fees (~$1030)
+          amount: totalChargeCents, // $104.15 - poster pays this
           currency: escrowTx.currency || 'usd',
           customer: customerId,
           payment_method: escrowTx.stripe_payment_method_id,
           off_session: true,
           confirm: true,
           description: `Bounty payment: ${submission.Bounties.title}`,
-          // NO transfer_data - funds stay in platform account first!
-          // Application fee shows in "Collected fees" tab
-          application_fee_amount: platformFeeCents, // $52 - THIS SHOWS IN COLLECTED FEES!
+          // APPLICATION FEE - This is what shows in "Collected fees" tab!
+          application_fee_amount: platformFeeCents, // $7.00 = platform fee
+          // DESTINATION - Automatically transfers remainder to hunter
+          // WITHOUT specifying amount, Stripe calculates: charge - stripe_fee - app_fee
+          transfer_data: {
+            destination: hunterProfile.stripe_connect_account_id,
+            // DO NOT set amount here! Let Stripe auto-calculate the transfer
+          },
           metadata: {
             bounty_id: submission.bounty_id,
             submission_id: submissionId,
@@ -326,7 +345,7 @@ serve(async (req) => {
             platform_fee: (platformFeeCents / 100).toFixed(2),
             hunter_payout: (hunterPayoutCents / 100).toFixed(2),
             type: 'bounty_payment',
-            model: 'separate_charge_and_transfer'
+            model: 'destination_charge_with_application_fee'
           }
         });
 
@@ -334,54 +353,28 @@ serve(async (req) => {
           throw new Error(`Payment failed. Status: ${paymentIntent.status}`);
         }
 
-        logStep("Step 1 COMPLETE: Charge succeeded, funds in platform account", { 
-          paymentIntentId: paymentIntent.id,
-          status: paymentIntent.status,
-          posterCharged: totalChargeCents / 100,
-          applicationFeeCollected: platformFeeCents / 100
-        });
-
         paymentIntentId = paymentIntent.id;
         chargedAmount = totalChargeCents;
 
-        // ============================================================
-        // STEP 2: TRANSFER TO HUNTER - SEPARATE FROM CHARGE
-        // Only transfer the hunter's portion ($948)
-        // Platform fee already collected, this is the remainder
-        // ============================================================
-        logStep("Step 2: Creating separate transfer to hunter", {
-          hunterReceives: hunterPayoutCents / 100,
-          destination: hunterProfile.stripe_connect_account_id
-        });
-
-        const transfer = await stripe.transfers.create({
-          amount: hunterPayoutCents, // Only $948, NOT $1030!
-          currency: escrowTx.currency || 'usd',
+        // Get the transfer that Stripe automatically created
+        const transfers = await stripe.transfers.list({
+          limit: 1,
           destination: hunterProfile.stripe_connect_account_id,
-          source_transaction: paymentIntent.latest_charge as string, // Links to the charge
-          description: `Hunter payout for bounty: ${submission.Bounties.title}`,
-          metadata: {
-            bounty_id: submission.bounty_id,
-            submission_id: submissionId,
-            hunter_id: submission.hunter_id,
-            platform_fee: (platformFeeCents / 100).toFixed(2),
-            type: 'hunter_payout'
-          }
         });
+        
+        if (transfers.data.length > 0) {
+          transferId = transfers.data[0].id;
+          logStep("Transfer automatically created by Stripe", { 
+            transferId,
+            transferAmount: transfers.data[0].amount / 100
+          });
+        }
 
-        transferId = transfer.id;
-
-        logStep("Step 2 COMPLETE: Transfer to hunter created", { 
-          transferId: transfer.id,
-          hunterReceived: hunterPayoutCents / 100,
-          destination: hunterProfile.stripe_connect_account_id
-        });
-
-        logStep("SEPARATE CHARGE + TRANSFER MODEL SUCCESS", {
+        logStep("DESTINATION CHARGE WITH APP FEE - SUCCESS", {
           posterCharged: totalChargeCents / 100,
-          stripeFee: stripeFeeCents / 100,
-          platformFeeCollected: platformFeeCents / 100,
-          hunterTransferred: hunterPayoutCents / 100
+          applicationFeeCollected: platformFeeCents / 100,
+          paymentIntentId: paymentIntent.id,
+          status: paymentIntent.status
         });
 
       } else if (escrowTx.stripe_payment_intent_id && escrowTx.stripe_payment_intent_id !== '') {
