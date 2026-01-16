@@ -337,6 +337,18 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
     subcategories: {
       'other': 'Other Items'
     }
+  },
+  'recovery-rewards': {
+    label: 'Recovery Rewards',
+    subcategories: {
+      'stolen-vehicles': 'Stolen Vehicles',
+      'stolen-electronics': 'Stolen Electronics',
+      'stolen-bikes': 'Stolen Bikes',
+      'stolen-tools': 'Stolen Tools & Equipment',
+      'lost-pets': 'Lost Pets',
+      'lost-items': 'Lost Items',
+      'other-recovery': 'Other Recovery'
+    }
   }
 };
 
@@ -356,7 +368,8 @@ export enum BountyCategory {
   HEALTH_BEAUTY = 'health-beauty',
   CRAFTS_HOBBIES = 'crafts-hobbies',
   BUSINESS_INDUSTRIAL = 'business-industrial',
-  MISCELLANEOUS = 'miscellaneous'
+  MISCELLANEOUS = 'miscellaneous',
+  RECOVERY_REWARDS = 'recovery-rewards'
 }
 
 export enum BountyStatus {
