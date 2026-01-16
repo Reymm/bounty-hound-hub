@@ -163,6 +163,16 @@ export default function MyBounties() {
         }
       }
       
+      // Sort reviews by most recent bounty first
+      const allBounties = [...postedBountiesData, ...appliedData];
+      reviews.sort((a, b) => {
+        const bountyA = allBounties.find(bounty => bounty.id === a.bountyId);
+        const bountyB = allBounties.find(bounty => bounty.id === b.bountyId);
+        const dateA = bountyA?.createdAt ? new Date(bountyA.createdAt).getTime() : 0;
+        const dateB = bountyB?.createdAt ? new Date(bountyB.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      
       setPendingReviews(reviews);
     } catch (error) {
       console.error('Error loading pending reviews:', error);
@@ -465,7 +475,7 @@ export default function MyBounties() {
                             <AlertDescription className="text-green-700 dark:text-green-300">
                               <div className="flex items-center gap-2 mt-1">
                                 <DollarSign className="h-4 w-4" />
-                                <span>Payout of ${(item.bountyAmount * 0.977).toFixed(2)} is being processed to your Stripe Connect account.</span>
+                                <span>Payout of ${(item.bountyAmount - (item.bountyAmount * 0.05 + 2)).toFixed(2)} is being processed to your Stripe Connect account.</span>
                               </div>
                               {item.requires_shipping && (
                                 <div className="flex items-center gap-2 mt-2">
