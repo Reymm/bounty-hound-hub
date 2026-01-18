@@ -525,7 +525,7 @@ export default function BountyDetail() {
             </TabsContent>
 
             <TabsContent value="comments">
-              <BountyComments bountyId={bounty.id} />
+              <BountyComments bountyId={bounty.id} bountyStatus={bounty.status} />
             </TabsContent>
 
             {canSeeClaimsTab && (
