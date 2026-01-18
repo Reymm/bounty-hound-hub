@@ -16,6 +16,7 @@ import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { ShippingInfoCard } from '@/components/bounty/ShippingInfoCard';
 import { ShippingDetailsDialog } from '@/components/bounty/ShippingDetailsDialog';
 import { SendFundsDialog } from '@/components/bounty/SendFundsDialog';
+import { BountyComments } from '@/components/bounty/BountyComments';
 import { BountySEO } from '@/components/seo/BountySEO';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
@@ -421,9 +422,10 @@ export default function BountyDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className={`grid w-full ${canSeeClaimsTab ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsList className={`grid w-full ${canSeeClaimsTab ? 'grid-cols-4' : 'grid-cols-3'}`}>
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="requirements">Requirements</TabsTrigger>
+              <TabsTrigger value="comments">Comments</TabsTrigger>
               {canSeeClaimsTab && (
                 <TabsTrigger value="claims" className="flex items-center gap-1.5">
                   {isOwnBounty ? 'Claims' : 'My Claim'}
@@ -520,6 +522,10 @@ export default function BountyDetail() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="comments">
+              <BountyComments bountyId={bounty.id} />
             </TabsContent>
 
             {canSeeClaimsTab && (
