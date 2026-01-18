@@ -35,6 +35,11 @@ import NotFound from "./pages/NotFound";
 import ConnectComplete from "./pages/ConnectComplete";
 import Auth from "./pages/Auth";
 import EditBounty from "./pages/EditBounty";
+// Niche landing pages
+import Reconnections from "./pages/niche/Reconnections";
+import Collectibles from "./pages/niche/Collectibles";
+import VintageCars from "./pages/niche/VintageCars";
+import HelpMeFind from "./pages/niche/HelpMeFind";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +76,12 @@ const App = () => (
                         </ProtectedRoute>
                       } />
                       <Route path="/faq" element={<FAQ />} />
+                      
+                      {/* Niche landing pages */}
+                      <Route path="/reconnections" element={<Reconnections />} />
+                      <Route path="/collectibles" element={<Collectibles />} />
+                      <Route path="/vintage-cars" element={<VintageCars />} />
+                      <Route path="/helpmefind" element={<HelpMeFind />} />
                       
                       {/* Protected routes */}
                       <Route path="/post" element={
