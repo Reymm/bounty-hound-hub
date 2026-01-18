@@ -24,9 +24,10 @@ interface Comment {
 
 interface BountyCommentsProps {
   bountyId: string;
+  bountyStatus: string;
 }
 
-export function BountyComments({ bountyId }: BountyCommentsProps) {
+export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -162,42 +163,48 @@ export function BountyComments({ bountyId }: BountyCommentsProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Comment Form */}
-        {user ? (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <Textarea
-              placeholder="Leave a helpful tip or ask a question..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="min-h-[80px] resize-none"
-              maxLength={1000}
-            />
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {newComment.length}/1000 characters
-              </span>
-              <Button 
-                type="submit" 
-                size="sm"
-                disabled={!newComment.trim() || submitting}
-              >
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Send className="h-4 w-4 mr-2" />
-                )}
-                Post Comment
+        {/* Comment Form - only show for open bounties */}
+        {bountyStatus === 'open' ? (
+          user ? (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <Textarea
+                placeholder="Leave a helpful tip or ask a question..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="min-h-[80px] resize-none"
+                maxLength={1000}
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {newComment.length}/1000 characters
+                </span>
+                <Button 
+                  type="submit" 
+                  size="sm"
+                  disabled={!newComment.trim() || submitting}
+                >
+                  {submitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Post Comment
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-center py-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">
+                Sign in to leave a comment
+              </p>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/auth">Sign In</Link>
               </Button>
             </div>
-          </form>
+          )
         ) : (
-          <div className="text-center py-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground mb-2">
-              Sign in to leave a comment
-            </p>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/auth">Sign In</Link>
-            </Button>
+          <div className="text-center py-3 bg-muted/30 rounded-lg text-sm text-muted-foreground">
+            Comments are closed on this bounty
           </div>
         )}
 
