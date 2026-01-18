@@ -107,6 +107,48 @@ export type Database = {
         }
         Relationships: []
       }
+      bounty_comments: {
+        Row: {
+          bounty_id: string
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bounty_id: string
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bounty_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_comments_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "Bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_comments_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bounty_milestones: {
         Row: {
           amount: number
