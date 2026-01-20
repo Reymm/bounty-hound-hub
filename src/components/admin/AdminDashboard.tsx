@@ -3,9 +3,9 @@ import {
   Ticket, 
   Flag,
   Clock, 
-  CheckCircle,
-  AlertTriangle
+  CheckCircle
 } from 'lucide-react';
+import { AdminDemoSeeder } from './AdminDemoSeeder';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -283,6 +283,9 @@ export function AdminDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Developer Tools Section */}
+      <AdminDemoSeeder />
     </div>
   );
 }
