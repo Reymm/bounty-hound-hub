@@ -135,10 +135,10 @@ serve(async (req) => {
       hasPaymentIntent: !!escrowTx.stripe_payment_intent_id
     });
 
-    // Get hunter's profile including Connect account
+    // Get hunter's profile including Connect account and referral partner
     const { data: hunterProfile } = await supabaseClient
       .from('profiles')
-      .select('stripe_connect_account_id, stripe_connect_onboarding_complete, stripe_connect_payouts_enabled, full_name, username')
+      .select('stripe_connect_account_id, stripe_connect_onboarding_complete, stripe_connect_payouts_enabled, full_name, username, referred_by')
       .eq('id', submission.hunter_id)
       .maybeSingle();
 
@@ -411,8 +411,25 @@ serve(async (req) => {
       }
 
       // ============================================================
-      // SUCCESS: Mark as captured
+      // SUCCESS: Mark as captured + store partner attribution
       // ============================================================
+      
+      // Get the partner ID if hunter was referred by a partner
+      let referredByPartnerId: string | null = null;
+      if (hunterProfile?.referred_by) {
+        const { data: partnerCheck } = await supabaseClient
+          .from('profiles')
+          .select('id, is_partner')
+          .eq('id', hunterProfile.referred_by)
+          .eq('is_partner', true)
+          .maybeSingle();
+        
+        if (partnerCheck) {
+          referredByPartnerId = partnerCheck.id;
+          logStep("Hunter was referred by partner", { partnerId: referredByPartnerId });
+        }
+      }
+      
       const { error: successError } = await supabaseClient
         .from('escrow_transactions')
         .update({ 
@@ -427,6 +444,7 @@ serve(async (req) => {
           charge_attempted_at: new Date().toISOString(),
           capture_error: null,
           manual_payout_status: 'confirmed',
+          referred_by_partner_id: referredByPartnerId,
           updated_at: new Date().toISOString()
         })
         .eq('id', escrowTx.id)

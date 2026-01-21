@@ -278,6 +278,7 @@ export type Database = {
           payout_sent_by_admin_user_id: string | null
           platform_fee_amount: number | null
           poster_id: string
+          referred_by_partner_id: string | null
           refund_amount: number | null
           refund_reference: string | null
           refunded_at: string | null
@@ -322,6 +323,7 @@ export type Database = {
           payout_sent_by_admin_user_id?: string | null
           platform_fee_amount?: number | null
           poster_id: string
+          referred_by_partner_id?: string | null
           refund_amount?: number | null
           refund_reference?: string | null
           refunded_at?: string | null
@@ -366,6 +368,7 @@ export type Database = {
           payout_sent_by_admin_user_id?: string | null
           platform_fee_amount?: number | null
           poster_id?: string
+          referred_by_partner_id?: string | null
           refund_amount?: number | null
           refund_reference?: string | null
           refunded_at?: string | null
@@ -391,6 +394,20 @@ export type Database = {
             columns: ["bounty_id"]
             isOneToOne: true
             referencedRelation: "bounties_secure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_transactions_referred_by_partner_id_fkey"
+            columns: ["referred_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_transactions_referred_by_partner_id_fkey"
+            columns: ["referred_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_secure"
             referencedColumns: ["id"]
           },
         ]

@@ -145,15 +145,49 @@ export function AdminPartnerPayouts() {
         .filter(p => p.status === 'sent' || p.status === 'confirmed')
         .reduce((sum, p) => sum + p.amount, 0);
 
-      // Load platform fees from escrow transactions
+      // Load platform fees from escrow transactions with partner attribution
       const { data: escrowData, error: escrowError } = await supabase
         .from('escrow_transactions')
-        .select('id, bounty_id, amount, platform_fee_amount, captured_at')
+        .select('id, bounty_id, amount, platform_fee_amount, captured_at, referred_by_partner_id')
         .eq('capture_status', 'captured')
         .not('platform_fee_amount', 'is', null)
         .order('captured_at', { ascending: false });
 
       if (escrowError) throw escrowError;
+      
+      // Load partner names for attribution
+      const partnerIds = (escrowData || [])
+        .map(e => e.referred_by_partner_id)
+        .filter((id): id is string => !!id);
+      
+      let partnerNameMap: Record<string, string> = {};
+      if (partnerIds.length > 0) {
+        const { data: partnerData } = await supabase
+          .from('profiles')
+          .select('id, partner_name, username, partner_commission_percent, partner_flat_fee_cents')
+          .in('id', partnerIds);
+        
+        partnerNameMap = (partnerData || []).reduce((acc, p) => {
+          acc[p.id] = p.partner_name || p.username || 'Partner';
+          return acc;
+        }, {} as Record<string, string>);
+      }
+      
+      // Also need partner commission rates for earnings calculation
+      const partnerRatesMap: Record<string, { commission: number; flatFee: number }> = {};
+      if (partnerIds.length > 0) {
+        const { data: partnerData } = await supabase
+          .from('profiles')
+          .select('id, partner_commission_percent, partner_flat_fee_cents')
+          .in('id', partnerIds);
+        
+        (partnerData || []).forEach(p => {
+          partnerRatesMap[p.id] = {
+            commission: p.partner_commission_percent || 20,
+            flatFee: p.partner_flat_fee_cents || 50
+          };
+        });
+      }
 
       const totalPlatformFees = (escrowData || []).reduce(
         (sum, e) => sum + (e.platform_fee_amount || 0), 
@@ -176,18 +210,29 @@ export function AdminPartnerPayouts() {
         }, {} as Record<string, string>);
       }
 
-      // Build bounty fee breakdown
-      // Note: For now, we don't have direct partner-bounty linking, 
-      // so partner earnings are calculated from the RPC function
-      const fees: CompletedBountyFee[] = (escrowData || []).map(e => ({
-        bountyId: e.bounty_id || '',
-        bountyTitle: bountyMap[e.bounty_id || ''] || 'Unknown Bounty',
-        bountyAmount: e.amount,
-        platformFee: e.platform_fee_amount || 0,
-        capturedAt: e.captured_at || '',
-        partnerName: null, // Would need referral tracking to show this
-        partnerEarning: 0
-      }));
+      // Build bounty fee breakdown with partner attribution
+      const fees: CompletedBountyFee[] = (escrowData || []).map(e => {
+        const partnerId = e.referred_by_partner_id;
+        const partnerName = partnerId ? partnerNameMap[partnerId] : null;
+        
+        // Calculate partner earning: flat fee + 20% of 5% of bounty amount
+        let partnerEarning = 0;
+        if (partnerId && partnerRatesMap[partnerId]) {
+          const rates = partnerRatesMap[partnerId];
+          const variablePortion = e.amount * 0.05; // 5% of bounty
+          partnerEarning = (rates.flatFee / 100) + (variablePortion * rates.commission / 100);
+        }
+        
+        return {
+          bountyId: e.bounty_id || '',
+          bountyTitle: bountyMap[e.bounty_id || ''] || 'Unknown Bounty',
+          bountyAmount: e.amount,
+          platformFee: e.platform_fee_amount || 0,
+          capturedAt: e.captured_at || '',
+          partnerName,
+          partnerEarning
+        };
+      });
 
       setBountyFees(fees);
 
@@ -451,6 +496,8 @@ export function AdminPartnerPayouts() {
                     <th className="text-left py-2 px-2 font-medium">Bounty</th>
                     <th className="text-right py-2 px-2 font-medium">Amount</th>
                     <th className="text-right py-2 px-2 font-medium">Platform Fee</th>
+                    <th className="text-left py-2 px-2 font-medium">Partner</th>
+                    <th className="text-right py-2 px-2 font-medium">Partner Earning</th>
                     <th className="text-right py-2 px-2 font-medium">Date</th>
                   </tr>
                 </thead>
@@ -466,6 +513,22 @@ export function AdminPartnerPayouts() {
                       <td className="py-3 px-2 text-right font-medium text-green-600 dark:text-green-400">
                         {formatUSD(fee.platformFee)}
                       </td>
+                      <td className="py-3 px-2">
+                        {fee.partnerName ? (
+                          <Badge variant="secondary" className="text-xs">{fee.partnerName}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">Direct</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {fee.partnerEarning > 0 ? (
+                          <span className="text-orange-600 dark:text-orange-400 font-medium">
+                            {formatUSD(fee.partnerEarning)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
                       <td className="py-3 px-2 text-right text-muted-foreground">
                         {fee.capturedAt ? format(new Date(fee.capturedAt), 'MMM d, yyyy') : '-'}
                       </td>
@@ -480,6 +543,10 @@ export function AdminPartnerPayouts() {
                     </td>
                     <td className="py-3 px-2 text-right font-bold text-green-600 dark:text-green-400">
                       {formatUSD(bountyFees.reduce((sum, f) => sum + f.platformFee, 0))}
+                    </td>
+                    <td></td>
+                    <td className="py-3 px-2 text-right font-bold text-orange-600 dark:text-orange-400">
+                      {formatUSD(bountyFees.reduce((sum, f) => sum + f.partnerEarning, 0))}
                     </td>
                     <td></td>
                   </tr>
