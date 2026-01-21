@@ -1,13 +1,6 @@
 // Demo bounties data for seeding the platform with realistic content
 // These are used to showcase BountyBay's capabilities to early communities
 
-import demoPokemon from '@/assets/demo-pokemon.jpg';
-import demoComics from '@/assets/demo-comics.jpg';
-import demoVinyl from '@/assets/demo-vinyl.jpg';
-import demoCamera from '@/assets/demo-camera.jpg';
-import demoSneakers from '@/assets/demo-sneakers.jpg';
-import demoHandbag from '@/assets/demo-handbag.jpg';
-
 export interface DemoBounty {
   title: string;
   description: string;
@@ -24,7 +17,7 @@ export interface DemoBounty {
   deadline_days: number; // Days from now until deadline
 }
 
-// Placeholder image for bounties that don't have specific images
+// All images use external Unsplash URLs for reliability in database storage
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1586769852044-692d6e3703f0?w=800&q=80'; // cozy blanket
 const FAMILY_IMAGE = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80'; // family silhouette
 const CAR_IMAGE = 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'; // classic car
@@ -32,6 +25,14 @@ const WATCH_IMAGE = 'https://images.unsplash.com/photo-1587836374828-a58e7ee52fc
 const BOOK_IMAGE = 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80'; // old books
 const TOY_IMAGE = 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=80'; // vintage toys
 const TECH_IMAGE = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'; // retro tech
+
+// New category-specific images (replacing local imports)
+const POKEMON_IMAGE = 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?w=800&q=80';
+const COMICS_IMAGE = 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=800&q=80';
+const VINYL_IMAGE = 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=800&q=80';
+const CAMERA_IMAGE = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80';
+const SNEAKERS_IMAGE = 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&q=80';
+const HANDBAG_IMAGE = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80';
 
 // Hero bounty - the emotional centerpiece
 export const HERO_BOUNTY: DemoBounty = {
@@ -278,7 +279,7 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
     amount: 200,
     location: "Austin, TX",
     tags: ["pokemon", "charizard", "psa-graded", "wotc", "1st-edition", "base-set"],
-    images: [demoPokemon],
+    images: [POKEMON_IMAGE],
     verification_requirements: ["PSA certification number", "Photos of front and back in holder"],
     poster_display_name: "PokeCollector99",
     days_ago: 2,
@@ -293,7 +294,7 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
     amount: 150,
     location: "Los Angeles, CA",
     tags: ["dc-comics", "batman", "silver-age", "key-issue", "poison-ivy", "cgc"],
-    images: [demoComics],
+    images: [COMICS_IMAGE],
     verification_requirements: ["CGC certification or clear photos of condition", "Pin-up page photo"],
     poster_display_name: "ComicVaultDC",
     days_ago: 4,
@@ -308,7 +309,7 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
     amount: 125,
     location: "Nashville, TN",
     tags: ["beatles", "white-album", "uk-pressing", "vinyl", "first-press", "numbered"],
-    images: [demoVinyl],
+    images: [VINYL_IMAGE],
     verification_requirements: ["Photo of serial number", "Photos of all inserts and vinyl condition"],
     poster_display_name: "VinylVince",
     days_ago: 7,
@@ -323,7 +324,7 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
     amount: 100,
     location: "San Francisco, CA",
     tags: ["leica", "m3", "rangefinder", "german-optics", "double-stroke", "film-camera"],
-    images: [demoCamera],
+    images: [CAMERA_IMAGE],
     verification_requirements: ["Serial number photo", "Shutter speed test photos"],
     poster_display_name: "FilmShooterPro",
     days_ago: 6,
@@ -338,7 +339,7 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
     amount: 175,
     location: "Chicago, IL",
     tags: ["jordan-1", "chicago", "1985-og", "size-10", "nike", "original"],
-    images: [demoSneakers],
+    images: [SNEAKERS_IMAGE],
     verification_requirements: ["Photos of size tag", "Sole and upper condition photos"],
     poster_display_name: "SneakerheadSteve",
     days_ago: 3,
@@ -353,7 +354,7 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
     amount: 250,
     location: "New York, NY",
     tags: ["hermes", "birkin", "barenia", "authentic", "luxury", "designer-bag"],
-    images: [demoHandbag],
+    images: [HANDBAG_IMAGE],
     verification_requirements: ["Receipt or authentication certificate", "Date stamp photos"],
     poster_display_name: "LuxuryLinda",
     days_ago: 5,
@@ -398,7 +399,7 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
     amount: 225,
     location: "New York, NY",
     tags: ["baseball-cards", "mickey-mantle", "topps", "vintage-sports", "1952", "yankees"],
-    images: [demoPokemon],
+    images: [POKEMON_IMAGE],
     verification_requirements: ["PSA certification number", "High-res scans of front and back"],
     poster_display_name: "CardCollectorNY",
     days_ago: 4,
