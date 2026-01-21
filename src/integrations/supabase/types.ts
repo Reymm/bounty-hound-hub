@@ -1643,7 +1643,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "hunter" | "poster"
+      app_role: "hunter" | "poster" | "official"
       shipping_status_type:
         | "not_requested"
         | "requested"
@@ -1799,7 +1799,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["hunter", "poster"],
+      app_role: ["hunter", "poster", "official"],
       shipping_status_type: [
         "not_requested",
         "requested",
