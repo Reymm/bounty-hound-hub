@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Eye, Clock, Image as ImageIcon } from 'lucide-react';
+import { Calendar, MapPin, Eye, Clock, Image as ImageIcon, BadgeCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -98,13 +98,19 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
         </div>
 
         <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <Badge 
               variant={bounty.status === BountyStatus.OPEN ? 'default' : bounty.status === BountyStatus.FULFILLED ? 'secondary' : 'outline'}
               className="capitalize text-xs"
             >
               {bounty.status}
             </Badge>
+            {bounty.isOfficial && (
+              <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs gap-0.5">
+                <BadgeCheck className="h-3 w-3" />
+                Official
+              </Badge>
+            )}
             {bounty.category && (
               <Badge variant="outline" className="text-xs">
                 {bounty.category}

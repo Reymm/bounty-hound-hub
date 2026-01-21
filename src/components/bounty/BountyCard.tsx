@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon } from 'lucide-react';
+import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon, BadgeCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
@@ -167,13 +167,19 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
           <div className="flex items-center justify-between pt-2 border-t border-border">
             {getDeadlineBadge()}
             
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
               by <Link 
                 to={`/u/${bounty.posterId}`}
                 className="font-medium text-foreground hover:text-primary transition-colors hover:underline"
               >
                 {bounty.posterName}
               </Link>
+              {bounty.isOfficial && (
+                <Badge className="ml-1 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-1.5 py-0 h-4 gap-0.5">
+                  <BadgeCheck className="h-3 w-3" />
+                  Official
+                </Badge>
+              )}
             </div>
           </div>
         </div>

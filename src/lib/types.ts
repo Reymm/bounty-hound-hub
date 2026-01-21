@@ -18,6 +18,7 @@ export interface Bounty {
   posterName: string;
   posterRating: number;
   posterRatingCount: number;
+  isOfficial?: boolean;
   verificationRequirements: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -107,6 +108,7 @@ export interface Profile {
   stripeConnectPayoutsEnabled?: boolean;
   payoutCountry?: string;
   payoutEmail?: string;
+  isOfficial?: boolean;
 }
 export interface Activity {
   id: string;

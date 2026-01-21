@@ -1615,6 +1615,7 @@ export type Database = {
         Args: { p_bounty_id: string }
         Returns: undefined
       }
+      is_official_account: { Args: { p_user_id: string }; Returns: boolean }
       is_support_admin: { Args: { user_id?: string }; Returns: boolean }
       mark_message_as_read: { Args: { message_id: string }; Returns: boolean }
       recalculate_user_rating: {

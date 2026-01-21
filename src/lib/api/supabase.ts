@@ -53,7 +53,7 @@ interface CreateBountyData {
 }
 
 // Helper functions to transform database rows to app types
-function transformBountyRow(row: BountyRow, profile?: any, claimsCount?: number): Bounty {
+function transformBountyRow(row: BountyRow, profile?: any, claimsCount?: number, isOfficial?: boolean): Bounty {
   return {
     id: row.id,
     title: row.title,
@@ -72,6 +72,7 @@ function transformBountyRow(row: BountyRow, profile?: any, claimsCount?: number)
     posterName: profile?.full_name || profile?.username || 'Anonymous',
     posterRating: Number(profile?.reputation_score || 5),
     posterRatingCount: (profile?.total_successful_claims || 0) + (profile?.total_failed_claims || 0),
+    isOfficial: isOfficial || false,
     verificationRequirements: row.verification_requirements || [],
     createdAt: parseDbTimestamp(row.created_at as any),
     updatedAt: parseDbTimestamp((row as any).updated_at || row.created_at as any),
@@ -171,14 +172,19 @@ export const supabaseApi = {
 
       // Fetch profile data for all bounties using secure function
       const posterIds = data?.map(bounty => bounty.poster_id).filter(Boolean) || [];
-      const profilePromises = posterIds.map(async (posterId) => {
-        const { data } = await supabase.rpc('get_public_profile_data', {
-          profile_id: posterId
-        });
-        return data?.[0] ? { 
+      const uniquePosterIds = [...new Set(posterIds)];
+      
+      // Fetch profiles and official status in parallel
+      const profilePromises = uniquePosterIds.map(async (posterId) => {
+        const [profileResult, officialResult] = await Promise.all([
+          supabase.rpc('get_public_profile_data', { profile_id: posterId }),
+          supabase.rpc('is_official_account', { p_user_id: posterId })
+        ]);
+        return profileResult.data?.[0] ? { 
           id: posterId, 
-          ...data[0],
-          total_failed_claims: 0 // Default for public access
+          ...profileResult.data[0],
+          total_failed_claims: 0,
+          isOfficial: officialResult.data || false
         } : null;
       });
       
@@ -194,7 +200,8 @@ export const supabaseApi = {
           // Remove shipping_details for unauthorized users
           const sanitizedBounty = { ...bounty };
           delete sanitizedBounty.shipping_details;
-          return transformBountyRow(sanitizedBounty, profileMap.get(bounty.poster_id));
+          const profile = profileMap.get(bounty.poster_id);
+          return transformBountyRow(sanitizedBounty, profile, 0, profile?.isOfficial);
         }) || [],
         total: count || 0,
         page,
@@ -245,18 +252,19 @@ export const supabaseApi = {
         delete data.shipping_details;
       }
 
-      // Fetch profile data using secure function
-      const { data: publicProfile } = await supabase.rpc('get_public_profile_data', {
-        profile_id: data.poster_id
-      });
+      // Fetch profile data and official status using secure functions
+      const [publicProfileResult, officialResult] = await Promise.all([
+        supabase.rpc('get_public_profile_data', { profile_id: data.poster_id }),
+        supabase.rpc('is_official_account', { p_user_id: data.poster_id })
+      ]);
       
-      const profile = publicProfile?.[0] ? {
-        ...publicProfile[0],
-        full_name: publicProfile[0].username, // Use username as display name for public profiles
-        total_failed_claims: 0 // Default for public access
+      const profile = publicProfileResult.data?.[0] ? {
+        ...publicProfileResult.data[0],
+        full_name: publicProfileResult.data[0].username,
+        total_failed_claims: 0
       } : null;
 
-      return transformBountyRow(data, profile, submissionsCount || 0);
+      return transformBountyRow(data, profile, submissionsCount || 0, officialResult.data || false);
     } catch (error) {
       console.error('Error fetching bounty:', error);
       return null;
@@ -690,35 +698,40 @@ export const supabaseApi = {
       const { data: { user } } = await supabase.auth.getUser();
       
       let profileData;
+      let isOfficial = false;
+      
       if (user && user.id === userId) {
         // Full profile access for own profile
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
+        const [profileResult, officialResult] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', userId).single(),
+          supabase.rpc('is_official_account', { p_user_id: userId })
+        ]);
 
-        if (error) {
-          if (error.code === 'PGRST116') return null;
-          throw error;
+        if (profileResult.error) {
+          if (profileResult.error.code === 'PGRST116') return null;
+          throw profileResult.error;
         }
-        profileData = data;
+        profileData = profileResult.data;
+        isOfficial = officialResult.data || false;
       } else {
         // Public profile access for other users
-        const { data, error } = await supabase.rpc('get_public_profile_data', {
-          profile_id: userId
-        });
+        const [profileResult, officialResult] = await Promise.all([
+          supabase.rpc('get_public_profile_data', { profile_id: userId }),
+          supabase.rpc('is_official_account', { p_user_id: userId })
+        ]);
 
-        if (error) throw error;
-        if (!data || data.length === 0) return null;
+        if (profileResult.error) throw profileResult.error;
+        if (!profileResult.data || profileResult.data.length === 0) return null;
+        
+        isOfficial = officialResult.data || false;
         
         // Convert RPC result to full profile format with limited data
         profileData = {
-          id: data[0].id,
-          username: data[0].username,
-          avatar_url: data[0].avatar_url,
-          reputation_score: data[0].reputation_score,
-          total_successful_claims: data[0].total_successful_claims,
+          id: profileResult.data[0].id,
+          username: profileResult.data[0].username,
+          avatar_url: profileResult.data[0].avatar_url,
+          reputation_score: profileResult.data[0].reputation_score,
+          total_successful_claims: profileResult.data[0].total_successful_claims,
           // Default values for sensitive fields
           full_name: null,
           bio: null,
@@ -767,7 +780,8 @@ export const supabaseApi = {
         stripeConnectOnboardingComplete: profileData.stripe_connect_onboarding_complete || false,
         stripeConnectPayoutsEnabled: profileData.stripe_connect_payouts_enabled || false,
         payoutCountry: profileData.payout_country || undefined,
-        payoutEmail: profileData.payout_email || undefined
+        payoutEmail: profileData.payout_email || undefined,
+        isOfficial
       };
     } catch (error) {
       console.error('Error fetching profile:', error);
