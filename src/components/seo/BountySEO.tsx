@@ -9,7 +9,7 @@ export function BountySEO({ bounty }: BountySEOProps) {
   const title = `${bounty.title} - $${bounty.bountyAmount} Bounty | BountyBay`;
   const description = bounty.description.slice(0, 155) + (bounty.description.length > 155 ? '...' : '');
   const url = `${window.location.origin}/b/${bounty.id}`;
-  const image = bounty.images?.[0] || `${window.location.origin}/og-default.png`;
+  const image = bounty.images?.[0] || 'https://bountybay.lovable.app/og-default.png';
 
   return (
     <Helmet>
