@@ -15,11 +15,18 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+// Reserved usernames that cannot be registered
+const RESERVED_USERNAMES = ['bountybay', 'admin', 'support', 'official', 'help', 'system', 'moderator', 'mod'];
+
 const profileSetupSchema = z.object({
   username: z.string()
     .min(3, 'Username must be at least 3 characters')
     .max(20, 'Username must be less than 20 characters')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
+    .refine(
+      (val) => !RESERVED_USERNAMES.includes(val.toLowerCase()),
+      'This username is reserved'
+    ),
   displayName: z.string()
     .min(2, 'Display name must be at least 2 characters')
     .max(50, 'Display name must be less than 50 characters'),

@@ -8,7 +8,8 @@ import {
   CheckCircle,
   AlertCircle,
   Shield,
-  ArrowLeft
+  ArrowLeft,
+  BadgeCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,8 +118,14 @@ export default function PublicProfile() {
             {/* Profile Info */}
             <div className="flex-1 space-y-4">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h1 className="text-2xl font-bold">{profile.displayName}</h1>
+                  {profile.isOfficial && (
+                    <Badge className="gap-1 bg-blue-500 hover:bg-blue-600 text-white">
+                      <BadgeCheck className="h-3 w-3" />
+                      Official
+                    </Badge>
+                  )}
                   {profile.idvStatus === IdvStatus.VERIFIED && (
                     <Badge variant="default" className="gap-1">
                       <Shield className="h-3 w-3" />
