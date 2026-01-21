@@ -23,7 +23,7 @@ const collectiblesConfig: NicheConfig = {
     {
       icon: <ShieldCheck className="h-6 w-6 text-primary" />,
       title: 'Protected Transactions',
-      description: 'Funds held in escrow until you verify the item. Never risk getting scammed again.'
+      description: 'Your card is saved securely and only charged when you accept a claim. No upfront payment required.'
     },
     {
       icon: <Trophy className="h-6 w-6 text-primary" />,
