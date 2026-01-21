@@ -128,17 +128,14 @@ export function ReferralCard() {
     }
   };
 
+  // Only show for partners - regular users don't have referral rewards
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-muted rounded w-1/2"></div>
-            <div className="h-10 bg-muted rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null; // Don't show loading state - we'll show nothing if not a partner
+  }
+
+  // If user is not a partner, don't show anything
+  if (!stats?.isPartner) {
+    return null;
   }
 
   // Calculate partner earnings example (on a $100 bounty)
@@ -167,36 +164,25 @@ export function ReferralCard() {
   const partnerEarnings = calculatePartnerEarnings();
 
   return (
-    <Card className={stats?.isPartner ? 'border-primary/50 bg-gradient-to-br from-primary/5 to-transparent' : ''}>
+    <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-transparent">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {stats?.isPartner ? (
-            <>
-              <Crown className="h-5 w-5 text-primary" />
-              Partner Dashboard
-            </>
-          ) : (
-            <>
-              <Gift className="h-5 w-5 text-primary" />
-              Refer Friends & Earn
-            </>
-          )}
+          <Crown className="h-5 w-5 text-primary" />
+          Partner Dashboard
         </CardTitle>
         <CardDescription>
-          {stats?.isPartner && stats.partnerName ? (
+          {stats.partnerName && (
             <span className="flex items-center gap-2">
               <Badge variant="secondary" className="font-medium">
                 {stats.partnerName}
               </Badge>
             </span>
-          ) : (
-            "Invite friends to BountyBay. When they complete their first bounty, you both earn rewards!"
           )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Partner Commission Info */}
-        {stats?.isPartner && partnerEarnings && (
+        {partnerEarnings && (
           <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-4 w-4 text-primary" />
@@ -220,27 +206,25 @@ export function ReferralCard() {
         )}
 
         {/* Stats Grid */}
-        <div className={`grid ${stats?.isPartner ? 'grid-cols-4' : 'grid-cols-3'} gap-3 text-center`}>
+        <div className="grid grid-cols-4 gap-3 text-center">
           <div className="p-3 bg-muted rounded-lg">
             <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-            <p className="text-2xl font-bold">{stats?.totalReferred || 0}</p>
+            <p className="text-2xl font-bold">{stats.totalReferred}</p>
             <p className="text-xs text-muted-foreground">Referred</p>
           </div>
-          {stats?.isPartner && (
-            <div className="p-3 bg-muted rounded-lg">
-              <Target className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-2xl font-bold">{stats?.completedBounties || 0}</p>
-              <p className="text-xs text-muted-foreground">Completed</p>
-            </div>
-          )}
+          <div className="p-3 bg-muted rounded-lg">
+            <Target className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+            <p className="text-2xl font-bold">{stats.completedBounties}</p>
+            <p className="text-xs text-muted-foreground">Completed</p>
+          </div>
           <div className="p-3 bg-muted rounded-lg">
             <Gift className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-            <p className="text-2xl font-bold">{stats?.pendingRewards || 0}</p>
+            <p className="text-2xl font-bold">{stats.pendingRewards}</p>
             <p className="text-xs text-muted-foreground">Pending</p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
             <DollarSign className="h-5 w-5 mx-auto mb-1 text-primary" />
-            <p className="text-2xl font-bold text-primary">${stats?.earnedCredits?.toFixed(0) || 0}</p>
+            <p className="text-2xl font-bold text-primary">${stats.earnedCredits.toFixed(0)}</p>
             <p className="text-xs text-muted-foreground">Earned</p>
           </div>
         </div>
@@ -251,7 +235,7 @@ export function ReferralCard() {
           <div className="flex gap-2">
             <Input
               readOnly
-              value={stats?.referralCode ? `${window.location.origin}/auth?ref=${stats.referralCode}` : ''}
+              value={`${window.location.origin}/auth?ref=${stats.referralCode}`}
               className="font-mono text-sm"
             />
             <Button
@@ -260,7 +244,7 @@ export function ReferralCard() {
               onClick={copyReferralLink}
               className="shrink-0"
             >
-              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
         </div>
@@ -275,7 +259,7 @@ export function ReferralCard() {
         <div className="text-center pt-2 border-t">
           <p className="text-xs text-muted-foreground mb-2">Your referral code</p>
           <Badge variant="secondary" className="text-lg font-mono px-4 py-1">
-            {stats?.referralCode || 'Loading...'}
+            {stats.referralCode}
           </Badge>
         </div>
       </CardContent>
