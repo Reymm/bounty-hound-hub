@@ -27,9 +27,6 @@ const profileSetupSchema = z.object({
       (val) => !RESERVED_USERNAMES.includes(val.toLowerCase()),
       'This username is reserved'
     ),
-  displayName: z.string()
-    .min(2, 'Display name must be at least 2 characters')
-    .max(50, 'Display name must be less than 50 characters'),
   region: z.string()
     .max(100, 'Region must be less than 100 characters')
     .optional(),
@@ -57,7 +54,6 @@ const ProfileSetup = () => {
     mode: 'onChange',
     defaultValues: {
       username: '',
-      displayName: '',
       region: '',
     },
   });
@@ -75,7 +71,6 @@ const ProfileSetup = () => {
       
       if (data) {
         if (data.username) setValue('username', data.username);
-        if (data.full_name) setValue('displayName', data.full_name);
         if (data.avatar_url) setAvatarUrl(data.avatar_url);
       }
     };
@@ -103,7 +98,6 @@ const ProfileSetup = () => {
         .from('profiles')
         .update({
           username: data.username,
-          full_name: data.displayName,
           region: data.region || null,
           avatar_url: avatarUrl || null,
         })
@@ -221,7 +215,7 @@ const ProfileSetup = () => {
                 <Label>Profile Photo (Optional)</Label>
                 <AvatarUpload
                   currentAvatarUrl={avatarUrl}
-                  fallbackText={watch('displayName')?.substring(0, 2).toUpperCase() || 'BB'}
+                  fallbackText={watch('username')?.substring(0, 2).toUpperCase() || 'BB'}
                   onAvatarChange={(url) => setAvatarUrl(url || '')}
                 />
                 <p className="text-sm text-muted-foreground">
@@ -229,18 +223,6 @@ const ProfileSetup = () => {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Full Name *</Label>
-                <Input
-                  id="displayName"
-                  placeholder="Your full name"
-                  {...register('displayName')}
-                  className={errors.displayName ? 'border-destructive' : ''}
-                />
-                {errors.displayName && (
-                  <p className="text-sm text-destructive">{errors.displayName.message}</p>
-                )}
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="region">Your Region (Optional)</Label>
