@@ -25,12 +25,12 @@ const BOOK_IMAGE = 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=
 const TOY_IMAGE = 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800&q=80'; // vintage toys
 
 // Car-specific images for each classic car bounty
-const MUSTANG_IMAGE = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80'; // 67 Mustang
-const BEL_AIR_IMAGE = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80'; // 57 Bel Air style
-const CHARGER_IMAGE = 'https://images.unsplash.com/photo-1612544448445-b8232cff3b6c?w=800&q=80'; // 69 Charger
-const CUDA_IMAGE = 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80'; // muscle car
-const PORSCHE_IMAGE = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80'; // classic Porsche
-const DATSUN_IMAGE = 'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80'; // vintage Japanese car
+const MUSTANG_IMAGE = 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800&q=80'; // classic Mustang fastback
+const BEL_AIR_IMAGE = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'; // 50s Chevy Bel Air
+const CHARGER_IMAGE = 'https://images.unsplash.com/photo-1630047243831-9c79d8eca939?w=800&q=80'; // black muscle car Charger style
+const CUDA_IMAGE = 'https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?w=800&q=80'; // Plymouth Barracuda style
+const PORSCHE_IMAGE = 'https://images.unsplash.com/photo-1611651338412-8403fa6e3599?w=800&q=80'; // classic 911
+const DATSUN_IMAGE = 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800&q=80'; // vintage Datsun Z
 const TECH_IMAGE = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'; // retro tech
 
 // New category-specific images (replacing local imports)
