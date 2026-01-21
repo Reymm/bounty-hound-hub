@@ -51,10 +51,7 @@ export function AdminDemoSeeder() {
         escrow_amount: bounty.amount,
         deadline: deadline.toISOString(),
         created_at: createdAt.toISOString(),
-        view_count: bounty.view_count,
-        claim_count: 0,
-        is_physical_item: bounty.category !== 'reconnections',
-        bounty_type: bounty.category === 'reconnections' ? 'search' : 'acquisition'
+        view_count: bounty.view_count
       });
 
       if (error) {
