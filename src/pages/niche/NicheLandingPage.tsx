@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import { Plus, TrendingUp, ShieldCheck, Heart, Search, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
@@ -20,6 +21,7 @@ export interface NicheConfig {
   ctaText: string;
   emptyMessage: string;
   emptyDescription: string;
+  ogImage?: string;
   features: {
     icon: React.ReactNode;
     title: string;
@@ -74,8 +76,33 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
     loadBounties(true);
   }, [config.category]);
 
+  const pageTitle = `${config.title} | BountyBay`;
+  const pageUrl = `https://bountybay.lovable.app/${config.slug}`;
+  const ogImage = config.ogImage || 'https://bountybay.lovable.app/og-default.png';
+
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={config.description} />
+        <link rel="canonical" href={pageUrl} />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={config.description} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:site_name" content="BountyBay" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={pageUrl} />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={config.description} />
+        <meta name="twitter:image" content={ogImage} />
+      </Helmet>
+
       {/* Hero Section */}
       <section className={`${config.heroGradient} border-b border-border`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
