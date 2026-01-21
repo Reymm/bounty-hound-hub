@@ -132,7 +132,7 @@ const Index = () => {
             <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2 mb-4">
               <ShieldCheck className="h-5 w-5 text-success" />
               <span className="text-sm font-medium text-success">
-                Every hunter is ID-verified. No scammers. Safe transactions.
+                Every hunter is ID-verified. Safe transactions.
               </span>
             </div>
             <p className="text-xs text-muted-foreground mb-8">
