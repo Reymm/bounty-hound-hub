@@ -60,22 +60,35 @@ export const uploadFile = async (
 
     console.log('[STORAGE] Uploading to path:', filePath);
 
-    // Simulate gradual progress since Supabase doesn't provide real upload progress
+    // Simulate gradual progress based on file size
+    // Larger files = slower progress increments
     let currentProgress = 0;
+    const fileSizeMB = file.size / (1024 * 1024);
+    const progressIncrement = Math.max(2, Math.min(10, 30 / fileSizeMB)); // Slower for bigger files
     const progressInterval = setInterval(() => {
-      if (currentProgress < 90) {
-        currentProgress += 10;
-        onProgress?.(currentProgress);
+      if (currentProgress < 85) {
+        currentProgress += progressIncrement;
+        currentProgress = Math.min(currentProgress, 85); // Cap at 85%
+        onProgress?.(Math.round(currentProgress));
       }
-    }, 200); // Update every 200ms
+    }, 500); // Update every 500ms
 
     try {
-      const { data: uploadData, error } = await supabase.storage
+      // Create a timeout promise for large file uploads (2 min for files over 5MB, 1 min otherwise)
+      const timeoutMs = fileSizeMB > 5 ? 120000 : 60000;
+      
+      const uploadPromise = supabase.storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error(`Upload timed out after ${timeoutMs / 1000} seconds. Try a smaller image (under 5MB recommended).`)), timeoutMs);
+      });
+
+      const { data: uploadData, error } = await Promise.race([uploadPromise, timeoutPromise]);
 
       clearInterval(progressInterval);
       onProgress?.(95);
