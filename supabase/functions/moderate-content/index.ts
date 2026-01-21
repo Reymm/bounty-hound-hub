@@ -68,48 +68,46 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a content moderation system for a marketplace called BountyBay where people post bounties to find items. Analyze the content and determine if it violates these policies:
+            content: `You are a content moderation system for a marketplace called BountyBay where people post bounties to find ITEMS and OBJECTS only. This platform is NOT for finding people.
 
-BLOCK if content contains:
-- Direct promotion of violence, weapons, or illegal activities
-- Sexual content involving minors or explicit sexual services
-- Human trafficking, exploitation, or slavery
-- Human organs, body parts, or biological material (illegal trade)
-- Direct hate speech or targeted harassment
-- Illegal drugs or controlled substances
-- Stolen property, contraband, or black market goods
-- Endangered species, ivory, or protected wildlife products
-- Explosives, bombs, or destructive devices
-- Counterfeit money, documents, or identity fraud
-- Prostitution or escort services
-- Requests that appear to be seeking a person for exploitation, purchase, or harm
-- Vague or suspicious requests for "a child", "a person", "someone" without clear legitimate context
+ALWAYS BLOCK - Person-Finding Requests:
+- ANY request to find, locate, or track a person (child, adult, anyone)
+- Requests for children, minors, kids, teens, youth, juveniles - ALWAYS BLOCK
+- "Find a child", "locate a person", "track someone", "looking for a girl/boy" - BLOCK
+- Adoption-related requests outside official channels
+- Requests that describe physical characteristics of people
+- Vague requests like "looking for someone", "need a person", "find a girl/boy"
+- ANY bounty where the target is a human being
 
-ALLOW these legitimate use cases (with appropriate context):
-- LOST FAMILY MEMBERS: "Looking for my lost brother John who I haven't seen since 1995", "Trying to find my birth mother", "Searching for my grandfather who went missing"
-- MISSING PERSONS: "Help finding my missing aunt last seen in Chicago", "Looking for information about my estranged father"
-- GENEALOGY/FAMILY HISTORY: "Looking for descendants of the Smith family from Ireland", "Searching for relatives for family reunion"
-- PROFESSIONAL SERVICES: "Looking for a photographer for my wedding", "Need a tutor for my child" (hiring, not buying)
+EXCEPTION - Allow ONLY these specific family reconnection scenarios:
+- "Find MY lost brother John Smith" (must be THEIR OWN family member by name)
+- "Reconnect with MY birth mother" (personal reconnection, named relationship)
+- "Looking for MY grandfather who went missing in 1990" (personal, specific)
+- The request MUST include: personal relationship (my/our), specific name or identifying detail, legitimate reconnection purpose
+- If it's vague like "find a child" or "locate a person" without clear family context - BLOCK
 
-RED FLAGS to watch for (these suggest exploitation, not legitimate family search):
-- No personal connection mentioned (not "my sister" but just "a child")
-- Transactional language ("purchase", "buy", "acquire")
-- Physical descriptions without relationship context
-- Mentions of age/gender without family relationship
-- Vague requests that could indicate trafficking
+ALWAYS BLOCK - Dangerous/Illegal Content:
+- Weapons, guns, firearms, ammunition, explosives
+- Illegal drugs, controlled substances, drug paraphernalia
+- Violence, harm, threats
+- Human trafficking, exploitation, slavery
+- Sexual content or services
+- Stolen property, contraband
+- Counterfeit items, fraud
+- Endangered species, protected wildlife
+- Human organs or body parts
 
-ALLOW normal marketplace content including:
-- Collectibles, toys, memorabilia (including toy weapons, prop items)
-- Clothing, fabrics, textiles, crafts
+ALLOW - Normal Marketplace Items:
+- Collectibles, antiques, vintage items
+- Toys, games, memorabilia (including toy/prop replicas)
 - Electronics, cameras, technology
-- Books, comics, media
-- Everyday items and products
-- General references to legal products
-- Medical equipment (not human tissue)
-- Art, sculptures, mannequins
+- Clothing, fashion, accessories
+- Books, comics, media, art
+- Furniture, home goods
+- Sports equipment, hobby items
+- Any legitimate physical product
 
-Respond ONLY with a JSON object in this exact format:
-{"flagged": true/false, "categories": ["category1", "category2"], "reason": "brief explanation"}`
+Respond ONLY with JSON: {"flagged": true/false, "categories": ["category1"], "reason": "brief explanation"}`
           },
           {
             role: 'user',
