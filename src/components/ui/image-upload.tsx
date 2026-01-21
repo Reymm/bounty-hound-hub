@@ -217,12 +217,12 @@ export function ImageUpload({
           {uploadedImages.map((imageUrl, index) => (
             <div
               key={index}
-              className="relative group border rounded-lg overflow-hidden bg-muted"
+              className="relative group border rounded-lg overflow-hidden bg-muted aspect-square"
             >
               <img
                 src={imageUrl}
                 alt={`Upload ${index + 1}`}
-                className="w-full h-auto max-h-64 object-contain"
+                className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Button
