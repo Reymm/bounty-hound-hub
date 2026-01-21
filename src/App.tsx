@@ -15,6 +15,7 @@ import { AdminSupport } from "./pages/admin/AdminSupport";
 import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
 import { AdminPartners } from "./pages/admin/AdminPartners";
 import AdminDisputes from "./pages/admin/AdminDisputes";
+import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { SupportTicket } from "./pages/SupportTicket";
 import { Support } from "./pages/Support";
 import Index from "./pages/Index";
@@ -148,6 +149,11 @@ const App = () => (
                       <Route path="/admin/partners" element={
                         <ProtectedRoute>
                           <AdminPartners />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin" element={
+                        <ProtectedRoute>
+                          <AdminDashboard />
                         </ProtectedRoute>
                       } />
                       
