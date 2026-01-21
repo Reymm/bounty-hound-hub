@@ -1,9 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X, Upload, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Upload, Loader2, CheckCircle2, Expand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 
 interface FileProgress {
   name: string;
@@ -34,6 +38,7 @@ export function ImageUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const uploadFiles = async (files: File[]) => {
@@ -217,18 +222,32 @@ export function ImageUpload({
           {uploadedImages.map((imageUrl, index) => (
             <div
               key={index}
-              className="relative group border rounded-lg overflow-hidden bg-muted aspect-square"
+              className="relative group border rounded-lg overflow-hidden bg-muted aspect-square cursor-pointer"
+              onClick={() => setLightboxImage(imageUrl)}
             >
               <img
                 src={imageUrl}
                 alt={`Upload ${index + 1}`}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxImage(imageUrl);
+                  }}
+                >
+                  <Expand className="h-4 w-4" />
+                </Button>
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => onRemove(imageUrl)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(imageUrl);
+                  }}
                   disabled={disabled}
                 >
                   <X className="h-4 w-4" />
@@ -238,6 +257,19 @@ export function ImageUpload({
           ))}
         </div>
       )}
+
+      {/* Lightbox Modal */}
+      <Dialog open={!!lightboxImage} onOpenChange={() => setLightboxImage(null)}>
+        <DialogContent className="max-w-4xl p-2 bg-background/95 backdrop-blur">
+          {lightboxImage && (
+            <img
+              src={lightboxImage}
+              alt="Full size preview"
+              className="w-full h-auto max-h-[80vh] object-contain rounded"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
