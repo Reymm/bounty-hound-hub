@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
@@ -28,9 +26,6 @@ const profileSetupSchema = z.object({
   region: z.string()
     .max(100, 'Region must be less than 100 characters')
     .optional(),
-  accountType: z.enum(['hunter', 'poster', 'both'], {
-    required_error: 'Please select an account type',
-  }),
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -57,7 +52,6 @@ const ProfileSetup = () => {
       username: '',
       displayName: '',
       region: '',
-      accountType: undefined,
     },
   });
 
@@ -66,33 +60,16 @@ const ProfileSetup = () => {
     const loadProfile = async () => {
       if (!user) return;
       
-      const [profileResult, rolesResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('username, full_name, avatar_url')
-          .eq('id', user.id)
-          .single(),
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-      ]);
+      const { data } = await supabase
+        .from('profiles')
+        .select('username, full_name, avatar_url')
+        .eq('id', user.id)
+        .single();
       
-      if (profileResult.data) {
-        if (profileResult.data.username) setValue('username', profileResult.data.username);
-        if (profileResult.data.full_name) setValue('displayName', profileResult.data.full_name);
-        if (profileResult.data.avatar_url) setAvatarUrl(profileResult.data.avatar_url);
-      }
-      
-      if (rolesResult.data && rolesResult.data.length > 0) {
-        const roles = rolesResult.data.map(r => r.role);
-        if (roles.includes('hunter') && roles.includes('poster')) {
-          setValue('accountType', 'both');
-        } else if (roles.includes('hunter')) {
-          setValue('accountType', 'hunter');
-        } else if (roles.includes('poster')) {
-          setValue('accountType', 'poster');
-        }
+      if (data) {
+        if (data.username) setValue('username', data.username);
+        if (data.full_name) setValue('displayName', data.full_name);
+        if (data.avatar_url) setAvatarUrl(data.avatar_url);
       }
     };
     
@@ -112,7 +89,7 @@ const ProfileSetup = () => {
     try {
       setIsSubmitting(true);
       
-      console.log('Starting profile setup...', { username: data.username, accountType: data.accountType });
+      console.log('Starting profile setup...', { username: data.username });
       
       // Save profile data to Supabase
       const { error: profileError } = await supabase
@@ -141,29 +118,18 @@ const ProfileSetup = () => {
 
       console.log('Profile updated successfully');
 
-      // Delete existing roles
-      const { error: deleteError } = await supabase
+      // Delete existing roles and insert both hunter + poster roles
+      await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', user.id);
 
-      if (deleteError) {
-        console.error('Delete roles error:', deleteError);
-      } else {
-        console.log('Existing roles deleted');
-      }
-
-      // Insert new roles based on account type
+      // Auto-assign both roles - users can do both posting and hunting
       type AppRole = 'hunter' | 'poster';
-      const rolesToInsert: Array<{ user_id: string; role: AppRole }> = 
-        data.accountType === 'both' 
-          ? [
-              { user_id: user.id, role: 'hunter' },
-              { user_id: user.id, role: 'poster' }
-            ]
-          : [{ user_id: user.id, role: data.accountType as AppRole }];
-
-      console.log('Inserting roles:', rolesToInsert);
+      const rolesToInsert: Array<{ user_id: string; role: AppRole }> = [
+        { user_id: user.id, role: 'hunter' },
+        { user_id: user.id, role: 'poster' }
+      ];
 
       const { error: rolesError } = await supabase
         .from('user_roles')
@@ -174,21 +140,13 @@ const ProfileSetup = () => {
         throw rolesError;
       }
       
-      console.log('Roles inserted successfully');
-      
       toast({
         title: "Profile setup complete!",
         description: "Welcome to BountyBay. You can now start posting or hunting bounties.",
       });
       
-      // Show chooser modal only if account type is "both"
-      if (data.accountType === 'both') {
-        setShowChooserModal(true);
-      } else if (data.accountType === 'poster') {
-        navigate('/post');
-      } else {
-        navigate('/bounties');
-      }
+      // Show chooser modal for next action
+      setShowChooserModal(true);
       
     } catch (error: any) {
       console.error('Error setting up profile:', error);
@@ -293,58 +251,6 @@ const ProfileSetup = () => {
                 />
                 {errors.region && (
                   <p className="text-sm text-destructive">{errors.region.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Account Type *</Label>
-                <Controller
-                  name="accountType"
-                  control={control}
-                  render={({ field }) => (
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
-                        <RadioGroupItem value="hunter" id="hunter" className="mt-0.5" />
-                        <div className="flex-1">
-                          <Label htmlFor="hunter" className="text-base font-medium cursor-pointer">
-                            Hunter
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            I want to find items for others
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
-                        <RadioGroupItem value="poster" id="poster" className="mt-0.5" />
-                        <div className="flex-1">
-                          <Label htmlFor="poster" className="text-base font-medium cursor-pointer">
-                            Poster
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            I want others to find items for me
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
-                        <RadioGroupItem value="both" id="both" className="mt-0.5" />
-                        <div className="flex-1">
-                          <Label htmlFor="both" className="text-base font-medium cursor-pointer">
-                            Both
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            I want to do both - find items and post bounties
-                          </p>
-                        </div>
-                      </div>
-                    </RadioGroup>
-                  )}
-                />
-                {errors.accountType && (
-                  <p className="text-sm text-destructive">{errors.accountType.message}</p>
                 )}
               </div>
 
