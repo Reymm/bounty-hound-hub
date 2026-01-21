@@ -91,6 +91,10 @@ function PostBountyForm() {
   const watchedTargetMin = watch('targetPriceMin');
   const watchedTargetMax = watch('targetPriceMax');
   const selectedCategory = watch('category');
+  const selectedSubcategory = watch('subcategory');
+
+  // Only require 18+ confirmation for person-finding reconnections, not lost pets
+  const requiresAdultConfirmation = selectedCategory === 'reconnections' && selectedSubcategory !== 'lost-pets';
 
   // Track if draft has already been loaded (prevents overwrites)
   const draftLoadedRef = useRef(false);
@@ -310,8 +314,8 @@ function PostBountyForm() {
         return;
       }
 
-      // Validate adult confirmation for reconnections category
-      if (data.category === 'reconnections' && !adultConfirmed) {
+      // Validate adult confirmation for person-finding reconnections (not lost pets)
+      if (data.category === 'reconnections' && data.subcategory !== 'lost-pets' && !adultConfirmed) {
         toast({
           title: "Confirmation required",
           description: "Please confirm that the person you're searching for is 18 years or older.",
@@ -817,8 +821,8 @@ function PostBountyForm() {
               )}
             </div>
 
-            {/* Adult Confirmation for Reconnections */}
-            {selectedCategory === 'reconnections' && (
+            {/* Adult Confirmation for Person-Finding Reconnections (not lost pets) */}
+            {requiresAdultConfirmation && (
               <Alert className="border-amber-500/50 bg-amber-500/10">
                 <AlertCircle className="h-4 w-4 text-amber-500" />
                 <AlertDescription className="ml-2">
