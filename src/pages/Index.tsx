@@ -129,12 +129,18 @@ const Index = () => {
             </p>
             
             {/* Trust Badge */}
-            <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2 mb-8">
+            <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2 mb-4">
               <ShieldCheck className="h-5 w-5 text-success" />
               <span className="text-sm font-medium text-success">
                 Every hunter is ID-verified. No scammers. Safe transactions.
               </span>
             </div>
+            <p className="text-xs text-muted-foreground mb-8">
+              By using BountyBay, you agree to our{' '}
+              <Link to="/legal/terms" className="underline hover:text-foreground">Terms of Service</Link>
+              {' '}and{' '}
+              <Link to="/legal/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+            </p>
             <div className="flex flex-col gap-4 items-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground w-full sm:w-auto">
                 <Link to={user ? "/post" : "/setup"}>
