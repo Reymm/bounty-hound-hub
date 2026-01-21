@@ -1188,7 +1188,7 @@ function PostBountyForm() {
               onRemove={handleImageRemove}
               uploadedImages={uploadedImages}
               maxFiles={5}
-              maxSize={10 * 1024 * 1024} // 10MB
+              maxSize={20 * 1024 * 1024} // 20MB
             />
             <p className="text-xs text-muted-foreground mt-2">
               Upload up to 5 reference images to help hunters understand what you're looking for
