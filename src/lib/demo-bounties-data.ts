@@ -18,11 +18,11 @@ export interface DemoBounty {
 }
 
 // All images use external Unsplash URLs for reliability in database storage
-const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1586769852044-692d6e3703f0?w=800&q=80'; // cozy blanket
+const BLANKET_IMAGE = 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=800&q=80'; // child's comfort blanket
 const FAMILY_IMAGE = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80'; // family silhouette
-const WATCH_IMAGE = 'https://images.unsplash.com/photo-1587836374828-a58e7ee52fc6?w=800&q=80'; // vintage watch
-const BOOK_IMAGE = 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80'; // old books
-const TOY_IMAGE = 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=80'; // vintage toys
+const WATCH_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80'; // vintage watch
+const BOOK_IMAGE = 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&q=80'; // old books
+const TOY_IMAGE = 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800&q=80'; // vintage toys
 
 // Car-specific images for each classic car bounty
 const MUSTANG_IMAGE = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80'; // 67 Mustang
@@ -50,7 +50,7 @@ export const HERO_BOUNTY: DemoBounty = {
   amount: 500,
   location: "Portland, OR",
   tags: ["comfort-blanket", "memorial", "little-miracles", "target", "2016", "child-memory", "satin-edge", "elephant"],
-  images: [PLACEHOLDER_IMAGE],
+  images: [BLANKET_IMAGE],
   verification_requirements: ["Photo of blanket with brand tag visible", "Close-up of elephant embroidery pattern"],
   poster_display_name: "GrievingMomSarah",
   days_ago: 1,
