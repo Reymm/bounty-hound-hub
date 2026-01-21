@@ -165,13 +165,21 @@ const generateEmailContent = (data: EmailRequest) => {
       };
 
     case 'submission_accepted':
+      // Calculate payout breakdown if amount is provided
+      const bountyAmount = data.amount || 0;
+      const platformFlatFee = 2.00;
+      const platformVariableFee = bountyAmount * 0.05;
+      const totalPlatformFee = platformFlatFee + platformVariableFee;
+      const hunterPayout = bountyAmount - totalPlatformFee;
+      const showPayoutBreakdown = bountyAmount > 0;
+      
       return {
-        subject: `Your Submission Was Accepted: "${data.bountyTitle}"`,
+        subject: `🎉 Your Submission Was Accepted: "${data.bountyTitle}"`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
             ${emailHeader}
             <div style="padding: 30px 20px; background: #f8f9fa;">
-              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">Submission Accepted</h2>
+              <h2 style="color: ${primaryBlue}; margin-bottom: 20px;">🎉 Submission Accepted!</h2>
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
                 Congratulations! Your submission has been accepted for:
               </p>
@@ -179,6 +187,34 @@ const generateEmailContent = (data: EmailRequest) => {
                 <h3 style="color: #333; margin: 0 0 10px 0;">${data.bountyTitle}</h3>
                 <p style="color: #666; margin: 0;">Accepted by: ${data.senderName}</p>
               </div>
+              
+              ${showPayoutBreakdown ? `
+              <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;">
+                <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 2px solid ${primaryBlue}; padding-bottom: 10px;">💰 Payout Breakdown</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #666;">Bounty Amount</td>
+                    <td style="padding: 8px 0; text-align: right; color: #333; font-weight: 500;">$${bountyAmount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #666;">Platform Fee ($2.00 + 5%)</td>
+                    <td style="padding: 8px 0; text-align: right; color: #dc3545;">-$${totalPlatformFee.toFixed(2)}</td>
+                  </tr>
+                  <tr style="border-top: 2px solid #dee2e6;">
+                    <td style="padding: 12px 0; color: #333; font-weight: bold; font-size: 16px;">Your Payout</td>
+                    <td style="padding: 12px 0; text-align: right; color: ${primaryBlue}; font-weight: bold; font-size: 18px;">$${hunterPayout.toFixed(2)}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0; color: #1976d2; font-size: 14px;">
+                  <strong>⏰ Payment Timeline:</strong><br>
+                  Funds will be available in your Stripe account after the 7-day security hold.
+                </p>
+              </div>
+              ` : ''}
+              
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${bountyUrl}" style="background: ${primaryBlue}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Details</a>
               </div>
