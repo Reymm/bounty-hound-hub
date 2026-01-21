@@ -132,6 +132,10 @@ function PostBountyForm() {
     }
   }, []);
 
+  // Watch specific fields for auto-save (NOT using watch() as dependency - that causes infinite loops!)
+  const watchedTitle = watch('title');
+  const watchedDescription = watch('description');
+
   // Auto-save draft as user types (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -149,7 +153,7 @@ function PostBountyForm() {
     }, 1000); // Save 1 second after user stops typing
 
     return () => clearTimeout(timeoutId);
-  }, [watch(), tags, verificationRequirements, uploadedImages, hasDeadline]);
+  }, [watchedTitle, watchedDescription, tags, verificationRequirements, uploadedImages, hasDeadline, getValues]);
 
   // FEE CALCULATION v2 - 3.7% + $0.30 - UPDATED JAN 14 2026
   // Calculate fees when bounty amount changes
