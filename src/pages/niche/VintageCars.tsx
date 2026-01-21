@@ -27,8 +27,8 @@ const vintageCarsConfig: NicheConfig = {
     },
     {
       icon: <ShieldCheck className="h-6 w-6 text-primary" />,
-      title: 'Secure Escrow',
-      description: 'Your bounty is held safely until you confirm the lead or find meets your requirements.'
+      title: 'Secure Payment',
+      description: 'Your card is saved securely and only charged when you accept a claim that meets your requirements.'
     }
   ]
 };

@@ -242,7 +242,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
               </div>
               <h3 className="font-semibold text-foreground mb-2">Safe Transaction</h3>
               <p className="text-sm text-muted-foreground">
-                Funds held in escrow until you confirm success
+                Card saved securely — only charged when you accept a claim
               </p>
             </div>
           </div>
