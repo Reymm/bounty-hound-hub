@@ -46,6 +46,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   const [confirmingDelivery, setConfirmingDelivery] = useState(false);
   const [rejectingClaim, setRejectingClaim] = useState(false);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
+  const [acceptingClaim, setAcceptingClaim] = useState(false);
   const [submissionToAccept, setSubmissionToAccept] = useState<string | null>(null);
   const [ratingPromptOpen, setRatingPromptOpen] = useState(false);
   const [ratingPromptData, setRatingPromptData] = useState<{ hunterId: string; hunterName: string } | null>(null);
@@ -86,7 +87,9 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
   };
 
   const handleAcceptClaim = async (submissionId: string) => {
-    const success = await supabaseApi.updateClaimStatus(submissionId, ClaimStatus.ACCEPTED);
+    setAcceptingClaim(true);
+    try {
+      const success = await supabaseApi.updateClaimStatus(submissionId, ClaimStatus.ACCEPTED);
     if (success) {
       // Find the accepted claim to get hunter info
       const claim = submissions.find(s => s.id === submissionId);
@@ -193,6 +196,16 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
         description: "Failed to accept the claim. Please try again.",
         variant: "destructive",
       });
+    }
+    } catch (error) {
+      console.error('Error accepting claim:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAcceptingClaim(false);
     }
   };
 
@@ -639,33 +652,43 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
       )}
 
       {/* Accept Confirmation Dialog */}
-      <AlertDialog open={acceptDialogOpen} onOpenChange={setAcceptDialogOpen}>
+      <AlertDialog open={acceptDialogOpen} onOpenChange={(open) => {
+        // Prevent closing while processing
+        if (!acceptingClaim) {
+          setAcceptDialogOpen(open);
+          if (!open) setSubmissionToAccept(null);
+        }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Accept this submission?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will mark the bounty as completed and release the reward to the hunter. 
+              This will mark the bounty as completed and <strong>immediately charge your card</strong> to release the reward to the hunter. 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setAcceptDialogOpen(false);
-              setSubmissionToAccept(null);
-            }}>
+            <AlertDialogCancel 
+              disabled={acceptingClaim}
+              onClick={() => {
+                setAcceptDialogOpen(false);
+                setSubmissionToAccept(null);
+              }}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              disabled={acceptingClaim}
+              onClick={async () => {
                 if (submissionToAccept) {
-                  handleAcceptClaim(submissionToAccept);
+                  await handleAcceptClaim(submissionToAccept);
                 }
                 setAcceptDialogOpen(false);
                 setSubmissionToAccept(null);
               }}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
             >
-              Accept & Process Payout
+              {acceptingClaim ? 'Processing...' : 'Accept & Process Payout'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
