@@ -20,10 +20,17 @@ export interface DemoBounty {
 // All images use external Unsplash URLs for reliability in database storage
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1586769852044-692d6e3703f0?w=800&q=80'; // cozy blanket
 const FAMILY_IMAGE = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80'; // family silhouette
-const CAR_IMAGE = 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'; // classic car
 const WATCH_IMAGE = 'https://images.unsplash.com/photo-1587836374828-a58e7ee52fc6?w=800&q=80'; // vintage watch
 const BOOK_IMAGE = 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80'; // old books
 const TOY_IMAGE = 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=80'; // vintage toys
+
+// Car-specific images for each classic car bounty
+const MUSTANG_IMAGE = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80'; // 67 Mustang
+const BEL_AIR_IMAGE = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80'; // 57 Bel Air style
+const CHARGER_IMAGE = 'https://images.unsplash.com/photo-1612544448445-b8232cff3b6c?w=800&q=80'; // 69 Charger
+const CUDA_IMAGE = 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80'; // muscle car
+const PORSCHE_IMAGE = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80'; // classic Porsche
+const DATSUN_IMAGE = 'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80'; // vintage Japanese car
 const TECH_IMAGE = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80'; // retro tech
 
 // New category-specific images (replacing local imports)
@@ -185,7 +192,7 @@ export const CLASSIC_CAR_BOUNTIES: DemoBounty[] = [
     amount: 250,
     location: "Oklahoma City, OK",
     tags: ["mustang", "fastback", "1967", "numbers-matching", "highland-green", "390-v8"],
-    images: [CAR_IMAGE],
+    images: [MUSTANG_IMAGE],
     verification_requirements: ["Photo of VIN plate", "Current photos of the car"],
     poster_display_name: "MustangMike67",
     days_ago: 5,
@@ -200,7 +207,7 @@ export const CLASSIC_CAR_BOUNTIES: DemoBounty[] = [
     amount: 200,
     location: "Los Angeles, CA",
     tags: ["bel-air", "1957", "tribute-build", "family-car", "turquoise", "california"],
-    images: [CAR_IMAGE],
+    images: [BEL_AIR_IMAGE],
     verification_requirements: ["Documentation of ownership history", "Current photos"],
     poster_display_name: "ChevyChaser",
     days_ago: 9,
@@ -215,7 +222,7 @@ export const CLASSIC_CAR_BOUNTIES: DemoBounty[] = [
     amount: 225,
     location: "Phoenix, AZ",
     tags: ["charger", "mopar", "1969", "r/t-440", "numbers-matching", "b5-blue"],
-    images: [CAR_IMAGE],
+    images: [CHARGER_IMAGE],
     verification_requirements: ["Fender tag photo", "VIN and engine number photos"],
     poster_display_name: "MoparOrNoCar",
     days_ago: 6,
@@ -230,7 +237,7 @@ export const CLASSIC_CAR_BOUNTIES: DemoBounty[] = [
     amount: 250,
     location: "Nashville, TN",
     tags: ["cuda", "plymouth", "e-body", "1970", "340-six-pack", "barracuda"],
-    images: [CAR_IMAGE],
+    images: [CUDA_IMAGE],
     verification_requirements: ["VIN verification", "Photos of body condition"],
     poster_display_name: "CudaCollector",
     days_ago: 11,
@@ -245,7 +252,7 @@ export const CLASSIC_CAR_BOUNTIES: DemoBounty[] = [
     amount: 175,
     location: "Seattle, WA",
     tags: ["porsche-911", "1965", "classic-porsche", "pnw", "air-cooled", "early-911"],
-    images: [CAR_IMAGE],
+    images: [PORSCHE_IMAGE],
     verification_requirements: ["Certificate of authenticity or Kardex", "Maintenance records"],
     poster_display_name: "AirCooledAdam",
     days_ago: 8,
@@ -260,7 +267,7 @@ export const CLASSIC_CAR_BOUNTIES: DemoBounty[] = [
     amount: 125,
     location: "San Diego, CA",
     tags: ["datsun-240z", "z-car", "1973", "project-car", "jdm-classic", "nissan"],
-    images: [CAR_IMAGE],
+    images: [DATSUN_IMAGE],
     verification_requirements: ["VIN photo", "Photos showing rust/condition"],
     poster_display_name: "ZCarZack",
     days_ago: 14,
