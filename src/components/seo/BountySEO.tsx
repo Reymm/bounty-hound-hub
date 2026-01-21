@@ -6,10 +6,15 @@ interface BountySEOProps {
 }
 
 export function BountySEO({ bounty }: BountySEOProps) {
-  const title = `${bounty.title} - $${bounty.bountyAmount} Bounty | BountyBay`;
-  const description = bounty.description.slice(0, 155) + (bounty.description.length > 155 ? '...' : '');
+  const title = `Help find: ${bounty.title} - $${bounty.bountyAmount} Reward | BountyBay`;
+  const description = `$${bounty.bountyAmount} bounty reward! ${bounty.description.slice(0, 120)}${bounty.description.length > 120 ? '...' : ''}`;
   const url = `${window.location.origin}/b/${bounty.id}`;
-  const image = bounty.images?.[0] || 'https://bountybay.lovable.app/og-default.png';
+  
+  // Use dynamic OG image from edge function
+  const ogImage = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${bounty.id}`;
+  
+  // Fallback to bounty image or default
+  const fallbackImage = bounty.images?.[0] || 'https://bountybay.lovable.app/og-default.png';
 
   return (
     <Helmet>
@@ -22,7 +27,9 @@ export function BountySEO({ bounty }: BountySEOProps) {
       <meta property="og:url" content={url} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content="BountyBay" />
 
       {/* Twitter */}
@@ -30,7 +37,7 @@ export function BountySEO({ bounty }: BountySEOProps) {
       <meta name="twitter:url" content={url} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={ogImage} />
 
       {/* Additional SEO */}
       <meta name="robots" content="index, follow" />
@@ -43,7 +50,7 @@ export function BountySEO({ bounty }: BountySEOProps) {
           "@type": "Product",
           "name": bounty.title,
           "description": description,
-          "image": image,
+          "image": fallbackImage,
           "offers": {
             "@type": "Offer",
             "price": bounty.bountyAmount,

@@ -15,6 +15,7 @@ import { SubmissionsList } from '@/components/bounty/SubmissionsList';
 import { ReportUserDialog } from '@/components/reports/ReportUserDialog';
 import { ShippingInfoCard } from '@/components/bounty/ShippingInfoCard';
 import { ShippingDetailsDialog } from '@/components/bounty/ShippingDetailsDialog';
+import { ShareBountyButton } from '@/components/bounty/ShareBountyButton';
 import { SendFundsDialog } from '@/components/bounty/SendFundsDialog';
 import { BountyComments } from '@/components/bounty/BountyComments';
 import { BountySEO } from '@/components/seo/BountySEO';
@@ -281,6 +282,13 @@ export default function BountyDetail() {
                   <Users className="h-4 w-4" />
                   {bounty.claimsCount} claims
                 </div>
+                <ShareBountyButton 
+                  bountyId={bounty.id}
+                  title={bounty.title}
+                  amount={bounty.bountyAmount}
+                  variant="ghost"
+                  size="sm"
+                />
               </div>
 
               <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
