@@ -212,24 +212,40 @@ const Index = () => {
           </div>
 
           <BountyGrid 
-            bounties={bounties}
+            bounties={hasActiveFilters ? bounties : bounties.slice(0, 6)}
             loading={loading && page === 1}
             emptyMessage="No bounties match your criteria"
             emptyDescription="Try adjusting your filters or check back later for new bounties."
           />
 
-          {/* Load More */}
-          {hasMore && bounties.length > 0 && (
-            <div className="mt-8 text-center">
-              <Button 
-                onClick={() => loadBounties(false)}
-                disabled={loading}
-                variant="outline"
-                size="lg"
-              >
-                {loading ? 'Loading...' : 'Load More Bounties'}
-              </Button>
-            </div>
+          {/* View All / Load More */}
+          {hasActiveFilters ? (
+            // When filtering, show load more pagination
+            hasMore && bounties.length > 0 && (
+              <div className="mt-8 text-center">
+                <Button 
+                  onClick={() => loadBounties(false)}
+                  disabled={loading}
+                  variant="outline"
+                  size="lg"
+                >
+                  {loading ? 'Loading...' : 'Load More Bounties'}
+                </Button>
+              </div>
+            )
+          ) : (
+            // On homepage default view, show "View All" button
+            bounties.length > 6 && (
+              <div className="mt-8 text-center">
+                <Button 
+                  asChild
+                  variant="outline"
+                  size="lg"
+                >
+                  <Link to="/bounties">View All Bounties →</Link>
+                </Button>
+              </div>
+            )
           )}
         </div>
       </section>
