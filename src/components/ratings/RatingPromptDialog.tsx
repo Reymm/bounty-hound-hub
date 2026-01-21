@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { StarRating } from './StarRating';
 import { createRating } from '@/lib/api/ratings';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Loader2, Star } from 'lucide-react';
 
 interface RatingPromptDialogProps {
@@ -34,7 +35,7 @@ export function RatingPromptDialog({
   ratingType,
   onComplete,
 }: RatingPromptDialogProps) {
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
@@ -52,11 +53,7 @@ export function RatingPromptDialog({
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast({
-        title: "Rating required",
-        description: "Please select a star rating.",
-        variant: "destructive",
-      });
+      toast.error("Please select a star rating.");
       return;
     }
 
@@ -70,20 +67,13 @@ export function RatingPromptDialog({
         rating_type: ratingType,
       });
 
-      toast({
-        title: "Rating submitted!",
-        description: "Thank you for your feedback.",
-      });
+      toast.success("Rating submitted! Thank you for your feedback.");
 
       onOpenChange(false);
       onComplete?.();
     } catch (error) {
       console.error('Error submitting rating:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit rating. You can rate later from the bounty page.",
-        variant: "destructive",
-      });
+      toast.error("Failed to submit rating. You can rate later from the bounty page.");
     } finally {
       setLoading(false);
     }
@@ -91,9 +81,13 @@ export function RatingPromptDialog({
 
   const handleSkip = () => {
     onOpenChange(false);
-    toast({
-      title: "Review saved for later",
-      description: "You can leave your review anytime from My Bounties → Reviews tab.",
+    toast("Review saved for later", {
+      description: "Find pending reviews in My Bounties → Reviews tab",
+      action: {
+        label: "Go to Reviews",
+        onClick: () => navigate('/me/bounties?tab=reviews'),
+      },
+      duration: 8000,
     });
     onComplete?.();
   };
