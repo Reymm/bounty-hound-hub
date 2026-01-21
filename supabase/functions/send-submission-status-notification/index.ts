@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { data: bounty, error: bountyError } = await supabase
       .from('Bounties')
-      .select('title, poster_id')
+      .select('title, poster_id, amount')
       .eq('id', submission.bounty_id)
       .single();
 
@@ -123,6 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
         submissionId: submissionId,
         senderName: posterProfile?.username || 'Poster',
         rejectionReason: rejectionReason || undefined,
+        amount: bounty.amount || undefined, // Include bounty amount for payout breakdown
       }
     });
 
