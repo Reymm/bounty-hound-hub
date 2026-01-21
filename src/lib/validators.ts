@@ -103,10 +103,6 @@ export const searchFiltersSchema = z.object({
 
 // Profile update validation
 export const profileUpdateSchema = z.object({
-  displayName: z.string()
-    .min(2, 'Display name must be at least 2 characters')
-    .max(50, 'Display name must be less than 50 characters'),
-  
   username: z.string()
     .min(3, 'Username must be at least 3 characters')
     .max(30, 'Username must be less than 30 characters')

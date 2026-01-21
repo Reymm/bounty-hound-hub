@@ -141,7 +141,6 @@ export default function Profile() {
       
       if (profileData) {
         reset({
-          displayName: profileData.displayName,
           username: profileData.username || '',
           bio: profileData.bio || '',
           region: profileData.region
@@ -167,7 +166,6 @@ export default function Profile() {
       
       // Only include username if user doesn't have one yet (usernames are permanent)
       const updateData = {
-        displayName: data.displayName,
         bio: data.bio,
         region: data.region,
         ...(profile.username ? {} : { username: data.username })
@@ -358,44 +356,29 @@ export default function Profile() {
                     <div className="flex flex-col items-center">
                       <AvatarUpload
                         currentAvatarUrl={profile.avatarUrl}
-                        fallbackText={profile.displayName.charAt(0)}
+                        fallbackText={profile.username?.charAt(0) || 'U'}
                         onAvatarChange={handleAvatarChange}
                         disabled={updating}
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="displayName">Display Name</Label>
-                        <Input
-                          id="displayName"
-                          placeholder="Your display name"
-                          {...register('displayName')}
-                          className={errors.displayName ? 'border-destructive' : ''}
-                        />
-                        {errors.displayName && (
-                          <p className="text-sm text-destructive">{errors.displayName.message}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="username">Username</Label>
-                        <Input
-                          id="username"
-                          placeholder="Choose your username"
-                          {...register('username')}
-                          disabled={!!profile.username}
-                          className={`${errors.username ? 'border-destructive' : ''} ${profile.username ? 'bg-muted cursor-not-allowed' : ''}`}
-                        />
-                        {errors.username && (
-                          <p className="text-sm text-destructive">{errors.username.message}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {profile.username 
-                            ? "Your username cannot be changed" 
-                            : "Choose your unique username (cannot be changed later)"}
-                        </p>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        placeholder="Choose your username"
+                        {...register('username')}
+                        disabled={!!profile.username}
+                        className={`${errors.username ? 'border-destructive' : ''} ${profile.username ? 'bg-muted cursor-not-allowed' : ''}`}
+                      />
+                      {errors.username && (
+                        <p className="text-sm text-destructive">{errors.username.message}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {profile.username 
+                          ? "Your username cannot be changed" 
+                          : "Choose your unique username (cannot be changed later)"}
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -453,13 +436,10 @@ export default function Profile() {
                         <AvatarImage src={profile.avatarUrl} alt="Profile picture" />
                       ) : null}
                       <AvatarFallback className="text-2xl">
-                        {profile.displayName.charAt(0)}
+                        {profile.username?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <h3 className="font-semibold text-lg">{profile.displayName}</h3>
-                    {profile.username && (
-                      <p className="text-sm text-muted-foreground">@{profile.username}</p>
-                    )}
+                    <h3 className="font-semibold text-lg">@{profile.username}</h3>
                     <p className="text-sm text-muted-foreground">{profile.email}</p>
                     {profile.bio && (
                       <p className="text-sm text-muted-foreground mt-2 italic">"{profile.bio}"</p>
