@@ -40,7 +40,6 @@ import EditBounty from "./pages/EditBounty";
 import Reconnections from "./pages/niche/Reconnections";
 import Collectibles from "./pages/niche/Collectibles";
 import VintageCars from "./pages/niche/VintageCars";
-import HelpMeFind from "./pages/niche/HelpMeFind";
 
 const queryClient = new QueryClient();
 
@@ -82,7 +81,6 @@ const App = () => (
                       <Route path="/reconnections" element={<Reconnections />} />
                       <Route path="/collectibles" element={<Collectibles />} />
                       <Route path="/vintage-cars" element={<VintageCars />} />
-                      <Route path="/helpmefind" element={<HelpMeFind />} />
                       
                       {/* Protected routes */}
                       <Route path="/post" element={
