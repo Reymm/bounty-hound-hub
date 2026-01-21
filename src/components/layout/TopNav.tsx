@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug } from 'lucide-react';
+import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationBell } from './NotificationBell';
+
+const nichePages = [
+  { title: 'Reconnections', description: 'Find lost loved ones', href: '/reconnections', icon: Heart },
+  { title: 'Collectibles', description: 'Cards, toys, memorabilia', href: '/collectibles', icon: Sparkles },
+  { title: 'Classic Cars', description: 'Vintage vehicles & parts', href: '/vintage-cars', icon: Car },
+];
 
 interface TopNavProps {
   onSearch?: (query: string) => void;
@@ -109,14 +115,46 @@ export function TopNav({ onSearch }: TopNavProps) {
     <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm safe-top">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link 
-            to="/" 
-            className="text-2xl font-bold text-primary hover:text-primary-hover transition-colors"
-            aria-label="BountyBay Home"
-          >
-            BountyBay
-          </Link>
+          {/* Logo and Explore Dropdown */}
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/" 
+              className="text-2xl font-bold text-primary hover:text-primary-hover transition-colors"
+              aria-label="BountyBay Home"
+            >
+              BountyBay
+            </Link>
+
+            {/* Explore Dropdown - Desktop */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="hidden md:flex items-center gap-1 focus-ring">
+                  Explore
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuItem asChild>
+                  <Link to="/bounties" className="flex items-center gap-2">
+                    <Search className="h-4 w-4" />
+                    <span className="font-medium">Browse All Bounties</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {nichePages.map((page) => (
+                  <DropdownMenuItem key={page.href} asChild>
+                    <Link to={page.href} className="flex items-center gap-3">
+                      <page.icon className="h-4 w-4 text-primary" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{page.title}</span>
+                        <span className="text-xs text-muted-foreground">{page.description}</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {/* Desktop Search Bar */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg mx-8">
@@ -289,6 +327,25 @@ export function TopNav({ onSearch }: TopNavProps) {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-4">
+            {/* Explore Section - Mobile */}
+            <div className="space-y-2 pb-2 border-b border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">Explore</p>
+              <Button asChild variant="ghost" className="w-full justify-start">
+                <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Search className="h-4 w-4 mr-2" />
+                  Browse All Bounties
+                </Link>
+              </Button>
+              {nichePages.map((page) => (
+                <Button key={page.href} asChild variant="ghost" className="w-full justify-start">
+                  <Link to={page.href} onClick={() => setIsMobileMenuOpen(false)}>
+                    <page.icon className="h-4 w-4 mr-2 text-primary" />
+                    {page.title}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+
             {user ? (
               <>
                 <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
