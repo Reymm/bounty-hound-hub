@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started - SAVE CARD MODEL");
+    logStep("Function started - THRESHOLD MODEL");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -42,7 +42,7 @@ serve(async (req) => {
     const requestBody = await req.json();
     logStep("Raw request received", { body: requestBody });
     
-    // Support both old (payment_intent_id) and new (setup_intent_id) flows
+    // Support both flows: SetupIntent (deferred) and PaymentIntent (immediate)
     const { payment_intent_id, setup_intent_id, bounty_data } = requestBody;
     const intentId = setup_intent_id || payment_intent_id;
     
@@ -51,18 +51,21 @@ serve(async (req) => {
     }
     
     const isSetupIntent = !!setup_intent_id;
+    const isPaymentIntent = !!payment_intent_id && !setup_intent_id;
     logStep("Request data validated", { 
       intentId,
       isSetupIntent,
+      isPaymentIntent,
       bountyTitle: bounty_data.title
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     let paymentMethodId: string | null = null;
+    let escrowStatus: string;
 
     if (isSetupIntent) {
-      // SAVE CARD MODEL: Verify SetupIntent succeeded and get payment method
+      // DEFERRED (under $150): Verify SetupIntent succeeded and get payment method
       const setupIntent = await stripe.setupIntents.retrieve(intentId);
       if (setupIntent.status !== 'succeeded') {
         throw new Error(`Card not saved. Status: ${setupIntent.status}`);
@@ -74,14 +77,24 @@ serve(async (req) => {
       if (!paymentMethodId) {
         throw new Error("No payment method found on SetupIntent");
       }
-      logStep("SetupIntent verified", { status: setupIntent.status, paymentMethodId });
-    } else {
-      // LEGACY: Old PaymentIntent flow (backward compatibility)
+      escrowStatus = 'card_saved';
+      logStep("SetupIntent verified (deferred)", { status: setupIntent.status, paymentMethodId });
+      
+    } else if (isPaymentIntent) {
+      // IMMEDIATE ($150+): Verify PaymentIntent is authorized
       const paymentIntent = await stripe.paymentIntents.retrieve(intentId);
       if (paymentIntent.status !== 'requires_capture') {
-        throw new Error(`Payment not ready for capture. Status: ${paymentIntent.status}`);
+        throw new Error(`Payment not authorized. Status: ${paymentIntent.status}`);
       }
-      logStep("PaymentIntent verified (legacy)", { status: paymentIntent.status });
+      paymentMethodId = typeof paymentIntent.payment_method === 'string'
+        ? paymentIntent.payment_method
+        : paymentIntent.payment_method?.id || null;
+      
+      escrowStatus = 'secured';
+      logStep("PaymentIntent verified (immediate)", { status: paymentIntent.status, paymentMethodId });
+      
+    } else {
+      throw new Error("Invalid intent type");
     }
 
     // Get escrow transaction
@@ -103,7 +116,7 @@ serve(async (req) => {
       amount: escrowData.amount,
       poster_id: user.id,
       status: 'open',
-      escrow_status: isSetupIntent ? 'card_saved' : 'secured', // Different status for save-card model
+      escrow_status: escrowStatus, // 'card_saved' or 'secured'
       escrow_amount: escrowData.amount,
       images: bounty_data.images || [],
       category: bounty_data.category,
@@ -134,14 +147,15 @@ serve(async (req) => {
     }
     logStep("Bounty created successfully", { 
       bountyId: bountyData.id,
-      escrowStatus: bountyInsertData.escrow_status
+      escrowStatus: escrowStatus
     });
 
     // Update escrow transaction with bounty ID and payment method
     const escrowUpdate: Record<string, any> = {
       bounty_id: bountyData.id,
-      status: isSetupIntent ? 'card_saved' : 'requires_capture',
-      card_saved_at: isSetupIntent ? new Date().toISOString() : null
+      status: escrowStatus,
+      card_saved_at: isSetupIntent ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
     };
     
     if (paymentMethodId) {
@@ -159,12 +173,15 @@ serve(async (req) => {
     }
     logStep("Escrow transaction updated");
 
+    const successMessage = escrowStatus === 'secured'
+      ? 'Bounty created and funds secured. Payment will be captured when you accept a submission.'
+      : 'Bounty created successfully. Card saved - will be charged when you accept a submission.';
+
     return new Response(JSON.stringify({
       bounty_id: bountyData.id,
-      escrow_status: isSetupIntent ? 'card_saved' : 'secured',
-      message: isSetupIntent 
-        ? 'Bounty created successfully. Card saved - will be charged when you accept a submission.'
-        : 'Bounty created successfully with escrow secured'
+      escrow_status: escrowStatus,
+      payment_mode: escrowStatus === 'secured' ? 'immediate' : 'deferred',
+      message: successMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

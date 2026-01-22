@@ -276,8 +276,71 @@ serve(async (req) => {
       let chargedAmount = 0;
       let transferId = '';
 
-      if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
-        logStep("Using TRUE SEPARATE CHARGES AND TRANSFERS model");
+      if (escrowTx.status === 'secured' && escrowTx.stripe_payment_intent_id && !escrowTx.stripe_payment_intent_id.startsWith('setup_')) {
+        // HIGH VALUE ($150+): Payment already authorized, just CAPTURE it
+        logStep("Using SECURED (pre-authorized) model - capturing payment", {
+          paymentIntentId: escrowTx.stripe_payment_intent_id
+        });
+        
+        const paymentIntent = await stripe.paymentIntents.retrieve(escrowTx.stripe_payment_intent_id);
+        
+        if (paymentIntent.status !== 'requires_capture') {
+          throw new Error(`PaymentIntent is not in requires_capture state: ${paymentIntent.status}`);
+        }
+        
+        // Capture the pre-authorized payment
+        const capturedIntent = await stripe.paymentIntents.capture(escrowTx.stripe_payment_intent_id);
+        
+        if (capturedIntent.status !== 'succeeded') {
+          throw new Error(`Capture failed. Status: ${capturedIntent.status}`);
+        }
+        
+        paymentIntentId = capturedIntent.id;
+        chargedAmount = capturedIntent.amount;
+        
+        logStep("Secured payment captured successfully", {
+          paymentIntentId: capturedIntent.id,
+          chargedAmount: chargedAmount / 100,
+          status: capturedIntent.status
+        });
+        
+        // Create transfer to hunter (bounty - platform fee)
+        logStep("Creating transfer to hunter", {
+          transferAmount: hunterPayoutCents / 100,
+          destination: hunterProfile.stripe_connect_account_id
+        });
+        
+        const transfer = await stripe.transfers.create({
+          amount: hunterPayoutCents,
+          currency: escrowTx.currency || 'usd',
+          destination: hunterProfile.stripe_connect_account_id,
+          source_transaction: capturedIntent.latest_charge as string,
+          description: `Bounty payout: ${submission.Bounties.title}`,
+          metadata: {
+            bounty_id: submission.bounty_id,
+            submission_id: submissionId,
+            hunter_id: submission.hunter_id,
+            poster_id: submission.Bounties.poster_id,
+            bounty_amount: bountyAmount.toString(),
+            platform_fee_retained: (platformFeeCents / 100).toFixed(2),
+            type: 'bounty_payout',
+            model: 'secured_capture'
+          }
+        });
+        
+        transferId = transfer.id;
+        
+        logStep("SECURED CAPTURE - SUCCESS", {
+          posterCharged: chargedAmount / 100,
+          platformRetained: platformFeeCents / 100,
+          hunterReceived: hunterPayoutCents / 100,
+          paymentIntentId: capturedIntent.id,
+          transferId: transfer.id
+        });
+
+      } else if (escrowTx.stripe_payment_method_id && escrowTx.status === 'card_saved') {
+        // LOW VALUE (under $150): Card was saved, create new charge now
+        logStep("Using CARD SAVED model - creating new charge");
         
         // Get customer from the payment method
         const paymentMethod = await stripe.paymentMethods.retrieve(escrowTx.stripe_payment_method_id);
@@ -374,7 +437,7 @@ serve(async (req) => {
           transferId: transfer.id
         });
 
-      } else if (escrowTx.stripe_payment_intent_id && escrowTx.stripe_payment_intent_id !== '') {
+      } else if (escrowTx.stripe_payment_intent_id && escrowTx.stripe_payment_intent_id !== '' && !escrowTx.stripe_payment_intent_id.startsWith('setup_')) {
         // LEGACY MODEL: Capture the existing PaymentIntent
         logStep("Using LEGACY model - capturing authorized payment");
         
