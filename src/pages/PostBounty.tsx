@@ -50,11 +50,12 @@ function PostBountyForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'details' | 'payment' | 'processing'>('details');
-  const [setupIntentId, setSetupIntentId] = useState<string | null>(null);
+  const [intentId, setIntentId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [escrowId, setEscrowId] = useState<string | null>(null);
   const [platformFee, setPlatformFee] = useState(0);
   const [totalCharge, setTotalCharge] = useState(0);
+  const [paymentMode, setPaymentMode] = useState<'immediate' | 'deferred'>('deferred');
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>([]);
@@ -367,16 +368,16 @@ function PostBountyForm() {
         return;
       }
       
-      // If we already have a setup intent (user went back to edit), 
+      // If we already have a client secret (user went back to edit), 
       // just go back to payment without creating a new one
-      if (clientSecret && setupIntentId) {
+      if (clientSecret && intentId) {
         setCurrentStep('payment');
         setIsSubmitting(false);
         return;
       }
       
       
-      // Proceed to save card (SetupIntent)
+      // Proceed to create payment/setup intent based on amount
       const { data: paymentData, error } = await supabase.functions.invoke('create-escrow-payment', {
         body: {
           amount: data.bountyAmount,
@@ -386,16 +387,21 @@ function PostBountyForm() {
 
       if (error) throw error;
 
-      setSetupIntentId(paymentData.setup_intent_id);
+      // Handle both PaymentIntent (immediate) and SetupIntent (deferred) responses
+      setIntentId(paymentData.payment_intent_id || paymentData.setup_intent_id);
       setClientSecret(paymentData.client_secret);
       setEscrowId(paymentData.escrow_id);
       setPlatformFee(paymentData.stripe_fee); // Stripe processing fee (what poster pays)
       setTotalCharge(paymentData.total_charge); // Bounty + Stripe fee
+      setPaymentMode(paymentData.payment_mode); // 'immediate' or 'deferred'
       setCurrentStep('payment');
       
+      const isImmediate = paymentData.payment_mode === 'immediate';
       toast({
-        title: "Save your card",
-        description: `Enter your card details to post a $${data.bountyAmount} bounty. You'll only be charged if you accept a submission.`,
+        title: isImmediate ? "Secure your bounty" : "Save your card",
+        description: isImmediate 
+          ? `Your card will be authorized for $${paymentData.total_charge.toFixed(2)}. Charge completes when you accept a claim.`
+          : `Enter your card details to post a $${data.bountyAmount} bounty. You'll only be charged if you accept a submission.`,
       });
 
     } catch (error: any) {
@@ -433,73 +439,105 @@ function PostBountyForm() {
     setIsPaymentProcessing(true);
 
     try {
-      // SAVE CARD MODEL: Use confirmCardSetup instead of confirmCardPayment
-      const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
-        payment_method: {
-          card: cardNumberElement,
-        }
-      });
+      let confirmResult: { intentId: string; status: string };
 
-      if (setupError) {
-        throw new Error(setupError.message);
-      }
-
-      // Only change to processing step after card is saved
-      setCurrentStep('processing');
-
-      if (setupIntent.status === 'succeeded') {
-        // Card saved successfully, create bounty
-        const formData = getValues();
-        const { data: bountyData, error: bountyError } = await supabase.functions.invoke('confirm-escrow-and-create-bounty', {
-          body: {
-            setup_intent_id: setupIntent.id,
-            bounty_data: {
-              title: formData.title,
-              description: formData.description,
-              category: formData.category,
-              subcategory: formData.subcategory,  
-              location: formData.location,
-              deadline: hasDeadline ? formData.deadline : null,
-              targetPriceMin: formData.targetPriceMin,
-              targetPriceMax: formData.targetPriceMax,
-              tags,
-              verificationRequirements: verificationRequirements.filter(req => req.trim()),
-              images: uploadedImages,
-              requires_shipping: requiresShipping,
-              hunter_purchases_item: hunterPurchasesItem
-            }
+      if (paymentMode === 'immediate') {
+        // HIGH VALUE ($150+): Confirm card payment with manual capture
+        const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardNumberElement,
           }
         });
 
-        if (bountyError) throw bountyError;
-
-        // Send confirmation email
-        try {
-          await supabase.functions.invoke('send-bounty-confirmation', {
-            body: {
-              email: user?.email,
-              bountyTitle: formData.title,
-              bountyAmount: watchedBountyAmount,
-              bountyId: bountyData.bounty_id,
-              posterName: user?.user_metadata?.full_name || user?.email?.split('@')[0]
-            }
-          });
-        } catch (emailError) {
-          console.error('Failed to send confirmation email:', emailError);
-          // Don't fail the bounty posting if email fails
+        if (paymentError) {
+          throw new Error(paymentError.message);
         }
 
-        toast({
-          title: "Bounty posted successfully!",
-          description: "Your bounty is now live. Your card will be charged when you accept a submission.",
+        if (!paymentIntent || paymentIntent.status !== 'requires_capture') {
+          throw new Error('Payment authorization failed. Please try again.');
+        }
+
+        confirmResult = { intentId: paymentIntent.id, status: paymentIntent.status };
+      } else {
+        // LOW VALUE (under $150): Use confirmCardSetup to save card only
+        const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
+          payment_method: {
+            card: cardNumberElement,
+          }
         });
 
-        // Clear the bounty posting flag and draft
-        sessionStorage.removeItem('bounty_post_in_progress');
-        sessionStorage.removeItem('bounty_draft');
+        if (setupError) {
+          throw new Error(setupError.message);
+        }
 
-        navigate(`/b/${bountyData.bounty_id}`);
+        if (!setupIntent || setupIntent.status !== 'succeeded') {
+          throw new Error('Card setup failed. Please try again.');
+        }
+
+        confirmResult = { intentId: setupIntent.id, status: setupIntent.status };
       }
+
+      // Only change to processing step after card is confirmed
+      setCurrentStep('processing');
+
+      // Card confirmed, create bounty
+      const formData = getValues();
+      const { data: bountyData, error: bountyError } = await supabase.functions.invoke('confirm-escrow-and-create-bounty', {
+        body: {
+          // Send the correct intent ID based on payment mode
+          ...(paymentMode === 'immediate' 
+            ? { payment_intent_id: confirmResult.intentId }
+            : { setup_intent_id: confirmResult.intentId }
+          ),
+          bounty_data: {
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            subcategory: formData.subcategory,  
+            location: formData.location,
+            deadline: hasDeadline ? formData.deadline : null,
+            targetPriceMin: formData.targetPriceMin,
+            targetPriceMax: formData.targetPriceMax,
+            tags,
+            verificationRequirements: verificationRequirements.filter(req => req.trim()),
+            images: uploadedImages,
+            requires_shipping: requiresShipping,
+            hunter_purchases_item: hunterPurchasesItem
+          }
+        }
+      });
+
+      if (bountyError) throw bountyError;
+
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke('send-bounty-confirmation', {
+          body: {
+            email: user?.email,
+            bountyTitle: formData.title,
+            bountyAmount: watchedBountyAmount,
+            bountyId: bountyData.bounty_id,
+            posterName: user?.user_metadata?.full_name || user?.email?.split('@')[0]
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the bounty posting if email fails
+      }
+
+      const isSecured = paymentMode === 'immediate';
+      toast({
+        title: "Bounty posted successfully!",
+        description: isSecured 
+          ? "Your funds are secured. Payment will be captured when you accept a submission."
+          : "Your bounty is now live. Your card will be charged when you accept a submission.",
+      });
+
+      // Clear the bounty posting flag and draft
+      sessionStorage.removeItem('bounty_post_in_progress');
+      sessionStorage.removeItem('bounty_draft');
+
+      navigate(`/b/${bountyData.bounty_id}`);
     } catch (error: any) {
       console.error('Error processing payment:', error);
       toast({
@@ -515,14 +553,19 @@ function PostBountyForm() {
 
 
   if (currentStep === 'payment') {
-    const stripeFee = totalCharge - watchedBountyAmount - platformFee;
+    const isImmediate = paymentMode === 'immediate';
     
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Verify Your Payment Method</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {isImmediate ? 'Secure Your Bounty' : 'Verify Your Payment Method'}
+          </h1>
           <p className="text-muted-foreground">
-            We'll save your card securely. You're only charged when you approve a submission.
+            {isImmediate 
+              ? `Your card will be authorized for $${totalCharge.toFixed(2)}. This secures your bounty and shows hunters you're serious.`
+              : "We'll save your card securely. You're only charged when you approve a submission."
+            }
           </p>
         </div>
 
@@ -531,6 +574,11 @@ function PostBountyForm() {
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
               Bounty: ${watchedBountyAmount?.toFixed(2) || '0.00'} USD
+              {isImmediate && (
+                <Badge variant="secondary" className="ml-2">
+                  Funds Secured
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -538,13 +586,25 @@ function PostBountyForm() {
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>No charge today:</strong> We verify and securely save your card. You're only charged when you approve a hunter's submission. If no one claims your bounty, you pay nothing.
+                {isImmediate ? (
+                  <>
+                    <strong>Authorization hold:</strong> We'll authorize ${totalCharge.toFixed(2)} on your card now. 
+                    The charge only completes when you accept a claim. If you cancel or your bounty expires, the hold is released.
+                  </>
+                ) : (
+                  <>
+                    <strong>No charge today:</strong> We verify and securely save your card. 
+                    You're only charged when you approve a hunter's submission. If no one claims your bounty, you pay nothing.
+                  </>
+                )}
               </AlertDescription>
             </Alert>
 
             {/* Payment Breakdown */}
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <h4 className="font-medium text-sm">When You Approve a Submission</h4>
+              <h4 className="font-medium text-sm">
+                {isImmediate ? 'Authorization Amount' : 'When You Approve a Submission'}
+              </h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Bounty reward to hunter:</span>
@@ -555,7 +615,7 @@ function PostBountyForm() {
                   <span>${platformFee.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Total you pay:</span>
+                  <span>{isImmediate ? 'Authorization hold:' : 'Total you pay:'}</span>
                   <span>${totalCharge.toFixed(2)}</span>
                 </div>
               </div>
@@ -570,7 +630,12 @@ function PostBountyForm() {
               <ol className="space-y-2 text-muted-foreground">
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">1.</span>
-                  <span>We verify and securely save your card (no charge)</span>
+                  <span>
+                    {isImmediate 
+                      ? `We authorize $${totalCharge.toFixed(2)} on your card (not charged yet)`
+                      : 'We verify and securely save your card (no charge)'
+                    }
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">2.</span>
@@ -586,11 +651,16 @@ function PostBountyForm() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">5.</span>
-                  <span>Only then: ${totalCharge.toFixed(2)} charged to you</span>
+                  <span>
+                    {isImmediate 
+                      ? `Authorization is captured: $${totalCharge.toFixed(2)} charged`
+                      : `Only then: $${totalCharge.toFixed(2)} charged to you`
+                    }
+                  </span>
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                💡 If your bounty expires or you cancel, you pay nothing.
+                💡 If your bounty expires or you cancel, {isImmediate ? 'the authorization is released' : 'you pay nothing'}.
               </p>
             </div>
 
@@ -685,7 +755,7 @@ function PostBountyForm() {
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      Save Card & Post Bounty
+                      {isImmediate ? 'Authorize & Post Bounty' : 'Save Card & Post Bounty'}
                     </>
                   )}
                 </Button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil } from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -417,6 +417,21 @@ export default function BountyDetail() {
                         <Flag className="h-4 w-4 mr-2" />
                         Claim This Bounty
                       </Button>
+                      
+                      {/* Hunter verification info block */}
+                      {user && (
+                        <div className="text-sm text-muted-foreground space-y-2 p-3 bg-muted/50 rounded-lg">
+                          <p className="flex items-center gap-2 font-medium text-foreground">
+                            <ShieldCheck className="h-4 w-4 text-primary" />
+                            First time claiming?
+                          </p>
+                          <ul className="text-xs space-y-1 ml-6">
+                            <li>• Verify your ID (government-issued photo ID)</li>
+                            <li>• Set up payouts (bank account or debit card)</li>
+                          </ul>
+                          <p className="text-xs">Takes about 5 minutes total.</p>
+                        </div>
+                      )}
                     </>
                   )}
                 </CardContent>
@@ -631,6 +646,21 @@ export default function BountyDetail() {
                     <Flag className="h-4 w-4 mr-2" />
                     Claim This Bounty
                   </Button>
+                  
+                  {/* Hunter verification info block - mobile */}
+                  {user && (
+                    <div className="text-sm text-muted-foreground space-y-2 p-3 bg-muted/50 rounded-lg">
+                      <p className="flex items-center gap-2 font-medium text-foreground">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        First time claiming?
+                      </p>
+                      <ul className="text-xs space-y-1 ml-6">
+                        <li>• Verify your ID (government-issued photo ID)</li>
+                        <li>• Set up payouts (bank account or debit card)</li>
+                      </ul>
+                      <p className="text-xs">Takes about 5 minutes total.</p>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>

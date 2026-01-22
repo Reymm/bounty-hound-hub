@@ -104,9 +104,46 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Cancel the payment intent or issue refund
-    if (escrowData.status === 'requires_capture') {
-      // Cancel uncaptured payment
+    // Handle cancellation based on escrow status
+    if (escrowData.status === 'secured') {
+      // HIGH VALUE ($150+): Cancel the uncaptured PaymentIntent (authorized but not captured)
+      // No refund needed since money was only authorized, not captured
+      await stripe.paymentIntents.cancel(escrowData.stripe_payment_intent_id);
+      logStep("Secured PaymentIntent cancelled (authorization released)", { 
+        paymentIntentId: escrowData.stripe_payment_intent_id 
+      });
+      
+      // Update escrow transaction
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({
+          status: 'cancelled',
+          cancellation_fee_amount: cancellationFee,
+          refund_amount: refundAmount, // Full bounty amount returned (auth released)
+          cancelled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', escrowData.id);
+
+    } else if (escrowData.status === 'card_saved' || escrowData.status === 'card_pending') {
+      // LOW VALUE (under $150): Card was just saved, nothing to cancel/refund
+      // No Stripe action needed - just mark as cancelled
+      logStep("Card-saved bounty cancelled (no charge to refund)");
+      
+      // Update escrow transaction  
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({
+          status: 'cancelled',
+          cancellation_fee_amount: 0, // No fee since nothing was charged
+          refund_amount: 0,
+          cancelled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', escrowData.id);
+
+    } else if (escrowData.status === 'requires_capture') {
+      // Legacy: Cancel uncaptured payment
       await stripe.paymentIntents.cancel(escrowData.stripe_payment_intent_id);
       logStep("Payment intent cancelled", { paymentIntentId: escrowData.stripe_payment_intent_id });
       
@@ -122,7 +159,7 @@ serve(async (req) => {
         })
         .eq('id', escrowData.id);
         
-    } else if (escrowData.status === 'succeeded') {
+    } else if (escrowData.status === 'succeeded' || escrowData.status === 'captured') {
       // Issue refund minus cancellation fee
       const refundAmountCents = Math.round(refundAmount * 100);
       
