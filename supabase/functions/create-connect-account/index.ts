@@ -87,9 +87,10 @@ serve(async (req) => {
           });
         }
       } catch (stripeErr: any) {
-        // Account doesn't exist on Stripe - clear it from DB and create new
-        if (stripeErr?.code === 'resource_missing') {
-          logStep("Stripe account no longer exists, clearing from DB", { accountId });
+        // Account doesn't exist on Stripe OR was created in test mode but we're using live key
+        // Clear stale account and create new one
+        if (stripeErr?.code === 'resource_missing' || stripeErr?.code === 'account_invalid') {
+          logStep("Stripe account invalid or missing, clearing from DB", { accountId, errorCode: stripeErr?.code });
           await supabaseClient
             .from('profiles')
             .update({
