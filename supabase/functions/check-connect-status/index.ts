@@ -21,8 +21,7 @@ serve(async (req) => {
     logStep("Check Connect status function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const stripeTestKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
-    if (!stripeKey && !stripeTestKey) throw new Error("No Stripe keys configured");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -40,10 +39,10 @@ serve(async (req) => {
     if (!user) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    // Get user's Connect account ID and mode
+    // Get user's Connect account ID
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('stripe_connect_account_id, stripe_connect_test_mode')
+      .select('stripe_connect_account_id')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -61,45 +60,16 @@ serve(async (req) => {
       });
     }
 
-    // Use appropriate key based on account mode
-    // If test_mode flag is set, or if account ID contains test indicators, use test key
-    const isTestAccount = profile.stripe_connect_test_mode === true;
-    const keyToUse = isTestAccount && stripeTestKey ? stripeTestKey : stripeKey;
-    
-    if (!keyToUse) {
-      throw new Error(isTestAccount ? "STRIPE_TEST_SECRET_KEY not configured for test account" : "STRIPE_SECRET_KEY not configured");
+    // Use the live Stripe key
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY not configured");
     }
     
-    logStep("Using Stripe key", { mode: isTestAccount ? "test" : "live" });
-    const stripe = new Stripe(keyToUse, { apiVersion: "2023-10-16" });
+    logStep("Using live Stripe key");
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Retrieve account from Stripe
-    let account;
-    try {
-      account = await stripe.accounts.retrieve(profile.stripe_connect_account_id);
-    } catch (stripeError: any) {
-      // If we get a test/live mode mismatch, try the other key
-      if (stripeError.message?.includes('testmode key') && stripeTestKey) {
-        logStep("Switching to test key due to mode mismatch");
-        const testStripe = new Stripe(stripeTestKey, { apiVersion: "2023-10-16" });
-        account = await testStripe.accounts.retrieve(profile.stripe_connect_account_id);
-        // Update the profile to remember this is a test account
-        await supabaseClient
-          .from('profiles')
-          .update({ stripe_connect_test_mode: true })
-          .eq('id', user.id);
-      } else if (stripeError.message?.includes('livemode key') && stripeKey) {
-        logStep("Switching to live key due to mode mismatch");
-        const liveStripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-        account = await liveStripe.accounts.retrieve(profile.stripe_connect_account_id);
-        await supabaseClient
-          .from('profiles')
-          .update({ stripe_connect_test_mode: false })
-          .eq('id', user.id);
-      } else {
-        throw stripeError;
-      }
-    }
+    const account = await stripe.accounts.retrieve(profile.stripe_connect_account_id);
     
     logStep("Retrieved Stripe Connect account", { 
       accountId: account.id,
