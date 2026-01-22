@@ -31,7 +31,7 @@ import { LocationPicker } from '@/components/ui/location-picker';
 import { useAuth } from '@/contexts/AuthContext';
 import { Switch } from '@/components/ui/switch';
 
-const stripePromise = loadStripe('pk_test_51JXDu0HQ9JaJlRZTdf0Wq0nc9nu5J0JIAOybThyevrFElUBRyoK8wxE9Ew3a36wg4q1BmZj6eHGhiA2llvhi77lh00xgJCfwH9');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 export default function PostBounty() {
   return (
