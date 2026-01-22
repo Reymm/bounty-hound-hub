@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     logStep('User authenticated', { userId: user.id });
 
     // Check if user is admin
-    const { data: adminCheck, error: adminError } = await supabase.rpc('is_support_admin');
+    const { data: adminCheck, error: adminError } = await supabase.rpc('is_support_admin', { user_id: user.id });
     
     if (adminError || !adminCheck) {
       logStep('Admin check failed', { error: adminError?.message, isAdmin: adminCheck });
