@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, User, CheckCircle, Plus, Search } from 'lucide-react';
+import { ArrowRight, User, CheckCircle, Plus, Search, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/auth/PasswordStrengthIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +31,26 @@ const profileSetupSchema = z.object({
   region: z.string()
     .max(100, 'Region must be less than 100 characters')
     .optional(),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+}).refine((data) => {
+  // If password is provided, it must be at least 8 characters
+  if (data.password && data.password.length > 0 && data.password.length < 8) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Password must be at least 8 characters',
+  path: ['password'],
+}).refine((data) => {
+  // If password is provided, confirmPassword must match
+  if (data.password && data.password.length > 0) {
+    return data.password === data.confirmPassword;
+  }
+  return true;
+}, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -41,6 +62,13 @@ const ProfileSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showChooserModal, setShowChooserModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Check if user signed up via Google only (no email/password identity)
+  const identities = user?.identities || [];
+  const hasEmailPassword = identities.some(i => i.provider === 'email');
+  const isGoogleOnly = identities.some(i => i.provider === 'google') && !hasEmailPassword;
 
   const {
     register,
@@ -55,8 +83,12 @@ const ProfileSetup = () => {
     defaultValues: {
       username: '',
       region: '',
+      password: '',
+      confirmPassword: '',
     },
   });
+
+  const passwordValue = watch('password');
 
   // Load existing profile data if any
   useEffect(() => {
@@ -118,6 +150,35 @@ const ProfileSetup = () => {
       }
 
       console.log('Profile updated successfully');
+
+      // If user is Google-only and provided a password, set it
+      if (isGoogleOnly && data.password && data.password.length >= 8) {
+        const passwordValidation = validatePasswordStrength(data.password);
+        if (!passwordValidation.isValid) {
+          toast({
+            title: "Weak password",
+            description: passwordValidation.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: data.password,
+        });
+
+        if (passwordError) {
+          console.error('Password update error:', passwordError);
+          toast({
+            title: "Password setup failed",
+            description: "Your profile was saved, but we couldn't set your password. You can add one later in Settings.",
+            variant: "destructive",
+          });
+          // Continue anyway - profile was saved
+        } else {
+          console.log('Password set successfully');
+        }
+      }
 
       // Delete existing roles and insert both hunter + poster roles
       await supabase
@@ -242,6 +303,69 @@ const ProfileSetup = () => {
                   <p className="text-sm text-destructive">{errors.region.message}</p>
                 )}
               </div>
+
+              {/* Password setup section - only for Google OAuth users */}
+              {isGoogleOnly && (
+                <div className="space-y-4 pt-2 border-t border-border">
+                  <div>
+                    <h4 className="font-medium text-sm">Add Password Login (Optional)</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Set a password so you can also log in with your email address
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Create a password (optional)"
+                        {...register('password')}
+                        className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-sm text-destructive">{errors.password.message}</p>
+                    )}
+                    {passwordValue && passwordValue.length > 0 && (
+                      <PasswordStrengthIndicator password={passwordValue} />
+                    )}
+                  </div>
+
+                  {passwordValue && passwordValue.length > 0 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          placeholder="Confirm your password"
+                          {...register('confirmPassword')}
+                          className={errors.confirmPassword ? 'border-destructive pr-10' : 'pr-10'}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="bg-primary/5 rounded-lg p-4">
                 <h4 className="font-medium text-sm mb-2">What's next?</h4>
