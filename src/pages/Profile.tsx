@@ -26,6 +26,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { ActivityHistory } from '@/components/profile/ActivityHistory';
 import { CountrySelectDialog } from '@/components/profile/CountrySelectDialog';
+import { ConnectedAccounts } from '@/components/profile/ConnectedAccounts';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
 import { ReferralCard } from '@/components/referral/ReferralCard';
@@ -588,6 +589,9 @@ export default function Profile() {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">
+          {/* Connected Accounts Section */}
+          {user && <ConnectedAccounts user={user} />}
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -612,7 +616,6 @@ export default function Profile() {
                     <Badge className="bg-success-light text-success">Active</Badge>
                   )}
                 </div>
-
 
                 <Separator />
 
