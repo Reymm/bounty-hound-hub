@@ -127,7 +127,6 @@ Deno.serve(async (req) => {
           stripe_connect_charges_enabled: false,
           stripe_connect_payouts_enabled: false,
           stripe_connect_details_submitted: false,
-          stripe_connect_test_mode: null,
         })
         .eq('id', targetUserId);
 
