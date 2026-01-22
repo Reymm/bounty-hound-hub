@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Loader2, Database, Trash2, AlertTriangle } from 'lucide-react';
+import { Loader2, Database, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +26,12 @@ const DEMO_MARKER = '[DEMO]'; // Added to description to identify demo bounties
 export function AdminDemoSeeder() {
   const [seeding, setSeeding] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [resettingStripe, setResettingStripe] = useState(false);
+  const [stripeAccountId, setStripeAccountId] = useState('');
   const [progress, setProgress] = useState(0);
   const [seedDialogOpen, setSeedDialogOpen] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [stripeResetDialogOpen, setStripeResetDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const createBounty = async (bounty: DemoBounty): Promise<boolean> => {
@@ -234,6 +239,94 @@ export function AdminDemoSeeder() {
                   className="bg-red-600 hover:bg-red-700"
                 >
                   Delete Demo Bounties
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Stripe Connect Reset Tool */}
+          <AlertDialog open={stripeResetDialogOpen} onOpenChange={setStripeResetDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                disabled={seeding || clearing || resettingStripe}
+                className="border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700"
+              >
+                {resettingStripe ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Resetting...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reset Stripe Connect
+                  </>
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-purple-600">
+                  <RefreshCw className="h-5 w-5" />
+                  Reset Stripe Connect Account
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-3">
+                  <p>This will delete a stuck Stripe Connect account and clear the user's profile so they can restart onboarding.</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="stripe-account-id">Stripe Account ID</Label>
+                    <Input
+                      id="stripe-account-id"
+                      placeholder="acct_1SsDKwHL39ipwmc6"
+                      value={stripeAccountId}
+                      onChange={(e) => setStripeAccountId(e.target.value)}
+                    />
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setStripeAccountId('')}>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={async () => {
+                    if (!stripeAccountId.trim()) {
+                      toast({
+                        title: "Error",
+                        description: "Please enter a Stripe Account ID",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    setResettingStripe(true);
+                    setStripeResetDialogOpen(false);
+                    
+                    try {
+                      const { data, error } = await supabase.functions.invoke('delete-connect-account', {
+                        body: { stripe_account_id: stripeAccountId.trim() }
+                      });
+                      
+                      if (error) throw error;
+                      
+                      toast({
+                        title: "Stripe Connect Reset! ✓",
+                        description: `Deleted ${stripeAccountId} and cleared user profile. They can now restart onboarding.`,
+                      });
+                      setStripeAccountId('');
+                    } catch (error: any) {
+                      console.error('Error resetting Stripe Connect:', error);
+                      toast({
+                        title: "Error",
+                        description: error.message || "Failed to reset Stripe Connect account",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setResettingStripe(false);
+                    }
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700"
+                  disabled={!stripeAccountId.trim()}
+                >
+                  Delete & Reset
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
