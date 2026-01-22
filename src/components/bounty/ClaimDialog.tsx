@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X, CreditCard, Loader2, CheckCircle, Info } from 'lucide-react';
+import { Plus, X, CreditCard, Loader2, CheckCircle, Info, ShieldCheck } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile, resolveStorageUrls } from '@/lib/storage';
@@ -39,9 +39,15 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   // uploadedImageDisplay stores resolved URLs for display in ImageUpload
   const [uploadedImageDisplay, setUploadedImageDisplay] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [stripeConnectRequired, setStripeConnectRequired] = useState(false);
+  
+  // Verification states
+  const [identityVerified, setIdentityVerified] = useState(false);
+  const [identityChecking, setIdentityChecking] = useState(false);
+  const [startingIdentityVerification, setStartingIdentityVerification] = useState(false);
+  const [stripeConnectComplete, setStripeConnectComplete] = useState(false);
   const [stripeConnectChecking, setStripeConnectChecking] = useState(false);
   const [startingStripeOnboarding, setStartingStripeOnboarding] = useState(false);
+  
   const [existingSubmission, setExistingSubmission] = useState<ExistingSubmission | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -107,34 +113,83 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   const hasExistingSubmission = !!existingSubmission;
   const canEdit = existingSubmission?.status === 'submitted';
 
-  // Check if Stripe Connect and KYC are required
+  // Check verification requirements
   useEffect(() => {
     const checkRequirements = async () => {
       if (!isOpen || !user) return;
 
-      // Check Stripe Connect status first
+      // Check Identity Verification status
+      setIdentityChecking(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('check-identity-status');
+        
+        if (error) {
+          console.error('Error checking identity status:', error);
+          setIdentityVerified(false);
+        } else {
+          setIdentityVerified(data?.verified === true);
+        }
+      } catch (error) {
+        console.error('Error checking identity status:', error);
+        setIdentityVerified(false);
+      } finally {
+        setIdentityChecking(false);
+      }
+
+      // Check Stripe Connect status
       setStripeConnectChecking(true);
       try {
         const { data, error } = await supabase.functions.invoke('check-connect-status');
         
         if (error) {
           console.error('Error checking Stripe Connect:', error);
-          setStripeConnectRequired(true);
+          setStripeConnectComplete(false);
         } else {
-          // Require Stripe Connect if not fully onboarded
-          setStripeConnectRequired(!data?.onboarding_complete);
+          setStripeConnectComplete(data?.onboarding_complete === true);
         }
       } catch (error) {
         console.error('Error checking Stripe Connect:', error);
-        setStripeConnectRequired(true);
+        setStripeConnectComplete(false);
       } finally {
         setStripeConnectChecking(false);
       }
-
     };
 
     checkRequirements();
   }, [isOpen, user]);
+
+  const handleStartIdentityVerification = async () => {
+    setStartingIdentityVerification(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-identity-session');
+      
+      if (error) throw error;
+      
+      if (data?.already_verified) {
+        setIdentityVerified(true);
+        toast({
+          title: "Already Verified",
+          description: "Your identity has already been verified.",
+        });
+        return;
+      }
+      
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No verification URL received');
+      }
+    } catch (error: any) {
+      console.error('Error starting identity verification:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start identity verification. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setStartingIdentityVerification(false);
+    }
+  };
 
   const handleStartStripeOnboarding = async () => {
     setStartingStripeOnboarding(true);
@@ -236,6 +291,12 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     }
   };
 
+  // Determine which step the user is on
+  const isLoading = identityChecking || stripeConnectChecking;
+  const needsIdentityVerification = !identityVerified;
+  const needsPayoutSetup = !stripeConnectComplete;
+  const canSubmitClaim = identityVerified && stripeConnectComplete;
+
   const handleSubmit = async () => {
     if (!user) {
       toast({
@@ -246,10 +307,10 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
       return;
     }
 
-    if (stripeConnectRequired) {
+    if (!canSubmitClaim) {
       toast({
-        title: "Payout setup required",
-        description: "Please set up your payout account before claiming bounties.",
+        title: "Verification required",
+        description: "Please complete identity verification and payout setup before claiming bounties.",
         variant: "destructive",
       });
       return;
@@ -362,174 +423,221 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         {/* Show form if: no existing submission OR existing submission is editable */}
         {((!hasExistingSubmission || canEdit) && !checkingExisting) && (
           <>
+            {/* Loading state while checking requirements */}
+            {isLoading && (
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertDescription>Checking verification status...</AlertDescription>
+              </Alert>
+            )}
 
-        {/* Identity Verification Alert - Show first as it's the primary requirement */}
-        {stripeConnectRequired && !stripeConnectChecking && (
-          <Alert className="border-primary bg-primary/5">
-            <CreditCard className="h-4 w-4 text-primary" />
-            <AlertDescription>
-              <div className="space-y-2">
-                <p className="font-semibold text-foreground">Complete Identity Verification</p>
-                <p className="text-muted-foreground">
-                  Before you can claim bounties, you need to verify your identity. This ensures safe transactions and allows you to receive payouts when your claims are accepted.
-                </p>
-                <Button 
-                  onClick={handleStartStripeOnboarding} 
-                  className="mt-2"
-                  disabled={startingStripeOnboarding}
-                >
-                  {startingStripeOnboarding ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Setting up...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Verify Identity
-                    </>
-                  )}
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
+            {/* Step 1: Identity Verification */}
+            {!isLoading && needsIdentityVerification && (
+              <Alert className="border-primary bg-primary/5">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                <AlertDescription>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-foreground">Step 1: Verify Your Identity</p>
+                      <p className="text-muted-foreground text-sm mt-1">
+                        Upload a government-issued ID (passport, driver's license, or ID card) and take a selfie to verify you're a real person. This keeps everyone on BountyBay safe.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={handleStartIdentityVerification} 
+                      disabled={startingIdentityVerification}
+                    >
+                      {startingIdentityVerification ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Opening verification...
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck className="h-4 w-4 mr-2" />
+                          Verify Identity
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
 
-        {stripeConnectChecking && (
-          <Alert>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <AlertDescription>Checking verification status...</AlertDescription>
-          </Alert>
-        )}
+            {/* Step 2: Payout Setup (only show if identity is verified) */}
+            {!isLoading && !needsIdentityVerification && needsPayoutSetup && (
+              <Alert className="border-primary bg-primary/5">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <AlertDescription>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-foreground">Step 2: Set Up Payouts</p>
+                      <p className="text-muted-foreground text-sm mt-1">
+                        Connect your bank account or debit card so you can receive payments when your claims are accepted.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Identity verified</span>
+                    </div>
+                    <Button 
+                      onClick={handleStartStripeOnboarding} 
+                      disabled={startingStripeOnboarding}
+                    >
+                      {startingStripeOnboarding ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Setting up...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Set Up Payouts
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
 
-        {/* Identity Verified Success Indicator */}
-        {!stripeConnectChecking && !stripeConnectRequired && (
-          <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
-            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <AlertDescription className="text-green-800 dark:text-green-200">
-              Identity verified — ready to claim
-            </AlertDescription>
-          </Alert>
-        )}
+            {/* Both verifications complete - show success and form */}
+            {!isLoading && canSubmitClaim && (
+              <>
+                <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-800 dark:text-green-200">
+                    <div className="flex items-center gap-4">
+                      <span>✓ Identity verified</span>
+                      <span>✓ Payouts set up</span>
+                      <span className="font-medium">— Ready to claim!</span>
+                    </div>
+                  </AlertDescription>
+                </Alert>
 
-        {/* Payout Breakdown - Show what hunter will receive */}
-        {!stripeConnectChecking && !stripeConnectRequired && bountyAmount > 0 && (
-          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Your Estimated Payout</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p>Platform fee: $2 + 5% of bounty amount. Stripe may also charge a small fee ($0.25) when you withdraw to your bank.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Bounty Amount</span>
-                <span>${bountyAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Platform Fee ($2 + 5%)</span>
-                <span>-${(2 + bountyAmount * 0.05).toFixed(2)}</span>
-              </div>
-              <div className="border-t pt-1 flex justify-between font-medium">
-                <span>You Receive</span>
-                <span className="text-green-600 dark:text-green-400">
-                  ${(bountyAmount - 2 - bountyAmount * 0.05).toFixed(2)}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground pt-1">
-                *Stripe may charge ~$0.25 when you withdraw to your bank
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="message">Your Claim Details *</Label>
-            <Textarea
-              id="message"
-              placeholder="Explain how you found this item, where it is located, and any relevant details..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-              className="resize-none"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label>Proof URLs (Optional)</Label>
-            <p className="text-sm text-muted-foreground">
-              Add links to photos, websites, or other proof that supports your claim
-            </p>
-            
-            {proofUrls.map((url, index) => (
-              <div key={index} className="flex gap-2">
-                <Input
-                  placeholder="https://example.com/proof-image.jpg"
-                  value={url}
-                  onChange={(e) => handleProofUrlChange(index, e.target.value)}
-                />
-                {proofUrls.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRemoveProofUrl(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                {/* Payout Breakdown */}
+                {bountyAmount > 0 && (
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Your Estimated Payout</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>Platform fee: $2 + 5% of bounty amount. Stripe may also charge a small fee ($0.25) when you withdraw to your bank.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bounty Amount</span>
+                        <span>${bountyAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Platform Fee ($2 + 5%)</span>
+                        <span>-${(2 + bountyAmount * 0.05).toFixed(2)}</span>
+                      </div>
+                      <div className="border-t pt-1 flex justify-between font-medium">
+                        <span>You Receive</span>
+                        <span className="text-green-600 dark:text-green-400">
+                          ${(bountyAmount - 2 - bountyAmount * 0.05).toFixed(2)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground pt-1">
+                        *Stripe may charge ~$0.25 when you withdraw to your bank
+                      </p>
+                    </div>
+                  </div>
                 )}
-              </div>
-            ))}
-            
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddProofUrl}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Another Proof URL
-            </Button>
-          </div>
 
-          <div className="space-y-3">
-            <Label>Upload Proof Images</Label>
-            <p className="text-sm text-muted-foreground">
-              Upload photos or documents that support your claim
-            </p>
-            <ImageUpload
-              onUpload={handleImageUpload}
-              onRemove={handleImageRemove}
-              uploadedImages={uploadedImageDisplay}
-              maxFiles={5}
-              maxSize={10 * 1024 * 1024} // 10MB
-            />
-          </div>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Your Claim Details *</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Explain how you found this item, where it is located, and any relevant details..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting || stripeConnectRequired || stripeConnectChecking}
-            >
-              {isSubmitting ? (isEditMode ? 'Updating...' : 'Submitting...') : 
-               stripeConnectRequired ? 'Payout Setup Required' :
-               isEditMode ? 'Update Claim' : 'Submit Claim'}
-            </Button>
-          </div>
-        </div>
-        </>
+                  <div className="space-y-3">
+                    <Label>Proof URLs (Optional)</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Add links to photos, websites, or other proof that supports your claim
+                    </p>
+                    
+                    {proofUrls.map((url, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          placeholder="https://example.com/proof-image.jpg"
+                          value={url}
+                          onChange={(e) => handleProofUrlChange(index, e.target.value)}
+                        />
+                        {proofUrls.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveProofUrl(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddProofUrl}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add another URL
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>Upload Images (Optional)</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Upload photos as proof - these will be visible to the bounty poster
+                    </p>
+                    <ImageUpload
+                      uploadedImages={uploadedImageDisplay}
+                      onUpload={handleImageUpload}
+                      onRemove={handleImageRemove}
+                      maxFiles={5}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={isSubmitting || !message.trim()}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {isEditMode ? 'Updating...' : 'Submitting...'}
+                      </>
+                    ) : (
+                      isEditMode ? 'Update Claim' : 'Submit Claim'
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>

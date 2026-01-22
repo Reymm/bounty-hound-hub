@@ -724,6 +724,8 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          identity_session_id: string | null
+          identity_verified: boolean
           is_partner: boolean | null
           is_support_admin: boolean
           is_suspended: boolean | null
@@ -760,6 +762,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          identity_session_id?: string | null
+          identity_verified?: boolean
           is_partner?: boolean | null
           is_support_admin?: boolean
           is_suspended?: boolean | null
@@ -796,6 +800,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          identity_session_id?: string | null
+          identity_verified?: boolean
           is_partner?: boolean | null
           is_support_admin?: boolean
           is_suspended?: boolean | null

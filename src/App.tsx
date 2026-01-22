@@ -34,6 +34,7 @@ import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 
 import ConnectComplete from "./pages/ConnectComplete";
+import IdentityComplete from "./pages/IdentityComplete";
 import Auth from "./pages/Auth";
 import EditBounty from "./pages/EditBounty";
 // Niche landing pages
@@ -117,6 +118,11 @@ const App = () => (
                       <Route path="/connect-complete" element={
                         <ProtectedRoute>
                           <ConnectComplete />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/identity-complete" element={
+                        <ProtectedRoute>
+                          <IdentityComplete />
                         </ProtectedRoute>
                       } />
                       <Route path="/support" element={
