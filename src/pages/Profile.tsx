@@ -440,7 +440,6 @@ export default function Profile() {
                       </AvatarFallback>
                     </Avatar>
                     <h3 className="font-semibold text-lg">@{profile.username}</h3>
-                    <p className="text-sm text-muted-foreground">{profile.email}</p>
                     {profile.bio && (
                       <p className="text-sm text-muted-foreground mt-2 italic">"{profile.bio}"</p>
                     )}
