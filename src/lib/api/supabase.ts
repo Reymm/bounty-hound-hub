@@ -26,14 +26,21 @@ type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 // Helper to parse Supabase timestamps (treat naive ones as UTC)
 const parseDbTimestamp = (value: string | null | undefined): Date => {
   if (!value) return new Date();
+  
+  // Normalize the timestamp: replace space with 'T' for ISO 8601 compliance
+  let normalized = value.replace(' ', 'T');
+  
+  // If it already has timezone info, parse directly
   if (
-    value.endsWith('Z') ||
-    value.endsWith('z') ||
-    /[+-]\d{2}:\d{2}$/.test(value)
+    normalized.endsWith('Z') ||
+    normalized.endsWith('z') ||
+    /[+-]\d{2}:\d{2}$/.test(normalized)
   ) {
-    return new Date(value);
+    return new Date(normalized);
   }
-  return new Date(`${value}Z`);
+  
+  // Add 'Z' suffix to treat as UTC
+  return new Date(`${normalized}Z`);
 };
 
 // API-specific types (after form processing)
