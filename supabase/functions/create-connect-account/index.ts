@@ -67,21 +67,44 @@ serve(async (req) => {
 
     let accountId = profile?.stripe_connect_account_id;
 
-    // If user already has a fully onboarded account, create a LOGIN link (not onboarding link)
-    if (accountId && profile?.stripe_connect_onboarding_complete) {
-      logStep("User already has onboarded account, creating login link", { accountId });
-      
-      // Use createLoginLink for existing accounts - this goes directly to dashboard without re-auth
-      const loginLink = await stripe.accounts.createLoginLink(accountId);
-
-      return new Response(JSON.stringify({
-        account_id: accountId,
-        onboarding_url: loginLink.url,
-        status: 'existing'
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+    // If user has an account ID in DB, verify it actually exists on Stripe
+    if (accountId) {
+      try {
+        const existingAccount = await stripe.accounts.retrieve(accountId);
+        logStep("Verified existing Stripe account", { accountId, chargesEnabled: existingAccount.charges_enabled });
+        
+        // If fully onboarded, create a LOGIN link (not onboarding link)
+        if (profile?.stripe_connect_onboarding_complete) {
+          logStep("User already has onboarded account, creating login link", { accountId });
+          const loginLink = await stripe.accounts.createLoginLink(accountId);
+          return new Response(JSON.stringify({
+            account_id: accountId,
+            onboarding_url: loginLink.url,
+            status: 'existing'
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      } catch (stripeErr: any) {
+        // Account doesn't exist on Stripe - clear it from DB and create new
+        if (stripeErr?.code === 'resource_missing') {
+          logStep("Stripe account no longer exists, clearing from DB", { accountId });
+          await supabaseClient
+            .from('profiles')
+            .update({
+              stripe_connect_account_id: null,
+              stripe_connect_onboarding_complete: false,
+              stripe_connect_charges_enabled: false,
+              stripe_connect_payouts_enabled: false,
+              stripe_connect_details_submitted: false,
+            })
+            .eq('id', user.id);
+          accountId = null; // Force creation of new account
+        } else {
+          throw stripeErr; // Re-throw other errors
+        }
+      }
     }
 
     // Create new Connect account if one doesn't exist
