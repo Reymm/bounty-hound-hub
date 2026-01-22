@@ -109,6 +109,8 @@ export interface Profile {
   payoutCountry?: string;
   payoutEmail?: string;
   isOfficial?: boolean;
+  identityVerified?: boolean;
+  identitySessionId?: string;
 }
 export interface Activity {
   id: string;

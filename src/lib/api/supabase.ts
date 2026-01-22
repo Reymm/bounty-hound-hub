@@ -781,7 +781,9 @@ export const supabaseApi = {
         stripeConnectPayoutsEnabled: profileData.stripe_connect_payouts_enabled || false,
         payoutCountry: profileData.payout_country || undefined,
         payoutEmail: profileData.payout_email || undefined,
-        isOfficial
+        isOfficial,
+        identityVerified: profileData.identity_verified || false,
+        identitySessionId: profileData.identity_session_id || undefined
       };
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -835,7 +837,9 @@ export const supabaseApi = {
         stripeConnectOnboardingComplete: data.stripe_connect_onboarding_complete || false,
         stripeConnectPayoutsEnabled: data.stripe_connect_payouts_enabled || false,
         payoutCountry: data.payout_country || undefined,
-        payoutEmail: data.payout_email || undefined
+        payoutEmail: data.payout_email || undefined,
+        identityVerified: data.identity_verified || false,
+        identitySessionId: data.identity_session_id || undefined
       };
     } catch (error) {
       console.error('Error updating profile:', error);

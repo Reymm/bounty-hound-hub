@@ -518,6 +518,70 @@ export default function Profile() {
         </TabsContent>
 
         <TabsContent value="verification" className="space-y-6">
+          {/* Identity Verification */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Identity Verification
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div>
+                  <p className="font-medium">Photo ID Verification</p>
+                  <p className="text-sm text-muted-foreground">
+                    Verify your identity with a government-issued ID to claim bounties
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {profile.identityVerified ? (
+                    <Badge className="status-active">Verified</Badge>
+                  ) : (
+                    <Badge variant="secondary">Not Verified</Badge>
+                  )}
+                  {!profile.identityVerified && (
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          setPayoutLoading(true);
+                          const { data, error } = await supabase.functions.invoke('create-identity-session');
+                          if (error) throw error;
+                          if (data?.already_verified) {
+                            toast({ title: "Already Verified", description: "Your identity is verified." });
+                            loadProfile();
+                            return;
+                          }
+                          if (data?.url) {
+                            window.location.href = data.url;
+                          }
+                        } catch (error: any) {
+                          toast({ title: "Error", description: error.message, variant: "destructive" });
+                        } finally {
+                          setPayoutLoading(false);
+                        }
+                      }}
+                      disabled={payoutLoading}
+                      size="sm"
+                    >
+                      {payoutLoading ? 'Opening...' : 'Verify Identity'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h4 className="font-medium mb-2">Why verify your identity?</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Required to claim bounties on BountyBay</li>
+                  <li>• Helps keep all users safe from fraud</li>
+                  <li>• Your ID is verified securely by Stripe</li>
+                  <li>• We never see or store your ID documents</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Payout Method */}
           <Card data-payout-card>
             <CardHeader>
