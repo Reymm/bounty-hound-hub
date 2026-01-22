@@ -122,7 +122,7 @@ serve(async (req) => {
         business_profile: {
           product_description: 'Freelance finder services - locating items and leads for bounty posters on BountyBay marketplace',
           mcc: '7299', // Miscellaneous personal services
-          url: 'https://bountybay.lovable.app', // Pre-fill so hunters don't need their own website
+          url: 'https://bountybay.co', // Pre-fill so hunters don't need their own website
         },
         metadata: {
           supabase_user_id: user.id,
