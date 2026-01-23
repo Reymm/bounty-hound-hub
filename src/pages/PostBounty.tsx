@@ -1122,6 +1122,23 @@ function PostBountyForm() {
                 <p className="text-xs text-muted-foreground pt-2 border-t">
                   💰 No platform fees for posters. Hunters pay $2 + 5% when paid out.
                 </p>
+                
+                {/* Dynamic payment threshold messaging */}
+                {watchedBountyAmount >= 150 ? (
+                  <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
+                    <CreditCard className="h-4 w-4 text-amber-500" />
+                    <AlertDescription className="text-amber-700 dark:text-amber-300">
+                      <strong>Immediate charge:</strong> For bounties $150+, your card will be charged ${totalCharge.toFixed(2)} now to secure the funds. This prevents fraud on high-value bounties.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert className="mt-3 border-emerald-500/50 bg-emerald-500/10">
+                    <CreditCard className="h-4 w-4 text-emerald-500" />
+                    <AlertDescription className="text-emerald-700 dark:text-emerald-300">
+                      <strong>Card saved only:</strong> Your card will be saved securely but <em>not charged</em> until you accept a hunter's claim.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             )}
 
