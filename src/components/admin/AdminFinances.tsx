@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Table,
   TableBody,
@@ -19,15 +20,18 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { formatUSD } from '@/components/ui/currency-display';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import { 
   DollarSign, 
   TrendingUp, 
   CreditCard, 
   Users,
   Download,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle,
+  Wrench
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { XAxis, YAxis, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 interface EscrowTransaction {
   id: string;
@@ -40,6 +44,17 @@ interface EscrowTransaction {
   created_at: string;
   capture_status: string | null;
   bounty_id: string | null;
+  bounty_title?: string;
+  capture_locked_at?: string | null;
+}
+
+interface StuckTransaction {
+  id: string;
+  bounty_id: string | null;
+  amount: number;
+  capture_status: string;
+  capture_locked_at: string | null;
+  created_at: string;
   bounty_title?: string;
 }
 
@@ -60,14 +75,16 @@ interface MonthlyData {
 
 export function AdminFinances() {
   const [transactions, setTransactions] = useState<EscrowTransaction[]>([]);
+  const [stuckTransactions, setStuckTransactions] = useState<StuckTransaction[]>([]);
   const [stats, setStats] = useState<FinanceStats | null>(null);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
 
   const fetchFinanceData = async () => {
     try {
-      // Fetch escrow transactions with bounty titles
+      // Fetch captured escrow transactions
       const { data: escrowData, error: escrowError } = await supabase
         .from('escrow_transactions')
         .select(`
@@ -87,6 +104,37 @@ export function AdminFinances() {
 
       if (escrowError) throw escrowError;
 
+      // Fetch stuck transactions (capturing for more than 10 minutes)
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: stuckData } = await supabase
+        .from('escrow_transactions')
+        .select(`
+          id,
+          amount,
+          capture_status,
+          capture_locked_at,
+          created_at,
+          bounty_id
+        `)
+        .eq('capture_status', 'capturing')
+        .lt('capture_locked_at', tenMinutesAgo);
+
+      // Process stuck transactions
+      const stuckWithTitles: StuckTransaction[] = [];
+      for (const tx of stuckData || []) {
+        let bountyTitle = 'Unknown Bounty';
+        if (tx.bounty_id) {
+          const { data: bountyData } = await supabase
+            .from('Bounties')
+            .select('title')
+            .eq('id', tx.bounty_id)
+            .maybeSingle();
+          if (bountyData) bountyTitle = bountyData.title;
+        }
+        stuckWithTitles.push({ ...tx, bounty_title: bountyTitle });
+      }
+      setStuckTransactions(stuckWithTitles);
+
       // Fetch bounty titles for each transaction
       const transactionsWithTitles: EscrowTransaction[] = [];
       
@@ -98,7 +146,7 @@ export function AdminFinances() {
             .from('Bounties')
             .select('title')
             .eq('id', tx.bounty_id)
-            .single();
+            .maybeSingle();
           
           if (bountyData) {
             bountyTitle = bountyData.title;
@@ -225,8 +273,80 @@ export function AdminFinances() {
     );
   }
 
+  const handleFixStuckTransaction = async (txId: string, bountyAmount: number) => {
+    try {
+      // Calculate standard fees
+      const platformFee = bountyAmount * 0.05 + 2; // 5% + $2 flat
+      const stripeFee = bountyAmount * 0.029 + 0.30; // ~2.9% + $0.30
+      const hunterPayout = bountyAmount - platformFee;
+      const totalCharged = bountyAmount + stripeFee;
+
+      const { error } = await supabase
+        .from('escrow_transactions')
+        .update({
+          capture_status: 'captured',
+          captured_at: new Date().toISOString(),
+          total_charged_amount: totalCharged,
+          stripe_fee_amount: stripeFee,
+          platform_fee_amount: platformFee,
+          payout_sent_amount: hunterPayout,
+          capture_lock_id: null,
+          capture_locked_at: null,
+        })
+        .eq('id', txId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Transaction Fixed',
+        description: `Marked as captured with $${platformFee.toFixed(2)} platform fee.`,
+      });
+
+      fetchFinanceData();
+    } catch (error) {
+      console.error('Error fixing transaction:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fix transaction. Check console.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Stuck Transactions Alert */}
+      {stuckTransactions.length > 0 && (
+        <Alert className="border-destructive/50 bg-destructive/10">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle className="text-destructive">Stuck Transactions Detected</AlertTitle>
+          <AlertDescription className="mt-2">
+            <p className="mb-3">
+              {stuckTransactions.length} transaction(s) have been stuck in "capturing" status for more than 10 minutes.
+              This usually means Stripe succeeded but the database update failed.
+            </p>
+            <div className="space-y-2">
+              {stuckTransactions.map((tx) => (
+                <div key={tx.id} className="flex items-center justify-between bg-background/50 p-2 rounded border">
+                  <div>
+                    <span className="font-medium">{tx.bounty_title}</span>
+                    <span className="text-muted-foreground ml-2">({formatUSD(tx.amount, true)})</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleFixStuckTransaction(tx.id, tx.amount)}
+                  >
+                    <Wrench className="h-3 w-3 mr-1" />
+                    Fix Now
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header Actions */}
       <div className="flex justify-between items-center">
         <div>
