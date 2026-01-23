@@ -11,11 +11,8 @@ import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 // Pages
-import { AdminSupport } from "./pages/admin/AdminSupport";
+import { Admin } from "./pages/admin/Admin";
 import { AdminSupportTicket } from "./pages/admin/AdminSupportTicket";
-import { AdminPartners } from "./pages/admin/AdminPartners";
-import AdminDisputes from "./pages/admin/AdminDisputes";
-import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { SupportTicket } from "./pages/SupportTicket";
 import { Support } from "./pages/Support";
 import Index from "./pages/Index";
@@ -135,29 +132,14 @@ const App = () => (
                           <SupportTicket />
                         </ProtectedRoute>
                       } />
-                      <Route path="/admin/support" element={
-                        <ProtectedRoute>
-                          <AdminSupport />
-                        </ProtectedRoute>
-                      } />
                       <Route path="/admin/support/:ticketId" element={
                         <ProtectedRoute>
                           <AdminSupportTicket />
                         </ProtectedRoute>
                       } />
-                      <Route path="/admin/disputes" element={
+                      <Route path="/admin/*" element={
                         <ProtectedRoute>
-                          <AdminDisputes />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/admin/partners" element={
-                        <ProtectedRoute>
-                          <AdminPartners />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/admin" element={
-                        <ProtectedRoute>
-                          <AdminDashboard />
+                          <Admin />
                         </ProtectedRoute>
                       } />
                       
