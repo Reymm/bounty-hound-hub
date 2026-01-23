@@ -34,6 +34,7 @@ export default function Messages() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [threadsLoading, setThreadsLoading] = useState(true);
+  const [threadsLoaded, setThreadsLoaded] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,7 +58,7 @@ export default function Messages() {
   // Handle incoming state from bounty detail page
   useEffect(() => {
     const initNewConversation = async () => {
-      if (!stateData?.recipientId || !stateData?.bountyId || !user || threads.length === 0) return;
+      if (!stateData?.recipientId || !stateData?.bountyId || !user || !threadsLoaded) return;
       
       // Find existing conversation with this user for this bounty
       const existingThread = threads.find(t => 
@@ -101,7 +102,7 @@ export default function Messages() {
     };
     
     initNewConversation();
-  }, [stateData, user, threads.length]); // Depend on threads.length instead of threads array
+  }, [stateData, user, threadsLoaded]); // Depend on threadsLoaded flag
 
   useEffect(() => {
     if (selectedThread) {
@@ -192,6 +193,7 @@ export default function Messages() {
       });
     } finally {
       setThreadsLoading(false);
+      setThreadsLoaded(true);
     }
   };
 
