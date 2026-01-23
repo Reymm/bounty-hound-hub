@@ -60,6 +60,7 @@ function PostBountyForm() {
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>([]);
   const [currentRequirement, setCurrentRequirement] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
   const [bountyType, setBountyType] = useState<'lead-only' | 'find-and-ship'>('lead-only');
@@ -82,7 +83,7 @@ function PostBountyForm() {
     resolver: zodResolver(postBountySchema),
     defaultValues: {
       tags: [],
-      verificationRequirements: [''],
+      verificationRequirements: [],
       deadline: undefined,
       category: undefined // Explicitly set to undefined
     }
@@ -197,8 +198,10 @@ function PostBountyForm() {
     if (currentRequirement.trim() && !verificationRequirements.includes(currentRequirement.trim()) && verificationRequirements.length < 10) {
       const newRequirements = [...verificationRequirements, currentRequirement.trim()];
       setVerificationRequirements(newRequirements);
-      setValue('verificationRequirements', newRequirements);
+      setValue('verificationRequirements', newRequirements, { shouldValidate: true });
       setCurrentRequirement('');
+      // Clear any verification-related validation errors
+      setValidationErrors(prev => prev.filter(e => !e.toLowerCase().includes('verification')));
     }
   };
 
@@ -307,23 +310,32 @@ function PostBountyForm() {
   const onDetailsSubmit = async (data: PostBountyFormData) => {
     try {
       setIsSubmitting(true);
+      setValidationErrors([]);
+      
+      const errors: string[] = [];
       
       // Validate required fields
       if (!data.category) {
-        toast({
-          title: "Missing category",
-          description: "Please select a category for your bounty.",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
+        errors.push("Please select a category for your bounty.");
       }
 
       // Validate adult confirmation for person-finding reconnections (not lost pets)
       if (data.category === 'reconnections' && data.subcategory !== 'lost-pets' && !adultConfirmed) {
+        errors.push("Please confirm that the person you're searching for is 18 years or older.");
+      }
+      
+      // CRITICAL: Validate verification requirements - filter empty strings and check count
+      const validRequirements = verificationRequirements.filter(req => req.trim().length > 0);
+      if (validRequirements.length === 0) {
+        errors.push("Add at least one verification requirement to help hunters prove their find.");
+      }
+      
+      // If there are validation errors, show them and stop
+      if (errors.length > 0) {
+        setValidationErrors(errors);
         toast({
-          title: "Confirmation required",
-          description: "Please confirm that the person you're searching for is 18 years or older.",
+          title: "Please fix the following",
+          description: errors[0], // Show first error in toast
           variant: "destructive",
         });
         setIsSubmitting(false);

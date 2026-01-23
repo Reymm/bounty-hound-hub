@@ -1,6 +1,6 @@
 // Form validation schemas using Zod
 import { z } from 'zod';
-import { BountyCategory, ClaimType, CATEGORY_STRUCTURE } from './types';
+import { BountyCategory, ClaimType } from './types';
 
 // Post Bounty form validation
 export const postBountySchema = z.object({
@@ -48,9 +48,10 @@ export const postBountySchema = z.object({
     .refine(date => date <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'Deadline cannot be more than 1 year in the future')
     .optional(),
   
-  verificationRequirements: z.array(z.string())
+  verificationRequirements: z.array(z.string().min(1, 'Requirement cannot be empty'))
     .min(1, 'Add at least one verification requirement')
-    .max(10, 'Maximum 10 verification requirements'),
+    .max(10, 'Maximum 10 verification requirements')
+    .refine(arr => arr.every(req => req.trim().length > 0), 'All requirements must be non-empty'),
     
   images: z.array(z.string().url())
     .max(5, 'Maximum 5 images allowed')

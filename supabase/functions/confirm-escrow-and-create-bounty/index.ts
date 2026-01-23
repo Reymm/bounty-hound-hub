@@ -50,6 +50,31 @@ serve(async (req) => {
       throw new Error("Intent ID and bounty data are required");
     }
     
+    // SERVER-SIDE VALIDATION: Verify critical bounty requirements
+    const verificationRequirements = bounty_data.verificationRequirements || [];
+    const validRequirements = verificationRequirements.filter((req: string) => 
+      typeof req === 'string' && req.trim().length > 0
+    );
+    
+    if (validRequirements.length === 0) {
+      logStep("VALIDATION FAILED: No valid verification requirements", { 
+        received: verificationRequirements 
+      });
+      throw new Error("At least one verification requirement is required");
+    }
+    
+    if (!bounty_data.title || bounty_data.title.trim().length < 10) {
+      throw new Error("Bounty title must be at least 10 characters");
+    }
+    
+    if (!bounty_data.description || bounty_data.description.trim().length < 20) {
+      throw new Error("Bounty description must be at least 20 characters");
+    }
+    
+    logStep("Server-side validation passed", { 
+      validRequirementsCount: validRequirements.length 
+    });
+    
     const isSetupIntent = !!setup_intent_id;
     const isPaymentIntent = !!payment_intent_id && !setup_intent_id;
     logStep("Request data validated", { 
