@@ -57,7 +57,7 @@ export function CancelBountyDialog({
 
       toast.success(data.message || "Bounty cancelled successfully");
       onOpenChange(false);
-      navigate("/my-bounties");
+      navigate("/me/bounties");
     } catch (error) {
       console.error("Cancel bounty error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to cancel bounty");

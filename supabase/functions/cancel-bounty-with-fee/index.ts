@@ -92,12 +92,17 @@ serve(async (req) => {
     if (feeError) throw new Error(`Failed to calculate fee: ${feeError.message}`);
     
     const cancellationFee = feeData || 0;
-    // Refund the total amount they paid (including platform and Stripe fees) minus only the cancellation fee
-    const refundAmount = escrowData.total_charged_amount - cancellationFee;
+    // For captured payments, refund total charged minus fee
+    // For authorized-only payments (secured), the full bounty amount authorization is released
+    const totalCharged = escrowData.total_charged_amount || 0;
+    const refundAmount = totalCharged > 0 
+      ? totalCharged - cancellationFee 
+      : bounty.amount; // Authorization release = full bounty amount returned
     
     logStep("Cancellation fee calculated", { 
       bountyAmount: bounty.amount,
-      totalCharged: escrowData.total_charged_amount,
+      totalCharged,
+      escrowStatus: escrowData.status,
       cancellationFee, 
       refundAmount 
     });
@@ -202,13 +207,25 @@ serve(async (req) => {
 
     logStep("Bounty cancelled successfully");
 
+    // Determine appropriate message based on escrow status
+    let message: string;
+    if (escrowData.status === 'secured') {
+      // Authorization was released, not a refund
+      message = `Bounty cancelled. The $${bounty.amount.toFixed(2)} authorization hold will be released by your bank within 5-10 business days.`;
+    } else if (escrowData.status === 'card_saved' || escrowData.status === 'card_pending') {
+      // Card was never charged
+      message = 'Bounty cancelled. Your card was never charged.';
+    } else if (cancellationFee > 0) {
+      message = `Bounty cancelled. $${refundAmount.toFixed(2)} refunded. $${cancellationFee.toFixed(2)} cancellation fee applied (bounty posted >24 hours ago).`;
+    } else {
+      message = `Bounty cancelled. Full refund of $${refundAmount.toFixed(2)} issued.`;
+    }
+
     return new Response(JSON.stringify({
       success: true,
       cancellationFee,
       refundAmount,
-      message: cancellationFee > 0 
-        ? `Bounty cancelled. $${refundAmount.toFixed(2)} refunded. $${cancellationFee.toFixed(2)} cancellation fee applied (bounty posted >24 hours ago).`
-        : `Bounty cancelled. Full refund of $${refundAmount.toFixed(2)} issued.`
+      message
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
