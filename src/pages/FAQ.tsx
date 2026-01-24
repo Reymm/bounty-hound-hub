@@ -76,7 +76,7 @@ const faqData = [
     questions: [
       {
         q: "How do I become a hunter?",
-        a: "Anyone can browse bounties, but to claim them you need to verify your identity through Stripe Connect. This takes about 5 minutes and ensures you can receive payouts. Go to your Profile > Verification to get started."
+        a: "Anyone can browse bounties, but to claim them you need to verify your identity and set up payouts. This takes about 5 minutes. Go to the Verification page from the navigation menu to get started."
       },
       {
         q: "How do I claim a bounty?",

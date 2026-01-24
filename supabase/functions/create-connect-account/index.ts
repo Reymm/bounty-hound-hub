@@ -159,7 +159,7 @@ serve(async (req) => {
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${req.headers.get("origin")}/me/profile`,
+      refresh_url: `${req.headers.get("origin")}/verification`,
       return_url: `${req.headers.get("origin")}/connect-complete`,
       type: 'account_onboarding',
     });

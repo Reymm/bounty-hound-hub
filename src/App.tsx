@@ -29,6 +29,8 @@ import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
+import Verification from "./pages/Verification";
+import Settings from "./pages/Settings";
 
 import ConnectComplete from "./pages/ConnectComplete";
 import IdentityComplete from "./pages/IdentityComplete";
@@ -99,6 +101,16 @@ const App = () => (
                       <Route path="/me/profile" element={
                         <ProtectedRoute>
                           <Profile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/me/settings" element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/verification" element={
+                        <ProtectedRoute>
+                          <Verification />
                         </ProtectedRoute>
                       } />
                       <Route path="/u/:userId" element={<PublicProfile />} />

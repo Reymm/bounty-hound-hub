@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   User, 
-  CreditCard, 
   Star, 
-  AlertCircle,
-  Trash2,
-  Settings
+  Settings,
+  Shield,
+  MapPin,
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,39 +18,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { ActivityHistory } from '@/components/profile/ActivityHistory';
-import { CountrySelectDialog } from '@/components/profile/CountrySelectDialog';
-import { ConnectedAccounts } from '@/components/profile/ConnectedAccounts';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
 import { ReferralCard } from '@/components/referral/ReferralCard';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 export default function Profile() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [payoutLoading, setPayoutLoading] = useState(false);
-  const [countryDialogOpen, setCountryDialogOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  
-  // Read tab from URL or fallback to session storage
-  const urlTab = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    return urlTab || sessionStorage.getItem('profile_active_tab') || 'profile';
-  });
-  
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -66,91 +50,16 @@ export default function Profile() {
   });
 
   const regionValue = watch('region');
-  
-  // Sync URL tab parameter with state
-  useEffect(() => {
-    if (urlTab && urlTab !== activeTab) {
-      setActiveTab(urlTab);
-    }
-  }, [urlTab]);
-  
-  // Update URL when tab changes (but don't add to history on initial load)
-  const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-    setSearchParams({ tab: newTab }, { replace: true });
-  };
 
   useEffect(() => {
     loadProfile();
-  }, []);
-
-  // Handle scroll restoration when navigating back
-  useEffect(() => {
-    if (history.scrollRestoration) {
-      history.scrollRestoration = 'manual';
-    }
-    
-    const savedScrollPosition = sessionStorage.getItem('profile_scroll_position');
-    if (savedScrollPosition && !loading) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollPosition));
-        sessionStorage.removeItem('profile_scroll_position');
-      }, 100);
-    }
-    
-    // Save active tab when navigating away
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem('profile_active_tab', activeTab);
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      if (history.scrollRestoration) {
-        history.scrollRestoration = 'auto';
-      }
-      sessionStorage.setItem('profile_active_tab', activeTab);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [loading, activeTab]);
-
-  const syncStripeConnectStatus = async () => {
-    if (!user) return;
-    
-    try {
-      // Call the check-connect-status edge function to sync latest status from Stripe
-      const { data, error } = await supabase.functions.invoke('check-connect-status', {
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        }
-      });
-      
-      if (error) {
-        console.error('Error syncing Stripe Connect status:', error);
-      } else {
-        console.log('Stripe Connect status synced:', data);
-      }
-    } catch (error) {
-      console.error('Error syncing Stripe Connect status:', error);
-    }
-  };
+  }, [user]);
 
   const loadProfile = async () => {
     if (!user) return;
     
     try {
       setLoading(true);
-      
-      // Sync Stripe Connect status in background (don't await)
-      syncStripeConnectStatus().then(() => {
-        // Reload profile after sync to get updated status
-        supabaseApi.getProfile(user.id).then(updatedProfile => {
-          if (updatedProfile) {
-            setProfile(updatedProfile);
-          }
-        });
-      });
-      
       const profileData = await supabaseApi.getProfile(user.id);
       setProfile(profileData);
       
@@ -174,12 +83,11 @@ export default function Profile() {
   };
 
   const onSubmit = async (data: ProfileUpdateFormData) => {
-    if (!profile) return;
+    if (!profile || !user) return;
 
     try {
       setUpdating(true);
       
-      // Only include username if user doesn't have one yet (usernames are permanent)
       const updateData = {
         bio: data.bio,
         region: data.region,
@@ -207,66 +115,6 @@ export default function Profile() {
     }
   };
 
-  const handleSetupPayout = async () => {
-    // If user already has an account, go directly to Stripe (no country selection needed)
-    if (profile?.hasPayoutMethod) {
-      try {
-        setPayoutLoading(true);
-        const result = await supabaseApi.createConnectAccount();
-        
-        if (!result) throw new Error('Failed to get Connect account link');
-        
-        if (result.onboarding_url) {
-          window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
-        } else {
-          throw new Error('No onboarding URL received');
-        }
-      } catch (error: any) {
-        console.error('Error opening Stripe:', error);
-        toast({
-          title: "Error opening Stripe",
-          description: error instanceof Error ? error.message : "Please try again later.",
-          variant: "destructive",
-        });
-      } finally {
-        setPayoutLoading(false);
-      }
-    } else {
-      // New setup - open country selection dialog first
-      setCountryDialogOpen(true);
-    }
-  };
-
-  const handleCountrySelected = async (country: string) => {
-    try {
-      setPayoutLoading(true);
-      
-      const result = await supabaseApi.createConnectAccount(country);
-      
-      if (!result) throw new Error('Failed to create Connect account');
-      
-      if (result.onboarding_url) {
-        // Close dialog before redirecting
-        setCountryDialogOpen(false);
-        // Open in new tab - more reliable than redirect and avoids popup blockers
-        // since it's triggered by a direct user click
-        window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
-        setPayoutLoading(false);
-      } else {
-        throw new Error('No onboarding URL received');
-      }
-      
-    } catch (error: any) {
-      console.error('Error setting up payout:', error);
-      toast({
-        title: "Error setting up payout",
-        description: error instanceof Error ? error.message : "Please try again later.",
-        variant: "destructive",
-      });
-      setPayoutLoading(false);
-    }
-  };
-
   const handleAvatarChange = async (url: string | null) => {
     if (!profile || !user) return;
 
@@ -282,30 +130,6 @@ export default function Profile() {
         description: "Please try again later.",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    try {
-      setDeleting(true);
-      
-      // TODO: Implement account deletion
-      console.log('TODO: Implement account deletion');
-      
-      toast({
-        title: "Account deletion requested",
-        description: "TODO: This will process account deletion.",
-      });
-      
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      toast({
-        title: "Error deleting account",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -335,425 +159,230 @@ export default function Profile() {
     );
   }
 
+  const isFullyVerified = profile.identityVerified && profile.stripeConnectPayoutsEnabled;
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Profile Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account information and verification status
-        </p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header with Quick Links */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-1">My Profile</h1>
+          <p className="text-muted-foreground">
+            Manage your public profile information
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/verification">
+              <Shield className="h-4 w-4 mr-2" />
+              Verification
+              {!isFullyVerified && (
+                <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-800 text-xs">
+                  Action Needed
+                </Badge>
+              )}
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/me/settings">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="w-full flex overflow-x-auto sm:grid sm:grid-cols-5 gap-1">
-          <TabsTrigger value="profile" className="flex-shrink-0">Profile</TabsTrigger>
-          <TabsTrigger value="ratings" className="flex-shrink-0">Ratings</TabsTrigger>
-          <TabsTrigger value="activity" className="flex-shrink-0">Activity</TabsTrigger>
-          <TabsTrigger value="verification" className="flex-shrink-0">Verify</TabsTrigger>
-          <TabsTrigger value="settings" className="flex-shrink-0">Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Basic Profile */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Basic Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    {/* Avatar Upload */}
-                    <div className="flex flex-col items-center">
-                      <AvatarUpload
-                        currentAvatarUrl={profile.avatarUrl}
-                        fallbackText={profile.username?.charAt(0) || 'U'}
-                        onAvatarChange={handleAvatarChange}
-                        disabled={updating}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        placeholder="Choose your username"
-                        {...register('username')}
-                        disabled={!!profile.username}
-                        className={`${errors.username ? 'border-destructive' : ''} ${profile.username ? 'bg-muted cursor-not-allowed' : ''}`}
-                      />
-                      {errors.username && (
-                        <p className="text-sm text-destructive">{errors.username.message}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        {profile.username 
-                          ? "Your username cannot be changed" 
-                          : "Choose your unique username (cannot be changed later)"}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        placeholder="Tell others about yourself..."
-                        rows={3}
-                        {...register('bio')}
-                        className={errors.bio ? 'border-destructive' : ''}
-                      />
-                      {errors.bio && (
-                        <p className="text-sm text-destructive">{errors.bio.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="region">Region</Label>
-                      <LocationPicker
-                        value={regionValue || ''}
-                        onChange={(location) => setValue('region', location, { shouldDirty: true })}
-                        placeholder="Search for your city or region..."
-                        className={errors.region ? '[&_input]:border-destructive' : ''}
-                      />
-                      {errors.region && (
-                        <p className="text-sm text-destructive">{errors.region.message}</p>
-                      )}
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button 
-                        type="submit" 
-                        disabled={!isDirty || updating}
-                        className="bg-primary hover:bg-primary-hover text-primary-foreground"
-                      >
-                        {updating ? 'Updating...' : 'Update Profile'}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Profile Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center">
-                    <Avatar className="w-16 h-16 mx-auto mb-3">
-                      {profile.avatarUrl ? (
-                        <AvatarImage src={profile.avatarUrl} alt="Profile picture" />
-                      ) : null}
-                      <AvatarFallback className="text-2xl">
-                        {profile.username?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h3 className="font-semibold text-lg">@{profile.username}</h3>
-                    {profile.bio && (
-                      <p className="text-sm text-muted-foreground mt-2 italic">"{profile.bio}"</p>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Rating</span>
-                      <div className="flex items-center gap-1">
-                        {profile.total_ratings_received > 0 ? (
-                          <>
-                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                            <span className="font-medium">
-                              {profile.average_rating.toFixed(1)}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              ({profile.total_ratings_received})
-                            </span>
-                          </>
-                        ) : (
-                          <span className="font-medium text-muted-foreground">No ratings yet</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Reputation</span>
-                      {profile.total_ratings_received > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                          <span className="font-medium">{profile.reputationScore.toFixed(1)}</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-end">
-                          <span className="font-medium text-muted-foreground">Not rated yet</span>
-                          <span className="text-xs text-muted-foreground">Earn ⭐ by completing bounties</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Completed Bounties</span>
-                      <span className="font-medium">{profile.completedBounties}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Posted Bounties</span>
-                      <span className="font-medium">{profile.postedBounties}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Member Since</span>
-                      <span className="font-medium">
-                        {format(profile.joinedAt, 'MMM yyyy')}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Referral Program */}
-              <ReferralCard />
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="ratings" className="space-y-6">
-          <RatingSummary userId={profile.id} />
-        </TabsContent>
-
-        <TabsContent value="activity" className="space-y-6">
-          <ActivityHistory userId={profile.id} />
-        </TabsContent>
-
-        <TabsContent value="verification" className="space-y-6">
-          {/* Identity Verification */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Basic Profile Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Identity Verification
+                Basic Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                <div>
-                  <p className="font-medium">Photo ID Verification</p>
-                  <p className="text-sm text-muted-foreground">
-                    Verify your identity with a government-issued ID to claim bounties
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Avatar Upload */}
+                <div className="flex flex-col items-center">
+                  <AvatarUpload
+                    currentAvatarUrl={profile.avatarUrl}
+                    fallbackText={profile.username?.charAt(0) || 'U'}
+                    onAvatarChange={handleAvatarChange}
+                    disabled={updating}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Choose your username"
+                    {...register('username')}
+                    disabled={!!profile.username}
+                    className={`${errors.username ? 'border-destructive' : ''} ${profile.username ? 'bg-muted cursor-not-allowed' : ''}`}
+                  />
+                  {errors.username && (
+                    <p className="text-sm text-destructive">{errors.username.message}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {profile.username 
+                      ? "Your username cannot be changed" 
+                      : "Choose your unique username (cannot be changed later)"}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  {profile.identityVerified ? (
-                    <Badge className="status-active">Verified</Badge>
-                  ) : (
-                    <Badge variant="secondary">Not Verified</Badge>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    placeholder="Tell others about yourself..."
+                    rows={3}
+                    {...register('bio')}
+                    className={errors.bio ? 'border-destructive' : ''}
+                  />
+                  {errors.bio && (
+                    <p className="text-sm text-destructive">{errors.bio.message}</p>
                   )}
-                  {!profile.identityVerified && (
-                    <Button 
-                      onClick={async () => {
-                        try {
-                          setPayoutLoading(true);
-                          const { data, error } = await supabase.functions.invoke('create-identity-session');
-                          if (error) throw error;
-                          if (data?.already_verified) {
-                            toast({ title: "Already Verified", description: "Your identity is verified." });
-                            loadProfile();
-                            return;
-                          }
-                          if (data?.url) {
-                            window.location.href = data.url;
-                          }
-                        } catch (error: any) {
-                          toast({ title: "Error", description: error.message, variant: "destructive" });
-                        } finally {
-                          setPayoutLoading(false);
-                        }
-                      }}
-                      disabled={payoutLoading}
-                      size="sm"
-                    >
-                      {payoutLoading ? 'Opening...' : 'Verify Identity'}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="region">Region</Label>
+                  <LocationPicker
+                    value={regionValue || ''}
+                    onChange={(location) => setValue('region', location, { shouldDirty: true })}
+                    placeholder="Search for your city or region..."
+                    className={errors.region ? '[&_input]:border-destructive' : ''}
+                  />
+                  {errors.region && (
+                    <p className="text-sm text-destructive">{errors.region.message}</p>
+                  )}
+                </div>
+
+                <div className="flex justify-end">
+                  <Button 
+                    type="submit" 
+                    disabled={!isDirty || updating}
+                  >
+                    {updating ? 'Updating...' : 'Update Profile'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Ratings Section */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              Ratings & Reviews
+            </h2>
+            <RatingSummary userId={profile.id} />
+          </div>
+
+          {/* Activity Section */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Activity History</h2>
+            <ActivityHistory userId={profile.id} />
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Profile Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <Avatar className="w-16 h-16 mx-auto mb-3">
+                  {profile.avatarUrl ? (
+                    <AvatarImage src={profile.avatarUrl} alt="Profile picture" />
+                  ) : null}
+                  <AvatarFallback className="text-2xl">
+                    {profile.username?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <h3 className="font-semibold text-lg">@{profile.username || 'username'}</h3>
+                {profile.bio && (
+                  <p className="text-sm text-muted-foreground mt-2 italic">"{profile.bio}"</p>
+                )}
+                {profile.region && (
+                  <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {profile.region}
+                  </p>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Rating</span>
+                  <div className="flex items-center gap-1">
+                    {profile.total_ratings_received > 0 ? (
+                      <>
+                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                        <span className="font-medium">
+                          {profile.average_rating.toFixed(1)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          ({profile.total_ratings_received})
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-medium text-muted-foreground">No ratings yet</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Completed</span>
+                  <span className="font-medium">{profile.completedBounties} bounties</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Posted</span>
+                  <span className="font-medium">{profile.postedBounties} bounties</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Member Since</span>
+                  <span className="font-medium flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {format(profile.joinedAt, 'MMM yyyy')}
+                  </span>
+                </div>
+
+                {/* Verification Status Quick View */}
+                <Separator />
+                <div className="pt-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Verification</span>
+                    {isFullyVerified ? (
+                      <Badge className="bg-green-100 text-green-800 text-xs">Complete</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-xs">Incomplete</Badge>
+                    )}
+                  </div>
+                  {!isFullyVerified && (
+                    <Button variant="outline" size="sm" className="w-full" asChild>
+                      <Link to="/verification">Complete Verification</Link>
                     </Button>
                   )}
                 </div>
               </div>
-
-              <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="font-medium mb-2">Why verify your identity?</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Required to claim bounties on BountyBay</li>
-                  <li>• Helps keep all users safe from fraud</li>
-                  <li>• Your ID is verified securely by Stripe</li>
-                  <li>• We never see or store your ID documents</li>
-                </ul>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Payout Method */}
-          <Card data-payout-card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Payout Method
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                <div>
-                  <p className="font-medium">Bank Account / Debit Card</p>
-                  <p className="text-sm text-muted-foreground">
-                    Set up how you want to receive bounty payments via Stripe Connect
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {profile.stripeConnectPayoutsEnabled ? (
-                    <Badge className="status-active">Ready for Payouts</Badge>
-                  ) : profile.hasPayoutMethod ? (
-                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">Pending Verification</Badge>
-                  ) : (
-                    <Badge variant="secondary">Not Set Up</Badge>
-                  )}
-                  <Button 
-                    onClick={handleSetupPayout}
-                    disabled={payoutLoading}
-                    size="sm"
-                    variant={profile.hasPayoutMethod ? "outline" : "default"}
-                    className={!profile.hasPayoutMethod ? "bg-primary hover:bg-primary-hover text-primary-foreground" : ""}
-                  >
-                    {payoutLoading ? 'Opening...' : (profile.hasPayoutMethod ? 'Manage' : 'Set Up Payout')}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Warning when onboarding complete but payouts not enabled */}
-              {profile.hasPayoutMethod && !profile.stripeConnectPayoutsEnabled && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-                    <div>
-                      <h4 className="font-medium text-amber-800">Verification Pending</h4>
-                      <p className="text-sm text-amber-700 mt-1">
-                        Your Stripe Connect account setup is complete, but Stripe is still verifying your information. 
-                        You cannot receive payouts until verification is complete. Click "Manage" to check your status 
-                        or complete any additional requirements.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="font-medium mb-2">Payout Information</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Payments processed via Stripe Connect</li>
-                  <li>• Platform fee: $2 + 5% deducted from payout</li>
-                  <li>• Payouts typically arrive in 2-7 business days (set by Stripe, not BountyBay)</li>
-                  <li>• You can adjust your payout schedule in your Stripe Dashboard</li>
-                </ul>
-                <p className="text-xs text-muted-foreground mt-3 italic">
-                  Payout timing is controlled by Stripe based on your account verification status. 
-                  New accounts typically have a 7-day payout delay which can be reduced over time.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          {/* Connected Accounts Section */}
-          {user && <ConnectedAccounts user={user} />}
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Account Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="p-4 border border-border rounded-lg">
-                  <h4 className="font-medium mb-2">Account Status</h4>
-                  {profile.isSuspended ? (
-                    <div className="space-y-2">
-                      <Badge variant="destructive">Account Suspended</Badge>
-                      {profile.suspendedUntil && (
-                        <p className="text-sm text-muted-foreground">
-                          Suspended until: {format(profile.suspendedUntil, 'PPP')}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <Badge className="bg-success-light text-success">Active</Badge>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-destructive mb-2">Danger Zone</h4>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Once you delete your account, there is no going back. All your data will be permanently removed.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" disabled={deleting}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {deleting ? 'Deleting...' : 'Delete Account'}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your account
-                          and remove all your data from our servers, including:
-                          <ul className="list-disc list-inside mt-2 space-y-1">
-                            <li>Your profile information</li>
-                            <li>All bounties you've posted</li>
-                            <li>Your claim history</li>
-                            <li>Messages and conversations</li>
-                            <li>Ratings and reviews</li>
-                          </ul>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteAccount}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Yes, delete my account
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Country Selection Dialog for Stripe Connect */}
-      <CountrySelectDialog
-        open={countryDialogOpen}
-        onOpenChange={setCountryDialogOpen}
-        onConfirm={handleCountrySelected}
-        loading={payoutLoading}
-      />
+          {/* Referral Program */}
+          <ReferralCard />
+        </div>
+      </div>
     </div>
   );
 }

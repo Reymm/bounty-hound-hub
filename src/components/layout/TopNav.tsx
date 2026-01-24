@@ -379,7 +379,7 @@ export function TopNav({ onSearch }: TopNavProps) {
 
                 {/* Verification - Prominent placement */}
                 <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/me/profile?tab=verification" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link to="/verification" onClick={() => setIsMobileMenuOpen(false)}>
                     <ShieldCheck className="h-4 w-4 mr-2" />
                     Verification
                     {!verificationStatus.loading && (
