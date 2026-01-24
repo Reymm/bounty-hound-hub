@@ -1358,12 +1358,22 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string | null
+          identity_session_id: string | null
+          identity_verified: boolean | null
+          is_partner: boolean | null
           is_support_admin: boolean | null
           is_suspended: boolean | null
           kyc_verified: boolean | null
           kyc_verified_at: string | null
+          partner_attribution_expires_at: string | null
+          partner_commission_percent: number | null
+          partner_flat_fee_cents: number | null
+          partner_name: string | null
           payout_country: string | null
           payout_email: string | null
+          referral_code: string | null
+          referral_credits: number | null
+          referred_by: string | null
           region: string | null
           reputation_score: number | null
           stripe_connect_account_id: string | null
@@ -1384,14 +1394,24 @@ export type Database = {
           average_rating?: number | null
           bio?: string | null
           created_at?: string | null
-          full_name?: string | null
+          full_name?: never
           id?: string | null
-          is_support_admin?: boolean | null
+          identity_session_id?: never
+          identity_verified?: never
+          is_partner?: never
+          is_support_admin?: never
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
-          kyc_verified_at?: string | null
+          kyc_verified_at?: never
+          partner_attribution_expires_at?: never
+          partner_commission_percent?: never
+          partner_flat_fee_cents?: never
+          partner_name?: never
           payout_country?: never
           payout_email?: never
+          referral_code?: never
+          referral_credits?: never
+          referred_by?: never
           region?: string | null
           reputation_score?: number | null
           stripe_connect_account_id?: never
@@ -1399,7 +1419,7 @@ export type Database = {
           stripe_connect_details_submitted?: never
           stripe_connect_onboarding_complete?: never
           stripe_connect_payouts_enabled?: never
-          suspended_until?: string | null
+          suspended_until?: never
           total_failed_claims?: number | null
           total_ratings_given?: number | null
           total_ratings_received?: number | null
@@ -1412,14 +1432,24 @@ export type Database = {
           average_rating?: number | null
           bio?: string | null
           created_at?: string | null
-          full_name?: string | null
+          full_name?: never
           id?: string | null
-          is_support_admin?: boolean | null
+          identity_session_id?: never
+          identity_verified?: never
+          is_partner?: never
+          is_support_admin?: never
           is_suspended?: boolean | null
           kyc_verified?: boolean | null
-          kyc_verified_at?: string | null
+          kyc_verified_at?: never
+          partner_attribution_expires_at?: never
+          partner_commission_percent?: never
+          partner_flat_fee_cents?: never
+          partner_name?: never
           payout_country?: never
           payout_email?: never
+          referral_code?: never
+          referral_credits?: never
+          referred_by?: never
           region?: string | null
           reputation_score?: number | null
           stripe_connect_account_id?: never
@@ -1427,7 +1457,7 @@ export type Database = {
           stripe_connect_details_submitted?: never
           stripe_connect_onboarding_complete?: never
           stripe_connect_payouts_enabled?: never
-          suspended_until?: string | null
+          suspended_until?: never
           total_failed_claims?: number | null
           total_ratings_given?: number | null
           total_ratings_received?: number | null
