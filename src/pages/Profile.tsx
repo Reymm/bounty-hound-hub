@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   User, 
   Star, 
-  Settings,
-  Shield,
   MapPin,
   Calendar
 } from 'lucide-react';
@@ -15,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -159,37 +155,14 @@ export default function Profile() {
     );
   }
 
-  const isFullyVerified = profile.identityVerified && profile.stripeConnectPayoutsEnabled;
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header with Quick Links */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">My Profile</h1>
-          <p className="text-muted-foreground">
-            Manage your public profile information
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/verification">
-              <Shield className="h-4 w-4 mr-2" />
-              Verification
-              {!isFullyVerified && (
-                <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-800 text-xs">
-                  Action Needed
-                </Badge>
-              )}
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/me/settings">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Link>
-          </Button>
-        </div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-1">My Profile</h1>
+        <p className="text-muted-foreground">
+          Manage your public profile information
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -358,23 +331,6 @@ export default function Profile() {
                   </span>
                 </div>
 
-                {/* Verification Status Quick View */}
-                <Separator />
-                <div className="pt-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">Verification</span>
-                    {isFullyVerified ? (
-                      <Badge className="bg-green-100 text-green-800 text-xs">Complete</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-xs">Incomplete</Badge>
-                    )}
-                  </div>
-                  {!isFullyVerified && (
-                    <Button variant="outline" size="sm" className="w-full" asChild>
-                      <Link to="/verification">Complete Verification</Link>
-                    </Button>
-                  )}
-                </div>
               </div>
             </CardContent>
           </Card>
