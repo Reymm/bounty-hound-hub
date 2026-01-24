@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, CreditCard, AlertCircle, CheckCircle2, ArrowRight, Shield } from 'lucide-react';
+import { User, CreditCard, AlertCircle, CheckCircle2, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -101,7 +101,8 @@ export default function Verification() {
         if (!result) throw new Error('Failed to get Connect account link');
         
         if (result.onboarding_url) {
-          window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
+          // Use window.location.href for mobile compatibility (popups get blocked)
+          window.location.href = result.onboarding_url;
         } else {
           throw new Error('No onboarding URL received');
         }
@@ -112,7 +113,6 @@ export default function Verification() {
           description: error instanceof Error ? error.message : "Please try again later.",
           variant: "destructive",
         });
-      } finally {
         setActionLoading(false);
       }
     } else {
@@ -130,8 +130,8 @@ export default function Verification() {
       
       if (result.onboarding_url) {
         setCountryDialogOpen(false);
-        window.open(result.onboarding_url, '_blank', 'noopener,noreferrer');
-        setActionLoading(false);
+        // Use window.location.href for mobile compatibility
+        window.location.href = result.onboarding_url;
       } else {
         throw new Error('No onboarding URL received');
       }
@@ -174,35 +174,30 @@ export default function Verification() {
   const isFullyVerified = profile.identityVerified && profile.stripeConnectPayoutsEnabled;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24">
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-          <Shield className="h-8 w-8 text-primary" />
+      <div className="text-center mb-6">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
+          <Shield className="h-6 w-6 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Hunter Verification</h1>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Complete these two steps to start claiming bounties and earning money on BountyBay
+        <h1 className="text-2xl font-bold text-foreground mb-1">Hunter Verification</h1>
+        <p className="text-sm text-muted-foreground">
+          Complete these steps to claim bounties
         </p>
       </div>
 
       {/* Success State */}
       {isFullyVerified && (
-        <Card className="mb-8 border-green-200 bg-green-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
-              </div>
+        <Card className="mb-6 border-green-200 bg-green-50">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <CheckCircle2 className="h-8 w-8 text-green-600 flex-shrink-0" />
               <div className="flex-1">
                 <h3 className="font-semibold text-green-900">You're All Set!</h3>
-                <p className="text-sm text-green-700">
-                  Your identity is verified and payouts are enabled. You can claim any bounty on the platform.
-                </p>
+                <p className="text-sm text-green-700">Ready to claim bounties.</p>
               </div>
-              <Button onClick={() => navigate('/bounties')} className="flex-shrink-0">
+              <Button onClick={() => navigate('/bounties')} size="sm" className="w-full sm:w-auto">
                 Browse Bounties
-                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </CardContent>
