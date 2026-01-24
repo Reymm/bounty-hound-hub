@@ -389,9 +389,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                           Complete
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/30">
-                          Action needed
-                        </Badge>
+                        <span className="ml-auto text-xs text-muted-foreground">(hunters only)</span>
                       )
                     )}
                   </Link>
