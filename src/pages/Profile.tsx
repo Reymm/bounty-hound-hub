@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   User, 
   CreditCard, 
   Star, 
-  Calendar,
   AlertCircle,
-  Activity,
-  Settings,
-  Trash2
+  Trash2,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,17 +37,20 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 export default function Profile() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [countryDialogOpen, setCountryDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // Read tab from URL or fallback to session storage
+  const urlTab = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState<string>(() => {
-    return sessionStorage.getItem('profile_active_tab') || 'profile';
+    return urlTab || sessionStorage.getItem('profile_active_tab') || 'profile';
   });
+  
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -65,6 +66,19 @@ export default function Profile() {
   });
 
   const regionValue = watch('region');
+  
+  // Sync URL tab parameter with state
+  useEffect(() => {
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
+  
+  // Update URL when tab changes (but don't add to history on initial load)
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    setSearchParams({ tab: newTab }, { replace: true });
+  };
 
   useEffect(() => {
     loadProfile();
@@ -330,13 +344,13 @@ export default function Profile() {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="ratings">Ratings</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="verification">Verification</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <TabsList className="w-full flex overflow-x-auto sm:grid sm:grid-cols-5 gap-1">
+          <TabsTrigger value="profile" className="flex-shrink-0">Profile</TabsTrigger>
+          <TabsTrigger value="ratings" className="flex-shrink-0">Ratings</TabsTrigger>
+          <TabsTrigger value="activity" className="flex-shrink-0">Activity</TabsTrigger>
+          <TabsTrigger value="verification" className="flex-shrink-0">Verify</TabsTrigger>
+          <TabsTrigger value="settings" className="flex-shrink-0">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
