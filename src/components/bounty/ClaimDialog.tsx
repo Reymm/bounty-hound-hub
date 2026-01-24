@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X, CreditCard, Loader2, CheckCircle, Info, ShieldCheck } from 'lucide-react';
+import { Plus, X, CreditCard, Loader2, CheckCircle, Info, ShieldCheck, ExternalLink } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile, resolveStorageUrls } from '@/lib/storage';
@@ -47,6 +47,9 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
   const [stripeConnectComplete, setStripeConnectComplete] = useState(false);
   const [stripeConnectChecking, setStripeConnectChecking] = useState(false);
   const [startingStripeOnboarding, setStartingStripeOnboarding] = useState(false);
+  
+  // Store the onboarding URL for mobile fallback
+  const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState<string | null>(null);
   
   const [existingSubmission, setExistingSubmission] = useState<ExistingSubmission | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(false);
@@ -175,7 +178,12 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
       }
       
       if (data?.url) {
-        window.location.href = data.url;
+        // Try multiple redirect methods for mobile compatibility
+        try {
+          window.location.href = data.url;
+        } catch {
+          window.open(data.url, '_self');
+        }
       } else {
         throw new Error('No verification URL received');
       }
@@ -193,24 +201,39 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
 
   const handleStartStripeOnboarding = async () => {
     setStartingStripeOnboarding(true);
+    setStripeOnboardingUrl(null);
     try {
       const { data, error } = await supabase.functions.invoke('create-connect-account');
       
       if (error) throw error;
       
       if (data?.onboarding_url) {
-        window.location.href = data.onboarding_url;
+        const url = data.onboarding_url;
+        setStripeOnboardingUrl(url);
+        
+        // Try redirect - some mobile browsers block this
+        try {
+          window.location.href = url;
+        } catch {
+          console.log('Direct redirect failed, URL stored for manual click');
+        }
+        
+        // Give redirect a moment to work before showing fallback
+        setTimeout(() => {
+          // If we're still here after 2 seconds, show the manual link
+          setStartingStripeOnboarding(false);
+        }, 2000);
       } else {
         throw new Error('No onboarding URL received');
       }
     } catch (error: any) {
       console.error('Error starting Stripe onboarding:', error);
+      setStripeOnboardingUrl(null);
       toast({
         title: "Error",
         description: error.message || "Failed to start payout setup. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setStartingStripeOnboarding(false);
     }
   };
@@ -293,8 +316,6 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
 
   // Determine which step the user is on
   const isLoading = identityChecking || stripeConnectChecking;
-  const needsIdentityVerification = !identityVerified;
-  const needsPayoutSetup = !stripeConnectComplete;
   const canSubmitClaim = identityVerified && stripeConnectComplete;
 
   const handleSubmit = async () => {
@@ -391,7 +412,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto my-8">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg leading-tight">
             {isEditMode ? `Edit Claim for "${bountyTitle}"` : `Submit Claim for "${bountyTitle}"`}
           </DialogTitle>
         </DialogHeader>
@@ -399,11 +420,11 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
         {/* Already submitted and NOT editable */}
         {hasExistingSubmission && !canEdit && !checkingExisting && (
           <Alert className="border-amber-500 bg-amber-500/10">
-            <CheckCircle className="h-4 w-4 text-amber-500" />
+            <CheckCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
             <AlertDescription>
               <div className="space-y-2">
                 <p className="font-semibold text-foreground">You've already submitted a claim</p>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Your claim has been reviewed and can no longer be edited. View your submission in the "My Claim" tab on this bounty page.
                 </p>
                 <Button onClick={onClose} variant="outline" className="mt-2">
@@ -426,90 +447,142 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
             {/* Loading state while checking requirements */}
             {isLoading && (
               <Alert>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
                 <AlertDescription>Checking verification status...</AlertDescription>
               </Alert>
             )}
 
-            {/* Step 1: Identity Verification */}
-            {!isLoading && needsIdentityVerification && (
-              <Alert className="border-primary bg-primary/5">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                <AlertDescription>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="font-semibold text-foreground">Step 1: Verify Your Identity</p>
-                      <p className="text-muted-foreground text-sm mt-1">
-                        Upload a government-issued ID (passport, driver's license, or ID card) and take a selfie to verify you're a real person. This keeps everyone on BountyBay safe.
-                      </p>
-                    </div>
-                    <Button 
-                      onClick={handleStartIdentityVerification} 
-                      disabled={startingIdentityVerification}
-                    >
-                      {startingIdentityVerification ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Opening verification...
-                        </>
-                      ) : (
-                        <>
-                          <ShieldCheck className="h-4 w-4 mr-2" />
-                          Verify Identity
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Show verification requirements UPFRONT - both steps visible */}
+            {!isLoading && !canSubmitClaim && (
+              <div className="space-y-4">
+                {/* Header explaining both steps are required */}
+                <Alert className="border-amber-500 bg-amber-500/10">
+                  <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <AlertDescription>
+                    <p className="font-semibold text-foreground">Two steps required before you can claim bounties</p>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      Complete both steps below to protect yourself and bounty posters. This only takes about 5 minutes.
+                    </p>
+                  </AlertDescription>
+                </Alert>
 
-            {/* Step 2: Payout Setup (only show if identity is verified) */}
-            {!isLoading && !needsIdentityVerification && needsPayoutSetup && (
-              <Alert className="border-primary bg-primary/5">
-                <CreditCard className="h-4 w-4 text-primary" />
-                <AlertDescription>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="font-semibold text-foreground">Step 2: Set Up Payouts</p>
-                      <p className="text-muted-foreground text-sm mt-1">
-                        Connect your bank account or debit card so you can receive payments when your claims are accepted.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Identity verified</span>
-                    </div>
-                    <Button 
-                      onClick={handleStartStripeOnboarding} 
-                      disabled={startingStripeOnboarding}
-                    >
-                      {startingStripeOnboarding ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Setting up...
-                        </>
+                {/* Step 1: Identity Verification */}
+                <div className={`rounded-lg border p-4 ${identityVerified ? 'border-green-500 bg-green-50 dark:bg-green-950/30' : 'border-primary bg-primary/5'}`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`rounded-full p-1.5 flex-shrink-0 ${identityVerified ? 'bg-green-500' : 'bg-primary'}`}>
+                      {identityVerified ? (
+                        <CheckCircle className="h-4 w-4 text-white" />
                       ) : (
-                        <>
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Set Up Payouts
-                        </>
+                        <ShieldCheck className="h-4 w-4 text-primary-foreground" />
                       )}
-                    </Button>
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div>
+                        <p className="font-semibold text-foreground">Step 1: Verify Your Identity</p>
+                        <p className="text-muted-foreground text-sm mt-1">
+                          {identityVerified 
+                            ? "Identity verified! You're confirmed as a real person."
+                            : "Upload a photo ID and take a quick selfie. This keeps BountyBay safe."}
+                        </p>
+                      </div>
+                      {!identityVerified && (
+                        <Button 
+                          onClick={handleStartIdentityVerification} 
+                          disabled={startingIdentityVerification}
+                          size="sm"
+                        >
+                          {startingIdentityVerification ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              <span className="truncate">Opening...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="h-4 w-4 mr-2 flex-shrink-0" />
+                              <span className="truncate">Verify Identity</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </AlertDescription>
-              </Alert>
+                </div>
+
+                {/* Step 2: Payout Setup */}
+                <div className={`rounded-lg border p-4 ${stripeConnectComplete ? 'border-green-500 bg-green-50 dark:bg-green-950/30' : identityVerified ? 'border-primary bg-primary/5' : 'border-muted bg-muted/30'}`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`rounded-full p-1.5 flex-shrink-0 ${stripeConnectComplete ? 'bg-green-500' : identityVerified ? 'bg-primary' : 'bg-muted-foreground'}`}>
+                      {stripeConnectComplete ? (
+                        <CheckCircle className="h-4 w-4 text-white" />
+                      ) : (
+                        <CreditCard className="h-4 w-4 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div>
+                        <p className={`font-semibold ${!identityVerified && !stripeConnectComplete ? 'text-muted-foreground' : 'text-foreground'}`}>
+                          Step 2: Set Up Payouts
+                        </p>
+                        <p className="text-muted-foreground text-sm mt-1">
+                          {stripeConnectComplete 
+                            ? "Payouts ready! You can receive payments when claims are accepted."
+                            : identityVerified
+                              ? "Connect your bank account or debit card to receive bounty payments."
+                              : "Complete Step 1 first, then set up your payout method."}
+                        </p>
+                      </div>
+                      {!stripeConnectComplete && identityVerified && (
+                        <div className="space-y-2">
+                          <Button 
+                            onClick={handleStartStripeOnboarding} 
+                            disabled={startingStripeOnboarding}
+                            size="sm"
+                          >
+                            {startingStripeOnboarding ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                <span className="truncate">Loading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="h-4 w-4 mr-2 flex-shrink-0" />
+                                <span className="truncate">Set Up Payouts</span>
+                              </>
+                            )}
+                          </Button>
+                          
+                          {/* Fallback link for mobile if redirect doesn't work */}
+                          {stripeOnboardingUrl && (
+                            <div className="mt-2">
+                              <p className="text-xs text-muted-foreground mb-1">Page didn't open? Tap below:</p>
+                              <a 
+                                href={stripeOnboardingUrl} 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-sm text-primary underline"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Open Stripe Setup
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Both verifications complete - show success and form */}
             {!isLoading && canSubmitClaim && (
               <>
                 <Alert className="border-green-500 bg-green-50 dark:bg-green-950/30">
-                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                   <AlertDescription className="text-green-800 dark:text-green-200">
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm">
                       <span>✓ Identity verified</span>
-                      <span>✓ Payouts set up</span>
+                      <span>✓ Payouts ready</span>
                       <span className="font-medium">— Ready to claim!</span>
                     </div>
                   </AlertDescription>
@@ -585,6 +658,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
                             variant="ghost"
                             size="icon"
                             onClick={() => handleRemoveProofUrl(index)}
+                            className="flex-shrink-0"
                           >
                             <X className="h-4 w-4" />
                           </Button>
