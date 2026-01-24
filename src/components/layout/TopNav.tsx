@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car } from 'lucide-react';
+import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,13 @@ export function TopNav({ onSearch }: TopNavProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  
+  // Verification status for mobile menu
+  const [verificationStatus, setVerificationStatus] = useState<{
+    identity: boolean;
+    payout: boolean;
+    loading: boolean;
+  }>({ identity: false, payout: false, loading: true });
 
   // Debounced auto-search
   useEffect(() => {
@@ -68,6 +75,7 @@ export function TopNav({ onSearch }: TopNavProps) {
   useEffect(() => {
     if (!user) {
       setUnreadMessages(0);
+      setVerificationStatus({ identity: false, payout: false, loading: false });
       return;
     }
 
@@ -87,7 +95,27 @@ export function TopNav({ onSearch }: TopNavProps) {
       }
     };
 
+    // Fetch verification status for mobile menu indicator
+    const fetchVerificationStatus = async () => {
+      try {
+        const [identityRes, connectRes] = await Promise.all([
+          supabase.functions.invoke('check-identity-status'),
+          supabase.functions.invoke('check-connect-status')
+        ]);
+        
+        setVerificationStatus({
+          identity: identityRes.data?.verified === true,
+          payout: connectRes.data?.onboarding_complete === true,
+          loading: false
+        });
+      } catch (error) {
+        console.error('Error fetching verification status:', error);
+        setVerificationStatus(prev => ({ ...prev, loading: false }));
+      }
+    };
+
     fetchUnreadCount();
+    fetchVerificationStatus();
 
     // Set up real-time subscription
     const channel = supabase
@@ -324,30 +352,12 @@ export function TopNav({ onSearch }: TopNavProps) {
           </div>
         </form>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Fixed scroll, simplified structure */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border py-4 space-y-4">
-            {/* Explore Section - Mobile */}
-            <div className="space-y-2 pb-2 border-b border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">Explore</p>
-              <Button asChild variant="ghost" className="w-full justify-start">
-                <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Search className="h-4 w-4 mr-2" />
-                  Browse All Bounties
-                </Link>
-              </Button>
-              {nichePages.map((page) => (
-                <Button key={page.href} asChild variant="ghost" className="w-full justify-start">
-                  <Link to={page.href} onClick={() => setIsMobileMenuOpen(false)}>
-                    <page.icon className="h-4 w-4 mr-2 text-primary" />
-                    {page.title}
-                  </Link>
-                </Button>
-              ))}
-            </div>
-
+          <div className="md:hidden border-t border-border py-3 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain">
             {user ? (
-              <>
+              <div className="space-y-1">
+                {/* Primary Actions */}
                 <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
                   <Link to="/post" onClick={() => setIsMobileMenuOpen(false)}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -367,45 +377,61 @@ export function TopNav({ onSearch }: TopNavProps) {
                   </Link>
                 </Button>
 
-                <div className="space-y-2 pt-2 border-t border-border">
-                  <Button asChild variant="ghost" className="w-full justify-start">
-                    <Link to="/me/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                      <User className="h-4 w-4 mr-2" />
-                      Profile Settings
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full justify-start">
-                    <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
-                      <FolderOpen className="h-4 w-4 mr-2" />
-                      My Bounties
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full justify-start">
-                    <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Support
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full justify-start">
-                    <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Bug className="h-4 w-4 mr-2" />
-                      Report Bug
-                    </Link>
-                  </Button>
-                </div>
+                {/* Verification - Prominent placement */}
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/me/profile?tab=verification" onClick={() => setIsMobileMenuOpen(false)}>
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Verification
+                    {!verificationStatus.loading && (
+                      verificationStatus.identity && verificationStatus.payout ? (
+                        <Badge variant="outline" className="ml-auto bg-green-500/10 text-green-600 border-green-500/30">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Complete
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="ml-auto bg-amber-500/10 text-amber-600 border-amber-500/30">
+                          Action needed
+                        </Badge>
+                      )
+                    )}
+                  </Link>
+                </Button>
 
-                <div className="space-y-2 pt-2 border-t border-border">
-                  <Button asChild variant="ghost" className="w-full justify-start text-sm">
-                    <Link to="/legal/terms" onClick={() => setIsMobileMenuOpen(false)}>
-                      Terms of Service
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full justify-start text-sm">
-                    <Link to="/legal/privacy" onClick={() => setIsMobileMenuOpen(false)}>
-                      Privacy Policy
-                    </Link>
-                  </Button>
-                </div>
+                <div className="border-t border-border my-2" />
+
+                {/* Browse */}
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Search className="h-4 w-4 mr-2" />
+                    Browse Bounties
+                  </Link>
+                </Button>
+
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                    <FolderOpen className="h-4 w-4 mr-2" />
+                    My Bounties
+                  </Link>
+                </Button>
+
+                <div className="border-t border-border my-2" />
+
+                {/* Account */}
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/me/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                    <User className="h-4 w-4 mr-2" />
+                    Profile Settings
+                  </Link>
+                </Button>
+
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Bug className="h-4 w-4 mr-2" />
+                    Support
+                  </Link>
+                </Button>
+
+                <div className="border-t border-border my-2" />
 
                 <Button 
                   onClick={handleSignOut}
@@ -415,9 +441,18 @@ export function TopNav({ onSearch }: TopNavProps) {
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="space-y-1">
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Search className="h-4 w-4 mr-2" />
+                    Browse Bounties
+                  </Link>
+                </Button>
+                
+                <div className="border-t border-border my-2" />
+                
                 <Button 
                   onClick={() => { navigate('/auth?tab=signin'); setIsMobileMenuOpen(false); }}
                   variant="ghost" 
@@ -433,7 +468,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                     Sign Up Free
                   </Link>
                 </Button>
-              </>
+              </div>
             )}
           </div>
         )}
