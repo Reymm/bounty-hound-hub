@@ -122,7 +122,7 @@ serve(async (req) => {
           require_matching_selfie: true,
         },
       },
-      return_url: `https://bountybay.lovable.app/identity-complete`,
+      return_url: `https://bountybay.co/identity-complete`,
     });
 
     logStep("Created verification session", { sessionId: session.id });
