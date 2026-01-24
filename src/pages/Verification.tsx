@@ -174,7 +174,7 @@ export default function Verification() {
   const isFullyVerified = profile.identityVerified && profile.stripeConnectPayoutsEnabled;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-24 scroll-mt-20">
       {/* Header - Compact for mobile */}
       <div className="flex items-center gap-3 mb-6">
         <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 shrink-0">
@@ -304,14 +304,13 @@ export default function Verification() {
             </div>
           ) : profile.hasPayoutMethod ? (
             <>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                   <div>
-                    <h4 className="font-medium text-amber-800">Verification Pending</h4>
-                    <p className="text-sm text-amber-700 mt-1">
-                      Your account setup is complete, but Stripe is still verifying your information. 
-                      Click "Continue Setup" to check your status or complete any additional requirements.
+                    <h4 className="font-medium text-amber-800 text-sm">Setup Incomplete</h4>
+                    <p className="text-xs text-amber-700 mt-1">
+                      Log in to Stripe to finish your payout setup.
                     </p>
                   </div>
                 </div>
