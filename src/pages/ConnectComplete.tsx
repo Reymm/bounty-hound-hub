@@ -179,16 +179,16 @@ export default function ConnectComplete() {
                     'Browse Bounties'
                   )}
                 </Button>
-                <Button onClick={() => navigate('/me/profile')} variant="outline" className="w-full">
-                  View Profile
+                <Button onClick={() => navigate('/verification')} variant="outline" className="w-full">
+                  Back to Verification
                 </Button>
               </>
             )}
             
             {status === 'failed' && (
               <>
-                <Button onClick={() => navigate('/me/profile')} className="w-full">
-                  Try Again from Profile
+                <Button onClick={() => navigate('/verification')} className="w-full">
+                  Try Again
                 </Button>
                 <Button onClick={() => navigate('/')} variant="outline" className="w-full">
                   Return to Home

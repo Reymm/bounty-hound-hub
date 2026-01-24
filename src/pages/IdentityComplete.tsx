@@ -141,19 +141,19 @@ export default function IdentityComplete() {
           <div className="flex flex-col gap-3">
             {status === "verified" && (
               <>
-                <Button onClick={() => navigate("/bounties")} className="w-full">
-                  Browse Bounties
+                <Button onClick={() => navigate("/verification")} className="w-full">
+                  Continue to Payout Setup
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/me/profile")} className="w-full">
-                  View Profile
+                <Button variant="outline" onClick={() => navigate("/bounties")} className="w-full">
+                  Browse Bounties
                 </Button>
               </>
             )}
 
             {(status === "pending" || status === "canceled" || status === "failed") && (
               <>
-                <Button onClick={() => navigate("/me/profile")} className="w-full">
-                  Go to Profile
+                <Button onClick={() => navigate("/verification")} className="w-full">
+                  Back to Verification
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/")} className="w-full">
                   Return Home
