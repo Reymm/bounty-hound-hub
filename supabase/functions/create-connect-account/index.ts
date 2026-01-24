@@ -157,13 +157,18 @@ serve(async (req) => {
     }
 
     // Create account link for onboarding
+    // Use production domain for Stripe branding (not preview URLs)
+    const origin = req.headers.get("origin") || "";
+    const isProduction = origin.includes("bountybay.co") || origin.includes("bountybay.net") || origin.includes("bountybay.ca");
+    const baseUrl = isProduction ? "https://bountybay.co" : origin;
+    
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${req.headers.get("origin")}/verification`,
-      return_url: `${req.headers.get("origin")}/connect-complete`,
+      refresh_url: `${baseUrl}/verification`,
+      return_url: `${baseUrl}/connect-complete`,
       type: 'account_onboarding',
     });
-    logStep("Created account onboarding link");
+    logStep("Created account onboarding link", { baseUrl });
 
     return new Response(JSON.stringify({
       account_id: accountId,
