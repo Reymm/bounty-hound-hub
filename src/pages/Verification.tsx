@@ -174,16 +174,16 @@ export default function Verification() {
   const isFullyVerified = profile.identityVerified && profile.stripeConnectPayoutsEnabled;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-          <Shield className="h-6 w-6 text-primary" />
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24">
+      {/* Header - Compact for mobile */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 shrink-0">
+          <Shield className="h-5 w-5 text-primary" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground mb-1">Hunter Verification</h1>
-        <p className="text-sm text-muted-foreground">
-          Complete these steps to claim bounties
-        </p>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Hunter Verification</h1>
+          <p className="text-xs text-muted-foreground">Complete to claim bounties</p>
+        </div>
       </div>
 
       {/* Success State */}
@@ -206,26 +206,26 @@ export default function Verification() {
 
       {/* Step 1: Identity Verification */}
       <Card className={`mb-6 ${profile.identityVerified ? 'border-green-200' : ''}`}>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                profile.identityVerified 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-primary text-primary-foreground'
-              }`}>
-                {profile.identityVerified ? <CheckCircle2 className="h-5 w-5" /> : '1'}
-              </div>
-              <div>
-                <CardTitle className="text-lg">Verify Your Identity</CardTitle>
-                <CardDescription>Photo ID verification via Stripe Identity</CardDescription>
-              </div>
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold shrink-0 ${
+              profile.identityVerified 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-primary text-primary-foreground'
+            }`}>
+              {profile.identityVerified ? <CheckCircle2 className="h-5 w-5" /> : '1'}
             </div>
-            {profile.identityVerified ? (
-              <Badge className="bg-green-100 text-green-800 border-green-200">Complete</Badge>
-            ) : (
-              <Badge variant="secondary">Required</Badge>
-            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-base sm:text-lg">Verify Your Identity</CardTitle>
+                {profile.identityVerified ? (
+                  <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">Complete</Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                )}
+              </div>
+              <CardDescription className="text-xs sm:text-sm mt-1">Photo ID via Stripe Identity</CardDescription>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -260,30 +260,30 @@ export default function Verification() {
 
       {/* Step 2: Payout Setup */}
       <Card className={profile.stripeConnectPayoutsEnabled ? 'border-green-200' : ''}>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                profile.stripeConnectPayoutsEnabled 
-                  ? 'bg-green-100 text-green-700' 
-                  : profile.identityVerified
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground'
-              }`}>
-                {profile.stripeConnectPayoutsEnabled ? <CheckCircle2 className="h-5 w-5" /> : '2'}
-              </div>
-              <div>
-                <CardTitle className="text-lg">Set Up Payouts</CardTitle>
-                <CardDescription>Link your bank account or debit card via Stripe Connect</CardDescription>
-              </div>
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold shrink-0 ${
+              profile.stripeConnectPayoutsEnabled 
+                ? 'bg-green-100 text-green-700' 
+                : profile.identityVerified
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+            }`}>
+              {profile.stripeConnectPayoutsEnabled ? <CheckCircle2 className="h-5 w-5" /> : '2'}
             </div>
-            {profile.stripeConnectPayoutsEnabled ? (
-              <Badge className="bg-green-100 text-green-800 border-green-200">Complete</Badge>
-            ) : profile.hasPayoutMethod ? (
-              <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Pending</Badge>
-            ) : (
-              <Badge variant="secondary">Required</Badge>
-            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-base sm:text-lg">Set Up Payouts</CardTitle>
+                {profile.stripeConnectPayoutsEnabled ? (
+                  <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">Complete</Badge>
+                ) : profile.hasPayoutMethod ? (
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200 text-xs">Pending</Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                )}
+              </div>
+              <CardDescription className="text-xs sm:text-sm mt-1">Link bank account via Stripe</CardDescription>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
