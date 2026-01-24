@@ -51,6 +51,16 @@ const profileSetupSchema = z.object({
 }, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
+}).refine((data) => {
+  // If password is provided and long enough, validate strength
+  if (data.password && data.password.length >= 8) {
+    const validation = validatePasswordStrength(data.password);
+    return validation.isValid;
+  }
+  return true;
+}, {
+  message: 'Password must include uppercase, lowercase, number, and special character',
+  path: ['password'],
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -112,12 +122,27 @@ const ProfileSetup = () => {
 
   const onSubmit = async (data: ProfileSetupFormData) => {
     if (!user) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       toast({
         title: "Error",
         description: "You must be logged in to complete profile setup.",
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate password strength BEFORE any database operations
+    if (isGoogleOnly && data.password && data.password.length >= 8) {
+      const passwordValidation = validatePasswordStrength(data.password);
+      if (!passwordValidation.isValid) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        toast({
+          title: "Weak password",
+          description: passwordValidation.message || "Password must include uppercase, lowercase, number, and special character.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     try {
@@ -138,7 +163,7 @@ const ProfileSetup = () => {
       if (profileError) {
         console.error('Profile update error:', profileError);
         if (profileError.code === '23505') {
-          // Unique constraint violation
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           toast({
             title: "Username taken",
             description: "This username is already in use. Please choose another.",
@@ -151,24 +176,15 @@ const ProfileSetup = () => {
 
       console.log('Profile updated successfully');
 
-      // If user is Google-only and provided a password, set it
+      // If user is Google-only and provided a password, set it (already validated above)
       if (isGoogleOnly && data.password && data.password.length >= 8) {
-        const passwordValidation = validatePasswordStrength(data.password);
-        if (!passwordValidation.isValid) {
-          toast({
-            title: "Weak password",
-            description: passwordValidation.message,
-            variant: "destructive",
-          });
-          return;
-        }
-
         const { error: passwordError } = await supabase.auth.updateUser({
           password: data.password,
         });
 
         if (passwordError) {
           console.error('Password update error:', passwordError);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           toast({
             title: "Password setup failed",
             description: "Your profile was saved, but we couldn't set your password. You can add one later in Settings.",
@@ -213,6 +229,7 @@ const ProfileSetup = () => {
     } catch (error: any) {
       console.error('Error setting up profile:', error);
       console.error('Error details:', error?.message, error?.code, error?.details);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       toast({
         title: "Error setting up profile",
         description: error?.message || "Please try again later.",
