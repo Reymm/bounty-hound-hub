@@ -60,16 +60,55 @@ serve(async (req) => {
       });
     }
 
-    // Use the live Stripe key
-    if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY not configured");
-    }
-    
     logStep("Using live Stripe key");
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Retrieve account from Stripe
-    const account = await stripe.accounts.retrieve(profile.stripe_connect_account_id);
+    // Try to retrieve account from Stripe
+    let account;
+    try {
+      account = await stripe.accounts.retrieve(profile.stripe_connect_account_id);
+    } catch (stripeError: any) {
+      // Handle test/live mode mismatch or invalid account
+      if (
+        stripeError?.message?.includes('testmode') ||
+        stripeError?.message?.includes('livemode') ||
+        stripeError?.code === 'resource_missing' ||
+        stripeError?.code === 'account_invalid'
+      ) {
+        logStep("Clearing stale/invalid Connect account", { 
+          accountId: profile.stripe_connect_account_id,
+          error: stripeError?.message 
+        });
+        
+        // Clear the stale account from the database
+        await supabaseClient
+          .from('profiles')
+          .update({
+            stripe_connect_account_id: null,
+            stripe_connect_onboarding_complete: false,
+            stripe_connect_charges_enabled: false,
+            stripe_connect_payouts_enabled: false,
+            stripe_connect_details_submitted: false
+          })
+          .eq('id', user.id);
+        
+        // Return as if no account exists - user will need to set up fresh
+        return new Response(JSON.stringify({
+          has_account: false,
+          onboarding_complete: false,
+          charges_enabled: false,
+          payouts_enabled: false,
+          details_submitted: false,
+          cleared_stale_account: true
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      
+      // Re-throw other Stripe errors
+      throw stripeError;
+    }
     
     logStep("Retrieved Stripe Connect account", { 
       accountId: account.id,
