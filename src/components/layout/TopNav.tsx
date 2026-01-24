@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck, CheckCircle } from 'lucide-react';
+import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -377,21 +377,28 @@ export function TopNav({ onSearch }: TopNavProps) {
                   </Link>
                 </Button>
 
-                {/* Verification - Prominent placement */}
-                <Button asChild variant="ghost" className="w-full justify-start">
+                {/* Verification */}
+                <Button asChild variant="ghost" className="w-full justify-start h-auto py-2">
                   <Link to="/verification" onClick={() => setIsMobileMenuOpen(false)}>
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    Verification
-                    {!verificationStatus.loading && (
-                      verificationStatus.identity && verificationStatus.payout ? (
-                        <Badge variant="outline" className="ml-auto bg-green-500/10 text-green-600 border-green-500/30">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Complete
-                        </Badge>
-                      ) : (
-                        <span className="ml-auto text-xs text-muted-foreground">(hunters only)</span>
-                      )
-                    )}
+                    <ShieldCheck className={`h-4 w-4 mr-2 ${
+                      !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout 
+                        ? 'text-green-600' 
+                        : ''
+                    }`} />
+                    <div className="flex flex-col items-start">
+                      <span className={
+                        !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout 
+                          ? 'text-green-600' 
+                          : ''
+                      }>Verification</span>
+                      {!verificationStatus.loading && (
+                        verificationStatus.identity && verificationStatus.payout ? (
+                          <span className="text-xs text-green-600">✓ Complete</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">(hunters only)</span>
+                        )
+                      )}
+                    </div>
                   </Link>
                 </Button>
 
