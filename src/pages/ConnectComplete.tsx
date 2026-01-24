@@ -1,29 +1,35 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, Clock, CreditCard } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, CreditCard, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ConnectComplete() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [status, setStatus] = useState<'checking' | 'complete' | 'pending' | 'failed'>('checking');
+  const [checkCount, setCheckCount] = useState(0);
+  
+  // Get return URL from query params (for returning to bounty after setup)
+  const returnTo = searchParams.get('return_to');
 
   useEffect(() => {
     checkConnectStatus();
     
-    // Auto-refresh status every 3 seconds while pending
+    // Auto-refresh status every 3 seconds while pending (max 10 checks)
     const interval = setInterval(() => {
-      if (status === 'pending' || status === 'checking') {
+      if ((status === 'pending' || status === 'checking') && checkCount < 10) {
         checkConnectStatus();
+        setCheckCount(prev => prev + 1);
       }
     }, 3000);
     
     return () => clearInterval(interval);
-  }, [status]);
+  }, [status, checkCount]);
 
   const checkConnectStatus = async () => {
     try {
@@ -57,11 +63,11 @@ export default function ConnectComplete() {
   const getStatusIcon = () => {
     switch (status) {
       case 'complete':
-        return <CheckCircle className="h-8 w-8 text-success" />;
+        return <CheckCircle className="h-8 w-8 text-green-500" />;
       case 'failed':
         return <XCircle className="h-8 w-8 text-destructive" />;
       case 'pending':
-        return <Clock className="h-8 w-8 text-warning" />;
+        return <Clock className="h-8 w-8 text-amber-500" />;
       default:
         return <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />;
     }
@@ -92,22 +98,30 @@ export default function ConnectComplete() {
     }
   };
 
+  const handleContinue = () => {
+    if (returnTo) {
+      navigate(returnTo);
+    } else {
+      navigate('/bounties');
+    }
+  };
+
   const statusMessage = getStatusMessage();
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Payout Setup</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Payout Setup</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Connect your bank account to receive bounty payments
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-3 justify-center">
-            <CreditCard className="h-6 w-6" />
-            Stripe Connect Status
+          <CardTitle className="flex items-center gap-3 justify-center text-base sm:text-lg">
+            <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+            <span>Stripe Connect Status</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -115,14 +129,14 @@ export default function ConnectComplete() {
             {getStatusIcon()}
             <div>
               <h3 className="text-lg font-semibold">{statusMessage.title}</h3>
-              <p className="text-muted-foreground">{statusMessage.description}</p>
+              <p className="text-muted-foreground text-sm sm:text-base">{statusMessage.description}</p>
             </div>
           </div>
 
           {status === 'checking' && (
             <Alert>
-              <Clock className="h-4 w-4" />
-              <AlertDescription>
+              <Clock className="h-4 w-4 flex-shrink-0" />
+              <AlertDescription className="text-sm">
                 Checking your payout setup with Stripe... This page will update automatically.
               </AlertDescription>
             </Alert>
@@ -130,44 +144,57 @@ export default function ConnectComplete() {
 
           {status === 'pending' && (
             <Alert>
-              <Clock className="h-4 w-4" />
-              <AlertDescription>
-                Your payout setup is being verified. This page will auto-refresh every 3 seconds to check your status.
+              <Clock className="h-4 w-4 flex-shrink-0" />
+              <AlertDescription className="text-sm">
+                Your payout setup is being verified. This page will auto-refresh to check your status.
               </AlertDescription>
             </Alert>
           )}
 
           {status === 'failed' && (
             <Alert variant="destructive">
-              <XCircle className="h-4 w-4" />
-              <AlertDescription>
+              <XCircle className="h-4 w-4 flex-shrink-0" />
+              <AlertDescription className="text-sm">
                 If you continue to experience issues, please ensure all your information is accurate and complete.
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col gap-3">
             {(status === 'checking' || status === 'pending') && (
-              <Button onClick={checkConnectStatus} variant="outline" disabled={status === 'checking'}>
+              <Button onClick={checkConnectStatus} variant="outline" disabled={status === 'checking'} className="w-full">
                 {status === 'checking' ? 'Checking...' : 'Check Status Now'}
               </Button>
             )}
             
             {status === 'complete' && (
-              <Button onClick={() => navigate('/me/profile')} className="bg-primary hover:bg-primary-hover">
-                View Profile
-              </Button>
+              <>
+                <Button onClick={handleContinue} className="w-full">
+                  {returnTo ? (
+                    <>
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Return to Bounty
+                    </>
+                  ) : (
+                    'Browse Bounties'
+                  )}
+                </Button>
+                <Button onClick={() => navigate('/me/profile')} variant="outline" className="w-full">
+                  View Profile
+                </Button>
+              </>
             )}
             
             {status === 'failed' && (
-              <Button onClick={() => navigate('/me/profile')} variant="outline">
-                Return to Profile
-              </Button>
+              <>
+                <Button onClick={() => navigate('/me/profile')} className="w-full">
+                  Try Again from Profile
+                </Button>
+                <Button onClick={() => navigate('/')} variant="outline" className="w-full">
+                  Return to Home
+                </Button>
+              </>
             )}
-            
-            <Button onClick={() => navigate('/')} variant="outline">
-              Return to Home
-            </Button>
           </div>
         </CardContent>
       </Card>
