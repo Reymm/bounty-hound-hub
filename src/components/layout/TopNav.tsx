@@ -380,25 +380,26 @@ export function TopNav({ onSearch }: TopNavProps) {
                 {/* Verification */}
                 <Button asChild variant="ghost" className="w-full justify-start h-auto py-2">
                   <Link to="/verification" onClick={() => setIsMobileMenuOpen(false)}>
-                    <ShieldCheck className={`h-4 w-4 mr-2 ${
+                    <ShieldCheck className={`h-4 w-4 mr-2 flex-shrink-0 ${
                       !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout 
                         ? 'text-green-600' 
                         : ''
                     }`} />
-                    <div className="flex flex-col items-start">
+                    <div className="flex flex-col items-start flex-1">
                       <span className={
                         !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout 
-                          ? 'text-green-600' 
+                          ? 'text-green-600 font-medium' 
                           : ''
                       }>Verification</span>
-                      {!verificationStatus.loading && (
-                        verificationStatus.identity && verificationStatus.payout ? (
-                          <span className="text-xs text-green-600">✓ Complete</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">(hunters only)</span>
-                        )
-                      )}
+                      <span className="text-xs text-muted-foreground">(hunters only)</span>
                     </div>
+                    {!verificationStatus.loading && (
+                      verificationStatus.identity && verificationStatus.payout ? (
+                        <span className="text-xs text-green-600 font-medium">✓</span>
+                      ) : (
+                        <span className="text-xs text-amber-600 font-medium">Action needed</span>
+                      )
+                    )}
                   </Link>
                 </Button>
 
