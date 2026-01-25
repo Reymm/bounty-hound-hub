@@ -1389,7 +1389,7 @@ function PostBountyForm() {
               !watch('description')?.trim() ||
               !watch('category') ||
               !watchedBountyAmount || 
-              watchedBountyAmount < 5 || 
+              watchedBountyAmount < 10 || 
               watchedBountyAmount > 10000 ||
               !watch('location')?.trim() ||
               (watch('tags') || []).length === 0 ||
