@@ -980,6 +980,7 @@ function PostBountyForm() {
                     }
                   }}
                   disabled={tags.length >= 10}
+                  spellCheck={true}
                   className="placeholder:text-foreground/70 border-foreground/30"
                 />
                 <Button
