@@ -71,14 +71,12 @@ export default function Messages() {
         // Use existing conversation
         setSelectedThread(existingThread);
       } else {
-        // Fetch the recipient's profile to get their name
+        // Fetch the recipient's profile using RPC to bypass RLS
         const { data: profileData } = await supabase
-          .from('profiles')
-          .select('username, full_name')
-          .eq('id', stateData.recipientId)
+          .rpc('get_public_profile_data', { profile_id: stateData.recipientId })
           .maybeSingle();
         
-        const recipientName = profileData?.username || profileData?.full_name || 'User';
+        const recipientName = profileData?.username || 'Unknown User';
         
         // Create new thread object using same format as getMessageThreads
         const threadId = [user.id, stateData.recipientId].sort().join('___');
@@ -143,11 +141,9 @@ export default function Messages() {
             // Only add message if it's from a participant AND for the same bounty
             if (participants.includes(newMessage.sender_id) && 
                 newMessage.bounty_id === selectedThread.bountyId) {
-              // Fetch sender profile
+              // Fetch sender profile using RPC to bypass RLS
               const { data: profileData } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('id', newMessage.sender_id)
+                .rpc('get_public_profile_data', { profile_id: newMessage.sender_id })
                 .maybeSingle();
               
               setMessages(prev => [...prev, {
@@ -155,7 +151,7 @@ export default function Messages() {
                 threadId: selectedThread.id,
                 bountyId: newMessage.bounty_id,
                 senderId: newMessage.sender_id,
-                senderName: profileData?.username || 'Unknown',
+                senderName: profileData?.username || 'Unknown User',
                 body: newMessage.content,
                 attachments: newMessage.attachment_url ? [newMessage.attachment_url] : [],
                 timestamp: new Date(newMessage.created_at),
@@ -218,23 +214,21 @@ export default function Messages() {
         return;
       }
       
-      // Fetch the other participant's profile info
+      // Fetch the other participant's profile info using RPC to bypass RLS
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', otherParticipant)
+        .rpc('get_public_profile_data', { profile_id: otherParticipant })
         .maybeSingle();
       
       if (profileError) {
         console.error('Error fetching profile:', profileError);
-        setOtherParticipantName('User');
+        setOtherParticipantName('Unknown User');
         setOtherParticipantAvatar('');
       } else if (profileData) {
-        const displayName = profileData.username || 'User';
+        const displayName = profileData.username || 'Unknown User';
         setOtherParticipantName(displayName);
         setOtherParticipantAvatar(profileData.avatar_url || '');
       } else {
-        setOtherParticipantName('User');
+        setOtherParticipantName('Unknown User');
         setOtherParticipantAvatar('');
       }
       
@@ -382,13 +376,18 @@ export default function Messages() {
 
       if (error) throw error;
 
+      // Fetch sender's actual username using RPC
+      const { data: senderProfile } = await supabase
+        .rpc('get_public_profile_data', { profile_id: user.id })
+        .maybeSingle();
+
       // Add the message to local state
       const message: Message = {
         id: data.id,
         threadId: selectedThread.id,
         bountyId: data.bounty_id,
         senderId: data.sender_id,
-        senderName: user.email?.split('@')[0] || 'You',
+        senderName: senderProfile?.username || 'You',
         body: data.content,
         attachments: data.attachment_url ? [data.attachment_url] : [],
         timestamp: new Date(data.created_at),

@@ -633,12 +633,10 @@ export const supabaseApi = {
 
   async getMessages(senderId: string, recipientId: string, bountyId?: string): Promise<Message[]> {
     try {
+      // Fetch messages without profile join (RLS blocks profile access)
       let query = supabase
         .from('messages')
-        .select(`
-          *,
-          sender_profile:profiles!sender_id (full_name, username)
-        `)
+        .select('*')
         .or(`and(sender_id.eq.${senderId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${senderId})`);
       
       // Filter by bounty_id if provided
@@ -646,16 +644,32 @@ export const supabaseApi = {
         query = query.eq('bounty_id', bountyId);
       }
       
-      const { data, error } = await query.order('created_at', { ascending: true });
+      const { data: messagesData, error } = await query.order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
+      // Get unique sender IDs and fetch their profiles using RPC to bypass RLS
+      const senderIds = [...new Set((messagesData || []).map(m => m.sender_id))];
+      
+      // Fetch all sender profiles in parallel
+      const profilePromises = senderIds.map(id => 
+        supabase.rpc('get_public_profile_data', { profile_id: id }).maybeSingle()
+      );
+      const profileResults = await Promise.all(profilePromises);
+      
+      // Create a map of id -> username
+      const profileMap = new Map<string, string>();
+      senderIds.forEach((id, index) => {
+        const profile = profileResults[index]?.data;
+        profileMap.set(id, profile?.username || 'Unknown User');
+      });
+
+      return (messagesData || []).map((row: any) => ({
         id: row.id,
         threadId: `${senderId}-${recipientId}`,
         bountyId: row.bounty_id,
         senderId: row.sender_id,
-        senderName: row.sender_profile?.username || row.sender_profile?.full_name || 'Unknown',
+        senderName: profileMap.get(row.sender_id) || 'Unknown User',
         body: row.content,
         attachments: row.attachment_url ? [row.attachment_url] : [],
         timestamp: new Date(row.created_at),
@@ -680,20 +694,22 @@ export const supabaseApi = {
           bounty_id: bountyId,
           content: body
         })
-        .select(`
-          *,
-          sender_profile:profiles!sender_id (full_name, username)
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
+
+      // Fetch sender's username using RPC to bypass RLS
+      const { data: senderProfile } = await supabase
+        .rpc('get_public_profile_data', { profile_id: user.id })
+        .maybeSingle();
 
       return {
         id: data.id,
         threadId: `${user.id}-${recipientId}`,
         bountyId: data.bounty_id,
         senderId: data.sender_id,
-        senderName: data.sender_profile?.username || data.sender_profile?.full_name || 'You',
+        senderName: senderProfile?.username || 'You',
         body: data.content,
         attachments: data.attachment_url ? [data.attachment_url] : [],
         timestamp: new Date(data.created_at),
