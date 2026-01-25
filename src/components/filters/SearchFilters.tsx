@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Filter, X, DollarSign, MapPin, Calendar } from 'lucide-react';
+import { Filter, X, DollarSign, MapPin, Calendar, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,6 +102,27 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
         </SheetHeader>
 
         <div className="space-y-6 mt-6 pb-20">
+          {/* Bounty Type Filter */}
+          <div className="space-y-2">
+            <Label htmlFor="bounty-type-filter" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Bounty Type
+            </Label>
+            <Select 
+              value={localFilters.bountyType || ''} 
+              onValueChange={(value) => handleFilterChange('bountyType', value === 'all' ? undefined : value)}
+            >
+              <SelectTrigger id="bounty-type-filter">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="lead_only">Lead Only</SelectItem>
+                <SelectItem value="find_ship">Find & Ship</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Category Filter */}
           <div className="space-y-2">
             <Label htmlFor="category-filter">Category</Label>
@@ -289,6 +310,19 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
                       size="sm"
                       className="h-auto p-0 ml-1 hover:bg-transparent"
                       onClick={() => handleFilterChange('deadline', undefined)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                )}
+                {filters.bountyType && (
+                  <Badge variant="secondary" className="text-xs">
+                    {filters.bountyType === 'lead_only' ? 'Lead Only' : 'Find & Ship'}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-0 ml-1 hover:bg-transparent"
+                      onClick={() => handleFilterChange('bountyType', undefined)}
                     >
                       <X className="h-3 w-3" />
                     </Button>
