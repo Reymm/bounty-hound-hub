@@ -405,12 +405,13 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                 <ProofImages urls={submission.proofUrls} />
               )}
 
-              <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
+              <div className="flex flex-col gap-3 text-xs text-muted-foreground border-t pt-3">
                 <span>
                   Submitted {formatDistanceToNow(submission.submittedAt, { addSuffix: true })}
                 </span>
                 
-                <div className="flex items-center gap-2">
+                {/* Action buttons - wrap on mobile */}
+                <div className="flex flex-wrap items-center gap-2">
                   {isOwner && submission.status === ClaimStatus.SUBMITTED && (
                     <>
                       <Button 
@@ -433,7 +434,7 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
                         }}
                       >
                         <RefreshCw className="h-3 w-3 mr-1" />
-                        Request Revision
+                        Revise
                       </Button>
                       <Button 
                         size="sm" 
