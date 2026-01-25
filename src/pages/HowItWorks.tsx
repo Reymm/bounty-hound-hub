@@ -146,9 +146,9 @@ const HowItWorks = () => {
                       2
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1">Verify Your Identity</h3>
+                      <h3 className="font-semibold text-foreground mb-1">Verify Identity & Set Up Payouts</h3>
                       <p className="text-sm text-muted-foreground">
-                        Complete a quick ID verification (takes ~5 minutes) to start claiming bounties.
+                        Complete ID verification and add your banking info (~5 minutes) to start claiming bounties.
                       </p>
                     </div>
                   </div>

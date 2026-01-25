@@ -5,4 +5,4 @@
 // - supabase/functions/create-escrow-payment/index.ts (IMMEDIATE_CHARGE_THRESHOLD)
 // 
 // Current: $10 for testing, planned production values: $75 or $150
-export const FREE_POST_THRESHOLD = 150;
+export const FREE_POST_THRESHOLD = 10;
