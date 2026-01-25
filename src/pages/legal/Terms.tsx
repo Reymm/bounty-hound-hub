@@ -144,6 +144,11 @@ export default function Terms() {
                     <li><strong>Hunters:</strong> Platform fee of $2 + 5% of bounty amount, plus Stripe transfer fees (approximately 0.25% + $0.25), deducted from payout</li>
                     <li><strong>Example:</strong> On a $100 bounty, Hunters receive approximately $92 after fees</li>
                   </ul>
+                  <p className="text-muted-foreground leading-relaxed mt-3">
+                    <strong>Fee Modifications:</strong> BountyBay reserves the right to modify its fee structure at any time. 
+                    We will provide at least 30 days' notice of any fee changes via email or Platform notification. 
+                    Continued use of the Platform after fee changes take effect constitutes acceptance of the new fees.
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">5.4 Cancellation Policy</h3>
@@ -337,7 +342,60 @@ export default function Terms() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">15. Entire Agreement</h2>
+              <h2 className="text-xl font-semibold mb-3">15. Force Majeure</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                BountyBay shall not be liable for any failure or delay in performing its obligations under these 
+                Terms due to circumstances beyond its reasonable control, including but not limited to: natural 
+                disasters, acts of God, war, terrorism, riots, embargoes, acts of civil or military authorities, 
+                fire, floods, pandemics, epidemics, strikes, power outages, internet or telecommunications failures, 
+                or failures of third-party service providers (including Stripe and Supabase). During such events, 
+                BountyBay's obligations shall be suspended until the force majeure event ceases.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">16. No Waiver</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                The failure of BountyBay to enforce any right or provision of these Terms shall not constitute a 
+                waiver of such right or provision. Any waiver of any provision of these Terms will be effective 
+                only if in writing and signed by BountyBay. No single or partial exercise of any right or remedy 
+                shall preclude any other or further exercise thereof.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">17. Assignment</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                You may not assign or transfer these Terms or your rights hereunder without BountyBay's prior 
+                written consent. BountyBay may freely assign or transfer these Terms and its rights and obligations 
+                hereunder, in whole or in part, without restriction or notification, including in connection with 
+                a merger, acquisition, sale of assets, or by operation of law.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">18. Survival</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                The following sections shall survive any termination or expiration of these Terms: Platform Role 
+                and Liability (Section 6), Limitation of Liability (Section 10), Indemnification (Section 11), 
+                Dispute Resolution (Section 8), Intellectual Property (Section 9), and any other provisions that 
+                by their nature should survive termination.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">19. Electronic Communications</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                By using the Platform, you consent to receive electronic communications from BountyBay, including 
+                emails, push notifications, and in-Platform messages. You agree that all agreements, notices, 
+                disclosures, and other communications provided electronically satisfy any legal requirement that 
+                such communications be in writing. You are responsible for maintaining a valid email address and 
+                checking for communications regularly.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3">20. Entire Agreement</h2>
               <p className="text-muted-foreground leading-relaxed">
                 These Terms, together with our Privacy Policy, constitute the entire agreement between you and 
                 Bountybay Ltd. regarding your use of the Platform and supersede all prior agreements, 
@@ -346,7 +404,7 @@ export default function Terms() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3">16. Contact Information</h2>
+              <h2 className="text-xl font-semibold mb-3">21. Contact Information</h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
                 For questions regarding these Terms of Service, please visit our Support Center:
               </p>
