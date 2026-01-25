@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus, TrendingUp, Trophy, ShieldCheck, CreditCard } from 'lucide-react';
+import { Plus, TrendingUp, Trophy, ShieldCheck, CreditCard, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
@@ -167,6 +167,12 @@ const Index = () => {
                     </Link>
                   </Button>
                 )}
+                <Button asChild variant="outline" size="default">
+                  <Link to="/how-it-works">
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    How It Works
+                  </Link>
+                </Button>
                 <Button asChild variant="outline" size="default">
                   <Link to="/bounties">
                     <TrendingUp className="h-4 w-4 mr-2" />

@@ -28,6 +28,7 @@ import Checkout from "./pages/Checkout";
 import Terms from "./pages/legal/Terms";
 import Privacy from "./pages/legal/Privacy";
 import FAQ from "./pages/FAQ";
+import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import Verification from "./pages/Verification";
 import Settings from "./pages/Settings";
@@ -76,6 +77,7 @@ const App = () => (
                         </ProtectedRoute>
                       } />
                       <Route path="/faq" element={<FAQ />} />
+                      <Route path="/how-it-works" element={<HowItWorks />} />
                       
                       {/* Niche landing pages */}
                       <Route path="/reconnections" element={<Reconnections />} />

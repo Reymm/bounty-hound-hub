@@ -27,6 +27,13 @@ export function Footer() {
           {/* Links */}
           <nav className="flex flex-wrap items-center justify-center gap-6 text-sm">
             <Link 
+              to="/how-it-works" 
+              className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
+              aria-label="How It Works"
+            >
+              How It Works
+            </Link>
+            <Link 
               to="/faq" 
               className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
               aria-label="Frequently Asked Questions"
