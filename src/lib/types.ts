@@ -353,6 +353,19 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
       'lost-items': 'Lost Items',
       'other-recovery': 'Other Recovery'
     }
+  },
+  'toys-kids': {
+    label: 'Toys & Kids',
+    subcategories: {
+      'stuffed-animals': 'Stuffed Animals & Plush',
+      'action-figures': 'Action Figures & Dolls',
+      'discontinued-toys': 'Discontinued Toys',
+      'baby-toddler': 'Baby & Toddler Toys',
+      'educational-stem': 'Educational & STEM',
+      'outdoor-play': 'Outdoor & Ride-On',
+      'building-sets': 'Building Sets & Blocks',
+      'board-games-puzzles': 'Board Games & Puzzles'
+    }
   }
 };
 
@@ -373,7 +386,8 @@ export enum BountyCategory {
   CRAFTS_HOBBIES = 'crafts-hobbies',
   BUSINESS_INDUSTRIAL = 'business-industrial',
   MISCELLANEOUS = 'miscellaneous',
-  RECOVERY_REWARDS = 'recovery-rewards'
+  RECOVERY_REWARDS = 'recovery-rewards',
+  TOYS_KIDS = 'toys-kids'
 }
 
 export enum BountyStatus {

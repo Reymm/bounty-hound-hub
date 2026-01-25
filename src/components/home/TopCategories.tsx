@@ -1,4 +1,4 @@
-import { Car, Heart, Sparkles, Shirt, Disc3, Trophy, Gamepad2, BookOpen, Palette, Shield } from 'lucide-react';
+import { Car, Heart, Sparkles, Shirt, Disc3, Trophy, Gamepad2, BookOpen, Palette, Shield, Baby } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BountyCategory } from '@/lib/types';
@@ -85,6 +85,13 @@ const topCategories: CategoryCard[] = [
     icon: <Shield className="h-6 w-6" />,
     description: 'Stolen vehicles, lost items, recovery tips',
     gradient: 'from-red-500/10 to-red-600/5'
+  },
+  {
+    id: BountyCategory.TOYS_KIDS,
+    label: 'Toys & Kids',
+    icon: <Baby className="h-6 w-6" />,
+    description: 'Discontinued toys, stuffed animals, baby gear',
+    gradient: 'from-cyan-500/10 to-cyan-600/5'
   }
 ];
 
