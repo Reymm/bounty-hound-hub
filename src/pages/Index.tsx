@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus, TrendingUp, Trophy, ShieldCheck } from 'lucide-react';
+import { Plus, TrendingUp, Trophy, ShieldCheck, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
@@ -10,6 +10,7 @@ import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { FREE_POST_THRESHOLD } from '@/lib/constants';
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -128,12 +129,20 @@ const Index = () => {
               help you discover exactly what you're looking for.
             </p>
             
-            {/* Trust Badge */}
-            <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2 mb-4">
-              <ShieldCheck className="h-5 w-5 text-success" />
-              <span className="text-sm font-medium text-success">
-                Every hunter is ID-verified. Safe transactions.
-              </span>
+            {/* Trust Badges */}
+            <div className="flex flex-col sm:flex-row gap-2 justify-center mb-4">
+              <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2">
+                <ShieldCheck className="h-4 w-4 text-success" />
+                <span className="text-sm font-medium text-success">
+                  ID-verified hunters
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  Free to post under ${FREE_POST_THRESHOLD}
+                </span>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mb-8">
               By using BountyBay, you agree to our{' '}
