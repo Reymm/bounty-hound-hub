@@ -293,12 +293,19 @@ export default function Privacy() {
               <h2 className="text-xl font-semibold mb-3">13. Contact Us</h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
                 If you have questions about this Privacy Policy, wish to exercise your privacy rights, or 
-                have concerns about our data practices, please contact us:
+                have concerns about our data practices, please visit our Support Center:
               </p>
-              <div className="text-muted-foreground space-y-1">
+              <div className="mt-4">
+                <Button asChild>
+                  <Link to="/support">Visit Support Center</Link>
+                </Button>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Select "Account / Privacy Request" when creating your ticket for GDPR/PIPEDA data requests, 
+                  or use our AI Assistant for quick answers to common questions.
+                </p>
+              </div>
+              <div className="text-muted-foreground space-y-1 mt-4">
                 <p><strong>Bountybay Ltd.</strong></p>
-                <p>Privacy Inquiries: privacy@bountybay.co</p>
-                <p>General Support: support@bountybay.co</p>
                 <p>Website: bountybay.co</p>
               </div>
               <p className="text-muted-foreground leading-relaxed mt-4">
