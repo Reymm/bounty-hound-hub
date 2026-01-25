@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Eye, Clock, Image as ImageIcon, BadgeCheck } from 'lucide-react';
+import { Calendar, MapPin, Eye, Clock, Image as ImageIcon, BadgeCheck, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -105,6 +105,17 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
             >
               {bounty.status}
             </Badge>
+            {bounty.requires_shipping ? (
+              <Badge variant="outline" className="text-xs text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-600 gap-0.5">
+                <Package className="h-3 w-3" />
+                Find & Ship
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600 gap-0.5">
+                <MapPin className="h-3 w-3" />
+                Lead Only
+              </Badge>
+            )}
             {bounty.isOfficial && (
               <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs gap-0.5">
                 <BadgeCheck className="h-3 w-3" />

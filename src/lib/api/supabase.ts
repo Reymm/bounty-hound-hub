@@ -156,6 +156,13 @@ export const supabaseApi = {
         query = query.lte('deadline', filters.deadlineBefore.toISOString());
       }
 
+      // Filter by bounty type (Lead Only vs Find & Ship)
+      if (filters.bountyType === 'lead_only') {
+        query = query.eq('requires_shipping', false);
+      } else if (filters.bountyType === 'find_ship') {
+        query = query.eq('requires_shipping', true);
+      }
+
       // Apply sorting
       if (filters.sortBy === 'top') {
         query = query.order('amount', { ascending: false }); // Highest payouts first

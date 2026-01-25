@@ -453,6 +453,7 @@ export interface SearchFilters {
   deadlineBefore?: Date; // Internal use for API
   status?: BountyStatus[];
   sortBy?: 'newest' | 'top' | 'soonest';
+  bountyType?: 'lead_only' | 'find_ship';
 }
 
 // API Response types

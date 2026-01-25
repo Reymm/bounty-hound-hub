@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon, BadgeCheck } from 'lucide-react';
+import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon, BadgeCheck, Package } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
@@ -52,6 +52,23 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
     );
   };
 
+  const getBountyTypeBadge = () => {
+    if (bounty.requires_shipping) {
+      return (
+        <Badge variant="outline" className="text-xs text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-600">
+          <Package className="h-3 w-3 mr-1" />
+          Find & Ship
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-xs text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600">
+        <MapPin className="h-3 w-3 mr-1" />
+        Lead Only
+      </Badge>
+    );
+  };
+
   return (
     <Card className="card-hover focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 transition-all duration-200 overflow-hidden">
       <CardContent className="p-0">
@@ -82,8 +99,9 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
         <div className="p-4 space-y-3">
           {/* Header with status and bounty amount */}
           <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {getStatusBadge()}
+              {getBountyTypeBadge()}
               {showSaveButton && onToggleSave && (
                 <SaveBountyButton isSaved={isSaved} onToggle={onToggleSave} />
               )}
