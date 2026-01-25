@@ -107,19 +107,7 @@ const HowItWorks = () => {
                   </div>
                 </div>
 
-                {/* Payment Info Box */}
-                <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CreditCard className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-sm text-foreground">How Payment Works</span>
-                  </div>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>• <strong>Under ${DISPLAY_THRESHOLD}:</strong> Card saved securely, only charged when you accept a claim</li>
-                    <li>• <strong>${DISPLAY_THRESHOLD}+:</strong> Authorization hold placed, still only charged upon acceptance</li>
-                  </ul>
-                </div>
-
-                <Button asChild className="w-full mt-6">
+                <Button asChild className="w-full mt-8">
                   <Link to={user ? "/post" : "/auth?tab=signup"}>
                     <Plus className="h-4 w-4 mr-2" />
                     Post a Bounty
