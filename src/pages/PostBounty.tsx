@@ -1154,6 +1154,7 @@ function PostBountyForm() {
                       id="targetPriceMin"
                       type="number"
                       min="1"
+                      step="1"
                       placeholder="Min price"
                       className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.targetPriceMin ? 'border-destructive' : ''}`}
                       {...register('targetPriceMin', { 
@@ -1174,6 +1175,7 @@ function PostBountyForm() {
                       id="targetPriceMax"
                       type="number"
                       min="1"
+                      step="1"
                       placeholder="Max price"
                       className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.targetPriceMax ? 'border-destructive' : ''}`}
                       {...register('targetPriceMax', { 
