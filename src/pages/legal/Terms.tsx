@@ -348,11 +348,18 @@ export default function Terms() {
             <section>
               <h2 className="text-xl font-semibold mb-3">16. Contact Information</h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
-                For questions regarding these Terms of Service, please contact us:
+                For questions regarding these Terms of Service, please visit our Support Center:
               </p>
-              <div className="mt-3 text-muted-foreground space-y-1">
+              <div className="mt-4">
+                <Button asChild>
+                  <Link to="/support">Contact Support</Link>
+                </Button>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Create a support ticket and our team will respond within 24-48 hours.
+                </p>
+              </div>
+              <div className="mt-4 text-muted-foreground space-y-1">
                 <p><strong>Bountybay Ltd.</strong></p>
-                <p>Email: legal@bountybay.co</p>
                 <p>Website: bountybay.co</p>
               </div>
             </section>
