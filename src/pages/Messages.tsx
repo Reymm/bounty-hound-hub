@@ -732,8 +732,8 @@ export default function Messages() {
                 )}
               </div>
 
-              {/* Message Composer */}
-              <div className="p-4 border-t border-border bg-background">
+              {/* Message Composer - solid background, safe area padding on mobile */}
+              <div className="p-4 border-t border-border bg-background safe-bottom sticky bottom-0 z-20">
                 {/* Image preview */}
                 {imagePreview && (
                   <div className="relative inline-block mb-3">
