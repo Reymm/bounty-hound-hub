@@ -10,7 +10,7 @@ import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { FREE_POST_THRESHOLD } from '@/lib/constants';
+
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -140,7 +140,7 @@ const Index = () => {
               <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
                 <CreditCard className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-primary">
-                  Free to post under ${FREE_POST_THRESHOLD}
+                  Only pay when your item is found
                 </span>
               </div>
             </div>
