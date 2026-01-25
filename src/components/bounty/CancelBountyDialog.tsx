@@ -13,9 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle, Clock } from "lucide-react";
-
-// Threshold for immediate charge vs. saved card (must match create-escrow-payment)
-const IMMEDIATE_CHARGE_THRESHOLD = 150;
+import { FREE_POST_THRESHOLD } from "@/lib/constants";
 
 interface CancelBountyDialogProps {
   bountyId: string;
@@ -80,7 +78,7 @@ export function CancelBountyDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {bountyAmount >= IMMEDIATE_CHARGE_THRESHOLD ? (
+          {bountyAmount >= FREE_POST_THRESHOLD ? (
             <Alert>
               <Clock className="h-4 w-4" />
               <AlertDescription>

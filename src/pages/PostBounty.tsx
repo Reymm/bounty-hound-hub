@@ -30,6 +30,7 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { useAuth } from '@/contexts/AuthContext';
 import { Switch } from '@/components/ui/switch';
+import { FREE_POST_THRESHOLD } from '@/lib/constants';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -1124,11 +1125,11 @@ function PostBountyForm() {
                 </p>
                 
                 {/* Dynamic payment threshold messaging */}
-                {watchedBountyAmount >= 150 ? (
+{watchedBountyAmount >= FREE_POST_THRESHOLD ? (
                   <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
                     <CreditCard className="h-4 w-4 text-amber-500" />
                     <AlertDescription className="text-amber-700 dark:text-amber-300">
-                      <strong>Immediate charge:</strong> For bounties $150+, your card will be charged ${totalCharge.toFixed(2)} now to secure the funds. This prevents fraud on high-value bounties.
+                      <strong>Immediate charge:</strong> For bounties ${FREE_POST_THRESHOLD}+, your card will be charged ${totalCharge.toFixed(2)} now to secure the funds. This prevents fraud on high-value bounties.
                     </AlertDescription>
                   </Alert>
                 ) : (
