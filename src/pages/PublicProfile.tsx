@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
-  User, 
   Star, 
   MapPin, 
   Calendar,
@@ -9,12 +8,12 @@ import {
   AlertCircle,
   Shield,
   ArrowLeft,
-  BadgeCheck
+  BadgeCheck,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
@@ -22,6 +21,7 @@ import { Profile as ProfileType, IdvStatus } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -166,7 +166,23 @@ export default function PublicProfile() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Reputation</p>
-                <p className="text-2xl font-bold">{profile.reputationScore.toFixed(1)}</p>
+                {profile.total_ratings_received > 0 ? (
+                  <p className="text-2xl font-bold">{profile.reputationScore.toFixed(1)}</p>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1">
+                          <p className="text-2xl font-bold text-muted-foreground">N/A</p>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Reputation builds after completing bounties</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
               <Star className="h-8 w-8 text-yellow-500 fill-current" />
             </div>
@@ -190,7 +206,23 @@ export default function PublicProfile() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Average Rating</p>
-                <p className="text-2xl font-bold">{profile.average_rating.toFixed(1)}</p>
+                {profile.total_ratings_received > 0 ? (
+                  <p className="text-2xl font-bold">{profile.average_rating.toFixed(1)}</p>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1">
+                          <p className="text-2xl font-bold text-muted-foreground">N/A</p>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Rating will appear after first review</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
               <Star className="h-8 w-8 text-primary" />
             </div>
