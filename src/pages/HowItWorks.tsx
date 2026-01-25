@@ -13,7 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { FREE_POST_THRESHOLD } from '@/lib/constants';
+// Display threshold for How It Works page (production value shown to users)
+const DISPLAY_THRESHOLD = 75;
 
 const HowItWorks = () => {
   const { user } = useAuth();
@@ -113,8 +114,8 @@ const HowItWorks = () => {
                     <span className="font-semibold text-sm text-foreground">How Payment Works</span>
                   </div>
                   <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>• <strong>Under ${FREE_POST_THRESHOLD}:</strong> Card saved securely, only charged when you accept a claim</li>
-                    <li>• <strong>${FREE_POST_THRESHOLD}+:</strong> Authorization hold placed, still only charged upon acceptance</li>
+                    <li>• <strong>Under ${DISPLAY_THRESHOLD}:</strong> Card saved securely, only charged when you accept a claim</li>
+                    <li>• <strong>${DISPLAY_THRESHOLD}+:</strong> Authorization hold placed, still only charged upon acceptance</li>
                   </ul>
                 </div>
 
@@ -263,7 +264,7 @@ const HowItWorks = () => {
             <Card className="border-2 border-primary/20">
               <CardContent className="p-6">
                 <div className="text-center mb-4">
-                  <span className="text-2xl font-bold text-primary">Under ${FREE_POST_THRESHOLD}</span>
+                  <span className="text-2xl font-bold text-primary">Under ${DISPLAY_THRESHOLD}</span>
                 </div>
                 <h3 className="font-semibold text-foreground text-center mb-3">Card Saved Only</h3>
                 <p className="text-sm text-muted-foreground text-center">
@@ -276,7 +277,7 @@ const HowItWorks = () => {
             <Card className="border-2 border-warning/30 bg-warning/5">
               <CardContent className="p-6">
                 <div className="text-center mb-4">
-                  <span className="text-2xl font-bold text-warning">${FREE_POST_THRESHOLD}+</span>
+                  <span className="text-2xl font-bold text-warning">${DISPLAY_THRESHOLD}+</span>
                 </div>
                 <h3 className="font-semibold text-foreground text-center mb-3">Authorization Hold</h3>
                 <p className="text-sm text-muted-foreground text-center">
@@ -292,7 +293,7 @@ const HowItWorks = () => {
               ✓ No find = No charge. You're never billed unless you accept a claim.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Cancel anytime before acceptance with no fees for bounties under ${FREE_POST_THRESHOLD}.
+              Cancel anytime before acceptance with no fees for bounties under ${DISPLAY_THRESHOLD}.
             </p>
           </div>
         </div>
