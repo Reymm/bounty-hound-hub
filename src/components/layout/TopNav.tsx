@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck } from 'lucide-react';
+import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -276,6 +276,12 @@ export function TopNav({ onSearch }: TopNavProps) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/how-it-works">
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        How It Works
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/support">
                         <Bug className="mr-2 h-4 w-4" />
                         Report Bug
@@ -434,6 +440,13 @@ export function TopNav({ onSearch }: TopNavProps) {
                   <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
                     <Bug className="h-4 w-4 mr-2" />
                     Support
+                  </Link>
+                </Button>
+
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    How It Works
                   </Link>
                 </Button>
 
