@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { FREE_POST_THRESHOLD } from '@/lib/constants';
-import bountybayLogo from '@/assets/bountybay-text-logo.png';
 
 const HowItWorks = () => {
   const { user } = useAuth();
@@ -29,14 +28,8 @@ const HowItWorks = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-success/5 border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 text-center">
-          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4 flex items-center justify-center gap-3 flex-wrap">
-            <span>How</span>
-            <img 
-              src={bountybayLogo} 
-              alt="BountyBay" 
-              className="h-10 lg:h-14 inline-block"
-            />
-            <span>Works</span>
+          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            How BountyBay Works
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             We connect people looking for hard-to-find items with a community of hunters 
