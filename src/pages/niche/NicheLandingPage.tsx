@@ -109,7 +109,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
           <div className="text-center max-w-3xl mx-auto">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="p-4 rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-lg">
+              <div className="p-4 rounded-2xl bg-background border border-border shadow-lg">
                 {config.icon}
               </div>
             </div>

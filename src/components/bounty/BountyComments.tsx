@@ -193,7 +193,7 @@ export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) 
               </div>
             </form>
           ) : (
-            <div className="text-center py-4 bg-muted/50 rounded-lg">
+            <div className="text-center py-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground mb-2">
                 Sign in to leave a comment
               </p>
@@ -203,7 +203,7 @@ export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) 
             </div>
           )
         ) : (
-          <div className="text-center py-3 bg-muted/30 rounded-lg text-sm text-muted-foreground">
+          <div className="text-center py-3 bg-muted rounded-lg text-sm text-muted-foreground">
             Comments are closed on this bounty
           </div>
         )}

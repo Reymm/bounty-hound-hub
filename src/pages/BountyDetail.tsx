@@ -420,7 +420,7 @@ export default function BountyDetail() {
                       
                       {/* Hunter verification info block */}
                       {user && (
-                        <div className="text-sm text-muted-foreground space-y-2 p-3 bg-muted/50 rounded-lg">
+                        <div className="text-sm text-muted-foreground space-y-2 p-3 bg-muted rounded-lg">
                           <p className="flex items-center gap-2 font-medium text-foreground">
                             <ShieldCheck className="h-4 w-4 text-primary" />
                             First time claiming?
@@ -649,7 +649,7 @@ export default function BountyDetail() {
                   
                   {/* Hunter verification info block - mobile */}
                   {user && (
-                    <div className="text-sm text-muted-foreground space-y-2 p-3 bg-muted/50 rounded-lg">
+                    <div className="text-sm text-muted-foreground space-y-2 p-3 bg-muted rounded-lg">
                       <p className="flex items-center gap-2 font-medium text-foreground">
                         <ShieldCheck className="h-4 w-4 text-primary" />
                         First time claiming?
