@@ -1080,7 +1080,7 @@ function PostBountyForm() {
                 <Input
                   id="bountyAmount"
                   type="number"
-                  min="10"
+                  min="5"
                   max="10000"
                   step="1"
                   placeholder="500"
@@ -1093,11 +1093,11 @@ function PostBountyForm() {
               {errors.bountyAmount && (
                 <p className="text-sm text-destructive">{errors.bountyAmount.message}</p>
               )}
-              {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && watchedBountyAmount < 10 && (
-                <p className="text-sm text-destructive">Minimum bounty must be $10 USD</p>
+              {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && watchedBountyAmount < 5 && (
+                <p className="text-sm text-destructive">Minimum bounty must be $5 USD</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                💰 This is your reward to the hunter for <strong>finding</strong> the item ($10 - $10,000 USD)
+                💰 This is your reward to the hunter for <strong>finding</strong> the item ($5 - $10,000 USD)
               </p>
             </div>
 

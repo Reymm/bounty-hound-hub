@@ -14,8 +14,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 // $75 threshold: bounties at or above this amount charge immediately to prevent trolls
-// Currently $5 for testing
-const IMMEDIATE_CHARGE_THRESHOLD = 5;
+const IMMEDIATE_CHARGE_THRESHOLD = 75;
 
 // Input validation schema
 const escrowPaymentSchema = z.object({
