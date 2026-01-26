@@ -582,18 +582,25 @@ export const supabaseApi = {
         row.participant_1 === userId ? row.participant_2 : row.participant_1
       ))];
 
-      // Fetch bounty titles and participant profiles in parallel
-      const [bountiesResult, profilesResult] = await Promise.all([
-        bountyIds.length > 0 
-          ? supabase.from('Bounties').select('id, title').in('id', bountyIds)
-          : { data: [] },
-        otherParticipantIds.length > 0 
-          ? supabase.from('profiles').select('id, username, full_name').in('id', otherParticipantIds)
-          : { data: [] }
-      ]);
+      // Fetch bounty titles
+      const bountiesResult = bountyIds.length > 0 
+        ? await supabase.from('Bounties').select('id, title').in('id', bountyIds)
+        : { data: [] };
+
+      // Fetch participant profiles using RPC to bypass RLS (same pattern as getMessages)
+      const profilePromises = otherParticipantIds.map(id => 
+        supabase.rpc('get_public_profile_data', { profile_id: id }).maybeSingle()
+      );
+      const profileResults = await Promise.all(profilePromises);
 
       const bountyMap = new Map((bountiesResult.data || []).map(b => [b.id, b.title]));
-      const profileMap = new Map((profilesResult.data || []).map(p => [p.id, p.username || p.full_name || 'Unknown User']));
+      
+      // Create profile map from RPC results
+      const profileMap = new Map<string, string>();
+      otherParticipantIds.forEach((id, index) => {
+        const profile = profileResults[index]?.data;
+        profileMap.set(id, profile?.username || 'Unknown User');
+      });
 
       return (data || []).map((row: any) => {
         const otherParticipantId = row.participant_1 === userId ? row.participant_2 : row.participant_1;
