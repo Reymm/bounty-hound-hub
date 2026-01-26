@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, MapPin, Upload, X, Plus, AlertCircle, CreditCard, Shield, Package } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Upload, X, AlertCircle, CreditCard, Shield, Package } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -21,15 +21,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { postBountySchema, PostBountyFormData } from '@/lib/validators';
-import { BountyCategory, CATEGORY_STRUCTURE } from '@/lib/types';
-import { mockApi } from '@/lib/api/mock';
+import { CATEGORY_STRUCTURE } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile, deleteFile } from '@/lib/storage';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { useAuth } from '@/contexts/AuthContext';
-import { Switch } from '@/components/ui/switch';
 import { FREE_POST_THRESHOLD } from '@/lib/constants';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -800,21 +798,21 @@ function PostBountyForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Post a Bounty</h1>
-        <p className="text-muted-foreground">
-          Tell our community what you're looking for and set a bounty for successful finds.
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">Post a Bounty</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Tell our community what you're looking for and set a reward.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onDetailsSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(onDetailsSubmit)} className="space-y-5 sm:space-y-8">
         {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-4 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl">Basic Information</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5 sm:space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title">
                 Title <span className="text-destructive">*</span>
@@ -1058,18 +1056,18 @@ function PostBountyForm() {
         </Card>
 
         {/* Pricing */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Pricing Information
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-4 sm:pb-6">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
+              Pricing
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <Alert>
-              <Shield className="h-4 w-4" />
-              <AlertDescription>
-                <strong>How pricing works:</strong> The bounty reward is what you pay the hunter for finding your item. For "Find & Ship" bounties, you'll also reimburse the hunter for any purchase costs via "Send Additional Funds" after they ship.
+          <CardContent className="space-y-5 sm:space-y-6">
+            <Alert className="bg-background border-border">
+              <Shield className="h-4 w-4 shrink-0" />
+              <AlertDescription className="text-xs sm:text-sm">
+                <strong>How it works:</strong> The bounty is your reward to the hunter. For "Find & Ship" bounties, you reimburse item costs separately.
               </AlertDescription>
             </Alert>
 
@@ -1095,30 +1093,30 @@ function PostBountyForm() {
               {errors.bountyAmount && (
                 <p className="text-sm text-destructive">{errors.bountyAmount.message}</p>
               )}
-              {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount < 10 && (
+              {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && watchedBountyAmount < 10 && (
                 <p className="text-sm text-destructive">Minimum bounty must be $10 USD</p>
               )}
-              <p className="text-xs text-muted-foreground">
-                💰 All amounts in USD. This is your reward to the hunter for <strong>finding</strong> the item - not the item's purchase price ($10 - $10,000 USD)
+              <p className="text-xs text-muted-foreground mt-1">
+                💰 This is your reward to the hunter for <strong>finding</strong> the item ($10 - $10,000 USD)
               </p>
             </div>
 
-            {/* Fee Breakdown */}
-            {watchedBountyAmount > 0 && (
-              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
-                <h4 className="font-medium">Payment Breakdown <span className="text-xs font-normal text-muted-foreground">(all amounts in USD)</span></h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Bounty Reward (Finder's Fee):</span>
-                    <span className="font-medium">${watchedBountyAmount.toFixed(2)} USD</span>
+            {/* Fee Breakdown - only show when bounty amount is a valid positive number */}
+            {typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && (
+              <div className="bg-background border border-border p-4 rounded-lg space-y-3">
+                <h4 className="font-medium text-sm sm:text-base">Payment Breakdown <span className="text-xs font-normal text-muted-foreground">(all amounts in USD)</span></h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Bounty Reward:</span>
+                    <span className="font-medium">${watchedBountyAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Payment Processing (3.7% + $0.30):</span>
-                    <span>${platformFee.toFixed(2)}</span>
+                  <div className="flex justify-between gap-2 text-muted-foreground text-xs sm:text-sm">
+                    <span>Processing (3.7% + $0.30):</span>
+                    <span>${(platformFee || 0).toFixed(2)}</span>
                   </div>
-                  <div className="border-t pt-2 flex justify-between font-semibold text-base">
-                    <span>Total Charge:</span>
-                    <span>${totalCharge.toFixed(2)} USD</span>
+                  <div className="border-t pt-2 flex justify-between gap-2 font-semibold text-sm sm:text-base">
+                    <span>Total:</span>
+                    <span>${(totalCharge || 0).toFixed(2)} USD</span>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2 border-t">
@@ -1126,18 +1124,18 @@ function PostBountyForm() {
                 </p>
                 
                 {/* Dynamic payment threshold messaging */}
-{watchedBountyAmount >= FREE_POST_THRESHOLD ? (
+                {watchedBountyAmount >= FREE_POST_THRESHOLD ? (
                   <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
-                    <CreditCard className="h-4 w-4 text-amber-500" />
-                    <AlertDescription className="text-amber-700 dark:text-amber-300">
-                      <strong>Immediate charge:</strong> For bounties ${FREE_POST_THRESHOLD}+, your card will be charged ${totalCharge.toFixed(2)} now to secure the funds. This prevents fraud on high-value bounties.
+                    <CreditCard className="h-4 w-4 text-amber-500 shrink-0" />
+                    <AlertDescription className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm">
+                      <strong>Immediate charge:</strong> For bounties ${FREE_POST_THRESHOLD}+, your card will be charged ${(totalCharge || 0).toFixed(2)} now.
                     </AlertDescription>
                   </Alert>
                 ) : (
                   <Alert className="mt-3 border-emerald-500/50 bg-emerald-500/10">
-                    <CreditCard className="h-4 w-4 text-emerald-500" />
-                    <AlertDescription className="text-emerald-700 dark:text-emerald-300">
-                      <strong>Card saved only:</strong> Your card will be saved securely but <em>not charged</em> until you accept a hunter's claim.
+                    <CreditCard className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <AlertDescription className="text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm">
+                      <strong>Card saved only:</strong> Not charged until you accept a claim.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -1193,10 +1191,12 @@ function PostBountyForm() {
               </p>
             </div>
 
-            {watchedTargetMin && watchedTargetMax && watchedTargetMin > watchedTargetMax && (
+            {typeof watchedTargetMin === 'number' && !isNaN(watchedTargetMin) && 
+             typeof watchedTargetMax === 'number' && !isNaN(watchedTargetMax) && 
+             watchedTargetMin > watchedTargetMax && (
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <AlertDescription className="text-xs sm:text-sm">
                   Minimum price cannot be greater than maximum price
                 </AlertDescription>
               </Alert>
@@ -1206,14 +1206,14 @@ function PostBountyForm() {
         </Card>
 
         {/* Timeline & Verification */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-4 sm:pb-6">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
               Timeline & Verification
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5 sm:space-y-6">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <input
@@ -1321,10 +1321,10 @@ function PostBountyForm() {
         </Card>
 
         {/* Image Upload */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-4 sm:pb-6">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
               Images (Optional)
             </CardTitle>
           </CardHeader>
@@ -1337,7 +1337,7 @@ function PostBountyForm() {
               maxSize={20 * 1024 * 1024} // 20MB
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Upload up to 5 reference images to help hunters understand what you're looking for
+              Upload up to 5 reference images
             </p>
           </CardContent>
         </Card>
@@ -1357,11 +1357,11 @@ function PostBountyForm() {
           
           if (missingFields.length > 0) {
             return (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Please complete the following:</strong>
-                  <ul className="list-disc list-inside mt-1">
+              <Alert variant="destructive" className="mb-4 bg-destructive/10">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <AlertDescription className="text-xs sm:text-sm">
+                  <strong>Please complete:</strong>
+                  <ul className="list-disc list-inside mt-1 space-y-0.5">
                     {missingFields.map((field, i) => (
                       <li key={i}>{field}</li>
                     ))}
@@ -1399,7 +1399,7 @@ function PostBountyForm() {
             }
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
-            {isSubmitting ? 'Creating Payment...' : `Continue to Payment ${totalCharge > 0 ? `($${totalCharge} total)` : watchedBountyAmount ? `($${watchedBountyAmount})` : ''}`}
+            {isSubmitting ? 'Creating Payment...' : `Continue to Payment${typeof totalCharge === 'number' && !isNaN(totalCharge) && totalCharge > 0 ? ` ($${totalCharge.toFixed(0)})` : typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 ? ` ($${watchedBountyAmount})` : ''}`}
           </Button>
         </div>
       </form>
