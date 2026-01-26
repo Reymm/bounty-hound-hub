@@ -70,8 +70,8 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
   };
 
   return (
-    <Card className="card-hover focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 transition-all duration-200 overflow-hidden">
-      <CardContent className="p-0">
+    <Card className="card-hover focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 transition-all duration-200 overflow-hidden w-full max-w-full">
+      <CardContent className="p-0 overflow-hidden">
         {/* Image Thumbnail */}
         {bounty.images && bounty.images.length > 0 ? (
           <Link to={`/b/${bounty.id}`} className="block">
@@ -96,10 +96,10 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
           </Link>
         )}
         
-        <div className="p-4 space-y-3">
+        <div className="p-3 sm:p-4 space-y-3 overflow-hidden">
           {/* Header with status and bounty amount */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-start justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               {getStatusBadge()}
               {getBountyTypeBadge()}
               {showSaveButton && onToggleSave && (
@@ -108,7 +108,7 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
             </div>
             <CurrencyDisplayCompact 
               amount={bounty.bountyAmount} 
-              className="bounty-amount font-bold"
+              className="bounty-amount font-bold flex-shrink-0"
             />
           </div>
 
@@ -147,12 +147,12 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
           {/* Meta information */}
           <div 
             id={`bounty-${bounty.id}-details`}
-            className="flex items-center justify-between text-xs text-muted-foreground"
+            className="flex items-center justify-between text-xs text-muted-foreground gap-2 overflow-hidden"
           >
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                <span className="truncate max-w-24">{bounty.location}</span>
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-shrink">
+              <div className="flex items-center gap-1 min-w-0">
+                <MapPin className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate max-w-16 sm:max-w-24">{bounty.location}</span>
               </div>
               
               <div className="flex items-center gap-1">
@@ -168,7 +168,7 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <div className="flex items-center gap-1" title={`${bounty.claimsCount} claims`}>
                 <Users className="h-3 w-3" />
                 <span>{bounty.claimsCount}</span>

@@ -97,8 +97,8 @@ const topCategories: CategoryCard[] = [
 
 export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
   return (
-    <section className="py-12 lg:py-16 bg-muted/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 lg:py-16 bg-muted/30 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="mb-10">
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
             Top Categories
@@ -108,7 +108,7 @@ export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full max-w-full">
           {topCategories.map((category) => (
             <Card
               key={category.id}
