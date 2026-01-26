@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus, TrendingUp, Trophy, ShieldCheck, CreditCard, HelpCircle } from 'lucide-react';
+import { Plus, Trophy, ShieldCheck, CreditCard, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
@@ -151,6 +151,7 @@ const Index = () => {
               <Link to="/legal/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
             </p>
             <div className="flex flex-col gap-4 items-center">
+              {/* Primary CTA */}
               <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground w-full sm:w-auto min-h-[44px]">
                 <Link to={user ? "/post" : "/setup"}>
                   <Plus className="h-5 w-5 mr-2" />
@@ -158,47 +159,23 @@ const Index = () => {
                 </Link>
               </Button>
               
-              <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full sm:w-auto justify-center">
+              {/* Secondary text links */}
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
                 {!user && (
-                  <Button asChild variant="outline" size="default" className="min-h-[44px]">
-                    <Link to="/post">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Post a Bounty
+                  <span className="text-muted-foreground">
+                    Already have an account?{' '}
+                    <Link to="/auth" className="text-primary hover:underline font-medium">
+                      Sign In
                     </Link>
-                  </Button>
+                  </span>
                 )}
-                <Button asChild variant="outline" size="default" className="min-h-[44px]">
-                  <Link to="/how-it-works">
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    How It Works
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="default" className="min-h-[44px]">
-                  <Link to="/bounties">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Browse Bounties
-                  </Link>
-                </Button>
-                <Button
-                  variant={sortByTop ? "default" : "outline"} 
-                  size="default"
-                  onClick={() => {
-                    setSortByTop(!sortByTop);
-                    setFilters(prev => ({ 
-                      ...prev, 
-                      sortBy: !sortByTop ? 'top' : 'newest' 
-                    }));
-                    // Scroll to browse section
-                    const browseSection = document.getElementById('browse');
-                    if (browseSection) {
-                      browseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  }}
-                  className={`min-h-[44px] ${sortByTop ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}`}
+                <Link 
+                  to="/how-it-works" 
+                  className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
                 >
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Top Bounties
-                </Button>
+                  <HelpCircle className="h-4 w-4" />
+                  How It Works
+                </Link>
               </div>
             </div>
           </div>
@@ -211,7 +188,7 @@ const Index = () => {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
               {sortByTop && (
-                <Trophy className="h-6 w-6 text-amber-500" />
+                <Trophy className="h-6 w-6 text-warning" />
               )}
               <div>
                 <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
@@ -223,6 +200,21 @@ const Index = () => {
                     : 'Discover what people are looking for and start earning'}
                 </p>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSortByTop(!sortByTop);
+                  setFilters(prev => ({ 
+                    ...prev, 
+                    sortBy: !sortByTop ? 'top' : 'newest' 
+                  }));
+                }}
+                className={`ml-2 ${sortByTop ? "text-warning hover:text-warning/80" : "text-muted-foreground"}`}
+              >
+                <Trophy className="h-4 w-4 mr-1" />
+                {sortByTop ? 'Show All' : 'Top $'}
+              </Button>
             </div>
             
             <SearchFilters
