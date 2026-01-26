@@ -186,7 +186,7 @@ export function ConversationList({
               return (
                 <div
                   key={`${otherUserId}-${conversation.bounty_id || 'direct'}`}
-                  className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                  className={`p-4 cursor-pointer hover:bg-muted transition-colors ${
                     selectedRecipient === otherUserId ? 'bg-muted' : ''
                   }`}
                   onClick={() => onConversationSelect(otherUserId, conversation.bounty_id)}
