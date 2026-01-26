@@ -402,7 +402,19 @@ export function SubmissionsList({ bountyId, bountyTitle, posterId, currentUserId
               </div>
 
               {submission.proofUrls.length > 0 && (
-                <ProofImages urls={submission.proofUrls} />
+                <ProofImages 
+                  urls={submission.proofUrls} 
+                  isHidden={
+                    // Hide proof for lead-only submissions until accepted
+                    // This prevents posters from stealing the lead without paying
+                    isOwner && 
+                    submission.type === 'lead' && 
+                    !requiresShipping &&
+                    submission.status !== ClaimStatus.ACCEPTED && 
+                    submission.status !== ClaimStatus.FULFILLED
+                  }
+                  hiddenMessage="For lead-only claims, proof URLs are hidden until you accept the claim. This protects hunters from having their leads stolen."
+                />
               )}
 
               <div className="flex flex-col gap-3 text-xs text-muted-foreground border-t pt-3">
