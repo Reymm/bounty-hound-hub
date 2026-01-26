@@ -324,9 +324,23 @@ export function TopNav({ onSearch }: TopNavProps) {
             )}
           </div>
 
-          {/* Mobile: Show notification bell for logged-in users */}
+          {/* Mobile: Show message indicator and notification bell for logged-in users */}
           {user && (
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-1">
+              <Button asChild variant="ghost" size="icon" className="relative h-10 w-10">
+                <Link to="/messages" aria-label={`Messages${unreadMessages > 0 ? ` (${unreadMessages} unread)` : ''}`}>
+                  <MessageCircle className="h-5 w-5" />
+                  {unreadMessages > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                      aria-label={`${unreadMessages} unread messages`}
+                    >
+                      {unreadMessages}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
               <NotificationBell />
             </div>
           )}
