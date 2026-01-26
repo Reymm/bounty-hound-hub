@@ -147,11 +147,12 @@ export function OpenDisputeDialog({
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
           <Button 
             variant="outline" 
             onClick={onClose}
             disabled={isSubmitting}
+            className="w-full sm:w-auto"
           >
             Cancel
           </Button>
@@ -159,6 +160,7 @@ export function OpenDisputeDialog({
             variant="destructive"
             onClick={handleSubmit}
             disabled={isSubmitting || !disputeReason.trim()}
+            className="w-full sm:w-auto"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Open Dispute

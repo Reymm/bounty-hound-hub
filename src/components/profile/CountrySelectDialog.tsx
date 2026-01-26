@@ -103,17 +103,19 @@ export function CountrySelectDialog({
               </RadioGroup>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleContinue}
                 disabled={!selectedCountry}
+                className="w-full sm:w-auto"
               >
                 Continue
               </Button>
@@ -191,17 +193,19 @@ export function CountrySelectDialog({
               </p>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={handleBack}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Back
               </Button>
               <Button
                 onClick={handleConfirm}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 {loading ? 'Setting up...' : 'Continue to Stripe'}
               </Button>

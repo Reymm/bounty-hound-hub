@@ -692,13 +692,14 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" onClick={onClose}>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
+                  <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleSubmit} 
                     disabled={isSubmitting || !message.trim()}
+                    className="w-full sm:w-auto"
                   >
                     {isSubmitting ? (
                       <>

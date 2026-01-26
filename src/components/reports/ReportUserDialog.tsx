@@ -153,13 +153,14 @@ export function ReportUserDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={loading || !reportType || !description.trim()}
+            className="w-full sm:w-auto"
           >
             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Submit Report
