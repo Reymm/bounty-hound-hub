@@ -410,11 +410,12 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto my-8">
+      <DialogContent className="w-[calc(100%-1rem)] sm:max-w-xl md:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg leading-tight">
-            {isEditMode ? `Edit Claim for "${bountyTitle}"` : `Submit Claim for "${bountyTitle}"`}
+          <DialogTitle className="text-base sm:text-lg leading-tight pr-8">
+            {isEditMode ? `Edit Claim` : `Submit Claim`}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground truncate">{bountyTitle}</p>
         </DialogHeader>
 
         {/* Already submitted and NOT editable */}
