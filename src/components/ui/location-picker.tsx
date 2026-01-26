@@ -109,11 +109,16 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     }
   };
 
-  const handleInputBlur = () => {
-    // Delay hiding suggestions to allow clicking on them
+  const handleInputBlur = (e: React.FocusEvent) => {
+    // Check if the related target is within the suggestions dropdown
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (suggestionsRef.current?.contains(relatedTarget)) {
+      return; // Don't hide if clicking within suggestions
+    }
+    // Delay hiding suggestions to allow clicking on them (longer for mobile)
     setTimeout(() => {
       setShowSuggestions(false);
-    }, 200);
+    }, 300);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -148,21 +153,14 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       {showSuggestions && suggestions.length > 0 && (
         <div 
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+          className="absolute z-[200] w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto"
         >
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.id}
               type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleSuggestionClick(suggestion);
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                handleSuggestionClick(suggestion);
-              }}
-              className="w-full px-3 py-3 text-left hover:bg-muted focus:bg-muted focus:outline-none border-none bg-transparent cursor-pointer active:bg-muted"
+              onClick={() => handleSuggestionClick(suggestion)}
+              className="w-full px-3 py-3 text-left hover:bg-muted focus:bg-muted focus:outline-none border-none bg-transparent cursor-pointer active:bg-muted touch-manipulation"
             >
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
