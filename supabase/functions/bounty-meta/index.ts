@@ -53,7 +53,10 @@ serve(async (req) => {
     const title = `Help find: ${bounty.title} - $${bounty.amount} Reward | BountyBay`;
     const description = `$${bounty.amount} bounty reward! ${(bounty.description || '').slice(0, 120)}${(bounty.description || '').length > 120 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-    const ogImage = `${supabaseUrl}/functions/v1/og-image?id=${bounty.id}`;
+    
+    // Use bounty's first image if available, otherwise use default OG image
+    // Facebook doesn't support SVG, so we can't use the og-image edge function directly
+    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
 
     // Generate HTML with proper meta tags for social crawlers
     const html = `<!DOCTYPE html>
