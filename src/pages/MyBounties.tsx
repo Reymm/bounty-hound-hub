@@ -285,25 +285,25 @@ export default function MyBounties() {
         defaultValue="posted" 
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="posted">
+        <TabsList className="w-full flex overflow-x-auto scrollbar-hide">
+          <TabsTrigger value="posted" className="flex-1 min-w-[60px] px-2 sm:px-3 text-xs sm:text-sm">
             Posted ({postedBounties.length})
           </TabsTrigger>
-          <TabsTrigger value="applied">
+          <TabsTrigger value="applied" className="flex-1 min-w-[60px] px-2 sm:px-3 text-xs sm:text-sm">
             Applied ({appliedBounties.length})
           </TabsTrigger>
-          <TabsTrigger value="reviews" className="relative">
-            <Star className="h-4 w-4 mr-1" />
-            Reviews
+          <TabsTrigger value="reviews" className="flex-1 min-w-[70px] px-2 sm:px-3 text-xs sm:text-sm relative">
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+            <span className="hidden sm:inline">Reviews</span>
             {pendingReviews.length > 0 && (
-              <Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
+              <Badge variant="destructive" className="ml-1 h-4 min-w-4 sm:h-5 sm:min-w-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                 {pendingReviews.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="saved">
-            <Bookmark className="h-4 w-4 mr-1" />
-            Saved ({savedBounties.length})
+          <TabsTrigger value="saved" className="flex-1 min-w-[60px] px-2 sm:px-3 text-xs sm:text-sm">
+            <Bookmark className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+            <span className="hidden sm:inline">Saved</span> ({savedBounties.length})
           </TabsTrigger>
         </TabsList>
 
@@ -377,25 +377,25 @@ export default function MyBounties() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Button asChild variant="outline" size="sm">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                           <Link to={`/b/${bounty.id}`}>
                             <Eye className="h-4 w-4 mr-2" />
                             View
                           </Link>
                         </Button>
                         
-                        <Button asChild variant="outline" size="sm">
+                        <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                           <Link to={`/b/${bounty.id}?tab=claims`}>
                             <Users className="h-4 w-4 mr-2" />
-                            Manage Claims
+                            <span className="sm:inline">Claims</span>
                           </Link>
                         </Button>
                         
-                        <Button asChild variant="outline" size="sm">
+                        <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                           <Link to="/messages">
                             <MessageCircle className="h-4 w-4 mr-2" />
-                            Messages
+                            <span className="sm:inline">Messages</span>
                           </Link>
                         </Button>
                       </div>

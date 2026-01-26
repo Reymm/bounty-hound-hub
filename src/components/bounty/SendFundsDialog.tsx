@@ -208,14 +208,14 @@ export function SendFundsDialog({
               </Alert>
             )}
 
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={handleClose} className="w-full sm:flex-1">
                 Cancel
               </Button>
               <Button 
                 onClick={() => setShowConfirmation(true)} 
                 disabled={isLoading || !amount || amountNum < 1}
-                className="flex-1"
+                className="w-full sm:flex-1"
               >
                 {isLoading ? (
                   <>

@@ -378,8 +378,8 @@ export function AdminTicketDetail({ ticketId }: AdminTicketDetailProps) {
                         </FormItem>
                       )}
                     />
-                    <div className="flex gap-2">
-                      <Button type="submit" size="sm" disabled={updating}>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button type="submit" size="sm" disabled={updating} className="w-full sm:w-auto">
                         <Save className="h-3 w-3 mr-1" />
                         Save
                       </Button>
@@ -388,6 +388,7 @@ export function AdminTicketDetail({ ticketId }: AdminTicketDetailProps) {
                         variant="outline"
                         size="sm"
                         onClick={() => setEditingNotes(false)}
+                        className="w-full sm:w-auto"
                       >
                         Cancel
                       </Button>

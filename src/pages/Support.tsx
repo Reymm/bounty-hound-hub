@@ -19,18 +19,21 @@ export function Support() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="ai" className="flex items-center gap-2">
+        <TabsList className="w-full flex overflow-x-auto scrollbar-hide">
+          <TabsTrigger value="ai" className="flex-1 min-w-[80px] px-2 sm:px-3 flex items-center justify-center gap-1 sm:gap-2">
             <Bot className="h-4 w-4" />
-            AI Assistant
+            <span className="hidden sm:inline">AI Assistant</span>
+            <span className="sm:hidden">AI</span>
           </TabsTrigger>
-          <TabsTrigger value="create" className="flex items-center gap-2">
+          <TabsTrigger value="create" className="flex-1 min-w-[80px] px-2 sm:px-3 flex items-center justify-center gap-1 sm:gap-2">
             <Plus className="h-4 w-4" />
-            Create Ticket
+            <span className="hidden sm:inline">Create Ticket</span>
+            <span className="sm:hidden">New</span>
           </TabsTrigger>
-          <TabsTrigger value="tickets" className="flex items-center gap-2">
+          <TabsTrigger value="tickets" className="flex-1 min-w-[80px] px-2 sm:px-3 flex items-center justify-center gap-1 sm:gap-2">
             <MessageSquare className="h-4 w-4" />
-            My Tickets
+            <span className="hidden sm:inline">My Tickets</span>
+            <span className="sm:hidden">Tickets</span>
           </TabsTrigger>
         </TabsList>
 

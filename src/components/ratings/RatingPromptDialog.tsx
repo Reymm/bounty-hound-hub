@@ -136,11 +136,11 @@ export function RatingPromptDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="ghost" onClick={handleSkip} disabled={loading}>
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+          <Button variant="ghost" onClick={handleSkip} disabled={loading} className="w-full sm:w-auto">
             Leave Review Later
           </Button>
-          <Button onClick={handleSubmit} disabled={loading || rating === 0}>
+          <Button onClick={handleSubmit} disabled={loading || rating === 0} className="w-full sm:w-auto">
             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Submit Rating
           </Button>

@@ -233,17 +233,19 @@ export function ShippingDetailsDialog({
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
           <Button 
             variant="outline" 
             onClick={handleSkip}
             disabled={isSubmitting}
+            className="w-full sm:w-auto"
           >
             Skip (No Shipping)
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={isSubmitting}
+            className="w-full sm:w-auto"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Provide Shipping Details

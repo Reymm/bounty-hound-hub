@@ -334,12 +334,12 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-6">
-            <Button onClick={applyFilters} className="flex-1">
-              Apply Filters
-            </Button>
-            <Button variant="outline" onClick={clearFilters}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 pt-6">
+            <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
               Clear All
+            </Button>
+            <Button onClick={applyFilters} className="w-full sm:flex-1">
+              Apply Filters
             </Button>
           </div>
         </div>
