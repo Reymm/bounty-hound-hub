@@ -45,19 +45,27 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
   useEffect(() => {
     fetchMessages();
     
-    // Set up realtime subscription
+    // Set up realtime subscription - include bounty_id filter if provided
+    const filterCondition = bountyId 
+      ? `or(and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId},bounty_id.eq.${bountyId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId},bounty_id.eq.${bountyId}))`
+      : `or(and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId}))`;
+    
     const channel = supabase
-      .channel('messages-changes')
+      .channel(`messages-${bountyId || 'all'}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `or(and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId}))`
+          filter: filterCondition
         },
         (payload) => {
           const newMessage = payload.new as Message;
+          // Double-check bounty_id matches (realtime filters can be unreliable)
+          if (bountyId && newMessage.bounty_id !== bountyId) {
+            return;
+          }
           setMessages(prev => [...prev, newMessage]);
           
           // Mark as read if we're the recipient
@@ -75,14 +83,20 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
 
   const fetchMessages = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('messages')
         .select(`
           *,
           sender_profile:profiles!sender_id(username, full_name, avatar_url)
         `)
-        .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`)
-        .order('created_at', { ascending: true });
+        .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${currentUserId})`);
+      
+      // Filter by bounty_id to isolate conversations per bounty
+      if (bountyId) {
+        query = query.eq('bounty_id', bountyId);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: true });
 
       if (error) throw error;
       setMessages(data || []);
