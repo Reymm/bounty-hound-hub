@@ -130,21 +130,21 @@ const Index = () => {
             </p>
             
             {/* Trust Badges */}
-            <div className="flex flex-col sm:flex-row gap-2 justify-center mb-4">
-              <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center items-center mb-4">
+              <div className="inline-flex items-center justify-center gap-2 bg-success/10 border border-success/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
                 <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
                 <span className="text-xs sm:text-sm font-medium text-success">
                   ID-verified hunters
                 </span>
               </div>
-              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
+              <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
                 <CreditCard className="h-4 w-4 text-primary flex-shrink-0" />
                 <span className="text-xs sm:text-sm font-medium text-primary">
                   Only pay when found
                 </span>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mb-8">
+            <p className="text-xs text-muted-foreground mb-8 text-center">
               By using BountyBay, you agree to our{' '}
               <Link to="/legal/terms" className="underline hover:text-foreground">Terms of Service</Link>
               {' '}and{' '}
