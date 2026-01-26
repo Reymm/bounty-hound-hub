@@ -383,7 +383,7 @@ function PostBountyForm() {
       // just go back to payment without creating a new one
       if (clientSecret && intentId) {
         setCurrentStep('payment');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => window.scrollTo(0, 0), 50);
         setIsSubmitting(false);
         return;
       }
@@ -407,7 +407,7 @@ function PostBountyForm() {
       setTotalCharge(paymentData.total_charge); // Bounty + Stripe fee
       setPaymentMode(paymentData.payment_mode); // 'immediate' or 'deferred'
       setCurrentStep('payment');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => window.scrollTo(0, 0), 50);
       
       const isImmediate = paymentData.payment_mode === 'immediate';
       toast({
@@ -755,7 +755,7 @@ function PostBountyForm() {
                   variant="outline"
                   onClick={() => {
                     setCurrentStep('details');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    setTimeout(() => window.scrollTo(0, 0), 50);
                   }}
                   disabled={isPaymentProcessing}
                   className="w-full sm:w-auto"
