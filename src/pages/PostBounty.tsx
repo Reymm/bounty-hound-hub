@@ -47,6 +47,7 @@ function PostBountyForm() {
   const stripe = useStripe();
   const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingModeration, setIsCheckingModeration] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'details' | 'payment' | 'processing'>('details');
   const [intentId, setIntentId] = useState<string | null>(null);
@@ -354,10 +355,7 @@ function PostBountyForm() {
       }));
       
       // ALWAYS run content moderation check - even if user went back to edit
-      toast({
-        title: "Checking content",
-        description: "Verifying your bounty meets community guidelines...",
-      });
+      setIsCheckingModeration(true);
       
       const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-content', {
         body: {
@@ -366,6 +364,8 @@ function PostBountyForm() {
           tags: tags
         }
       });
+      
+      setIsCheckingModeration(false);
       
       if (moderationError) throw moderationError;
       
@@ -383,6 +383,7 @@ function PostBountyForm() {
       // just go back to payment without creating a new one
       if (clientSecret && intentId) {
         setCurrentStep('payment');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setIsSubmitting(false);
         return;
       }
@@ -406,6 +407,7 @@ function PostBountyForm() {
       setTotalCharge(paymentData.total_charge); // Bounty + Stripe fee
       setPaymentMode(paymentData.payment_mode); // 'immediate' or 'deferred'
       setCurrentStep('payment');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       
       const isImmediate = paymentData.payment_mode === 'immediate';
       toast({
@@ -751,7 +753,10 @@ function PostBountyForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setCurrentStep('details')}
+                  onClick={() => {
+                    setCurrentStep('details');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   disabled={isPaymentProcessing}
                   className="w-full sm:w-auto"
                 >
@@ -799,7 +804,19 @@ function PostBountyForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 sm:py-8">
+    <>
+      {/* Moderation Check Overlay */}
+      {isCheckingModeration && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-card border border-border rounded-lg p-6 shadow-lg max-w-sm mx-4 text-center animate-scale-in">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <h3 className="font-semibold text-foreground mb-2">Checking Community Guidelines</h3>
+            <p className="text-sm text-muted-foreground">Verifying your bounty content...</p>
+          </div>
+        </div>
+      )}
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 sm:py-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">Post a Bounty</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
@@ -1405,5 +1422,6 @@ function PostBountyForm() {
         </div>
       </form>
     </div>
+    </>
   );
 }
