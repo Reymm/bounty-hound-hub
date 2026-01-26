@@ -363,11 +363,20 @@ export default function Auth() {
       });
 
       if (error) {
-        // Handle specific error cases
-        if (error.message.toLowerCase().includes('session') || 
-            error.message.toLowerCase().includes('not authenticated') ||
-            error.message.toLowerCase().includes('jwt')) {
+        // Handle specific error cases with user-friendly messages
+        const errorLower = error.message.toLowerCase();
+        
+        if (errorLower.includes('session') || 
+            errorLower.includes('not authenticated') ||
+            errorLower.includes('jwt')) {
           setError('Your password reset link has expired. Please request a new one.');
+        } else if (errorLower.includes('weak') || 
+                   errorLower.includes('password') && errorLower.includes('security') ||
+                   errorLower.includes('pwned') ||
+                   errorLower.includes('breach') ||
+                   errorLower.includes('compromised')) {
+          // Password was rejected by Supabase's leaked password protection
+          setError('This password has been found in a data breach. Please choose a different password that hasn\'t been compromised.');
         } else {
           setError(error.message);
         }
