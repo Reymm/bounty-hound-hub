@@ -154,7 +154,7 @@ const Index = () => {
               {/* Primary CTA */}
               <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground w-full sm:w-auto min-h-[44px]">
                 <Link to={user ? "/post" : "/setup"}>
-                  {user ? "Post a Bounty" : "Sign Up Free"}
+                  {user ? "Post Bounty" : "Sign Up Free"}
                 </Link>
               </Button>
               
