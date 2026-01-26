@@ -512,12 +512,12 @@ export default function Messages() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex h-[calc(100vh-10rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-full overflow-x-hidden">
+      <div className="flex h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
         {/* Thread List - hidden on mobile when a thread is selected */}
         <div className={`${
           isMobile && selectedThread ? 'hidden' : 'flex'
-        } flex-col w-full lg:w-80 xl:w-72 bg-muted/30 border-r border-border flex-shrink-0`}>
+        } flex-col w-full lg:w-80 xl:w-72 bg-muted/30 border-r border-border flex-shrink-0 min-w-0`}>
           <div className="p-4 border-b border-border">
             <h1 className="text-xl font-semibold mb-4">Messages</h1>
             <div className="relative">
@@ -695,7 +695,7 @@ export default function Messages() {
                         }`}
                       >
                         <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 rounded-lg break-words ${
                             message.senderId === user?.id
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted text-foreground'
@@ -737,7 +737,7 @@ export default function Messages() {
               </div>
 
               {/* Message Composer - solid background, safe area padding on mobile */}
-              <div className="p-4 border-t border-border bg-background safe-bottom sticky bottom-0 z-20">
+              <div className="p-3 sm:p-4 border-t border-border bg-background safe-bottom sticky bottom-0 z-20">
                 {/* Image preview */}
                 {imagePreview && (
                   <div className="relative inline-block mb-3">
@@ -765,7 +765,7 @@ export default function Messages() {
                     accept="image/jpeg,image/png,image/webp,image/gif"
                     className="hidden"
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <Textarea
                       placeholder="Type your message..."
                       value={newMessage}
@@ -777,25 +777,26 @@ export default function Messages() {
                         }
                       }}
                       rows={1}
-                      className="min-h-[2.5rem] max-h-32 resize-none"
+                      className="min-h-[2.5rem] max-h-32 resize-none text-base"
                     />
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                     <Button 
                       variant="ghost" 
-                      size="sm"
+                      size="icon"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={sendingMessage}
                       title="Attach image"
+                      className="h-10 w-10"
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
                     <Button 
                       onClick={sendMessage}
                       disabled={sendingMessage || (!newMessage.trim() && !selectedImage)}
-                      size="sm"
-                      className="bg-primary hover:bg-primary-hover text-primary-foreground"
+                      size="icon"
+                      className="bg-primary hover:bg-primary-hover text-primary-foreground h-10 w-10"
                     >
                       {isUploading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -806,7 +807,7 @@ export default function Messages() {
                   </div>
                 </div>
                 
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-2 hidden sm:block">
                   Press Enter to send, Shift+Enter for new line
                 </p>
               </div>
