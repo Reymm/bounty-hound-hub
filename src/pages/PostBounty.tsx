@@ -747,19 +747,20 @@ function PostBountyForm() {
                 </p>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCurrentStep('details')}
                   disabled={isPaymentProcessing}
+                  className="w-full sm:w-auto"
                 >
                   Back to Details
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={!stripe || !elements || isPaymentProcessing}
-                  className="flex-1 bg-primary hover:bg-primary-hover"
+                  className="w-full sm:flex-1 bg-primary hover:bg-primary-hover"
                 >
                   {isPaymentProcessing ? (
                     <>Processing...</>
