@@ -47,13 +47,14 @@ export function BountyGrid({
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {bounties.map((bounty) => (
-          <BountyCard 
-            key={bounty.id} 
-            bounty={bounty} 
-            isSaved={isSaved(bounty.id)}
-            onToggleSave={() => toggleSave(bounty.id)}
-            showSaveButton={showSaveButton}
-          />
+          <div key={bounty.id} className="max-w-sm mx-auto md:max-w-none md:mx-0 w-full">
+            <BountyCard 
+              bounty={bounty} 
+              isSaved={isSaved(bounty.id)}
+              onToggleSave={() => toggleSave(bounty.id)}
+              showSaveButton={showSaveButton}
+            />
+          </div>
         ))}
       </div>
       
