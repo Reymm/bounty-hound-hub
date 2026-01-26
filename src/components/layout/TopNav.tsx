@@ -214,6 +214,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                   className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
                 >
                   <Link to="/post" aria-label="Post a bounty">
+                    <Sparkles className="h-4 w-4 mr-2" />
                     Post Bounty
                   </Link>
                 </Button>
@@ -365,6 +366,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                 {/* Primary Actions */}
                 <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
                   <Link to="/post" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Sparkles className="h-4 w-4 mr-2" />
                     Post Bounty
                   </Link>
                 </Button>
