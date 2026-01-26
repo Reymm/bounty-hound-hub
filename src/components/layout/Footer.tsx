@@ -13,7 +13,7 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               © 2024 BountyBay. All rights reserved.
             </p>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center md:justify-start gap-1">
               All prices are in USD
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" className="h-3 w-4 inline-block">
                 <path fill="#bf0a30" d="M0 0h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0zm0 74h640v37H0z"/>
