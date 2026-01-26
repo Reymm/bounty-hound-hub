@@ -62,9 +62,18 @@ export function ConnectedAccounts({ user }: ConnectedAccountsProps) {
       });
 
       if (error) {
+        // Check for breached password error
+        const errorLower = error.message.toLowerCase();
+        const isBreachedPassword = errorLower.includes('weak') || 
+                                   errorLower.includes('pwned') ||
+                                   errorLower.includes('breach') ||
+                                   errorLower.includes('compromised');
+        
         toast({
           title: "Failed to set password",
-          description: error.message,
+          description: isBreachedPassword 
+            ? "This password has been found in a data breach. Please choose a different password."
+            : error.message,
           variant: "destructive",
         });
         return;

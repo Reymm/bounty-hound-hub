@@ -54,6 +54,8 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
 
   if (!password) return null;
 
+  const allMet = strength === requirements.length;
+
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex items-center gap-2">
@@ -82,6 +84,13 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
           );
         })}
       </div>
+      
+      {/* Note about breached passwords - only show when all basic requirements are met */}
+      {allMet && (
+        <p className="text-xs text-muted-foreground mt-2">
+          Note: Passwords found in data breaches will be rejected for your security.
+        </p>
+      )}
     </div>
   );
 }

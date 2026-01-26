@@ -185,12 +185,26 @@ const ProfileSetup = () => {
         if (passwordError) {
           console.error('Password update error:', passwordError);
           window.scrollTo({ top: 0, behavior: 'smooth' });
+          
+          // Check for breached password error
+          const errorLower = passwordError.message.toLowerCase();
+          const isBreachedPassword = errorLower.includes('weak') || 
+                                     errorLower.includes('pwned') ||
+                                     errorLower.includes('breach') ||
+                                     errorLower.includes('compromised');
+          
           toast({
             title: "Password setup failed",
-            description: "Your profile was saved, but we couldn't set your password. You can add one later in Settings.",
+            description: isBreachedPassword 
+              ? "This password has been found in a data breach. Please choose a different password."
+              : "Your profile was saved, but we couldn't set your password. You can add one later in Settings.",
             variant: "destructive",
           });
-          // Continue anyway - profile was saved
+          
+          if (isBreachedPassword) {
+            return; // Don't continue if password was breached - let them fix it
+          }
+          // Continue anyway for other errors - profile was saved
         } else {
           console.log('Password set successfully');
         }
