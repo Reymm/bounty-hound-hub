@@ -482,8 +482,11 @@ export default function EditBounty() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-4">
-              <Button type="submit" disabled={saving} className="flex-1">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
+              <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
+                <Link to={`/b/${id}`}>Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={saving} className="w-full sm:flex-1">
                 {saving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -492,9 +495,6 @@ export default function EditBounty() {
                 ) : (
                   'Save Changes'
                 )}
-              </Button>
-              <Button type="button" variant="outline" asChild>
-                <Link to={`/b/${id}`}>Cancel</Link>
               </Button>
             </div>
           </form>
