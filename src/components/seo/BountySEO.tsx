@@ -54,7 +54,7 @@ export function BountySEO({ bounty }: BountySEOProps) {
           "offers": {
             "@type": "Offer",
             "price": bounty.bountyAmount,
-            "priceCurrency": "CAD",
+            "priceCurrency": "USD",
             "availability": bounty.status === 'open' 
               ? "https://schema.org/InStock" 
               : "https://schema.org/SoldOut"

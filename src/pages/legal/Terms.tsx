@@ -284,7 +284,7 @@ export default function Terms() {
                 <li>Any third-party conduct or content on the Platform</li>
               </ul>
               <p className="text-muted-foreground leading-relaxed mt-3">
-                In no event shall our total liability exceed the greater of $100 CAD or the fees paid by you to 
+                In no event shall our total liability exceed the greater of $100 USD or the fees paid by you to 
                 BountyBay in the twelve (12) months preceding the claim.
               </p>
             </section>

@@ -13,9 +13,8 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-ESCROW] ${step}${detailsStr}`);
 };
 
-// $150 threshold: bounties at or above this amount charge immediately to prevent trolls
-// TEMP: Lowered to $10 for testing - REVERT TO 150 AFTER TEST!
-const IMMEDIATE_CHARGE_THRESHOLD = 10;
+// $75 threshold: bounties at or above this amount charge immediately to prevent trolls
+const IMMEDIATE_CHARGE_THRESHOLD = 75;
 
 // Input validation schema
 const escrowPaymentSchema = z.object({
