@@ -445,15 +445,15 @@ export default function BountyDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className={`grid w-full ${canSeeClaimsTab ? 'grid-cols-4' : 'grid-cols-3'}`}>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              <TabsTrigger value="comments">Comments</TabsTrigger>
+            <TabsList className="w-full flex overflow-x-auto scrollbar-hide">
+              <TabsTrigger value="details" className="flex-1 min-w-[70px] px-2 sm:px-3">Details</TabsTrigger>
+              <TabsTrigger value="requirements" className="flex-1 min-w-[100px] px-2 sm:px-3">Requirements</TabsTrigger>
+              <TabsTrigger value="comments" className="flex-1 min-w-[80px] px-2 sm:px-3">Comments</TabsTrigger>
               {canSeeClaimsTab && (
-                <TabsTrigger value="claims" className="flex items-center gap-1.5">
-                  {isOwnBounty ? 'Claims' : 'My Claim'}
+                <TabsTrigger value="claims" className="flex-1 min-w-[70px] px-2 sm:px-3 flex items-center justify-center gap-1">
+                  <span className="truncate">{isOwnBounty ? 'Claims' : 'My Claim'}</span>
                   {!isOwnBounty && userSubmissionStatus && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                    <span className={`hidden sm:inline text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                       userSubmissionStatus === 'submitted' 
                         ? 'bg-amber-500/20 text-amber-600' 
                         : userSubmissionStatus === 'accepted' 
