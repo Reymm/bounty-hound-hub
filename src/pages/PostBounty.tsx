@@ -1349,7 +1349,7 @@ function PostBountyForm() {
           if (!watch('description')?.trim()) missingFields.push('Description');
           if (!watch('category')) missingFields.push('Category');
           if (!watchedBountyAmount) missingFields.push('Bounty amount');
-          else if (watchedBountyAmount < 10) missingFields.push('Bounty amount (min $10)');
+          else if (watchedBountyAmount < 5) missingFields.push('Bounty amount (min $5)');
           else if (watchedBountyAmount > 10000) missingFields.push('Bounty amount (max $10,000)');
           if (!watch('location')?.trim()) missingFields.push('Location');
           if ((watch('tags') || []).length === 0) missingFields.push('At least one tag');
@@ -1391,7 +1391,7 @@ function PostBountyForm() {
               !watch('description')?.trim() ||
               !watch('category') ||
               !watchedBountyAmount || 
-              watchedBountyAmount < 10 || 
+              watchedBountyAmount < 5 || 
               watchedBountyAmount > 10000 ||
               !watch('location')?.trim() ||
               (watch('tags') || []).length === 0 ||
@@ -1399,7 +1399,7 @@ function PostBountyForm() {
             }
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
-            {isSubmitting ? 'Creating Payment...' : `Continue to Payment${typeof totalCharge === 'number' && !isNaN(totalCharge) && totalCharge > 0 ? ` ($${totalCharge.toFixed(0)})` : typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 ? ` ($${watchedBountyAmount})` : ''}`}
+            {isSubmitting ? 'Creating Payment...' : `Continue to Payment${typeof totalCharge === 'number' && !isNaN(totalCharge) && totalCharge > 0 ? ` ($${totalCharge.toFixed(2)})` : typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 ? ` ($${watchedBountyAmount})` : ''}`}
           </Button>
         </div>
       </form>
