@@ -157,6 +157,11 @@ export function NotificationBell() {
           navigate('/me/bounties?tab=applied');
           break;
           
+        // New message notification - go to messages
+        case 'new_message':
+          navigate('/messages');
+          break;
+          
         // Dispute notifications - go to the bounty detail
         case 'dispute_opened':
         case 'dispute_resolved':
