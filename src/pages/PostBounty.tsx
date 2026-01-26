@@ -798,7 +798,7 @@ function PostBountyForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 sm:py-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">Post a Bounty</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
