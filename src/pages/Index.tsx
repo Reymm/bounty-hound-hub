@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Plus, Trophy, ShieldCheck, CreditCard, HelpCircle } from 'lucide-react';
+import { Trophy, ShieldCheck, CreditCard, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
@@ -154,7 +154,6 @@ const Index = () => {
               {/* Primary CTA */}
               <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground w-full sm:w-auto min-h-[44px]">
                 <Link to={user ? "/post" : "/setup"}>
-                  <Plus className="h-5 w-5 mr-2" />
                   {user ? "Post a Bounty" : "Sign Up Free"}
                 </Link>
               </Button>

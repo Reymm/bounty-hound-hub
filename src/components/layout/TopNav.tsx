@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -214,7 +214,6 @@ export function TopNav({ onSearch }: TopNavProps) {
                   className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium focus-ring"
                 >
                   <Link to="/post" aria-label="Post a bounty">
-                    <Plus className="h-4 w-4 mr-2" />
                     Post Bounty
                   </Link>
                 </Button>
@@ -366,7 +365,6 @@ export function TopNav({ onSearch }: TopNavProps) {
                 {/* Primary Actions */}
                 <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
                   <Link to="/post" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Plus className="h-4 w-4 mr-2" />
                     Post Bounty
                   </Link>
                 </Button>
@@ -463,6 +461,25 @@ export function TopNav({ onSearch }: TopNavProps) {
               </div>
             ) : (
               <div className="space-y-1">
+                {/* Auth buttons first for logged-out users */}
+                <Button 
+                  asChild 
+                  className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground"
+                >
+                  <Link to="/auth?tab=signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    Sign Up Free
+                  </Link>
+                </Button>
+                <Button 
+                  onClick={() => { navigate('/auth?tab=signin'); setIsMobileMenuOpen(false); }}
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  Sign In
+                </Button>
+                
+                <div className="border-t border-border my-2" />
+                
                 <Button asChild variant="ghost" className="w-full justify-start">
                   <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
                     <Search className="h-4 w-4 mr-2" />
@@ -470,21 +487,10 @@ export function TopNav({ onSearch }: TopNavProps) {
                   </Link>
                 </Button>
                 
-                <div className="border-t border-border my-2" />
-                
-                <Button 
-                  onClick={() => { navigate('/auth?tab=signin'); setIsMobileMenuOpen(false); }}
-                  variant="ghost" 
-                  className="w-full justify-start"
-                >
-                  Sign In
-                </Button>
-                <Button 
-                  asChild 
-                  className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground"
-                >
-                  <Link to="/auth?tab=signup" onClick={() => setIsMobileMenuOpen(false)}>
-                    Sign Up Free
+                <Button asChild variant="ghost" className="w-full justify-start">
+                  <Link to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    How It Works
                   </Link>
                 </Button>
               </div>
