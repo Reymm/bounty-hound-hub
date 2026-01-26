@@ -324,6 +324,13 @@ export function TopNav({ onSearch }: TopNavProps) {
             )}
           </div>
 
+          {/* Mobile: Show notification bell for logged-in users */}
+          {user && (
+            <div className="md:hidden">
+              <NotificationBell />
+            </div>
+          )}
+
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
