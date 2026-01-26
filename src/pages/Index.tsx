@@ -183,8 +183,8 @@ const Index = () => {
       </section>
 
       {/* Browse Section - Active Bounties First */}
-      <section id="browse" className="py-8 lg:py-12 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <section id="browse" className="py-8 lg:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
               {sortByTop && (

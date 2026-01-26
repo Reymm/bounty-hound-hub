@@ -695,7 +695,7 @@ export default function Messages() {
                         }`}
                       >
                         <div
-                          className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 rounded-lg break-words ${
+                          className={`max-w-xs sm:max-w-sm lg:max-w-md px-4 py-2 rounded-lg break-words ${
                             message.senderId === user?.id
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted text-foreground'
