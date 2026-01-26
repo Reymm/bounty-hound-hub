@@ -410,7 +410,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100%-1rem)] sm:max-w-xl md:max-w-2xl">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-base sm:text-lg leading-tight pr-8">
             {isEditMode ? `Edit Claim` : `Submit Claim`}
