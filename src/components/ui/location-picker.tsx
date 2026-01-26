@@ -29,6 +29,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTouchingDropdown, setIsTouchingDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +101,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     setSearchValue(suggestion.place_name);
     setShowSuggestions(false);
     setSuggestions([]);
+    setIsTouchingDropdown(false);
     onChange?.(suggestion.place_name, suggestion.center);
   };
 
@@ -109,16 +111,17 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     }
   };
 
-  const handleInputBlur = (e: React.FocusEvent) => {
-    // Check if the related target is within the suggestions dropdown
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    if (suggestionsRef.current?.contains(relatedTarget)) {
-      return; // Don't hide if clicking within suggestions
+  const handleInputBlur = () => {
+    // Don't hide if user is touching the dropdown
+    if (isTouchingDropdown) {
+      return;
     }
-    // Delay hiding suggestions to allow clicking on them (longer for mobile)
+    // Small delay for desktop click to complete
     setTimeout(() => {
-      setShowSuggestions(false);
-    }, 300);
+      if (!isTouchingDropdown) {
+        setShowSuggestions(false);
+      }
+    }, 150);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -154,6 +157,15 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         <div 
           ref={suggestionsRef}
           className="absolute z-[200] w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+          onTouchStart={() => setIsTouchingDropdown(true)}
+          onTouchEnd={() => {
+            // Keep flag for a moment to let click complete
+            setTimeout(() => setIsTouchingDropdown(false), 100);
+          }}
+          onMouseDown={() => setIsTouchingDropdown(true)}
+          onMouseUp={() => {
+            setTimeout(() => setIsTouchingDropdown(false), 100);
+          }}
         >
           {suggestions.map((suggestion) => (
             <button
