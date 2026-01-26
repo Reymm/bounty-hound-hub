@@ -87,9 +87,8 @@ serve(async (req) => {
   <!-- Canonical -->
   <link rel="canonical" href="${bountyUrl}">
   
-  <!-- Redirect to actual page for browsers -->
-  <meta http-equiv="refresh" content="0;url=${bountyUrl}">
-  <script>window.location.href = "${bountyUrl}";</script>
+  <!-- Redirect browsers only (crawlers don't execute JS, so they read our meta tags) -->
+  <script>window.location.replace("${bountyUrl}");</script>
 </head>
 <body>
   <p>Redirecting to <a href="${bountyUrl}">${escapeHtml(bounty.title)}</a>...</p>
