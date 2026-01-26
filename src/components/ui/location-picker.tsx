@@ -154,8 +154,15 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             <button
               key={suggestion.id}
               type="button"
-              onClick={() => handleSuggestionClick(suggestion)}
-              className="w-full px-3 py-2 text-left hover:bg-muted focus:bg-muted focus:outline-none border-none bg-transparent cursor-pointer"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSuggestionClick(suggestion);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleSuggestionClick(suggestion);
+              }}
+              className="w-full px-3 py-3 text-left hover:bg-muted focus:bg-muted focus:outline-none border-none bg-transparent cursor-pointer active:bg-muted"
             >
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
