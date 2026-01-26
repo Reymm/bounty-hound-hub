@@ -355,10 +355,11 @@ export default function BountyDetail() {
               )}
               
               {isOwnBounty && bounty.status === BountyStatus.OPEN && !acceptedHunter && (
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
                   <Button
                     variant="outline"
                     asChild
+                    className="w-full sm:w-auto"
                   >
                     <Link to={`/b/${bounty.id}/edit`}>
                       <Pencil className="h-4 w-4 mr-2" />
@@ -368,6 +369,7 @@ export default function BountyDetail() {
                   <Button
                     variant="destructive"
                     onClick={() => setIsCancelDialogOpen(true)}
+                    className="w-full sm:w-auto"
                   >
                     <XCircle className="h-4 w-4 mr-2" />
                     Cancel Bounty
