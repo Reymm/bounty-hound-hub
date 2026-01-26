@@ -30,15 +30,17 @@ export function ShareBountyButton({
   const [copied, setCopied] = useState(false);
   
   const bountyUrl = `${window.location.origin}/b/${bountyId}`;
+  // Use edge function URL for social shares to get proper meta tags
+  const socialShareUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bounty-meta?id=${bountyId}`;
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
-  const encodedUrl = encodeURIComponent(bountyUrl);
+  const encodedSocialUrl = encodeURIComponent(socialShareUrl);
   const encodedText = encodeURIComponent(shareText);
 
   const shareLinks = {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
-    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedSocialUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedSocialUrl}`,
+    reddit: `https://reddit.com/submit?url=${encodedSocialUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedSocialUrl}`,
   };
 
   const handleNativeShare = async () => {
