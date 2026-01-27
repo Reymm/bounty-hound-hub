@@ -29,22 +29,18 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Clean URL for users (copy link, native share)
-  const cleanUrl = `https://bountybay.co/b/${bountyId}`;
-  
-  // Share page URL for social platform sharing
-  // This page serves proper OG meta tags to crawlers and redirects browsers to the clean URL
-  const socialShareUrl = `https://bountybay.lovable.app/share/${bountyId}`;
+  // Main bounty URL - Cloudflare Worker intercepts crawlers and serves OG tags
+  const bountyUrl = `https://bountybay.co/b/${bountyId}`;
   
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
-  const encodedSocialUrl = encodeURIComponent(socialShareUrl);
+  const encodedUrl = encodeURIComponent(bountyUrl);
   const encodedText = encodeURIComponent(shareText);
 
   const shareLinks = {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedSocialUrl}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedSocialUrl}`,
-    reddit: `https://reddit.com/submit?url=${encodedSocialUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedSocialUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
   };
 
   const handleNativeShare = async () => {
@@ -53,7 +49,7 @@ export function ShareBountyButton({
         await navigator.share({
           title: `$${amount} Bounty: ${title}`,
           text: shareText,
-          url: cleanUrl, // Use clean URL for native share (users see this URL)
+          url: bountyUrl,
         });
       } catch (error) {
         // User cancelled or error
@@ -66,7 +62,7 @@ export function ShareBountyButton({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(cleanUrl); // Use clean URL for copy
+      await navigator.clipboard.writeText(bountyUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
