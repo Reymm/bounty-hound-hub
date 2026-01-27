@@ -243,12 +243,10 @@ export const supabaseApi = {
         if (error.code === 'PGRST116') return null; // Not found
         throw error;
       }
-
-      // Get count of submissions for this bounty
-      const { count: submissionsCount } = await supabase
-        .from('Submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('bounty_id', id);
+      // Get count of submissions for this bounty using secure function
+      // (RLS blocks direct count for non-poster/non-hunter users)
+      const { data: submissionsCount } = await supabase
+        .rpc('get_bounty_claims_count', { p_bounty_id: id });
 
       // Check if user can view shipping details
       const { data: user } = await supabase.auth.getUser();

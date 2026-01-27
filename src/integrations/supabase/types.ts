@@ -1590,6 +1590,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_bounty_claims_count: {
+        Args: { p_bounty_id: string }
+        Returns: number
+      }
       get_completed_bounties_showcase: {
         Args: { limit_count?: number }
         Returns: {
