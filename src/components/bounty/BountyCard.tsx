@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon, BadgeCheck, Package } from 'lucide-react';
+import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon, BadgeCheck, Package, Link2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
@@ -63,7 +63,7 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
     }
     return (
       <Badge variant="outline" className="text-xs text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600">
-        <MapPin className="h-3 w-3 mr-1" />
+        <Link2 className="h-3 w-3 mr-1" />
         Lead Only
       </Badge>
     );

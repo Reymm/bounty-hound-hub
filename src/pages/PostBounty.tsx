@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, MapPin, Upload, X, AlertCircle, CreditCard, Shield, Package } from 'lucide-react';
+import { Calendar, DollarSign, Upload, X, AlertCircle, CreditCard, Shield, Package, Link2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -1036,7 +1036,7 @@ function PostBountyForm() {
                 </div>
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2 font-medium">
-                    <MapPin className="h-4 w-4" />
+                    <Link2 className="h-4 w-4" />
                     <span>Lead Only</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
