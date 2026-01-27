@@ -29,22 +29,19 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Clean URL for copy/native share (user-facing)
+  // Use bountybay.co domain - Cloudflare Worker handles OG tags for crawlers
   const bountyUrl = `https://bountybay.co/b/${bountyId}`;
   
-  // Edge function URL for social crawlers (serves dynamic OG tags)
-  const socialShareUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
-  
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
-  const encodedSocialUrl = encodeURIComponent(socialShareUrl);
+  const encodedUrl = encodeURIComponent(bountyUrl);
   const encodedText = encodeURIComponent(shareText);
 
   const shareLinks = {
-    // Social platforms use edge function URL for proper OG tag parsing
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedSocialUrl}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedSocialUrl}`,
-    reddit: `https://reddit.com/submit?url=${encodedSocialUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedSocialUrl}`,
+    // Cloudflare Worker intercepts these and serves OG tags for crawlers
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
   };
 
   const handleNativeShare = async () => {
