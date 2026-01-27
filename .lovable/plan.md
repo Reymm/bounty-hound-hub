@@ -1,64 +1,80 @@
 
 
-# Fix Social Media Previews - Immediate Solution
+# Fix Dynamic Social Media Previews for BountyBay
 
 ## Problem Identified
-The `bounty-meta` edge function exists in code but is not deploying to Supabase. The Cloudflare Worker needs this function to generate dynamic previews for Facebook/Twitter crawlers.
+
+After investigating the database, code, and your Cloudflare configuration, I found the root cause:
+
+**Your Cloudflare route `*bountybay.co/*` is a catch-all wildcard that intercepts ALL traffic before the specific `bountybay.co/b/*` route can be processed.**
+
+When Facebook's crawler visits `bountybay.co/b/36b513a7-1e23-4e1b-a900-a612a6ccf4fc`, the wildcard route catches it first and sends it directly to the origin (your React app), bypassing your Worker entirely.
+
+---
 
 ## Solution
-Deploy the edge function properly and ensure the Cloudflare Worker is configured to route crawler traffic to it.
 
-## Step-by-Step Implementation
+### Step 1: Fix Cloudflare Route Priority
 
-### Step 1: Fix the Edge Function Deployment
-The `bounty-meta` function may have a deployment sync issue. I will:
-- Verify the function syntax is correct
-- Ensure it matches the pattern of working functions
-- Force a proper deployment
+You need to **remove or modify the conflicting wildcard route** in Cloudflare:
 
-### Step 2: Test the Edge Function
-After deployment, verify the function responds correctly by calling it directly with a bounty ID.
+1. Go to **Cloudflare Dashboard** -> **Websites** -> **bountybay.co**
+2. Navigate to **Workers Routes** (where you saw the two routes)
+3. **Delete or disable the `*bountybay.co/*` route** - this wildcard is overriding your specific Worker route
+4. Keep only the `bountybay.co/b/*` route pointing to your Worker
 
-### Step 3: Verify Cloudflare Worker Configuration
-The Cloudflare Worker in your dashboard should:
-1. Detect social media crawlers (Facebook, Twitter, LinkedIn, etc.)
-2. For bounty URLs (`/b/[id]`), fetch the bounty data and return HTML with proper og: tags
-3. For regular users, proxy directly to your app
+**Why this works**: Cloudflare will then send all `/b/*` requests to your Worker, which will serve dynamic meta tags to crawlers.
 
-You already have the Worker code in `.lovable/plan.md`. The Worker fetches bounty data directly from Supabase REST API, so it doesn't need the edge function at all.
+---
 
-### Step 4: Verify Everything Works
-- Test with Facebook Sharing Debugger
-- Confirm you see: "Help find: [Title] - $[Amount] Reward | BountyBay"
-- Confirm the bounty image shows instead of generic BB logo
+### Step 2: Test the Fix
+
+After removing the wildcard route:
+
+1. Go to [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
+2. Enter: `https://bountybay.co/b/36b513a7-1e23-4e1b-a900-a612a6ccf4fc`
+3. Click **"Scrape Again"** (important - Facebook caches old data)
+
+You should now see:
+- **Title**: "Help find: Looking for a Lead on a Nixon Hoodie From Around 2012..." 
+- **Image**: The actual hoodie photo from your bounty
+- **Amount**: $5 Reward
+
+---
+
+## Alternative: If You Need the Wildcard Route
+
+If the `*bountybay.co/*` route serves another purpose (like a different Worker), you can instead **move your `/b/*` route to be MORE specific** by:
+
+1. Creating the route as: `bountybay.co/b/*` (no asterisk prefix)
+2. Ensuring it appears ABOVE the wildcard in the routes list
+
+However, the cleanest solution is to simply remove the conflicting wildcard if it's not needed.
+
+---
 
 ## Technical Details
 
-### Why the Edge Function Wasn't Deploying
-The deployment tool reported success but the function never appeared in Supabase. This can happen when:
-- There's a lockfile incompatibility
-- The function was never triggered to actually deploy
-- There's a silent error during deployment
+**Current bounty data verified in database:**
 
-### The Cloudflare Worker Already Has Everything It Needs
-Looking at your plan.md, the Worker code directly calls Supabase REST API:
-```javascript
-const apiUrl = `${supabaseUrl}/rest/v1/Bounties?id=eq.${bountyId}&select=...`;
+| Field | Value |
+|-------|-------|
+| ID | `36b513a7-1e23-4e1b-a900-a612a6ccf4fc` |
+| Title | Looking for a Lead on a Nixon Hoodie From Around 2012 (Grey, Size Large) - Lead Only |
+| Amount | $5 |
+| Status | open |
+| Image | `https://lenyuvobgktgdearflim.supabase.co/storage/v1/object/public/bounty-images/.../9ezzim3r4z.webp` |
+
+**Worker logic is correct** - it will generate this preview:
 ```
-This means it doesn't need the edge function at all - it generates the HTML directly.
+Title: "Help find: Looking for a Lead on a Nixon Hoodie..." - $5 Reward | BountyBay
+Image: [Your uploaded hoodie photo]
+Description: $5 bounty reward! [First 120 chars of description]...
+```
 
-### Files That May Need Updates
-1. **Cloudflare Worker** (in your Cloudflare dashboard) - verify it has the correct code
-2. **supabase/functions/bounty-meta/index.ts** - ensure proper deployment
-3. Verify no code changes needed in your app
+---
 
-## Expected Outcome
-After this fix:
-- Share any bounty link to Facebook
-- Facebook shows dynamic preview with title, amount, image
-- Users click and land on your app
-- No more generic BB logo
+## No Code Changes Required
 
-## Time Estimate
-5-10 minutes once in build mode
+The Worker code you deployed is correct. The only issue is the Cloudflare route configuration conflicting with your Worker.
 
