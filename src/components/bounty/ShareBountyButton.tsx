@@ -29,10 +29,9 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Use edge function URL for social sharing (dynamic meta tags + preview image)
-  // The edge function redirects users to the clean URL when they click
-  const shareUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
-  const cleanUrl = `https://bountybay.co/b/${bountyId}`;
+  // Share the clean bountybay.co URL - Cloudflare Worker handles crawler detection
+  // and serves proper OG metadata with title, amount, and clean URL
+  const shareUrl = `https://bountybay.co/b/${bountyId}`;
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedText = encodeURIComponent(shareText);
@@ -63,8 +62,7 @@ export function ShareBountyButton({
 
   const handleCopyLink = async () => {
     try {
-      // Copy the clean URL for users to paste
-      await navigator.clipboard.writeText(cleanUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
