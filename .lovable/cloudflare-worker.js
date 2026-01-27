@@ -209,15 +209,15 @@ export default {
         });
       }
 
-      const title = bounty.title || "BountyBay Bounty";
-      const amount = bounty.amount != null ? ` ($${bounty.amount})` : "";
-      const descRaw = bounty.description || "Help find this item. Even a lead helps.";
-      const description = `${descRaw}`.slice(0, 280);
+      // Clean title format - no status badges, no amount in title
+      const title = `Help me find: ${bounty.title || "this item"} | BountyBay`;
+      const descRaw = bounty.description || "Help find this item on BountyBay.";
+      const description = `${descRaw}`.slice(0, 160);
       const imageUrl = pickOgImage(bounty);
 
       const html = ogHtml({
         canonicalUrl: canonical,
-        title: `${title}${amount}`,
+        title: title,
         description,
         imageUrl
       });

@@ -50,10 +50,9 @@ serve(async (req) => {
       });
     }
 
-    // Add status badge to title for social previews
-    const statusBadge = bounty.status === 'open' ? '🟢 OPEN | ' : '';
-    const title = `${statusBadge}Help find: ${bounty.title} - $${bounty.amount} Reward | BountyBay`;
-    const description = `$${bounty.amount} bounty reward! ${(bounty.description || '').slice(0, 120)}${(bounty.description || '').length > 120 ? '...' : ''}`;
+    // Clean title format for social previews
+    const title = `Help me find: ${bounty.title} | BountyBay`;
+    const description = (bounty.description || 'Help find this item on BountyBay').slice(0, 160);
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
     // Use bounty's first image if available, otherwise use default OG image
