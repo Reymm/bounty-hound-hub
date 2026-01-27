@@ -32,9 +32,9 @@ export function ShareBountyButton({
   // Clean URL for users (copy link, native share)
   const cleanUrl = `https://bountybay.co/b/${bountyId}`;
   
-  // Supabase Edge Function URL for social platform sharing
-  // This serves proper OG meta tags to crawlers and redirects browsers to the clean URL
-  const socialShareUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
+  // Share page URL for social platform sharing
+  // This page serves proper OG meta tags to crawlers and redirects browsers to the clean URL
+  const socialShareUrl = `https://bountybay.lovable.app/share/${bountyId}`;
   
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
   const encodedSocialUrl = encodeURIComponent(socialShareUrl);

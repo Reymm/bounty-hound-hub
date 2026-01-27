@@ -41,6 +41,7 @@ import EditBounty from "./pages/EditBounty";
 import Reconnections from "./pages/niche/Reconnections";
 import Collectibles from "./pages/niche/Collectibles";
 import VintageCars from "./pages/niche/VintageCars";
+import ShareBounty from "./pages/ShareBounty";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
+              <Route path="/share/:id" element={<ShareBounty />} />
               
               
               {/* Routes with navigation */}
