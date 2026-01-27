@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.delete-connect-account]
 verify_jwt = true
+
+[functions.bounty-meta]
+verify_jwt = false
