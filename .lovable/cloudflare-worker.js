@@ -1,224 +1,264 @@
 /**
- * BountyBay Cloudflare Worker - Dynamic Social Media Previews
+ * Cloudflare Worker: Dynamic OG previews for /b/[uuid]
+ * - Crawlers get server-rendered OG HTML from Supabase + JS redirect
+ * - Browsers are proxied to the SPA origin (bountybay.lovable.app)
  * 
- * This Worker detects social media crawlers and serves dynamic OG meta tags
- * for bounty pages. Regular users are proxied directly to the origin.
- * 
- * INSTALLATION:
- * 1. Go to Cloudflare Dashboard > Workers & Pages > bounty-preview
- * 2. Click "Edit Code" and paste this entire file
- * 3. Deploy
- * 4. Set environment variables: SUPABASE_URL, SUPABASE_ANON_KEY
- * 5. Add routes: bountybay.co/b/* and www.bountybay.co/b/*
- * 
- * TESTING:
- * - Add ?og=1 to any bounty URL to force OG tag rendering
- * - curl -A "facebookexternalhit" https://bountybay.co/b/[uuid]
- * - Check response headers: x-bounty-worker, x-bounty-isCrawler, x-bounty-path
+ * Configure Worker vars (Settings -> Variables):
+ *   SUPABASE_URL = https://lenyuvobgktgdearflim.supabase.co
+ *   SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlbnl1dm9iZ2t0Z2RlYXJmbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTI0OTcsImV4cCI6MjA3MDA4ODQ5N30.9Ax2mNDPCQoq0K9KCIQKk-qLFQoClxBhGNWsMrXMCx0
  */
 
-// Social media crawler user agents (case-insensitive matching)
 const CRAWLER_USER_AGENTS = [
-  'facebookexternalhit',
-  'facebot',
-  'twitterbot',
-  'linkedinbot',
-  'whatsapp',
-  'slackbot',
-  'telegrambot',
-  'discordbot',
-  'googlebot',
-  'bingbot',
-  'pinterestbot',
-  'redditbot',
-  'applebot',
-  'embedly',
-  'quora link preview',
-  'showyoubot',
-  'outbrain',
-  'rogerbot',
-  'vkshare',
-  'w3c_validator',
+  "facebookexternalhit",
+  "facebot",
+  "twitterbot",
+  "linkedinbot",
+  "slackbot",
+  "discordbot",
+  "telegrambot",
+  "whatsapp",
+  "pinterest",
+  "skypeuripreview",
+  "googlebot",
+  "bingbot"
 ];
 
-function isCrawler(userAgent) {
-  if (!userAgent) return false;
-  const ua = userAgent.toLowerCase();
-  return CRAWLER_USER_AGENTS.some(crawler => ua.includes(crawler));
+const ORIGIN_HOST = "bountybay.lovable.app";
+
+// Fallback image if bounty has none
+const FALLBACK_OG_IMAGE = "https://bountybay.co/og-default.png";
+
+function isCrawlerRequest(userAgent) {
+  const ua = (userAgent || "").toLowerCase();
+  return CRAWLER_USER_AGENTS.some(c => ua.includes(c));
 }
 
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+function withDebugHeaders(resp, debug) {
+  const out = new Response(resp.body, resp);
+  out.headers.set("x-bounty-worker", "hit");
+  out.headers.set("x-bounty-isCrawler", String(debug.isCrawler));
+  out.headers.set("x-bounty-path", debug.path);
+  out.headers.set("x-bounty-bountyId", debug.bountyId || "");
+  out.headers.set("x-bounty-branch", debug.branch);
+  return out;
 }
 
-function addDebugHeaders(response, headers) {
-  const newResponse = new Response(response.body, response);
-  for (const [key, value] of Object.entries(headers)) {
-    newResponse.headers.set(key, value);
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function absoluteUrl(requestUrl, path) {
+  const u = new URL(requestUrl);
+  u.pathname = path;
+  u.search = "";
+  u.hash = "";
+  return u.toString();
+}
+
+async function fetchBountyFromSupabase(env, bountyId) {
+  // Use env vars if set, otherwise use hardcoded defaults
+  const base = env.SUPABASE_URL || "https://lenyuvobgktgdearflim.supabase.co";
+  const key = env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlbnl1dm9iZ2t0Z2RlYXJmbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTI0OTcsImV4cCI6MjA3MDA4ODQ5N30.9Ax2mNDPCQoq0K9KCIQKk-qLFQoClxBhGNWsMrXMCx0";
+
+  // Supabase REST endpoint
+  const url =
+    `${base}/rest/v1/Bounties` +
+    `?id=eq.${encodeURIComponent(bountyId)}` +
+    `&select=id,title,amount,description,images,status` +
+    `&limit=1`;
+
+  const res = await fetch(url, {
+    headers: {
+      apikey: key,
+      authorization: `Bearer ${key}`,
+      accept: "application/json"
+    }
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Supabase error ${res.status}: ${txt}`);
   }
-  return newResponse;
+
+  const data = await res.json();
+  return Array.isArray(data) && data.length ? data[0] : null;
+}
+
+function pickOgImage(bounty) {
+  const imgs = bounty?.images;
+  if (!imgs) return FALLBACK_OG_IMAGE;
+
+  // images might be an array, a JSON string, or a single string URL
+  if (Array.isArray(imgs)) return imgs[0] || FALLBACK_OG_IMAGE;
+
+  if (typeof imgs === "string") {
+    try {
+      const parsed = JSON.parse(imgs);
+      if (Array.isArray(parsed)) return parsed[0] || FALLBACK_OG_IMAGE;
+    } catch (_) {
+      return imgs || FALLBACK_OG_IMAGE;
+    }
+  }
+
+  return FALLBACK_OG_IMAGE;
+}
+
+function ogHtml({ canonicalUrl, title, description, imageUrl }) {
+  const t = escapeHtml(title);
+  const d = escapeHtml(description);
+  const img = escapeHtml(imageUrl);
+  const canon = escapeHtml(canonicalUrl);
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>${t}</title>
+
+  <link rel="canonical" href="${canon}" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="${canon}" />
+  <meta property="og:title" content="${t}" />
+  <meta property="og:description" content="${d}" />
+  <meta property="og:image" content="${img}" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${t}" />
+  <meta name="twitter:description" content="${d}" />
+  <meta name="twitter:image" content="${img}" />
+
+  <meta name="robots" content="noindex,nofollow" />
+</head>
+<body>
+  <noscript>
+    <p>${t}</p>
+    <p><a href="${canon}">Open bounty</a></p>
+  </noscript>
+
+  <script>
+    window.location.replace(${JSON.stringify(canonicalUrl)});
+  </script>
+</body>
+</html>`;
 }
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const userAgent = request.headers.get('User-Agent') || '';
-    const pathname = url.pathname;
-    
-    // Debug headers to add to ALL responses
-    const debugHeaders = {
-      'x-bounty-worker': 'hit',
-      'x-bounty-path': pathname,
-    };
-    
-    // Match bounty paths: /b/[uuid] with optional trailing slash
-    // UUID pattern: 8-4-4-4-12 hexadecimal characters
-    const bountyMatch = pathname.match(/^\/b\/([a-f0-9-]{36})\/?$/i);
-    
-    if (!bountyMatch) {
-      // Not a bounty page - proxy to origin
-      debugHeaders['x-bounty-isCrawler'] = 'n/a';
+    const ua = request.headers.get("user-agent") || "";
+
+    // Match /b/<uuid> with optional trailing slash
+    const m = url.pathname.match(/^\/b\/([a-f0-9-]+)\/?$/i);
+    const bountyId = m?.[1] || null;
+
+    // Manual override for testing: ?og=1
+    const forceOg = url.searchParams.get("og") === "1";
+
+    const isCrawler = forceOg || (bountyId && isCrawlerRequest(ua));
+
+    // If not a bounty path OR not a crawler, proxy to the SPA origin
+    if (!bountyId || !isCrawler) {
       const originUrl = new URL(request.url);
-      originUrl.hostname = 'bountybay.lovable.app';
-      const response = await fetch(new Request(originUrl, request));
-      return addDebugHeaders(response, debugHeaders);
+      originUrl.hostname = ORIGIN_HOST;
+
+      const proxyReq = new Request(originUrl.toString(), request);
+      const resp = await fetch(proxyReq);
+
+      return withDebugHeaders(resp, {
+        isCrawler,
+        path: url.pathname,
+        bountyId: bountyId || "",
+        branch: "proxy"
+      });
     }
-    
-    const bountyId = bountyMatch[1];
-    
-    // Check for crawler OR manual override via ?og=1
-    const forceOg = url.searchParams.get('og') === '1';
-    const detectedCrawler = isCrawler(userAgent);
-    const shouldServeOg = detectedCrawler || forceOg;
-    
-    debugHeaders['x-bounty-isCrawler'] = detectedCrawler.toString();
-    debugHeaders['x-bounty-forceOg'] = forceOg.toString();
-    debugHeaders['x-bounty-bountyId'] = bountyId;
-    
-    if (!shouldServeOg) {
-      // Regular browser - proxy to origin
-      const originUrl = new URL(request.url);
-      originUrl.hostname = 'bountybay.lovable.app';
-      const response = await fetch(new Request(originUrl, request));
-      return addDebugHeaders(response, debugHeaders);
-    }
-    
-    // Crawler detected or ?og=1 - serve dynamic OG tags
+
+    // Crawler path: fetch bounty + serve OG HTML
     try {
-      // Get Supabase credentials from environment
-      const supabaseUrl = env.SUPABASE_URL || 'https://lenyuvobgktgdearflim.supabase.co';
-      const supabaseKey = env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlbnl1dm9iZ2t0Z2RlYXJmbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTI0OTcsImV4cCI6MjA3MDA4ODQ5N30.9Ax2mNDPCQoq0K9KCIQKk-qLFQoClxBhGNWsMrXMCx0';
-      
-      // Fetch bounty from Supabase REST API
-      const apiUrl = `${supabaseUrl}/rest/v1/Bounties?id=eq.${bountyId}&select=id,title,amount,description,status,images`;
-      
-      console.log(`[BountyWorker] Fetching bounty: ${bountyId}`);
-      console.log(`[BountyWorker] User-Agent: ${userAgent}`);
-      console.log(`[BountyWorker] isCrawler: ${detectedCrawler}, forceOg: ${forceOg}`);
-      
-      const bountyResponse = await fetch(apiUrl, {
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Accept': 'application/json',
-        },
-      });
-      
-      if (!bountyResponse.ok) {
-        const errorText = await bountyResponse.text();
-        console.error(`[BountyWorker] Supabase API error: ${bountyResponse.status}`, errorText);
-        throw new Error(`Supabase API error: ${bountyResponse.status}`);
+      const bounty = await fetchBountyFromSupabase(env, bountyId);
+
+      const canonical = absoluteUrl(request.url, `/b/${bountyId}`);
+
+      if (!bounty) {
+        const html = ogHtml({
+          canonicalUrl: canonical,
+          title: "BountyBay: Bounty not found",
+          description: "This bounty may have been removed or is unavailable.",
+          imageUrl: FALLBACK_OG_IMAGE
+        });
+
+        const resp = new Response(html, {
+          status: 200,
+          headers: {
+            "content-type": "text/html; charset=UTF-8",
+            "cache-control": "no-store"
+          }
+        });
+
+        return withDebugHeaders(resp, {
+          isCrawler,
+          path: url.pathname,
+          bountyId,
+          branch: "og-notfound"
+        });
       }
-      
-      const bounties = await bountyResponse.json();
-      console.log(`[BountyWorker] Bounties found: ${bounties.length}`);
-      
-      if (!bounties || bounties.length === 0) {
-        // Bounty not found - redirect to homepage
-        console.log('[BountyWorker] No bounty found, redirecting to homepage');
-        return Response.redirect('https://bountybay.co', 302);
-      }
-      
-      const bounty = bounties[0];
-      console.log(`[BountyWorker] Bounty data: ${JSON.stringify(bounty)}`);
-      
-      // Build dynamic meta content
-      const statusBadge = bounty.status === 'open' ? '🟢 OPEN | ' : '';
-      const title = `${statusBadge}${bounty.title} - $${bounty.amount} Reward | BountyBay`;
-      const description = `$${bounty.amount} bounty reward! ${(bounty.description || 'Help find this item on BountyBay.').slice(0, 150)}${(bounty.description || '').length > 150 ? '...' : ''}`;
-      const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-      const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
-      
-      // Return HTML with OG tags for crawlers
-      const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Primary Meta Tags -->
-  <title>${escapeHtml(title)}</title>
-  <meta name="title" content="${escapeHtml(title)}">
-  <meta name="description" content="${escapeHtml(description)}">
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="${bountyUrl}">
-  <meta property="og:title" content="${escapeHtml(title)}">
-  <meta property="og:description" content="${escapeHtml(description)}">
-  <meta property="og:image" content="${ogImage}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:site_name" content="BountyBay">
+      const title = bounty.title || "BountyBay Bounty";
+      const amount = bounty.amount != null ? ` ($${bounty.amount})` : "";
+      const descRaw = bounty.description || "Help find this item. Even a lead helps.";
+      const description = `${descRaw}`.slice(0, 280);
+      const imageUrl = pickOgImage(bounty);
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${bountyUrl}">
-  <meta name="twitter:title" content="${escapeHtml(title)}">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
-  <meta name="twitter:image" content="${ogImage}">
-
-  <!-- Canonical -->
-  <link rel="canonical" href="${bountyUrl}">
-  
-  <!-- Redirect browsers (crawlers don't execute JS) -->
-  <script>window.location.replace("${bountyUrl}");</script>
-  <noscript>
-    <meta http-equiv="refresh" content="0;url=${bountyUrl}">
-  </noscript>
-</head>
-<body>
-  <h1>${escapeHtml(bounty.title)}</h1>
-  <p>$${bounty.amount} Reward</p>
-  <p>${escapeHtml(bounty.description || '')}</p>
-  <p>Redirecting to <a href="${bountyUrl}">BountyBay</a>...</p>
-</body>
-</html>`;
-
-      debugHeaders['x-bounty-served'] = 'og-html';
-      
-      return new Response(html, {
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
-          ...debugHeaders,
-        },
+      const html = ogHtml({
+        canonicalUrl: canonical,
+        title: `${title}${amount}`,
+        description,
+        imageUrl
       });
-      
-    } catch (error) {
-      console.error('[BountyWorker] Error:', error.message);
-      debugHeaders['x-bounty-error'] = error.message;
-      
-      // On any error, proxy to origin
-      const originUrl = new URL(request.url);
-      originUrl.hostname = 'bountybay.lovable.app';
-      const response = await fetch(new Request(originUrl, request));
-      return addDebugHeaders(response, debugHeaders);
+
+      const resp = new Response(html, {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=UTF-8",
+          "cache-control": "no-store"
+        }
+      });
+
+      return withDebugHeaders(resp, {
+        isCrawler,
+        path: url.pathname,
+        bountyId,
+        branch: "og"
+      });
+    } catch (err) {
+      const canonical = absoluteUrl(request.url, `/b/${bountyId}`);
+      const html = ogHtml({
+        canonicalUrl: canonical,
+        title: "BountyBay: Preview unavailable",
+        description: "We couldn't load this bounty preview right now.",
+        imageUrl: FALLBACK_OG_IMAGE
+      });
+
+      const resp = new Response(html, {
+        status: 200,
+        headers: {
+          "content-type": "text/html; charset=UTF-8",
+          "cache-control": "no-store"
+        }
+      });
+
+      return withDebugHeaders(resp, {
+        isCrawler,
+        path: url.pathname,
+        bountyId,
+        branch: "og-error"
+      });
     }
-  },
+  }
 };
