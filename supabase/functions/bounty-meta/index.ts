@@ -50,7 +50,9 @@ serve(async (req) => {
       });
     }
 
-    const title = `Help find: ${bounty.title} - $${bounty.amount} Reward | BountyBay`;
+    // Add status badge to title for social previews
+    const statusBadge = bounty.status === 'open' ? '🟢 OPEN | ' : '';
+    const title = `${statusBadge}Help find: ${bounty.title} - $${bounty.amount} Reward | BountyBay`;
     const description = `$${bounty.amount} bounty reward! ${(bounty.description || '').slice(0, 120)}${(bounty.description || '').length > 120 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
