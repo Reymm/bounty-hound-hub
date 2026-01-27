@@ -29,25 +29,19 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Clean URL for display and copying
-  const cleanUrl = `https://bountybay.co/b/${bountyId}`;
-  
-  // Edge function URL for social sharing - serves proper OG meta tags to crawlers
-  // and redirects actual users to the clean bounty URL
-  const metaUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
+  // Use the clean bountybay.co URL for all sharing
+  // The Cloudflare Worker intercepts crawler requests and serves OG meta tags
+  const shareUrl = `https://bountybay.co/b/${bountyId}`;
   
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
-  const encodedMetaUrl = encodeURIComponent(metaUrl);
-  const encodedCleanUrl = encodeURIComponent(cleanUrl);
+  const encodedUrl = encodeURIComponent(shareUrl);
   const encodedText = encodeURIComponent(shareText);
 
-  // Use metaUrl for platforms that scrape OG tags (Facebook, LinkedIn)
-  // Use cleanUrl for platforms where display URL matters more (Twitter, Reddit)
   const shareLinks = {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedCleanUrl}`,
-    reddit: `https://reddit.com/submit?url=${encodedCleanUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedMetaUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
   };
 
   const handleNativeShare = async () => {
@@ -56,7 +50,7 @@ export function ShareBountyButton({
         await navigator.share({
           title: `$${amount} Bounty: ${title}`,
           text: shareText,
-          url: cleanUrl,
+          url: shareUrl,
         });
       } catch (error) {
         // User cancelled or error
@@ -69,7 +63,7 @@ export function ShareBountyButton({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(cleanUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
