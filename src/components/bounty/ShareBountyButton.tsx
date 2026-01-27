@@ -29,9 +29,12 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  const bountyUrl = `https://bountybay.co/b/${bountyId}`;
+  // Use edge function URL for social sharing (dynamic meta tags + preview image)
+  // The edge function redirects users to the clean URL when they click
+  const shareUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
+  const cleanUrl = `https://bountybay.co/b/${bountyId}`;
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
-  const encodedUrl = encodeURIComponent(bountyUrl);
+  const encodedUrl = encodeURIComponent(shareUrl);
   const encodedText = encodeURIComponent(shareText);
 
   const shareLinks = {
@@ -47,7 +50,7 @@ export function ShareBountyButton({
         await navigator.share({
           title: `$${amount} Bounty: ${title}`,
           text: shareText,
-          url: bountyUrl,
+          url: shareUrl,
         });
       } catch (error) {
         // User cancelled or error
@@ -60,11 +63,12 @@ export function ShareBountyButton({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(bountyUrl);
+      // Copy the clean URL for users to paste
+      await navigator.clipboard.writeText(cleanUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy link');
     }
   };
