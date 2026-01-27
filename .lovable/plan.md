@@ -1,61 +1,35 @@
 
 
-# Social Media Preview Fix: Supabase Edge Function Approach
+# Fix Social Media Previews - Deploy the Edge Function
 
-## Problem Summary
-Facebook's crawler isn't reaching the Cloudflare Worker, so bounty previews don't show dynamic OG tags. Despite correct DNS settings (proxied/orange cloud), Worker routes, and no WAF blocking, something in Cloudflare's edge is preventing crawler requests from reaching the Worker.
+## The Problem
+The `bounty-meta` edge function code exists in Lovable but is **NOT deployed** to your Supabase project. When Facebook tries to fetch `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=...`, it gets a 404 error.
 
-## Solution
-Bypass Cloudflare Workers entirely by pointing social share URLs directly to the existing **Supabase Edge Function** (`bounty-meta`), which already serves the correct OG meta tags and redirects browsers to the actual bounty page.
+## Solution Options
 
-## How It Works
+### Option A: Recover Supabase Access (Recommended)
+1. Go to https://supabase.com/dashboard and click "Forgot Password"
+2. Use your email to reset password
+3. Once logged in, go to **Functions** section
+4. Deploy the `bounty-meta` function
 
-```text
-Current (broken):
-User shares -> bountybay.co/b/[id] -> Cloudflare Worker (not reached) -> No OG tags
-
-New (reliable):
-User shares -> Supabase Edge Function URL -> OG tags served to crawlers
-                                          -> Browser redirected to bountybay.co/b/[id]
+### Option B: Use Supabase CLI (If you have it installed)
+Run this command from your project directory:
+```bash
+supabase functions deploy bounty-meta --project-ref lenyuvobgktgdearflim
 ```
 
-## Changes Required
+### Option C: Alternative - Use Lovable's Domain for Previews
+Since Lovable CAN deploy to its own infrastructure, we could:
+1. Create a special route at `bountybay.lovable.app/share/[id]` 
+2. This page serves OG meta tags and redirects to the main site
+3. Share links would use the Lovable URL for social platforms
 
-### 1. Update ShareBountyButton Component
-**File:** `src/components/bounty/ShareBountyButton.tsx`
+This would work immediately without needing Supabase access.
 
-- Change the `shareUrl` from `https://bountybay.co/b/${bountyId}` to the Supabase edge function URL
-- The edge function URL will be: `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`
-- Keep the "Copy Link" feature pointing to the clean `bountybay.co/b/` URL (for when users paste in browsers)
-- Only social platform share links (Facebook, Twitter, etc.) will use the edge function URL
+## What Was Working Before
+The same exact approach - Supabase Edge Function serving OG tags. The function just needs to be deployed again.
 
-### 2. Deploy the Edge Function
-The `bounty-meta` edge function already exists and handles:
-- Fetching bounty data from the database
-- Serving HTML with proper OG meta tags for crawlers
-- Redirecting browsers via JavaScript to the actual bounty page
-- We just need to ensure it's deployed
-
-## What Users Will Experience
-
-1. **Sharing on social media**: Rich previews with bounty title, amount, description, and image will display correctly
-2. **Clicking shared links**: Users are instantly redirected to the full bounty page at `bountybay.co/b/[id]`
-3. **Copying link directly**: Still copies the clean `bountybay.co` URL for direct sharing
-
-## Technical Details
-
-The edge function already:
-- Has `verify_jwt = false` in config (public access)
-- Fetches bounty from database using service role key
-- Returns HTML with all required OG tags (og:title, og:description, og:image, twitter:card, etc.)
-- Includes JavaScript redirect for browsers
-- Has 5-minute cache for performance
-
-## Benefits of This Approach
-
-1. **Reliable**: Supabase edge functions are directly accessible without proxy layers
-2. **Debuggable**: Logs visible in Supabase dashboard
-3. **Already built**: The `bounty-meta` function is ready to use
-4. **Clean UX**: Users still see the nice `bountybay.co` URL when they land on the page
-5. **Keep Cloudflare**: Your DNS and CDN setup remains intact for the main site
+## Recommended Next Step
+**Try Supabase password reset first** - it's the quickest path since the code is already correct. If that fails, I can implement Option C immediately.
 
