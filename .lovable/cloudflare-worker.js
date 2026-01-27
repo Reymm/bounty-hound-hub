@@ -5,14 +5,10 @@
  * for bounty pages. Regular users are proxied directly to the origin.
  * 
  * INSTALLATION:
- * 1. Go to Cloudflare Dashboard > Workers & Pages > Create Worker
- * 2. Paste this entire code
- * 3. Go to Settings > Variables and add:
- *    - SUPABASE_URL = https://lenyuvobgktgdearflim.supabase.co
- *    - SUPABASE_ANON_KEY = (your anon key - starts with eyJhbG...)
- * 4. Go to your domain's DNS and add a Worker Route:
- *    - Route pattern: bountybay.co/b/*
- *    - Worker: (select this worker)
+ * 1. Go to Cloudflare Dashboard > Workers & Pages > bounty-preview
+ * 2. Click "Edit Code" and paste this entire file
+ * 3. Click "Deploy"
+ * 4. Ensure the route bountybay.co/b/* is pointing to this worker
  */
 
 // Social media crawler user agents
@@ -30,6 +26,10 @@ const CRAWLER_USER_AGENTS = [
   'Pinterestbot',
   'redditbot',
 ];
+
+// Hardcoded Supabase credentials (these are public anon keys, safe to include)
+const SUPABASE_URL = 'https://lenyuvobgktgdearflim.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlbnl1dm9iZ2t0Z2RlYXJmbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTI0OTcsImV4cCI6MjA3MDA4ODQ5N30.9Ax2mNDPCQoq0K9KCIQKk-qLFQoClxBhGNWsMrXMCx0';
 
 function isCrawler(userAgent) {
   if (!userAgent) return false;
@@ -65,38 +65,33 @@ export default {
     
     try {
       // Fetch bounty from Supabase REST API
-      const supabaseUrl = env.SUPABASE_URL || 'https://lenyuvobgktgdearflim.supabase.co';
-      const supabaseKey = env.SUPABASE_ANON_KEY;
+      const apiUrl = `${SUPABASE_URL}/rest/v1/Bounties?id=eq.${bountyId}&select=id,title,amount,description,status,images`;
       
-      if (!supabaseKey) {
-        console.error('Missing SUPABASE_ANON_KEY environment variable');
-        // Fallback to origin
-        const originUrl = new URL(request.url);
-        originUrl.hostname = 'bountybay.lovable.app';
-        return fetch(new Request(originUrl, request));
-      }
-      
-      const apiUrl = `${supabaseUrl}/rest/v1/Bounties?id=eq.${bountyId}&select=id,title,amount,description,status,images`;
+      console.log('Fetching bounty:', bountyId);
       
       const bountyResponse = await fetch(apiUrl, {
         headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
       });
       
       if (!bountyResponse.ok) {
+        console.error('Supabase API error:', bountyResponse.status, await bountyResponse.text());
         throw new Error(`Supabase API error: ${bountyResponse.status}`);
       }
       
       const bounties = await bountyResponse.json();
+      console.log('Bounties found:', bounties.length);
       
       if (!bounties || bounties.length === 0) {
         // Bounty not found - redirect to homepage
+        console.log('No bounty found, redirecting to homepage');
         return Response.redirect('https://bountybay.co', 302);
       }
       
       const bounty = bounties[0];
+      console.log('Bounty data:', JSON.stringify(bounty));
       
       // Build dynamic meta content
       const statusBadge = bounty.status === 'open' ? '🟢 OPEN | ' : '';
@@ -153,7 +148,7 @@ export default {
       });
       
     } catch (error) {
-      console.error('Worker error:', error);
+      console.error('Worker error:', error.message);
       // On any error, proxy to origin
       const originUrl = new URL(request.url);
       originUrl.hostname = 'bountybay.lovable.app';
