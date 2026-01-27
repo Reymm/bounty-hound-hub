@@ -1,238 +1,61 @@
 
 
-# Fix Social Media Preview - Final Solution
+# Social Media Preview Fix: Supabase Edge Function Approach
 
-## Root Cause Identified
+## Problem Summary
+Facebook's crawler isn't reaching the Cloudflare Worker, so bounty previews don't show dynamic OG tags. Despite correct DNS settings (proxied/orange cloud), Worker routes, and no WAF blocking, something in Cloudflare's edge is preventing crawler requests from reaching the Worker.
 
-After thorough investigation:
-- **Database**: Working correctly. RLS policy allows anon to read open bounties.
-- **Bounty Data**: All fields accessible (title, amount, description, images)
-- **Worker Code**: Logic is correct in the repository
+## Solution
+Bypass Cloudflare Workers entirely by pointing social share URLs directly to the existing **Supabase Edge Function** (`bounty-meta`), which already serves the correct OG meta tags and redirects browsers to the actual bounty page.
 
-**The problem: Facebook's crawler requests are NOT hitting your Cloudflare Worker at all.** The empty logs prove this - when Facebook scrapes, the Worker should log "Fetching bounty: ..." but nothing appears.
-
----
-
-## Why Requests Bypass the Worker
-
-There are only 3 possible causes:
-
-1. **Route pattern mismatch** - The route `bountybay.co/b/*` may not be matching correctly
-2. **Multiple conflicting routes** - Another route is catching requests first  
-3. **Worker not deployed to the route** - The code in Cloudflare doesn't match the repository
-
----
-
-## The Fix (5 Minutes)
-
-### Step 1: Delete ALL existing routes and recreate ONE clean route
-
-1. Go to **Cloudflare Dashboard → Websites → bountybay.co → Workers Routes**
-2. **Delete every route you see** (click the X or delete button on each)
-3. Click **Add Route**
-4. Enter exactly:
-   - **Route**: `bountybay.co/b/*`
-   - **Worker**: `bounty-preview`
-5. Save
-
-### Step 2: Verify Worker Code Has Debug Logging
-
-Go to **Cloudflare Dashboard → Workers & Pages → bounty-preview → Edit Code**
-
-Replace the ENTIRE contents with this updated code that has better logging:
+## How It Works
 
 ```text
-/**
- * BountyBay Cloudflare Worker - Dynamic Social Media Previews
- * Updated with aggressive logging for debugging
- */
+Current (broken):
+User shares -> bountybay.co/b/[id] -> Cloudflare Worker (not reached) -> No OG tags
 
-const CRAWLER_USER_AGENTS = [
-  'facebookexternalhit',
-  'Facebot',
-  'Twitterbot',
-  'LinkedInBot',
-  'WhatsApp',
-  'Slackbot',
-  'TelegramBot',
-  'Discordbot',
-  'Googlebot',
-  'bingbot',
-  'Pinterestbot',
-  'redditbot',
-];
-
-const SUPABASE_URL = 'https://lenyuvobgktgdearflim.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlbnl1dm9iZ2t0Z2RlYXJmbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTI0OTcsImV4cCI6MjA3MDA4ODQ5N30.9Ax2mNDPCQoq0K9KCIQKk-qLFQoClxBhGNWsMrXMCx0';
-
-function isCrawler(userAgent) {
-  if (!userAgent) return false;
-  const ua = userAgent.toLowerCase();
-  return CRAWLER_USER_AGENTS.some(crawler => ua.includes(crawler.toLowerCase()));
-}
-
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    const userAgent = request.headers.get('User-Agent') || '';
-    
-    // LOG EVERY REQUEST
-    console.log('=== WORKER HIT ===');
-    console.log('URL:', url.href);
-    console.log('Path:', url.pathname);
-    console.log('User-Agent:', userAgent);
-    console.log('Is Crawler:', isCrawler(userAgent));
-    
-    const bountyMatch = url.pathname.match(/^\/b\/([a-f0-9-]+)$/i);
-    console.log('Bounty Match:', bountyMatch ? bountyMatch[1] : 'NO MATCH');
-    
-    if (!bountyMatch || !isCrawler(userAgent)) {
-      console.log('Proxying to origin - not a crawler or not /b/ route');
-      const originUrl = new URL(request.url);
-      originUrl.hostname = 'bountybay.lovable.app';
-      return fetch(new Request(originUrl, request));
-    }
-    
-    const bountyId = bountyMatch[1];
-    console.log('Processing bounty for crawler:', bountyId);
-    
-    try {
-      const apiUrl = `${SUPABASE_URL}/rest/v1/Bounties?id=eq.${bountyId}&select=id,title,amount,description,status,images`;
-      console.log('Fetching from:', apiUrl);
-      
-      const bountyResponse = await fetch(apiUrl, {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      });
-      
-      console.log('Supabase response status:', bountyResponse.status);
-      
-      if (!bountyResponse.ok) {
-        const errorText = await bountyResponse.text();
-        console.error('Supabase API error:', bountyResponse.status, errorText);
-        throw new Error(`Supabase API error: ${bountyResponse.status}`);
-      }
-      
-      const bounties = await bountyResponse.json();
-      console.log('Bounties found:', bounties.length);
-      
-      if (!bounties || bounties.length === 0) {
-        console.log('No bounty found, redirecting to homepage');
-        return Response.redirect('https://bountybay.co', 302);
-      }
-      
-      const bounty = bounties[0];
-      console.log('SUCCESS - Returning OG tags for:', bounty.title);
-      
-      const statusBadge = bounty.status === 'open' ? '🟢 OPEN | ' : '';
-      const title = `${statusBadge}Help find: ${bounty.title} - $${bounty.amount} Reward | BountyBay`;
-      const description = `$${bounty.amount} bounty reward! ${(bounty.description || '').slice(0, 120)}${(bounty.description || '').length > 120 ? '...' : ''}`;
-      const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-      const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
-      
-      console.log('OG Image:', ogImage);
-      console.log('OG Title:', title);
-      
-      const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(title)}</title>
-  <meta name="title" content="${escapeHtml(title)}">
-  <meta name="description" content="${escapeHtml(description)}">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="${bountyUrl}">
-  <meta property="og:title" content="${escapeHtml(title)}">
-  <meta property="og:description" content="${escapeHtml(description)}">
-  <meta property="og:image" content="${ogImage}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:site_name" content="BountyBay">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${bountyUrl}">
-  <meta name="twitter:title" content="${escapeHtml(title)}">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
-  <meta name="twitter:image" content="${ogImage}">
-  <link rel="canonical" href="${bountyUrl}">
-  <script>window.location.replace("${bountyUrl}");</script>
-</head>
-<body>
-  <p>Redirecting to <a href="${bountyUrl}">${escapeHtml(bounty.title)}</a>...</p>
-</body>
-</html>`;
-
-      return new Response(html, {
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=300, s-maxage=300',
-        },
-      });
-      
-    } catch (error) {
-      console.error('Worker error:', error.message);
-      const originUrl = new URL(request.url);
-      originUrl.hostname = 'bountybay.lovable.app';
-      return fetch(new Request(originUrl, request));
-    }
-  },
-};
+New (reliable):
+User shares -> Supabase Edge Function URL -> OG tags served to crawlers
+                                          -> Browser redirected to bountybay.co/b/[id]
 ```
 
-### Step 3: Deploy and Test
+## Changes Required
 
-1. Click **Save and Deploy** in Cloudflare
-2. Go to **Workers & Pages → bounty-preview → Logs**
-3. Click **Begin log stream** (or Start Debugging)
-4. In a new tab, go to **Facebook Sharing Debugger**
-5. Paste: `https://bountybay.co/b/36b513a7-1e23-4e1b-a900-a612a6ccf4fc`
-6. Click **Scrape Again**
+### 1. Update ShareBountyButton Component
+**File:** `src/components/bounty/ShareBountyButton.tsx`
 
-**You should now see logs appear** with "=== WORKER HIT ===" and all the debug info.
+- Change the `shareUrl` from `https://bountybay.co/b/${bountyId}` to the Supabase edge function URL
+- The edge function URL will be: `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`
+- Keep the "Copy Link" feature pointing to the clean `bountybay.co/b/` URL (for when users paste in browsers)
+- Only social platform share links (Facebook, Twitter, etc.) will use the edge function URL
 
----
+### 2. Deploy the Edge Function
+The `bounty-meta` edge function already exists and handles:
+- Fetching bounty data from the database
+- Serving HTML with proper OG meta tags for crawlers
+- Redirecting browsers via JavaScript to the actual bounty page
+- We just need to ensure it's deployed
 
-## If Logs Still Don't Appear
+## What Users Will Experience
 
-If you click Scrape Again and STILL see no logs, the issue is that Facebook is bypassing Cloudflare entirely. This can happen if:
+1. **Sharing on social media**: Rich previews with bounty title, amount, description, and image will display correctly
+2. **Clicking shared links**: Users are instantly redirected to the full bounty page at `bountybay.co/b/[id]`
+3. **Copying link directly**: Still copies the clean `bountybay.co` URL for direct sharing
 
-1. **DNS propagation** - Your domain's nameservers might not be fully pointed to Cloudflare
-2. **SSL/TLS mode** - Should be set to "Full (Strict)" in Cloudflare SSL settings
+## Technical Details
 
-Go to **Cloudflare Dashboard → bountybay.co → DNS** and confirm:
-- Nameservers are Cloudflare's (not your registrar's)
-- The A record for `bountybay.co` shows the orange cloud (Proxied)
+The edge function already:
+- Has `verify_jwt = false` in config (public access)
+- Fetches bounty from database using service role key
+- Returns HTML with all required OG tags (og:title, og:description, og:image, twitter:card, etc.)
+- Includes JavaScript redirect for browsers
+- Has 5-minute cache for performance
 
----
+## Benefits of This Approach
 
-## Expected Result
-
-After fixing the route, when Facebook scrapes the bounty URL:
-
-| Field | Value |
-|-------|-------|
-| Title | 🟢 OPEN - Help find: Looking for a Lead on a Nixon Hoodie... - $5 Reward - BountyBay |
-| Description | $5 bounty reward! I had this Nixon hoodie around 2012... |
-| Image | The actual hoodie photo from your bounty |
-
----
-
-## Summary
-
-No code changes needed in Lovable. The fix is 100% in Cloudflare configuration:
-
-1. Delete all routes, create fresh `bountybay.co/b/*` → `bounty-preview`
-2. Deploy the updated Worker code with logging
-3. Test with Facebook Debugger while watching logs
+1. **Reliable**: Supabase edge functions are directly accessible without proxy layers
+2. **Debuggable**: Logs visible in Supabase dashboard
+3. **Already built**: The `bounty-meta` function is ready to use
+4. **Clean UX**: Users still see the nice `bountybay.co` URL when they land on the page
+5. **Keep Cloudflare**: Your DNS and CDN setup remains intact for the main site
 
