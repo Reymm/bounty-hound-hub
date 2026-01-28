@@ -1,103 +1,95 @@
 
-# Fix Social Media Previews with share.bountybay.co Subdomain
 
-## The Problem
-The Cloudflare Worker approach has failed repeatedly. Traffic to `bountybay.co/b/*` is not being intercepted by the Worker, so social platforms see the homepage instead of bounty metadata.
+# Fix Social Media Previews - Complete Solution
 
-## The Solution
-Create a dedicated subdomain `share.bountybay.co` that points directly to your Supabase project. Social share links will use this subdomain to serve proper OG tags.
+## The Root Cause
 
----
+Looking at your screenshot, you used the **iOS native share** feature (Share sheet), not the "Facebook" button in the dropdown. Here's what happens:
 
-## How It Will Work
+| Share Method | URL Sent to Facebook | Result |
+|--------------|---------------------|--------|
+| **"Share via..." (iOS native)** | `bountybay.co/b/xxx` | ❌ Homepage metadata (no SSR) |
+| **"Facebook" dropdown button** | Supabase edge function URL | ✅ Bounty-specific metadata |
 
-```text
-User clicks "Share to Facebook"
-         |
-         v
-Facebook loads: share.bountybay.co/functions/v1/bounty-meta?id=xxx
-         |
-         v
-Supabase Edge Function returns HTML with:
-  - og:title = "Help me find: Vintage Camera | BountyBay"
-  - og:image = [bounty's first image]
-  - og:url = https://bountybay.co/b/xxx (canonical)
-         |
-         v
-Facebook displays rich preview with bounty details
-         |
-         v
-User clicks the link -> JavaScript redirects to bountybay.co/b/xxx
-```
+The native iOS share uses `bountybay.co/b/...` which is a client-side React app - Facebook's crawler can't read the JavaScript-rendered meta tags, so it falls back to homepage defaults.
 
 ---
 
-## Your Steps (DNS Setup)
+## The Fix
 
-### Step 1: Add DNS Record in Your Domain Registrar
+We have two options:
 
-Create a **CNAME record**:
-- **Name/Host**: `share`
-- **Target/Points to**: `lenyuvobgktgdearflim.supabase.co`
-- **TTL**: Auto or 300
+### Option A: Update Native Share to Use Edge Function URL (Recommended)
+Change the native share to also use the edge function URL, so ALL share methods work correctly.
 
-This makes `share.bountybay.co` route directly to your Supabase project.
-
----
-
-## My Steps (Code Changes)
-
-### 1. Update ShareBountyButton.tsx
-
-Change line 36 from:
+**Current code (line 50-57):**
 ```typescript
-const edgeFunctionUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
+await navigator.share({
+  title: `$${amount} Bounty: ${title}`,
+  text: shareText,
+  url: bountyUrl,  // ← Uses bountybay.co/b/xxx
+});
 ```
 
-To:
+**New code:**
 ```typescript
-const edgeFunctionUrl = `https://share.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
+await navigator.share({
+  title: `$${amount} Bounty: ${title}`,
+  text: shareText,
+  url: edgeFunctionUrl,  // ← Uses Supabase edge function
+});
 ```
 
-This is the only code change needed. The edge function already exists and works.
+**Trade-off:** When someone taps the shared link, they'll briefly see the Supabase domain in the URL bar before being redirected to `bountybay.co/b/xxx`.
+
+### Option B: Keep Native Share, Educate Users
+Keep native share using the clean URL, but inform users that for best previews on social media, they should tap the specific platform button (Facebook, Twitter, etc.) rather than "Share via..."
 
 ---
 
-## What Users Will See
+## What I'll Implement (Option A)
 
-| Where | URL Shown |
-|-------|-----------|
-| Shared link on Facebook/Twitter | `share.bountybay.co/...` (briefly, in address bar) |
-| OG preview og:url | `bountybay.co/b/xxx` |
-| Where user lands | `bountybay.co/b/xxx` |
+1. **Update ShareBountyButton.tsx** - Change the native share handler to use `edgeFunctionUrl` instead of `bountyUrl` so all sharing methods produce proper social previews
 
-The preview will show `bountybay.co` as the canonical URL. Users land on the main domain.
+2. **Update the edge function format** - Ensure the deployed edge function matches your code (clean format without emoji/price prefix)
 
 ---
 
-## Why This Works (When Worker Didn't)
+## Technical Details
 
-- **No interception needed**: The subdomain points directly to Supabase
-- **No Worker configuration**: DNS does all the routing
-- **Edge function already works**: We verified it returns correct metadata
-- **Simple**: One DNS record + one line of code
+### File Change: `src/components/bounty/ShareBountyButton.tsx`
+
+```typescript
+// Line 50-57: Change native share URL
+const handleNativeShare = async () => {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `$${amount} Bounty: ${title}`,
+        text: shareText,
+        url: edgeFunctionUrl,  // Changed from bountyUrl
+      });
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Share failed:', error);
+      }
+    }
+  }
+};
+```
+
+### Edge Function Status
+- Already deployed and working at `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta`
+- Returns proper OG metadata with bounty title, description, and image
+- Redirects browsers to `bountybay.co/b/xxx` via JavaScript
 
 ---
 
-## After You Add the DNS Record
+## After Implementation
 
-1. Wait 5-10 minutes for DNS propagation
-2. I'll update the ShareBountyButton code
-3. Test by sharing a bounty to Facebook
-4. Use Facebook Debugger to verify the preview
-
----
-
-## Summary
-
-| Task | Who |
-|------|-----|
-| Add CNAME record `share` → `lenyuvobgktgdearflim.supabase.co` | You |
-| Update ShareBountyButton.tsx to use `share.bountybay.co` | Me |
-| Republish the app | Automatic |
+When you share a bounty (via any method), Facebook will show:
+- **Title:** "Help me find: [Bounty Title] | BountyBay"
+- **Description:** Bounty description (truncated to 160 chars)
+- **Image:** The bounty's first image
+- **Link shown:** `bountybay.co/b/xxx` (canonical URL)
 
