@@ -1,74 +1,103 @@
 
-# Fix: Update Cloudflare Worker to Use Correct Supabase URL
+# Fix Social Media Previews with share.bountybay.co Subdomain
 
 ## The Problem
-Your Supabase project has a **custom domain** (`auth.bountybay.co`) as shown in your screenshot, but the Cloudflare Worker is still trying to call the old default Supabase URL (`lenyuvobgktgdearflim.supabase.co`). 
-
-This is why:
-- The edge function shows in your dashboard ✅
-- But calling it returns 404 ❌
+The Cloudflare Worker approach has failed repeatedly. Traffic to `bountybay.co/b/*` is not being intercepted by the Worker, so social platforms see the homepage instead of bounty metadata.
 
 ## The Solution
+Create a dedicated subdomain `share.bountybay.co` that points directly to your Supabase project. Social share links will use this subdomain to serve proper OG tags.
 
-Update your Cloudflare Worker to call the **correct URL**:
+---
 
-**Old (broken):** `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta`
-**New (correct):** `https://auth.bountybay.co/functions/v1/bounty-meta`
+## How It Will Work
 
-## Updated Cloudflare Worker Code
-
-```javascript
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    const ua = (request.headers.get("user-agent") || "").toLowerCase();
-    
-    // Match /b/<uuid>
-    const match = url.pathname.match(/^\/b\/([a-f0-9-]+)\/?$/i);
-    const bountyId = match?.[1];
-    
-    // Manual test override
-    const forceOg = url.searchParams.get("og") === "1";
-    
-    // Check if crawler or forced
-    const crawlers = ["facebookexternalhit","facebot","twitterbot","linkedinbot","discordbot","slackbot","whatsapp","telegrambot"];
-    const isCrawler = crawlers.some(c => ua.includes(c));
-    
-    if (bountyId && (forceOg || isCrawler)) {
-      // Call YOUR CUSTOM DOMAIN - this is the fix!
-      const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
-      
-      const res = await fetch(metaUrl);
-      
-      if (res.ok) {
-        return new Response(res.body, {
-          headers: { "content-type": "text/html; charset=utf-8" }
-        });
-      }
-    }
-    
-    // Regular traffic: proxy to the app
-    return fetch(`https://bountybay.lovable.app${url.pathname}${url.search}`);
-  }
-}
+```text
+User clicks "Share to Facebook"
+         |
+         v
+Facebook loads: share.bountybay.co/functions/v1/bounty-meta?id=xxx
+         |
+         v
+Supabase Edge Function returns HTML with:
+  - og:title = "Help me find: Vintage Camera | BountyBay"
+  - og:image = [bounty's first image]
+  - og:url = https://bountybay.co/b/xxx (canonical)
+         |
+         v
+Facebook displays rich preview with bounty details
+         |
+         v
+User clicks the link -> JavaScript redirects to bountybay.co/b/xxx
 ```
 
-## Steps to Implement
+---
 
-1. Go to **Cloudflare Dashboard** → **Workers & Pages** → **bounty-preview**
-2. Click **Edit Code** (or Quick Edit)
-3. Replace ALL code with the updated version above
-4. Click **Save and Deploy**
-5. Wait 1 minute
+## Your Steps (DNS Setup)
 
-## Verify It Works
+### Step 1: Add DNS Record in Your Domain Registrar
 
-1. Test: `https://bounty-preview.yerttam.workers.dev/b/36b513a7-1e23-4e1b-a900-a612a6ccf4fc?og=1`
-   - Should show white page with meta tags, then redirect
-2. Test production: `https://bountybay.co/b/36b513a7-1e23-4e1b-a900-a612a6ccf4fc?og=1`
-   - Same behavior
-3. Facebook Debugger: Scrape again - should now show bounty preview!
+Create a **CNAME record**:
+- **Name/Host**: `share`
+- **Target/Points to**: `lenyuvobgktgdearflim.supabase.co`
+- **TTL**: Auto or 300
 
-## Why This Happened
+This makes `share.bountybay.co` route directly to your Supabase project.
 
-When you set up a custom domain for Supabase (`auth.bountybay.co`), the edge functions moved to that domain. The old `.supabase.co` URL stopped working for functions. The Cloudflare Worker code was still using the old URL.
+---
+
+## My Steps (Code Changes)
+
+### 1. Update ShareBountyButton.tsx
+
+Change line 36 from:
+```typescript
+const edgeFunctionUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
+```
+
+To:
+```typescript
+const edgeFunctionUrl = `https://share.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
+```
+
+This is the only code change needed. The edge function already exists and works.
+
+---
+
+## What Users Will See
+
+| Where | URL Shown |
+|-------|-----------|
+| Shared link on Facebook/Twitter | `share.bountybay.co/...` (briefly, in address bar) |
+| OG preview og:url | `bountybay.co/b/xxx` |
+| Where user lands | `bountybay.co/b/xxx` |
+
+The preview will show `bountybay.co` as the canonical URL. Users land on the main domain.
+
+---
+
+## Why This Works (When Worker Didn't)
+
+- **No interception needed**: The subdomain points directly to Supabase
+- **No Worker configuration**: DNS does all the routing
+- **Edge function already works**: We verified it returns correct metadata
+- **Simple**: One DNS record + one line of code
+
+---
+
+## After You Add the DNS Record
+
+1. Wait 5-10 minutes for DNS propagation
+2. I'll update the ShareBountyButton code
+3. Test by sharing a bounty to Facebook
+4. Use Facebook Debugger to verify the preview
+
+---
+
+## Summary
+
+| Task | Who |
+|------|-----|
+| Add CNAME record `share` → `lenyuvobgktgdearflim.supabase.co` | You |
+| Update ShareBountyButton.tsx to use `share.bountybay.co` | Me |
+| Republish the app | Automatic |
+
