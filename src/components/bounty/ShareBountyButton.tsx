@@ -53,7 +53,7 @@ export function ShareBountyButton({
           await navigator.share({
             title: `$${amount} Bounty: ${title}`,
             text: shareText,
-            url: bountyUrl,
+            url: edgeFunctionUrl,
           });
       } catch (error) {
         // User cancelled or error
