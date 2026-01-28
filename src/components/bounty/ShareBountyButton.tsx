@@ -32,8 +32,9 @@ export function ShareBountyButton({
   // Clean URL for copy/native share (user-facing)
   const bountyUrl = `https://bountybay.co/b/${bountyId}`;
   
-  // Edge function URL for social crawlers - this WORKS and deploys automatically
-  const edgeFunctionUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
+  // Branded subdomain for social crawlers - CNAME to Supabase, serves OG metadata
+  // DNS: share CNAME → lenyuvobgktgdearflim.supabase.co (gray cloud/DNS only)
+  const edgeFunctionUrl = `https://share.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
   
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
   const encodedEdgeUrl = encodeURIComponent(edgeFunctionUrl);
