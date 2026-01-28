@@ -61,8 +61,8 @@ function absoluteUrl(requestUrl, path) {
 }
 
 async function fetchBountyFromSupabase(env, bountyId) {
-  // Use env vars if set, otherwise use hardcoded defaults
-  const base = env.SUPABASE_URL || "https://lenyuvobgktgdearflim.supabase.co";
+  // Use env vars if set, otherwise use hardcoded custom domain
+  const base = env.SUPABASE_URL || "https://auth.bountybay.co";
   const key = env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlbnl1dm9iZ2t0Z2RlYXJmbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MTI0OTcsImV4cCI6MjA3MDA4ODQ5N30.9Ax2mNDPCQoq0K9KCIQKk-qLFQoClxBhGNWsMrXMCx0";
 
   // Supabase REST endpoint
