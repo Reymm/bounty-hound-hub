@@ -1,43 +1,52 @@
 
 
-# Fix Social Media Previews - Status and Solution
+# Root Cause Identified: Worker Route Configuration
 
-## What's Actually Working RIGHT NOW
+## The Problem
+After extensive testing, I've confirmed:
 
-The Supabase Edge Function (`bounty-meta`) is deployed and working perfectly. I just tested it - it returns:
-- Title: "OPEN | Help find: Looking for a Lead on a Nixon Hoodie..."
-- Description: "$5 bounty reward!..."
-- Image: The actual bounty image from storage
+1. **Your Supabase Edge Function works perfectly** - When accessed directly, it returns proper OG meta tags (I can see it working)
+2. **Your Cloudflare Worker code works perfectly** - The `workers.dev` test shows the white-page-then-redirect behavior
+3. **Your DNS is correctly proxied** (orange cloud) - You've shown this multiple times
 
-The Share button in your app already uses this edge function for Facebook/Twitter/LinkedIn sharing.
+**THE ISSUE**: The Worker is not assigned to handle traffic for `bountybay.co`. The Worker is only responding on its `workers.dev` subdomain, not on your custom domain.
 
-## The Problem You're Experiencing
+## The Missing Step: Worker Routes
 
-When someone copies `bountybay.co/b/...` directly and pastes it into Facebook, that URL doesn't show a preview because the Cloudflare Worker isn't intercepting the traffic.
+In Cloudflare, having a Worker deployed is NOT enough. You must explicitly tell Cloudflare: "When someone visits `bountybay.co/*`, run this Worker."
 
-The Worker code is correct, the routes exist, DNS is proxied - but it's not running. This is a Cloudflare account configuration issue I cannot diagnose further without direct access.
+## Fix (5 minutes, no code needed)
 
-## What I Will Do
+### Step 1: Open Worker Settings
+1. Go to **Cloudflare Dashboard**
+2. Click **Workers & Pages** (left sidebar)
+3. Click on your worker (**bounty-preview**)
 
-Make the user experience work by ensuring ALL share paths use the working edge function:
+### Step 2: Add a Route
+1. Click the **Triggers** or **Settings** tab
+2. Look for **Routes** section (or "HTTP Routes")
+3. Click **Add Route**
+4. Enter these values:
+   - **Route**: `bountybay.co/b/*`
+   - **Zone**: Select `bountybay.co`
+5. Click **Save**
 
-1. **Verify ShareBountyButton uses edge function** - Already done, line 36
-2. **Update any other share references** - Check if there are other places linking directly to `bountybay.co/b/...` for social sharing
+### Step 3: Add www Route (optional but recommended)
+1. Click **Add Route** again
+2. Enter:
+   - **Route**: `www.bountybay.co/b/*`
+   - **Zone**: Select `bountybay.co`
+3. Click **Save**
 
-## Testing the Fix
+## Why This Was Missed
+The Worker was deployed and working, but it was only accessible via the `workers.dev` URL. Without a Route, Cloudflare doesn't know to run the Worker when someone visits your actual domain. The DNS being proxied only means traffic goes THROUGH Cloudflare - it doesn't automatically run Workers.
 
-You can verify the edge function works right now:
+## After Adding Routes
+1. Wait 1-2 minutes for propagation
+2. Test: `https://bountybay.co/b/36b513a7-1e23-4e1b-a900-a612a6ccf4fc?og=1`
+   - Should show white page then redirect (just like the `workers.dev` test)
+3. Run Facebook Debugger again - it should finally show the bounty preview
 
-1. Go to: https://developers.facebook.com/tools/debug/
-2. Paste this URL: `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=36b513a7-1e23-4e1b-a900-a612a6ccf4fc`
-3. Click "Debug" then "Scrape Again"
-4. You should see the Nixon Hoodie preview with title, description, and image
-
-## About the Cloudflare Worker
-
-The Worker would make `bountybay.co/b/...` work directly for social previews without the edge function redirect. But since the Worker isn't intercepting traffic despite correct configuration, and I cannot access your Cloudflare account to debug further, we're using the edge function approach which works.
-
-## Technical: No Code Changes Needed
-
-The current implementation already works. The ShareBountyButton sends social platforms to the edge function URL which serves proper OG tags. Users clicking Share from your app will get proper previews.
+## Technical Note
+The edge function is returning an older title format with emojis ("🟢 OPEN | Help find..."). Once the Worker route is working, I can update the edge function code to use the clean format ("Help me find: ... | BountyBay") as you wanted.
 
