@@ -95,7 +95,7 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto safe-top pt-4">
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         {/* Back button for mobile */}
         <div className="flex items-center gap-3 mb-4">
           <SheetClose asChild>
