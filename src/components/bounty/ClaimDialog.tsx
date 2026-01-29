@@ -410,12 +410,12 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-xl sm:max-w-xl md:max-w-2xl overflow-x-hidden">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-lg sm:max-w-xl overflow-hidden">
         <DialogHeader className="pr-8">
           <DialogTitle className="text-base sm:text-lg leading-tight">
             {isEditMode ? `Edit Claim` : `Submit Claim`}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground truncate">{bountyTitle}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-words">{bountyTitle}</p>
         </DialogHeader>
 
         {/* Already submitted and NOT editable */}
@@ -455,32 +455,32 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
 
             {/* Show verification requirements UPFRONT - both steps visible */}
             {!isLoading && !canSubmitClaim && (
-              <div className="space-y-4">
+              <div className="space-y-3 overflow-hidden">
                 {/* Header explaining both steps are required */}
                 <Alert className="border-amber-500 bg-amber-500/10">
                   <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <AlertDescription>
-                    <p className="font-semibold text-foreground">Two steps required before you can claim bounties</p>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      Complete both steps below to protect yourself and bounty posters. This only takes about 5 minutes.
+                  <AlertDescription className="break-words">
+                    <p className="font-semibold text-foreground text-sm">Two steps required</p>
+                    <p className="text-muted-foreground text-xs mt-1">
+                      Complete both steps below. Takes about 5 minutes.
                     </p>
                   </AlertDescription>
                 </Alert>
 
                 {/* Step 1: Identity Verification */}
-                <div className={`rounded-lg border p-4 ${identityVerified ? 'border-green-500 bg-green-50 dark:bg-green-950/30' : 'border-primary bg-primary/5'}`}>
-                  <div className="flex items-start gap-3">
-                    <div className={`rounded-full p-1.5 flex-shrink-0 ${identityVerified ? 'bg-green-500' : 'bg-primary'}`}>
+                <div className={`rounded-lg border p-3 ${identityVerified ? 'border-green-500 bg-green-50 dark:bg-green-950/30' : 'border-primary bg-primary/5'}`}>
+                  <div className="flex items-start gap-2">
+                    <div className={`rounded-full p-1 flex-shrink-0 ${identityVerified ? 'bg-green-500' : 'bg-primary'}`}>
                       {identityVerified ? (
-                        <CheckCircle className="h-4 w-4 text-white" />
+                        <CheckCircle className="h-3.5 w-3.5 text-white" />
                       ) : (
-                        <ShieldCheck className="h-4 w-4 text-primary-foreground" />
+                        <ShieldCheck className="h-3.5 w-3.5 text-primary-foreground" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-2 overflow-hidden">
                       <div>
-                        <p className="font-semibold text-foreground">Step 1: Verify Your Identity</p>
-                        <p className="text-muted-foreground text-sm mt-1">
+                        <p className="font-semibold text-foreground text-sm">Step 1: Verify Your Identity</p>
+                        <p className="text-muted-foreground text-xs mt-1 break-words">
                           {identityVerified 
                             ? "Identity verified! You're confirmed as a real person."
                             : "Upload a photo ID and take a quick selfie. This keeps BountyBay safe."}
@@ -510,25 +510,25 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
                 </div>
 
                 {/* Step 2: Payout Setup */}
-                <div className={`rounded-lg border p-4 ${stripeConnectComplete ? 'border-green-500 bg-green-50 dark:bg-green-950/30' : identityVerified ? 'border-primary bg-primary/5' : 'border-muted bg-muted/30'}`}>
-                  <div className="flex items-start gap-3">
-                    <div className={`rounded-full p-1.5 flex-shrink-0 ${stripeConnectComplete ? 'bg-green-500' : identityVerified ? 'bg-primary' : 'bg-muted-foreground'}`}>
+                <div className={`rounded-lg border p-3 ${stripeConnectComplete ? 'border-green-500 bg-green-50 dark:bg-green-950/30' : identityVerified ? 'border-primary bg-primary/5' : 'border-muted bg-muted/30'}`}>
+                  <div className="flex items-start gap-2">
+                    <div className={`rounded-full p-1 flex-shrink-0 ${stripeConnectComplete ? 'bg-green-500' : identityVerified ? 'bg-primary' : 'bg-muted-foreground'}`}>
                       {stripeConnectComplete ? (
-                        <CheckCircle className="h-4 w-4 text-white" />
+                        <CheckCircle className="h-3.5 w-3.5 text-white" />
                       ) : (
-                        <CreditCard className="h-4 w-4 text-white" />
+                        <CreditCard className="h-3.5 w-3.5 text-white" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-2 overflow-hidden">
                       <div>
-                        <p className={`font-semibold ${!identityVerified && !stripeConnectComplete ? 'text-muted-foreground' : 'text-foreground'}`}>
+                        <p className={`font-semibold text-sm ${!identityVerified && !stripeConnectComplete ? 'text-muted-foreground' : 'text-foreground'}`}>
                           Step 2: Set Up Payouts
                         </p>
-                        <p className="text-muted-foreground text-sm mt-1">
+                        <p className="text-muted-foreground text-xs mt-1 break-words">
                           {stripeConnectComplete 
-                            ? "Payouts ready! You can receive payments when claims are accepted."
+                            ? "Payouts ready!"
                             : identityVerified
-                              ? "Connect your bank account or debit card to receive bounty payments."
+                              ? "Connect your bank or debit card to receive payments."
                               : "Complete Step 1 first, then set up your payout method."}
                         </p>
                       </div>
