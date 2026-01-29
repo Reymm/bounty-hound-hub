@@ -21,13 +21,21 @@ export default function Auth() {
   
   // CRITICAL: Capture hash IMMEDIATELY before Supabase can clear it
   // This must be at the top level, not in a useEffect
-  const [initialHashType] = useState(() => {
+  const [initialHashState] = useState(() => {
     const hash = window.location.hash;
     const hashParams = new URLSearchParams(hash.substring(1));
     const type = hashParams.get('type');
-    console.log('Initial hash captured:', type, 'full hash:', hash);
-    return type;
+    const accessToken = hashParams.get('access_token');
+    console.log('Initial hash captured:', type, 'hasAccessToken:', !!accessToken, 'full hash:', hash.substring(0, 100));
+    return { 
+      type, 
+      isOAuthCallback: !!accessToken,
+      isRecovery: type === 'recovery'
+    };
   });
+  
+  // Track if we're still processing the OAuth callback
+  const [isProcessingOAuth, setIsProcessingOAuth] = useState(initialHashState.isOAuthCallback);
 
   // Capture referral code from URL and allow manual entry
   const [referralCode, setReferralCode] = useState(() => {
@@ -43,7 +51,7 @@ export default function Auth() {
   });
   
   // If we detected recovery in the initial hash, start in recovery mode
-  const [isRecoveryMode, setIsRecoveryMode] = useState(() => initialHashType === 'recovery');
+  const [isRecoveryMode, setIsRecoveryMode] = useState(() => initialHashState.isRecovery);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,16 +90,17 @@ export default function Auth() {
     
     // Set up auth state listener - this is the OFFICIAL way to detect password recovery
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, 'session:', !!session);
+      console.log('Auth state change:', event, 'session:', !!session, 'isOAuthCallback:', initialHashState.isOAuthCallback);
       
       if (event === 'PASSWORD_RECOVERY') {
         // This is the official Supabase event for password recovery
         console.log('PASSWORD_RECOVERY event - showing reset form');
         setIsRecoveryMode(true);
         setError(null);
-      } else if (event === 'SIGNED_IN' && !isRecoveryMode) {
-        // User signed in normally (not via recovery) - redirect
-        console.log('SIGNED_IN event - will redirect');
+      } else if (event === 'SIGNED_IN') {
+        // Mark OAuth processing as complete when we get a confirmed sign-in
+        setIsProcessingOAuth(false);
+        console.log('SIGNED_IN event - OAuth processing complete');
       } else if (event === 'USER_UPDATED') {
         // Password was successfully updated
         console.log('USER_UPDATED event - password changed');
@@ -117,14 +126,21 @@ export default function Auth() {
   // Separate effect for redirect logic - only runs when user state changes
   useEffect(() => {
     // CRITICAL: Use the initially captured hash type to prevent redirect during recovery
-    // This is checked BEFORE Supabase can clear the hash from the URL
-    if (isRecoveryMode || initialHashType === 'recovery') {
+    if (isRecoveryMode || initialHashState.isRecovery) {
       console.log('Recovery mode active - blocking redirect');
+      return;
+    }
+    
+    // CRITICAL: Don't redirect while OAuth callback is still being processed
+    // This prevents the loop where we redirect before session is fully established
+    if (isProcessingOAuth) {
+      console.log('OAuth callback in progress - blocking redirect');
       return;
     }
     
     // Redirect authenticated users (only for non-recovery flows)
     if (user) {
+      console.log('User authenticated, checking profile for redirect');
       const checkAndRedirect = async () => {
         const { data: profile } = await supabase
           .from('profiles')
@@ -133,15 +149,17 @@ export default function Auth() {
           .single();
         
         if (!profile?.username) {
+          console.log('No username, redirecting to /setup');
           navigate('/setup');
         } else {
           const from = (location.state as any)?.from?.pathname || '/';
+          console.log('Redirecting to:', from);
           navigate(from);
         }
       };
       checkAndRedirect();
     }
-  }, [user, isRecoveryMode, initialHashType, navigate, location]);
+  }, [user, isRecoveryMode, isProcessingOAuth, navigate, location]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
