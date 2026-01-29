@@ -11,7 +11,7 @@ export function Footer() {
           <div className="text-center md:text-left">
             <div className="text-lg font-semibold text-primary mb-2">BountyBay</div>
             <p className="text-sm text-muted-foreground">
-              © 2024 BountyBay. All rights reserved.
+              © {new Date().getFullYear()} BountyBay. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center md:justify-start gap-1">
               All prices are in USD
@@ -62,13 +62,13 @@ export function Footer() {
             >
               Privacy
             </Link>
-            <a 
-              href="mailto:contact@bountybay.co" 
+            <Link 
+              to="/support" 
               className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
-              aria-label="Contact us via email"
+              aria-label="Contact us"
             >
               Contact
-            </a>
+            </Link>
             <PartnerApplicationDialog />
           </nav>
         </div>
