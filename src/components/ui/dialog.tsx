@@ -43,7 +43,7 @@ const DialogContent = React.forwardRef<
         }
       }}
       className={cn(
-        "fixed left-4 right-4 top-1/2 z-50 grid max-w-lg mx-auto -translate-y-1/2 gap-4 border bg-background p-4 sm:p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-lg max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto",
+        "fixed left-4 right-4 top-[50%] z-50 grid max-w-lg mx-auto -translate-y-[50%] gap-4 border bg-background p-4 sm:p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-lg max-h-[calc(100dvh-4rem)] sm:max-h-[calc(100dvh-4rem)] overflow-y-auto",
         className
       )}
       {...props}
