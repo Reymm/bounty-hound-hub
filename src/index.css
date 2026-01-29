@@ -219,19 +219,23 @@ All colors MUST be HSL for consistency */
   }
   
   /* Safe area insets for mobile notch/home indicator */
-  .safe-top {
+  .safe-top,
+  .pt-safe {
     padding-top: env(safe-area-inset-top, 0px);
   }
   
-  .safe-bottom {
+  .safe-bottom,
+  .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   
-  .safe-left {
+  .safe-left,
+  .pl-safe {
     padding-left: env(safe-area-inset-left, 0px);
   }
   
-  .safe-right {
+  .safe-right,
+  .pr-safe {
     padding-right: env(safe-area-inset-right, 0px);
   }
 }
