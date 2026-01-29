@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Filter, X, DollarSign, MapPin, Calendar, Package } from 'lucide-react';
+import { Filter, X, DollarSign, MapPin, Calendar, Package, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,9 +17,10 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { BountyCategory, SearchFilters as SearchFiltersType, CATEGORY_STRUCTURE } from '@/lib/types';
+import { SearchFilters as SearchFiltersType, CATEGORY_STRUCTURE } from '@/lib/types';
 
 interface SearchFiltersProps {
   filters: SearchFiltersType;
@@ -94,15 +95,25 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters }: Sear
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader className="sticky top-0 bg-background z-10 pb-4">
-          <SheetTitle>Filter Bounties</SheetTitle>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto safe-top pt-4">
+        {/* Back button for mobile */}
+        <div className="flex items-center gap-3 mb-4">
+          <SheetClose asChild>
+            <Button variant="ghost" size="sm" className="h-10 px-2 -ml-2">
+              <ArrowLeft className="h-5 w-5 mr-1" />
+              Back
+            </Button>
+          </SheetClose>
+        </div>
+        
+        <SheetHeader className="pb-4">
+          <SheetTitle className="text-xl">Filter Bounties</SheetTitle>
           <SheetDescription>
             Refine your search to find the perfect bounties.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 mt-6 pb-20">
+        <div className="space-y-6 pb-20">
           {/* Bounty Type Filter */}
           <div className="space-y-2">
             <Label htmlFor="bounty-type-filter" className="flex items-center gap-2">
