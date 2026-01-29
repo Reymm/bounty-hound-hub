@@ -109,7 +109,10 @@ export default function Terms() {
                   <p className="text-muted-foreground leading-relaxed">
                     For Bounties requiring physical delivery, Hunters must provide valid tracking information. 
                     Funds will be released upon confirmed delivery or after tracking shows delivery status. 
-                    BountyBay is not responsible for items lost or damaged during shipping.
+                    BountyBay is not responsible for items lost, stolen, or damaged during shipping. 
+                    <strong>Hunters are strongly encouraged to purchase shipping insurance for items valued over $100.</strong> 
+                    Neither BountyBay nor the Poster shall be liable for shipping-related losses; all claims must 
+                    be filed directly with the shipping carrier or insurance provider.
                   </p>
                 </div>
               </div>
