@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ExternalLink, Loader2, Lock, Eye, Link2 } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 import { resolveStorageUrl } from '@/lib/storage';
-import { cn } from '@/lib/utils';
 
 interface ProofImagesProps {
   urls: string[];
-  /** If true, hide actual URLs/images and show a locked placeholder */
-  isHidden?: boolean;
-  /** Message to show when content is hidden */
-  hiddenMessage?: string;
 }
 
 interface ResolvedUrl {
@@ -30,17 +25,11 @@ const isImageUrl = (url: string): boolean => {
   return false;
 };
 
-export function ProofImages({ urls, isHidden = false, hiddenMessage }: ProofImagesProps) {
+export function ProofImages({ urls }: ProofImagesProps) {
   const [resolvedUrls, setResolvedUrls] = useState<ResolvedUrl[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If hidden, don't bother resolving URLs - just count them
-    if (isHidden) {
-      setLoading(false);
-      return;
-    }
-
     const resolveUrls = async () => {
       if (!urls || urls.length === 0) {
         setResolvedUrls([]);
@@ -78,9 +67,9 @@ export function ProofImages({ urls, isHidden = false, hiddenMessage }: ProofImag
     };
 
     resolveUrls();
-  }, [urls, isHidden]);
+  }, [urls]);
 
-  if (loading && !isHidden) {
+  if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -91,47 +80,6 @@ export function ProofImages({ urls, isHidden = false, hiddenMessage }: ProofImag
 
   if (!urls || urls.length === 0) {
     return null;
-  }
-
-  // Count images vs links for hidden display
-  const imageCount = urls.filter(isImageUrl).length;
-  const linkCount = urls.length - imageCount;
-
-  // If hidden, show a locked placeholder instead of actual content
-  if (isHidden) {
-    return (
-      <div className="space-y-3">
-        <div className="border border-dashed rounded-lg p-4 bg-muted/30">
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <div className="p-2 rounded-full bg-muted">
-              <Lock className="h-4 w-4" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">
-                Proof Hidden Until Acceptance
-              </p>
-              <p className="text-xs mt-1">
-                {hiddenMessage || 'Accept this claim to reveal the proof URLs and images.'}
-              </p>
-              <div className="flex items-center gap-4 mt-2 text-xs">
-                {imageCount > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    {imageCount} image{imageCount !== 1 ? 's' : ''}
-                  </span>
-                )}
-                {linkCount > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Link2 className="h-3 w-3" />
-                    {linkCount} link{linkCount !== 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   const imageUrls = resolvedUrls.filter(u => u.isImage);

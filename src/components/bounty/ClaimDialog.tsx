@@ -638,6 +638,10 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
                       rows={4}
                       className="resize-none"
                     />
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Info className="h-3 w-3 flex-shrink-0" />
+                      <span>Tip: Describe what you found without including specific URLs here—save those for the proof section below.</span>
+                    </p>
                   </div>
 
                   <div className="space-y-3">
