@@ -123,6 +123,9 @@ function ogHtml({ canonicalUrl, title, description, imageUrl }) {
 
   <link rel="canonical" href="${canon}" />
 
+  <link rel="icon" type="image/png" href="https://bountybay.co/favicon.png">
+  <link rel="apple-touch-icon" href="https://bountybay.co/favicon.png">
+
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${canon}" />
   <meta property="og:title" content="${t}" />
