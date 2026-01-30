@@ -331,7 +331,6 @@ export default function Verification() {
                 <h4 className="font-medium mb-2 text-sm">What you'll need:</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Bank account or debit card details</li>
-                  <li>• Your SSN/SIN for tax purposes</li>
                   <li>• Takes about 5 minutes to complete</li>
                 </ul>
               </div>
