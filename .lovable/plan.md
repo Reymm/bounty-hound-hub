@@ -1,95 +1,73 @@
 
+# Plan: Fix Lovable Heart Icon Appearing as Favicon
 
-# Fix Social Media Previews - Complete Solution
+## Problem Analysis
 
-## The Root Cause
+After thorough investigation, I've identified the root cause. The Lovable heart icon is appearing because:
 
-Looking at your screenshot, you used the **iOS native share** feature (Share sheet), not the "Facebook" button in the dropdown. Here's what happens:
+1. **The Cloudflare Worker's OG HTML template has NO favicon link** - When crawlers or certain conditions trigger the worker's HTML response (lines 111-150 in `.lovable/cloudflare-worker.js`), the generated HTML doesn't include `<link rel="icon">` tags. Browsers may then fall back to a default or cached icon.
 
-| Share Method | URL Sent to Facebook | Result |
-|--------------|---------------------|--------|
-| **"Share via..." (iOS native)** | `bountybay.co/b/xxx` | ❌ Homepage metadata (no SSR) |
-| **"Facebook" dropdown button** | Supabase edge function URL | ✅ Bounty-specific metadata |
+2. **The `*.lovable.app` subdomains may serve default Lovable branding** - The Lovable platform infrastructure likely serves a default favicon for any requests to `bountybay.lovable.app` before your app's `index.html` is even processed. This is a platform-level behavior that your code can't fully override for the preview/published URLs on `*.lovable.app`.
 
-The native iOS share uses `bountybay.co/b/...` which is a client-side React app - Facebook's crawler can't read the JavaScript-rendered meta tags, so it falls back to homepage defaults.
+3. **iOS Safari aggressively caches favicons** - Even when fixed, old icons persist in the tab switcher until browser history is cleared.
 
----
+## Solution
 
-## The Fix
+### Step 1: Add Favicon to Cloudflare Worker OG HTML
 
-We have two options:
+Update `.lovable/cloudflare-worker.js` to include proper favicon links in the `ogHtml()` function. This ensures that even crawler responses include the correct favicon.
 
-### Option A: Update Native Share to Use Edge Function URL (Recommended)
-Change the native share to also use the edge function URL, so ALL share methods work correctly.
+```text
+Update ogHtml function to add after line 124:
 
-**Current code (line 50-57):**
-```typescript
-await navigator.share({
-  title: `$${amount} Bounty: ${title}`,
-  text: shareText,
-  url: bountyUrl,  // ← Uses bountybay.co/b/xxx
-});
+  <link rel="icon" type="image/png" href="https://bountybay.co/favicon.png">
+  <link rel="apple-touch-icon" href="https://bountybay.co/favicon.png">
 ```
 
-**New code:**
-```typescript
-await navigator.share({
-  title: `$${amount} Bounty: ${title}`,
-  text: shareText,
-  url: edgeFunctionUrl,  // ← Uses Supabase edge function
-});
+### Step 2: Use Absolute URLs for Favicon in index.html
+
+Change the relative favicon paths to absolute URLs pointing to your custom domain. This helps ensure the correct icon is served regardless of which subdomain is being accessed:
+
+```text
+index.html changes (lines 27-28):
+
+Before:
+  <link rel="icon" type="image/png" href="/favicon.png?v=3">
+  <link rel="apple-touch-icon" href="/favicon.png?v=3">
+
+After:
+  <link rel="icon" type="image/png" href="https://bountybay.co/favicon.png?v=4">
+  <link rel="apple-touch-icon" href="https://bountybay.co/favicon.png?v=4">
 ```
 
-**Trade-off:** When someone taps the shared link, they'll briefly see the Supabase domain in the URL bar before being redirected to `bountybay.co/b/xxx`.
+### Step 3: Add Additional Favicon Formats for Better Browser Support
 
-### Option B: Keep Native Share, Educate Users
-Keep native share using the clean URL, but inform users that for best previews on social media, they should tap the specific platform button (Facebook, Twitter, etc.) rather than "Share via..."
+Add more comprehensive favicon declarations to ensure maximum browser compatibility:
 
----
+```text
+Add to index.html after the existing favicon lines:
 
-## What I'll Implement (Option A)
-
-1. **Update ShareBountyButton.tsx** - Change the native share handler to use `edgeFunctionUrl` instead of `bountyUrl` so all sharing methods produce proper social previews
-
-2. **Update the edge function format** - Ensure the deployed edge function matches your code (clean format without emoji/price prefix)
-
----
-
-## Technical Details
-
-### File Change: `src/components/bounty/ShareBountyButton.tsx`
-
-```typescript
-// Line 50-57: Change native share URL
-const handleNativeShare = async () => {
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: `$${amount} Bounty: ${title}`,
-        text: shareText,
-        url: edgeFunctionUrl,  // Changed from bountyUrl
-      });
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('Share failed:', error);
-      }
-    }
-  }
-};
+  <link rel="shortcut icon" href="https://bountybay.co/favicon.png?v=4">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://bountybay.co/favicon.png?v=4">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://bountybay.co/favicon.png?v=4">
 ```
 
-### Edge Function Status
-- Already deployed and working at `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta`
-- Returns proper OG metadata with bounty title, description, and image
-- Redirects browsers to `bountybay.co/b/xxx` via JavaScript
+## Important Note: `*.lovable.app` Domain Limitation
 
----
+**For the `bountybay.lovable.app` and preview subdomains**, the Lovable platform may inject default branding at the infrastructure level that you cannot override through code. The only guaranteed way to have full control over all branding elements is to use your custom domain (`bountybay.co`) which bypasses Lovable's default infrastructure handling.
+
+**On your custom domain `bountybay.co`**, these changes will ensure the correct favicon appears everywhere.
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `.lovable/cloudflare-worker.js` | Add favicon links to `ogHtml()` function |
+| `index.html` | Use absolute URLs for favicons + add additional formats |
 
 ## After Implementation
 
-When you share a bounty (via any method), Facebook will show:
-- **Title:** "Help me find: [Bounty Title] | BountyBay"
-- **Description:** Bounty description (truncated to 160 chars)
-- **Image:** The bounty's first image
-- **Link shown:** `bountybay.co/b/xxx` (canonical URL)
-
+1. Publish the changes
+2. Test on `bountybay.co` (your custom domain) - should show BB logo
+3. Clear Safari history on your device to remove cached old icons
+4. Note: `*.lovable.app` subdomains may still show the Lovable heart due to platform-level behavior - this is expected when using the Lovable-hosted URLs
