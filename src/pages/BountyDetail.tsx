@@ -736,25 +736,25 @@ export default function BountyDetail() {
         />
       )}
       <Dialog open={selectedImageIndex !== null} onOpenChange={() => setSelectedImageIndex(null)}>
-        <DialogContent className="max-w-5xl w-full p-0 overflow-hidden bg-black/95">
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl w-full h-auto max-h-[calc(100dvh-2rem)] p-0 overflow-hidden bg-black/95 flex items-center justify-center">
           <button
             onClick={() => setSelectedImageIndex(null)}
-            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
             aria-label="Close"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
           
           {selectedImageIndex !== null && bounty?.images && (
-            <div className="relative flex items-center justify-center min-h-[60vh] max-h-[90vh]">
+            <div className="relative flex items-center justify-center w-full h-full p-4">
               {/* Previous Button */}
               {bounty.images.length > 1 && selectedImageIndex > 0 && (
                 <button
                   onClick={() => setSelectedImageIndex(selectedImageIndex - 1)}
-                  className="absolute left-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  className="absolute left-2 sm:left-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                   aria-label="Previous image"
                 >
-                  <ChevronLeft className="h-8 w-8" />
+                  <ChevronLeft className="h-6 w-6 sm:h-8 sm:w-8" />
                 </button>
               )}
               
@@ -762,24 +762,24 @@ export default function BountyDetail() {
               <SafeImage
                 src={bounty.images[selectedImageIndex]}
                 alt={`Bounty image ${selectedImageIndex + 1}`}
-                className="max-w-full max-h-[90vh] w-auto h-auto object-contain"
-                fallbackClassName="w-96 h-64"
+                className="max-w-full max-h-[calc(100dvh-6rem)] w-auto h-auto object-contain"
+                fallbackClassName="w-64 h-48 sm:w-96 sm:h-64"
               />
               
               {/* Next Button */}
               {bounty.images.length > 1 && selectedImageIndex < bounty.images.length - 1 && (
                 <button
                   onClick={() => setSelectedImageIndex(selectedImageIndex + 1)}
-                  className="absolute right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  className="absolute right-2 sm:right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                   aria-label="Next image"
                 >
-                  <ChevronRight className="h-8 w-8" />
+                  <ChevronRight className="h-6 w-6 sm:h-8 sm:w-8" />
                 </button>
               )}
               
               {/* Image Counter */}
               {bounty.images.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 text-white text-sm">
+                <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/10 text-white text-xs sm:text-sm">
                   {selectedImageIndex + 1} / {bounty.images.length}
                 </div>
               )}
