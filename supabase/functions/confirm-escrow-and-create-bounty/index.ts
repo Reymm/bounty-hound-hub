@@ -71,6 +71,12 @@ serve(async (req) => {
       throw new Error("Bounty description must be at least 20 characters");
     }
     
+    // Validate minimum bounty amount
+    const bountyAmount = escrowData?.amount;
+    if (bountyAmount && bountyAmount < 10) {
+      throw new Error("Minimum bounty is $10");
+    }
+    
     logStep("Server-side validation passed", { 
       validRequirementsCount: validRequirements.length 
     });
