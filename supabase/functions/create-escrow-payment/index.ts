@@ -19,7 +19,7 @@ const IMMEDIATE_CHARGE_THRESHOLD = 75;
 // Input validation schema
 const escrowPaymentSchema = z.object({
   amount: z.number()
-    .min(5, 'Amount must be at least $5')
+    .min(10, 'Amount must be at least $10')
     .max(10000, 'Amount cannot exceed $10,000')
     .positive('Amount must be positive'),
   currency: z.string()
