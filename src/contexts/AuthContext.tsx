@@ -70,10 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    // CRITICAL: Use the production domain for OAuth redirect to prevent loops
+    // This ensures consistent redirect handling regardless of how user accessed the site
+    const redirectUrl = window.location.hostname === 'localhost' 
+      ? `${window.location.origin}/auth`
+      : 'https://bountybay.co/auth';
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth`
+        redirectTo: redirectUrl
       }
     });
     return { error };

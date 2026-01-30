@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/auth/PasswordStrengthIndicator';
 
 export default function Auth() {
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -138,6 +138,13 @@ export default function Auth() {
       return;
     }
     
+    // CRITICAL: Don't redirect while auth is still loading
+    // This prevents premature redirects before session is fully established
+    if (loading) {
+      console.log('Auth still loading - blocking redirect');
+      return;
+    }
+    
     // Redirect authenticated users (only for non-recovery flows)
     if (user) {
       console.log('User authenticated, checking profile for redirect');
@@ -159,7 +166,7 @@ export default function Auth() {
       };
       checkAndRedirect();
     }
-  }, [user, isRecoveryMode, isProcessingOAuth, navigate, location]);
+  }, [user, loading, isRecoveryMode, isProcessingOAuth, navigate, location]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
