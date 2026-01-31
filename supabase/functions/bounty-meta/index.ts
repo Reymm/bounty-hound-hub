@@ -33,7 +33,8 @@ serve(async (req) => {
         amount,
         description,
         status,
-        images
+        images,
+        requires_shipping
       `)
       .eq("id", bountyId)
       .single();
@@ -51,8 +52,16 @@ serve(async (req) => {
     }
 
     // Clean title format for social previews
-    const title = `Help me find: ${bounty.title} | BountyBay`;
-    const description = (bounty.description || 'Help find this item on BountyBay').slice(0, 160);
+    const truncatedTitle = bounty.title.length > 45 
+      ? bounty.title.slice(0, 42) + '...' 
+      : bounty.title;
+    const title = `Help me find: $${(bounty.amount || 0).toLocaleString()} Bounty — ${truncatedTitle} | BountyBay`;
+    
+    // Description with bounty type prefix
+    const bountyType = bounty.requires_shipping ? 'Find & Ship' : 'Lead Only';
+    const rawDesc = bounty.description || '';
+    const shortDesc = rawDesc.slice(0, 80);
+    const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
     // Use bounty's first image if available, otherwise use default OG image
