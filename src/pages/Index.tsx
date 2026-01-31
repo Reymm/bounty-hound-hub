@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Trophy, ShieldCheck, CreditCard, HelpCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -114,6 +115,13 @@ const Index = () => {
 
   return (
     <>
+      <Helmet>
+        <title>BountyBay - Find The Unfindable</title>
+        <link rel="icon" type="image/png" href="/favicon.png?v=5" />
+        <link rel="apple-touch-icon" href="/favicon.png?v=5" />
+        <link rel="shortcut icon" href="/favicon.png?v=5" />
+      </Helmet>
+      
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-success/5 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
