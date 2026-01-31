@@ -1,42 +1,73 @@
 
+# Plan: Update ShareBountyButton to Use Clean URLs
 
-# Plan: Fix Partner Application Dialog Cut-off Issue
+## Summary
 
-## Problem
+After you deploy the Cloudflare Worker and enable Orange Cloud, I'll update the share button to use clean `bountybay.co/b/{id}` URLs instead of the long `share.bountybay.co/functions/v1/bounty-meta?id=...` URLs.
 
-The dialog uses CSS transform centering (`top-[50%]` + `-translate-y-[50%]`), which positions the dialog's **center** at 50% of the viewport. When the dialog content is tall (like the Partner Application form with many fields), the top half extends beyond the viewport edge, causing the header to be cut off.
+---
 
-## Solution
+## Changes to Make
 
-Change the dialog positioning strategy from transform-based centering to flexbox centering. This ensures the dialog stays fully within the viewport regardless of its height.
+**File: `src/components/bounty/ShareBountyButton.tsx`**
 
-## Changes Required
-
-### File: `src/components/ui/dialog.tsx`
-
-| Current | New |
-|---------|-----|
-| `top-[50%] -translate-y-[50%]` | `top-0 bottom-0 my-auto` with flex container |
-| Fixed positioning with transform | Flexbox-based centering that respects viewport bounds |
-
-**Updated DialogContent positioning:**
-```tsx
-// Change the DialogPrimitive.Content className from:
-"fixed left-4 right-4 top-[50%] ... -translate-y-[50%] ..."
-
-// To:
-"fixed left-4 right-4 top-4 bottom-4 ... my-auto h-fit ..."
+### 1. Remove the edge function URL variable (lines 35-37)
+```typescript
+// DELETE these lines:
+// Branded subdomain for social crawlers - CNAME to Supabase, serves OG metadata
+// DNS: share CNAME → lenyuvobgktgdearflim.supabase.co (gray cloud/DNS only)
+const edgeFunctionUrl = `https://share.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
 ```
 
-This approach:
-1. Sets `top-4` and `bottom-4` to create minimum margins from viewport edges
-2. Uses `my-auto` to center vertically within those constraints
-3. Uses `h-fit` so the dialog sizes to its content
-4. Removes the transform that was causing the overflow
+### 2. Update encoded URL variable (line 40)
+```typescript
+// BEFORE:
+const encodedEdgeUrl = encodeURIComponent(edgeFunctionUrl);
 
-## Why This Works
+// AFTER:
+const encodedUrl = encodeURIComponent(bountyUrl);
+```
 
-Transform-based centering (`-translate-y-[50%]`) doesn't know about viewport boundaries - it just moves the element up by 50% of its own height. If the dialog is 80% of the viewport tall, moving it up 40% (half of 80%) means 10% gets cut off at the top.
+### 3. Update all share links to use clean URL (lines 43-50)
+```typescript
+const shareLinks = {
+  facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+  twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+  reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
+  linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+  pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
+};
+```
 
-Flexbox/margin-auto centering respects the container boundaries and will never push content outside the viewport.
+### 4. Update native share to use clean URL (line 58)
+```typescript
+// BEFORE:
+url: edgeFunctionUrl,
 
+// AFTER:
+url: bountyUrl,
+```
+
+---
+
+## Result
+
+| Before | After |
+|--------|-------|
+| Social cards show: `share.bountybay.co/functions/v1/bounty-meta?id=...` | Social cards show: `bountybay.co` |
+| Rich previews work (via edge function) | Rich previews work (via Cloudflare Worker) |
+| Ugly long URL at bottom of preview | Clean domain at bottom of preview |
+
+---
+
+## Prerequisites (Your Manual Steps)
+
+Before I make these code changes, you need to complete:
+
+1. Create Cloudflare Worker with the fixed code (bypasses /auth paths)
+2. Add Worker Route: `bountybay.co/*`
+3. Enable Orange Cloud on `bountybay.co` DNS record
+4. Test Google OAuth still works
+5. Test `bountybay.co/b/{bounty-id}?og=1` shows OG HTML
+
+Once you confirm those steps are done, approve this plan and I'll make the code changes.
