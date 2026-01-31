@@ -1,73 +1,52 @@
 
-# Plan: Fix Lovable Heart Icon Appearing as Favicon
+# Plan: Fix Favicon - Replace Corrupted File with Actual BB Logo
 
-## Problem Analysis
+## Root Cause Found
 
-After thorough investigation, I've identified the root cause. The Lovable heart icon is appearing because:
+I discovered why the favicon shows the homepage: **The `public/favicon.png` file has been replaced with a screenshot of the homepage instead of the actual BB logo.**
 
-1. **The Cloudflare Worker's OG HTML template has NO favicon link** - When crawlers or certain conditions trigger the worker's HTML response (lines 111-150 in `.lovable/cloudflare-worker.js`), the generated HTML doesn't include `<link rel="icon">` tags. Browsers may then fall back to a default or cached icon.
+When I opened `public/favicon.png` to inspect it, it literally shows screenshots of the BountyBay homepage - that's what Safari is displaying because that's literally what the favicon.png file contains now.
 
-2. **The `*.lovable.app` subdomains may serve default Lovable branding** - The Lovable platform infrastructure likely serves a default favicon for any requests to `bountybay.lovable.app` before your app's `index.html` is even processed. This is a platform-level behavior that your code can't fully override for the preview/published URLs on `*.lovable.app`.
-
-3. **iOS Safari aggressively caches favicons** - Even when fixed, old icons persist in the tab switcher until browser history is cleared.
+The actual BB logo is stored externally at:
+`https://storage.googleapis.com/gpt-engineer-file-uploads/.../favicon better BB.png`
 
 ## Solution
 
-### Step 1: Add Favicon to Cloudflare Worker OG HTML
+### Step 1: Download and Replace the Favicon
 
-Update `.lovable/cloudflare-worker.js` to include proper favicon links in the `ogHtml()` function. This ensures that even crawler responses include the correct favicon.
-
-```text
-Update ogHtml function to add after line 124:
-
-  <link rel="icon" type="image/png" href="https://bountybay.co/favicon.png">
-  <link rel="apple-touch-icon" href="https://bountybay.co/favicon.png">
-```
-
-### Step 2: Use Absolute URLs for Favicon in index.html
-
-Change the relative favicon paths to absolute URLs pointing to your custom domain. This helps ensure the correct icon is served regardless of which subdomain is being accessed:
+I need to fetch the correct BB logo from the Google Cloud Storage URL referenced in your OG meta tags and replace the corrupted `public/favicon.png` file:
 
 ```text
-index.html changes (lines 27-28):
+1. Fetch: https://storage.googleapis.com/gpt-engineer-file-uploads/V7ghVgsFwWSBH4eOg4aoiLyUlGi1/uploads/1761531821540-favicon%20better%20BB.png
 
-Before:
-  <link rel="icon" type="image/png" href="/favicon.png?v=3">
-  <link rel="apple-touch-icon" href="/favicon.png?v=3">
-
-After:
-  <link rel="icon" type="image/png" href="https://bountybay.co/favicon.png?v=4">
-  <link rel="apple-touch-icon" href="https://bountybay.co/favicon.png?v=4">
+2. Save as: public/favicon.png (replacing the corrupted screenshot file)
 ```
 
-### Step 3: Add Additional Favicon Formats for Better Browser Support
+### Step 2: Update Cache Buster Version
 
-Add more comprehensive favicon declarations to ensure maximum browser compatibility:
-
-```text
-Add to index.html after the existing favicon lines:
-
-  <link rel="shortcut icon" href="https://bountybay.co/favicon.png?v=4">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://bountybay.co/favicon.png?v=4">
-  <link rel="icon" type="image/png" sizes="16x16" href="https://bountybay.co/favicon.png?v=4">
-```
-
-## Important Note: `*.lovable.app` Domain Limitation
-
-**For the `bountybay.lovable.app` and preview subdomains**, the Lovable platform may inject default branding at the infrastructure level that you cannot override through code. The only guaranteed way to have full control over all branding elements is to use your custom domain (`bountybay.co`) which bypasses Lovable's default infrastructure handling.
-
-**On your custom domain `bountybay.co`**, these changes will ensure the correct favicon appears everywhere.
-
-## Files to Modify
+Increment the version number to v=6 in both files to force all browsers to re-fetch:
 
 | File | Change |
 |------|--------|
-| `.lovable/cloudflare-worker.js` | Add favicon links to `ogHtml()` function |
-| `index.html` | Use absolute URLs for favicons + add additional formats |
+| `index.html` | Update `?v=5` → `?v=6` on all favicon links |
+| `src/pages/Index.tsx` | Update `?v=5` → `?v=6` on Helmet favicon links |
+
+## Why This Happened
+
+At some point, an operation likely overwrote the `public/favicon.png` file with incorrect content. This explains why:
+- Other pages show the BB logo (they might be using cached correct version)
+- Homepage shows the screenshot (loading the corrupted file fresh)
 
 ## After Implementation
 
-1. Publish the changes
-2. Test on `bountybay.co` (your custom domain) - should show BB logo
-3. Clear Safari history on your device to remove cached old icons
-4. Note: `*.lovable.app` subdomains may still show the Lovable heart due to platform-level behavior - this is expected when using the Lovable-hosted URLs
+1. The favicon.png file will be the actual BB logo
+2. Cache buster v=6 will force all browsers to re-download
+3. Clear your browser cache after publishing to verify
+
+## Files to Modify
+
+| File | Action |
+|------|--------|
+| `public/favicon.png` | **Replace with actual BB logo from external URL** |
+| `index.html` | Update version to v=6 |
+| `src/pages/Index.tsx` | Update version to v=6 |
