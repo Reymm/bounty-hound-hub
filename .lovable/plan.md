@@ -1,73 +1,87 @@
 
-# Plan: Update ShareBountyButton to Use Clean URLs
 
-## Summary
+## Fix Social Sharing Preview (Revert to Working Approach)
 
-After you deploy the Cloudflare Worker and enable Orange Cloud, I'll update the share button to use clean `bountybay.co/b/{id}` URLs instead of the long `share.bountybay.co/functions/v1/bounty-meta?id=...` URLs.
+The Cloudflare Worker approach failed because Workers require Orange Cloud (proxied DNS), which breaks Lovable. We're reverting to the proven edge function approach.
 
 ---
 
-## Changes to Make
+### What Went Wrong
 
-**File: `src/components/bounty/ShareBountyButton.tsx`**
+The Worker you deployed is never triggered because Grey Cloud DNS sends traffic directly to Lovable, bypassing Cloudflare entirely.
 
-### 1. Remove the edge function URL variable (lines 35-37)
+---
+
+### The Fix
+
+Use two different URLs:
+1. **Social platforms** → `share.bountybay.co/functions/v1/bounty-meta?id=...` (serves OG metadata)
+2. **Copy link / Native share** → `bountybay.co/b/...` (clean user-facing URL)
+
+---
+
+### File Changes
+
+**`src/components/bounty/ShareBountyButton.tsx`**
+
+Restore the dual-URL approach:
+
 ```typescript
-// DELETE these lines:
-// Branded subdomain for social crawlers - CNAME to Supabase, serves OG metadata
-// DNS: share CNAME → lenyuvobgktgdearflim.supabase.co (gray cloud/DNS only)
+// Clean URL for copy/native share (user-facing)
+const bountyUrl = `https://bountybay.co/b/${bountyId}`;
+
+// Edge function URL for social crawlers - serves OG metadata
 const edgeFunctionUrl = `https://share.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
-```
 
-### 2. Update encoded URL variable (line 40)
-```typescript
-// BEFORE:
+const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
 const encodedEdgeUrl = encodeURIComponent(edgeFunctionUrl);
+const encodedText = encodeURIComponent(shareText);
 
-// AFTER:
-const encodedUrl = encodeURIComponent(bountyUrl);
-```
-
-### 3. Update all share links to use clean URL (lines 43-50)
-```typescript
 const shareLinks = {
-  facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-  twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
-  reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
-  linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-  pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
+  // Social platforms use edge function URL - it serves proper OG tags
+  facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedEdgeUrl}`,
+  twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedEdgeUrl}`,
+  reddit: `https://reddit.com/submit?url=${encodedEdgeUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
+  linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedEdgeUrl}`,
+  pinterest: `https://pinterest.com/pin/create/button/?url=${encodedEdgeUrl}&description=${encodedText}`,
 };
 ```
 
-### 4. Update native share to use clean URL (line 58)
+Native share keeps using clean URL:
 ```typescript
-// BEFORE:
-url: edgeFunctionUrl,
-
-// AFTER:
-url: bountyUrl,
+await navigator.share({
+  title: `$${amount} Bounty: ${title}`,
+  text: shareText,
+  url: bountyUrl,  // Clean URL for copy
+});
 ```
 
----
-
-## Result
-
-| Before | After |
-|--------|-------|
-| Social cards show: `share.bountybay.co/functions/v1/bounty-meta?id=...` | Social cards show: `bountybay.co` |
-| Rich previews work (via edge function) | Rich previews work (via Cloudflare Worker) |
-| Ugly long URL at bottom of preview | Clean domain at bottom of preview |
+Copy link keeps using clean URL (already correct).
 
 ---
 
-## Prerequisites (Your Manual Steps)
+### Cleanup Tasks (You Do Manually)
 
-Before I make these code changes, you need to complete:
+1. **Delete the Worker route** in Cloudflare (bountybay.co/b/*)
+2. **Delete the bountybay-og Worker** (optional, it's not hurting anything)
+3. **Verify share.bountybay.co exists** as a CNAME → lenyuvobgktgdearflim.supabase.co
 
-1. Create Cloudflare Worker with the fixed code (bypasses /auth paths)
-2. Add Worker Route: `bountybay.co/*`
-3. Enable Orange Cloud on `bountybay.co` DNS record
-4. Test Google OAuth still works
-5. Test `bountybay.co/b/{bounty-id}?og=1` shows OG HTML
+---
 
-Once you confirm those steps are done, approve this plan and I'll make the code changes.
+### Result
+
+| Feature | URL Used | Why |
+|---------|----------|-----|
+| Facebook/Twitter/etc share | share.bountybay.co/... | Social crawlers get proper OG metadata |
+| Copy Link button | bountybay.co/b/... | Users see clean URL |
+| Native mobile share | bountybay.co/b/... | Users see clean URL |
+
+Social previews will show the bounty title, description, and image. Users who click through land on the clean bountybay.co URL.
+
+---
+
+### DNS Requirements
+
+Ensure this CNAME exists (Grey Cloud is fine):
+- `share` → `lenyuvobgktgdearflim.supabase.co`
+
