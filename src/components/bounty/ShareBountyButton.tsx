@@ -29,24 +29,19 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Clean URL for copy/native share (user-facing)
+  // Clean URL - Cloudflare Worker handles OG metadata for crawlers
   const bountyUrl = `https://bountybay.co/b/${bountyId}`;
   
-  // Branded subdomain for social crawlers - CNAME to Supabase, serves OG metadata
-  // DNS: share CNAME → lenyuvobgktgdearflim.supabase.co (gray cloud/DNS only)
-  const edgeFunctionUrl = `https://share.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
-  
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
-  const encodedEdgeUrl = encodeURIComponent(edgeFunctionUrl);
+  const encodedUrl = encodeURIComponent(bountyUrl);
   const encodedText = encodeURIComponent(shareText);
 
   const shareLinks = {
-    // Social platforms use edge function URL - it serves proper OG tags
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedEdgeUrl}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedEdgeUrl}`,
-    reddit: `https://reddit.com/submit?url=${encodedEdgeUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedEdgeUrl}`,
-    pinterest: `https://pinterest.com/pin/create/button/?url=${encodedEdgeUrl}&description=${encodedText}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+    pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
   };
 
   const handleNativeShare = async () => {
@@ -55,7 +50,7 @@ export function ShareBountyButton({
           await navigator.share({
             title: `$${amount} Bounty: ${title}`,
             text: shareText,
-            url: edgeFunctionUrl,
+            url: bountyUrl,
           });
       } catch (error) {
         // User cancelled or error
