@@ -29,9 +29,7 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Clean URL for copy/native share (user-facing)
-  const bountyUrl = `https://bountybay.co/b/${bountyId}`;
-  
+  // Edge function URL for social crawlers AND copy/native share (rich previews everywhere)
   // Edge function URL for social crawlers - uses Supabase custom domain for branded preview
   const edgeFunctionUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
   
@@ -53,7 +51,7 @@ export function ShareBountyButton({
           await navigator.share({
             title: `$${amount} Bounty: ${title}`,
             text: shareText,
-            url: bountyUrl,
+            url: edgeFunctionUrl,
           });
       } catch (error) {
         // User cancelled or error
@@ -66,7 +64,7 @@ export function ShareBountyButton({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(bountyUrl);
+      await navigator.clipboard.writeText(edgeFunctionUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
