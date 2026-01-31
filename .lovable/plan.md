@@ -1,52 +1,42 @@
 
-# Plan: Fix Favicon - Replace Corrupted File with Actual BB Logo
 
-## Root Cause Found
+# Plan: Fix Partner Application Dialog Cut-off Issue
 
-I discovered why the favicon shows the homepage: **The `public/favicon.png` file has been replaced with a screenshot of the homepage instead of the actual BB logo.**
+## Problem
 
-When I opened `public/favicon.png` to inspect it, it literally shows screenshots of the BountyBay homepage - that's what Safari is displaying because that's literally what the favicon.png file contains now.
-
-The actual BB logo is stored externally at:
-`https://storage.googleapis.com/gpt-engineer-file-uploads/.../favicon better BB.png`
+The dialog uses CSS transform centering (`top-[50%]` + `-translate-y-[50%]`), which positions the dialog's **center** at 50% of the viewport. When the dialog content is tall (like the Partner Application form with many fields), the top half extends beyond the viewport edge, causing the header to be cut off.
 
 ## Solution
 
-### Step 1: Download and Replace the Favicon
+Change the dialog positioning strategy from transform-based centering to flexbox centering. This ensures the dialog stays fully within the viewport regardless of its height.
 
-I need to fetch the correct BB logo from the Google Cloud Storage URL referenced in your OG meta tags and replace the corrupted `public/favicon.png` file:
+## Changes Required
 
-```text
-1. Fetch: https://storage.googleapis.com/gpt-engineer-file-uploads/V7ghVgsFwWSBH4eOg4aoiLyUlGi1/uploads/1761531821540-favicon%20better%20BB.png
+### File: `src/components/ui/dialog.tsx`
 
-2. Save as: public/favicon.png (replacing the corrupted screenshot file)
+| Current | New |
+|---------|-----|
+| `top-[50%] -translate-y-[50%]` | `top-0 bottom-0 my-auto` with flex container |
+| Fixed positioning with transform | Flexbox-based centering that respects viewport bounds |
+
+**Updated DialogContent positioning:**
+```tsx
+// Change the DialogPrimitive.Content className from:
+"fixed left-4 right-4 top-[50%] ... -translate-y-[50%] ..."
+
+// To:
+"fixed left-4 right-4 top-4 bottom-4 ... my-auto h-fit ..."
 ```
 
-### Step 2: Update Cache Buster Version
+This approach:
+1. Sets `top-4` and `bottom-4` to create minimum margins from viewport edges
+2. Uses `my-auto` to center vertically within those constraints
+3. Uses `h-fit` so the dialog sizes to its content
+4. Removes the transform that was causing the overflow
 
-Increment the version number to v=6 in both files to force all browsers to re-fetch:
+## Why This Works
 
-| File | Change |
-|------|--------|
-| `index.html` | Update `?v=5` → `?v=6` on all favicon links |
-| `src/pages/Index.tsx` | Update `?v=5` → `?v=6` on Helmet favicon links |
+Transform-based centering (`-translate-y-[50%]`) doesn't know about viewport boundaries - it just moves the element up by 50% of its own height. If the dialog is 80% of the viewport tall, moving it up 40% (half of 80%) means 10% gets cut off at the top.
 
-## Why This Happened
+Flexbox/margin-auto centering respects the container boundaries and will never push content outside the viewport.
 
-At some point, an operation likely overwrote the `public/favicon.png` file with incorrect content. This explains why:
-- Other pages show the BB logo (they might be using cached correct version)
-- Homepage shows the screenshot (loading the corrupted file fresh)
-
-## After Implementation
-
-1. The favicon.png file will be the actual BB logo
-2. Cache buster v=6 will force all browsers to re-download
-3. Clear your browser cache after publishing to verify
-
-## Files to Modify
-
-| File | Action |
-|------|--------|
-| `public/favicon.png` | **Replace with actual BB logo from external URL** |
-| `index.html` | Update version to v=6 |
-| `src/pages/Index.tsx` | Update version to v=6 |
