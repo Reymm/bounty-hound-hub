@@ -174,6 +174,32 @@ export default {
       const proxyReq = new Request(originUrl.toString(), request);
       const resp = await fetch(proxyReq);
 
+      // Inject correct favicon into HTML responses to override Lovable's heart icon
+      const contentType = resp.headers.get("content-type") || "";
+      if (contentType.includes("text/html")) {
+        let html = await resp.text();
+        
+        // Inject our favicon links right after <head>
+        const faviconLinks = `
+    <link rel="icon" type="image/png" href="https://bountybay.co/favicon.png?v=7">
+    <link rel="apple-touch-icon" href="https://bountybay.co/favicon.png?v=7">
+    <link rel="shortcut icon" href="https://bountybay.co/favicon.png?v=7">`;
+        
+        html = html.replace(/<head>/i, `<head>${faviconLinks}`);
+        
+        const newResp = new Response(html, {
+          status: resp.status,
+          headers: resp.headers
+        });
+        
+        return withDebugHeaders(newResp, {
+          isCrawler,
+          path: url.pathname,
+          bountyId: bountyId || "",
+          branch: "proxy-favicon-injected"
+        });
+      }
+
       return withDebugHeaders(resp, {
         isCrawler,
         path: url.pathname,
