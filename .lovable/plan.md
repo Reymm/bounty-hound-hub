@@ -1,51 +1,12 @@
+# READY TO IMPLEMENT - User Approved
 
+## Status: APPROVED - Switch to default mode to implement
 
-# Build Professional OG Image Generator (Like OpenGraph.xyz)
+The user has approved. Implementation requires switching to default mode.
 
-## What You Want
+## Files to Create/Modify:
 
-The screenshot shows a professional OG card from OpenGraph.xyz with:
-- Light pink/lavender gradient background  
-- Bounty photo on the LEFT in a clean white frame with shadow
-- Domain badge (auth.bountybay.co)
-- Title: "Help me find: $5 Bounty — Looking for a Lead on a Nixon Hoodie From... | BountyBay"
-- Black "Read more" button
-- Navigation arrows at bottom
-
-## What I'll Build
-
-A complete rewrite of `og-image/index.ts` using:
-- **`og_edge` library** - Generates PNG images (not SVG) from React/JSX
-- **Base64 image embedding** - Fetch bounty image and embed directly
-- **WebP detection** - Convert or fallback gracefully
-- **Your brand colors** - Blue (#3B82F6), not orange
-
-## Design Spec (Matching Reference)
-
-```text
-+----------------------------------------------------------+
-|                                                          |
-|   +---------------+    auth.bountybay.co                 |
-|   |               |                                      |
-|   |   [BOUNTY     |    Help me find: $50 Bounty —        |
-|   |    IMAGE]     |    Looking for a vintage...          |
-|   |               |    | BountyBay                       |
-|   |               |                                      |
-|   +---------------+    [Read more]                       |
-|                                                          |
-+----------------------------------------------------------+
-
-Background: Light gradient (lavender/pink like reference)
-Image frame: White with subtle shadow
-Typography: Clean system fonts
-Button: Black rounded "Read more"
-```
-
-## Technical Implementation
-
-### File: `supabase/functions/og-image/index.ts`
-
-Complete rewrite:
+### 1. supabase/functions/og-image/index.ts (Complete Rewrite)
 
 ```typescript
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -53,11 +14,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 import React from "https://esm.sh/react@18.2.0";
 import { ImageResponse } from "https://deno.land/x/og_edge@0.0.6/mod.ts";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 // Fetch image and convert to base64 data URI
 async function fetchImageAsBase64(url: string): Promise<string | null> {
   try {
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.log("Failed to fetch image:", response.status);
+      return null;
+    }
     
     const contentType = response.headers.get("content-type") || "image/jpeg";
     
@@ -82,119 +51,116 @@ async function fetchImageAsBase64(url: string): Promise<string | null> {
 }
 
 serve(async (req) => {
-  // ... CORS handling, bounty fetch same as before ...
-
-  // Fetch and convert bounty image
-  let imageData: string | null = null;
-  if (bounty.images?.[0]) {
-    imageData = await fetchImageAsBase64(bounty.images[0]);
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
-  // Generate PNG using og_edge
-  return new ImageResponse(
-    <div style={{
-      width: "100%",
-      height: "100%",
-      display: "flex",
-      background: "linear-gradient(135deg, #fdf2f8 0%, #ede9fe 50%, #dbeafe 100%)",
-      padding: "40px",
-      fontFamily: "system-ui, sans-serif",
-    }}>
-      {/* Left: Image in white frame */}
-      <div style={{
-        width: "400px",
-        height: "400px",
-        background: "white",
-        borderRadius: "16px",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-      }}>
-        {imageData ? (
-          <img 
-            src={imageData} 
-            width={360} 
-            height={360} 
-            style={{ objectFit: "contain", borderRadius: "8px" }} 
-          />
-        ) : (
-          <div style={{ fontSize: "120px" }}>📦</div>
-        )}
-      </div>
-      
-      {/* Right: Content */}
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        paddingLeft: "50px",
-      }}>
-        {/* Domain badge */}
-        <div style={{
-          fontSize: "18px",
-          color: "#6b7280",
-          marginBottom: "16px",
-        }}>
-          bountybay.co
-        </div>
-        
-        {/* Title */}
-        <div style={{
-          fontSize: "42px",
-          fontWeight: "bold",
-          color: "#1f2937",
-          lineHeight: 1.2,
-          marginBottom: "24px",
-        }}>
-          {title}
-        </div>
-        
-        {/* Read more button */}
-        <div style={{
-          background: "#1f2937",
-          color: "white",
-          padding: "12px 28px",
-          borderRadius: "24px",
-          fontSize: "18px",
-          fontWeight: "600",
-          width: "fit-content",
-        }}>
-          Read more
-        </div>
-      </div>
-    </div>,
-    {
-      width: 1200,
-      height: 630,
+  try {
+    const url = new URL(req.url);
+    const bountyId = url.searchParams.get("id");
+
+    if (!bountyId) {
+      return new Response("Missing bounty ID", { status: 400, headers: corsHeaders });
     }
-  );
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: bounty, error } = await supabase
+      .from("Bounties")
+      .select(`id, title, amount, description, status, images, requires_shipping`)
+      .eq("id", bountyId)
+      .single();
+
+    if (error || !bounty) {
+      console.error("Bounty not found:", error);
+      return new Response("Bounty not found", { status: 404, headers: corsHeaders });
+    }
+
+    const truncatedTitle = bounty.title.length > 45 
+      ? bounty.title.slice(0, 42) + '...' 
+      : bounty.title;
+    const title = `Help me find: $${(bounty.amount || 0).toLocaleString()} Bounty — ${truncatedTitle} | BountyBay`;
+
+    let imageData: string | null = null;
+    if (bounty.images?.[0]) {
+      imageData = await fetchImageAsBase64(bounty.images[0]);
+    }
+
+    return new ImageResponse(
+      React.createElement(
+        "div",
+        {
+          style: {
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            background: "linear-gradient(135deg, #fdf2f8 0%, #ede9fe 50%, #dbeafe 100%)",
+            padding: "40px",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              width: "400px",
+              height: "400px",
+              background: "white",
+              borderRadius: "16px",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "20px",
+              marginTop: "75px",
+            },
+          },
+          imageData
+            ? React.createElement("img", {
+                src: imageData,
+                width: 360,
+                height: 360,
+                style: { width: "360px", height: "360px", objectFit: "contain", borderRadius: "8px" },
+              })
+            : React.createElement("div", { style: { fontSize: "120px", display: "flex", alignItems: "center", justifyContent: "center" } }, "📦")
+        ),
+        React.createElement(
+          "div",
+          {
+            style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "50px" },
+          },
+          React.createElement("div", { style: { fontSize: "18px", color: "#6b7280", marginBottom: "16px" } }, "bountybay.co"),
+          React.createElement("div", { style: { fontSize: "36px", fontWeight: "bold", color: "#1f2937", lineHeight: 1.3, marginBottom: "24px", maxWidth: "650px" } }, title),
+          React.createElement("div", { style: { background: "#1f2937", color: "white", padding: "12px 28px", borderRadius: "24px", fontSize: "18px", fontWeight: "600", display: "flex", width: "140px" } }, "Read more")
+        )
+      ),
+      { width: 1200, height: 630 }
+    );
+  } catch (error) {
+    console.error("OG image generation error:", error);
+    return new Response("Error generating image", { status: 500, headers: corsHeaders });
+  }
 });
 ```
 
-### File: `supabase/functions/bounty-meta/index.ts`
+### 2. supabase/functions/bounty-meta/index.ts (Line 67-69)
 
-Update line 67-69 to use the og-image generator:
-
+Change:
 ```typescript
-// Use dynamic OG image generator
+const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+```
+
+To:
+```typescript
 const ogImage = `https://auth.bountybay.co/functions/v1/og-image?id=${bounty.id}`;
 ```
 
-## Output
+## Expected Result
 
-**PNG image** at 1200x630 that looks like the OpenGraph.xyz preview:
-- Light gradient background (pink → lavender → blue)
-- Bounty image in clean white frame with shadow
-- Domain, title, and "Read more" button
+PNG image at 1200x630 matching OpenGraph.xyz style:
+- Light pink/lavender gradient background
+- Bounty image in white frame on left
+- Title, domain, and "Read more" button on right
 - Works on Facebook, Twitter, iMessage, WhatsApp
-
-## Files to Change
-
-| File | Action |
-|------|--------|
-| `supabase/functions/og-image/index.ts` | Complete rewrite with og_edge + proper styling |
-| `supabase/functions/bounty-meta/index.ts` | Update og:image URL to use generator |
-
