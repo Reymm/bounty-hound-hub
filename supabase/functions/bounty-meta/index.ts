@@ -51,31 +51,22 @@ serve(async (req) => {
       });
     }
 
-    // Full title - don't truncate, let platforms handle it
-    const title = `Help me find: "${bounty.title}" — $${(bounty.amount || 0).toLocaleString()} Bounty | BountyBay`;
+    // Clean title format for social previews
+    const truncatedTitle = bounty.title.length > 45 
+      ? bounty.title.slice(0, 42) + '...' 
+      : bounty.title;
+    const title = `Help me find: $${(bounty.amount || 0).toLocaleString()} Bounty — ${truncatedTitle} | BountyBay`;
     
     // Description with bounty type prefix
     const bountyType = bounty.requires_shipping ? 'Find & Ship' : 'Lead Only';
     const rawDesc = bounty.description || '';
-    const shortDesc = rawDesc.slice(0, 120);
-    const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 120 ? '...' : ''}`;
-    
-    // Use the edge function URL as canonical so crawlers don't re-scrape the SPA
-    const canonicalUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
-    // Clean URL for the JS redirect (where browsers actually land)
+    const shortDesc = rawDesc.slice(0, 80);
+    const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
-    // Get first image - if it's WebP, use the PNG OG generator instead
-    let ogImage = 'https://bountybay.co/og-default.png';
-    const firstImage = bounty.images?.[0];
-    if (firstImage) {
-      if (firstImage.toLowerCase().endsWith('.webp')) {
-        // WebP not supported by Facebook/OG - use our PNG generator
-        ogImage = `https://auth.bountybay.co/functions/v1/og-image?id=${bounty.id}`;
-      } else {
-        ogImage = firstImage;
-      }
-    }
+    // Use bounty's first image if available, otherwise use default OG image
+    // Facebook doesn't support SVG, so we can't use the og-image edge function directly
+    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
 
     // Generate HTML with proper meta tags for social crawlers
     const html = `<!DOCTYPE html>
@@ -91,7 +82,7 @@ serve(async (req) => {
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${canonicalUrl}">
+  <meta property="og:url" content="${bountyUrl}">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${ogImage}">
@@ -101,13 +92,13 @@ serve(async (req) => {
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${canonicalUrl}">
+  <meta name="twitter:url" content="${bountyUrl}">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
   <meta name="twitter:image" content="${ogImage}">
 
   <!-- Canonical -->
-  <link rel="canonical" href="${canonicalUrl}">
+  <link rel="canonical" href="${bountyUrl}">
   
   <!-- Redirect browsers only (crawlers don't execute JS, so they read our meta tags) -->
   <script>window.location.replace("${bountyUrl}");</script>
