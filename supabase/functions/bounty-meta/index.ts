@@ -64,9 +64,8 @@ serve(async (req) => {
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
-    // Use bounty's first image if available, otherwise use default OG image
-    // Facebook doesn't support SVG, so we can't use the og-image edge function directly
-    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+    // Use dynamic OG image generator for professional social cards
+    const ogImage = `https://auth.bountybay.co/functions/v1/og-image?id=${bounty.id}`;
 
     // Generate HTML with proper meta tags for social crawlers
     const html = `<!DOCTYPE html>
