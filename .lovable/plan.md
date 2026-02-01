@@ -1,136 +1,103 @@
 
+# Implementation: Fix OG Image Generator for WebP Support
 
-# Dynamic OG Image Generator
+## Problem Identified
+The current `og-image` edge function is failing because:
+1. **WebP images are not supported** by the og_edge/satori library
+2. **Image dimensions must be explicitly specified** when using embedded images
 
-## Overview
-Upgrade the `og-image` edge function to generate proper **1200x630 PNG images** with the bounty photo embedded, amount displayed prominently in green, and BountyBay branding. This will make every shared bounty link look professional across Facebook, X, iMessage, WhatsApp, etc.
-
-## What You'll Get
-A card-style image for every bounty that includes:
-- The actual bounty item photo (properly scaled/cropped to fit)
-- Bounty amount in large green text
-- Item title
-- "OPEN" status badge
-- BountyBay branding
-- Clean dark theme background
-
-## Architecture
-
-```text
-+-------------------+     +------------------+     +------------------+
-|   bounty-meta     | --> |    og-image      | --> |   Social Card    |
-|   (serves HTML    |     |   (generates     |     |   (1200x630 PNG) |
-|   with og:image)  |     |   PNG from JSX)  |     |                  |
-+-------------------+     +------------------+     +------------------+
+Error from logs:
 ```
+Can't load image: Unsupported image type: image/webp
+Image size cannot be determined. Please provide the width and height of the image.
+```
+
+## Solution
+
+### File: `supabase/functions/og-image/index.ts`
+
+**Changes needed:**
+
+1. **Add image fetching helper function** - Fetch image bytes and convert to base64 data URI
+2. **Handle WebP fallback** - If image is WebP (not supported), show placeholder emoji instead
+3. **Specify explicit dimensions** - Add `width` and `height` props to the `<img>` element
+
+**Key code changes:**
+
+```typescript
+// Add helper function to fetch and convert images
+async function fetchImageAsBase64(imageUrl: string): Promise<string | null> {
+  try {
+    const response = await fetch(imageUrl);
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    
+    // WebP is not supported by satori - fall back to placeholder
+    if (contentType.includes("webp")) {
+      console.log("WebP detected, falling back to placeholder");
+      return null;
+    }
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = btoa(
+      new Uint8Array(arrayBuffer).reduce(
+        (data, byte) => data + String.fromCharCode(byte),
+        ""
+      )
+    );
+    
+    const mimeType = contentType.includes("png") ? "image/png" : "image/jpeg";
+    return `data:${mimeType};base64,${base64}`;
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    return null;
+  }
+}
+```
+
+```typescript
+// In the main handler, try to fetch image
+let imageDataUri: string | null = null;
+if (bounty.images?.[0]) {
+  imageDataUri = await fetchImageAsBase64(bounty.images[0]);
+}
+
+// In the image element, add explicit dimensions
+React.createElement("img", {
+  src: imageDataUri,
+  width: 380,  // Explicit width
+  height: 380, // Explicit height
+  style: {
+    width: "380px",
+    height: "380px",
+    objectFit: "cover",
+  },
+})
+```
+
+3. **Conditional rendering** - Show emoji placeholder when image is WebP or fails to load
 
 ---
 
-## Technical Implementation
+## Current Status
 
-### Step 1: Upgrade og-image Edge Function
-
-Replace the current SVG-based approach with **Satori + resvg-wasm**:
-
-- **Satori**: Converts React-like JSX to SVG (by Vercel, battle-tested)
-- **resvg-wasm**: Converts SVG to PNG (WebAssembly, runs in Deno)
-
-The function will:
-1. Fetch bounty data (title, amount, status, images)
-2. Fetch the bounty's first image and convert it to base64 (for embedding)
-3. Generate a JSX template with the embedded photo
-4. Convert JSX to SVG via Satori
-5. Convert SVG to PNG via resvg-wasm
-6. Return the PNG with proper caching headers
-
-### Step 2: Update bounty-meta to Use Dynamic Image
-
-Change line 69 in `bounty-meta/index.ts` from:
-```typescript
-const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
-```
-
-To point to the og-image function:
+The `bounty-meta` function is already correctly pointing to the og-image function:
 ```typescript
 const ogImage = `https://auth.bountybay.co/functions/v1/og-image?id=${bounty.id}`;
 ```
-
-### Step 3: Template Design (Card Style)
-
-```text
-+------------------------------------------------------------------+
-|  BOUNTYBAY                                          [OPEN] badge |
-+------------------------------------------------------------------+
-|                                                                  |
-|  +------------------+    REWARD                                  |
-|  |                  |                                            |
-|  |   [ITEM PHOTO]   |    $500                                    |
-|  |   (400x400 area) |    (large green text)                      |
-|  |                  |                                            |
-|  +------------------+    Help find:                              |
-|                         Vintage Rolex Submariner 1680            |
-|                         (title in white)                         |
-|                                                                  |
-+------------------------------------------------------------------+
-|                                          bountybay.co            |
-+------------------------------------------------------------------+
-```
-
----
-
-## Dependencies (Deno-compatible)
-
-```typescript
-import satori from "https://esm.sh/satori@0.10.14";
-import { Resvg } from "https://esm.sh/@resvg/resvg-wasm@2.6.2";
-import { initWasm } from "https://esm.sh/@resvg/resvg-wasm@2.6.2";
-```
-
----
-
-## Handling the Bounty Photo
-
-1. Fetch the image URL from the bounty record
-2. Fetch the actual image bytes
-3. Convert to base64 data URI
-4. Embed directly in the JSX template
-5. Apply CSS `object-fit: cover` to handle any aspect ratio
-
-If the image fetch fails or bounty has no image, fall back to a placeholder icon.
-
----
-
-## Caching Strategy
-
-- Cache generated PNGs for 1 hour (`Cache-Control: public, max-age=3600`)
-- When a bounty is updated, the cache will naturally expire
-- Consider adding a cache-busting param based on `updated_at` if needed
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/og-image/index.ts` | Complete rewrite with Satori + resvg-wasm |
-| `supabase/functions/bounty-meta/index.ts` | Update `ogImage` URL to point to og-image function |
-
----
-
-## Risk Mitigation
-
-- **Cold start latency**: First request may take 1-2 seconds due to WASM initialization. Subsequent requests will be faster.
-- **Image fetch failures**: Graceful fallback to emoji/placeholder if bounty image can't be fetched.
-- **Font loading**: Use system fonts via Satori's built-in font loading, or embed a simple font file.
+| File | Change |
+|------|--------|
+| `supabase/functions/og-image/index.ts` | Add WebP handling, explicit dimensions, base64 conversion |
 
 ---
 
 ## Expected Result
 
-When someone shares `https://auth.bountybay.co/functions/v1/bounty-meta?id=xxx`:
-
-- Facebook, X, LinkedIn, iMessage, WhatsApp will all show a professional 1200x630 card
-- The card will include the actual item photo
-- The bounty amount will be prominent in green
-- BountyBay branding will be consistent
-
+After this fix:
+- PNG/JPEG bounty images will display in the OG card
+- WebP images will gracefully fall back to a 💰 emoji placeholder
+- Social platforms (Facebook, X, iMessage, WhatsApp) will show professional 1200x630 cards
