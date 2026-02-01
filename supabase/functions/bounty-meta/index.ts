@@ -51,26 +51,31 @@ serve(async (req) => {
       });
     }
 
-    // Clean title format for social previews
-    const truncatedTitle = bounty.title.length > 45 
-      ? bounty.title.slice(0, 42) + '...' 
-      : bounty.title;
-    const title = `Help me find: $${(bounty.amount || 0).toLocaleString()} Bounty — ${truncatedTitle} | BountyBay`;
+    // Full title - don't truncate, let platforms handle it
+    const title = `Help me find: "${bounty.title}" — $${(bounty.amount || 0).toLocaleString()} Bounty | BountyBay`;
     
     // Description with bounty type prefix
     const bountyType = bounty.requires_shipping ? 'Find & Ship' : 'Lead Only';
     const rawDesc = bounty.description || '';
-    const shortDesc = rawDesc.slice(0, 80);
-    const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
+    const shortDesc = rawDesc.slice(0, 120);
+    const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 120 ? '...' : ''}`;
     
     // Use the edge function URL as canonical so crawlers don't re-scrape the SPA
     const canonicalUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
     // Clean URL for the JS redirect (where browsers actually land)
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
-    // Use bounty's first image if available, otherwise use default OG image
-    // Facebook doesn't support SVG, so we can't use the og-image edge function directly
-    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+    // Get first image - if it's WebP, use the PNG OG generator instead
+    let ogImage = 'https://bountybay.co/og-default.png';
+    const firstImage = bounty.images?.[0];
+    if (firstImage) {
+      if (firstImage.toLowerCase().endsWith('.webp')) {
+        // WebP not supported by Facebook/OG - use our PNG generator
+        ogImage = `https://auth.bountybay.co/functions/v1/og-image?id=${bounty.id}`;
+      } else {
+        ogImage = firstImage;
+      }
+    }
 
     // Generate HTML with proper meta tags for social crawlers
     const html = `<!DOCTYPE html>
