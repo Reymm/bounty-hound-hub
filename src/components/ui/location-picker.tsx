@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, AlertCircle } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LocationSuggestion {
@@ -29,11 +30,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTouchingDropdown, setIsTouchingDropdown] = useState(false);
-  const [fallbackMode, setFallbackMode] = useState(false);
-  const [mapboxFailed, setMapboxFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const failureCountRef = useRef(0);
 
   // Get Mapbox token from Supabase edge function
   useEffect(() => {
@@ -41,14 +39,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       try {
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         if (error) throw error;
-        if (!data?.token) throw new Error('No token returned');
         setMapboxToken(data.token);
-        setFallbackMode(false);
       } catch (error) {
         console.error('Error fetching Mapbox token:', error);
-        // Enable fallback mode if we can't get token
-        setFallbackMode(true);
-        setMapboxFailed(true);
       }
     };
     fetchToken();
@@ -60,11 +53,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   }, [value]);
 
   const searchLocations = async (query: string) => {
-    // In fallback mode, don't search - just let user type freely
-    if (fallbackMode) {
-      return;
-    }
-
     if (!query.trim() || !mapboxToken || query.length < 3) {
       setSuggestions([]);
       return;
@@ -75,23 +63,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       const response = await fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=5&types=place,locality,neighborhood,address,poi`
       );
-      
-      // Check for rate limiting or errors
-      if (!response.ok) {
-        failureCountRef.current++;
-        if (failureCountRef.current >= 3) {
-          console.warn('Mapbox API failing repeatedly, switching to fallback mode');
-          setFallbackMode(true);
-          setMapboxFailed(true);
-        }
-        setSuggestions([]);
-        return;
-      }
-
       const data = await response.json();
-      
-      // Reset failure count on success
-      failureCountRef.current = 0;
       
       if (data.features && data.features.length > 0) {
         const locationSuggestions: LocationSuggestion[] = data.features.map((feature: any) => ({
@@ -107,12 +79,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       }
     } catch (error) {
       console.error('Error searching locations:', error);
-      failureCountRef.current++;
-      if (failureCountRef.current >= 3) {
-        console.warn('Mapbox API failing repeatedly, switching to fallback mode');
-        setFallbackMode(true);
-        setMapboxFailed(true);
-      }
       setSuggestions([]);
     } finally {
       setIsLoading(false);
@@ -122,12 +88,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchValue(newValue);
-    
-    // In fallback mode, update parent immediately
-    if (fallbackMode) {
-      onChange?.(newValue);
-      return;
-    }
     
     // Debounce the search
     const timeoutId = setTimeout(() => {
@@ -146,17 +106,12 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   const handleInputFocus = () => {
-    if (suggestions.length > 0 && !fallbackMode) {
+    if (suggestions.length > 0) {
       setShowSuggestions(true);
     }
   };
 
   const handleInputBlur = () => {
-    // In fallback mode, commit the value on blur
-    if (fallbackMode && searchValue.trim()) {
-      onChange?.(searchValue.trim());
-    }
-    
     // Don't hide if user is touching the dropdown
     if (isTouchingDropdown) {
       return;
@@ -171,15 +126,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // In fallback mode, just submit the typed value
-    if (fallbackMode) {
-      if (searchValue.trim()) {
-        onChange?.(searchValue.trim());
-      }
-      return;
-    }
-    
     // If there are suggestions, select the first one
     if (suggestions.length > 0) {
       handleSuggestionClick(suggestions[0]);
@@ -196,26 +142,18 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
-          placeholder={fallbackMode ? "Enter your city or region" : placeholder}
+          placeholder={placeholder}
           className="pl-10"
           autoComplete="off"
         />
-        {isLoading && !fallbackMode && (
+        {isLoading && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
           </div>
         )}
       </div>
       
-      {/* Fallback mode indicator */}
-      {mapboxFailed && (
-        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-          <AlertCircle className="h-3 w-3" />
-          <span>Type your location manually</span>
-        </div>
-      )}
-      
-      {showSuggestions && suggestions.length > 0 && !fallbackMode && (
+      {showSuggestions && suggestions.length > 0 && (
         <div 
           ref={suggestionsRef}
           className="absolute z-[200] w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto"
