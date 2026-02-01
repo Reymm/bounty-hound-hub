@@ -62,6 +62,10 @@ serve(async (req) => {
     const rawDesc = bounty.description || '';
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
+    
+    // Use the edge function URL as canonical so crawlers don't re-scrape the SPA
+    const canonicalUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
+    // Clean URL for the JS redirect (where browsers actually land)
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
     // Use bounty's first image if available, otherwise use default OG image
@@ -82,7 +86,7 @@ serve(async (req) => {
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${bountyUrl}">
+  <meta property="og:url" content="${canonicalUrl}">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${ogImage}">
@@ -92,13 +96,13 @@ serve(async (req) => {
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${bountyUrl}">
+  <meta name="twitter:url" content="${canonicalUrl}">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
   <meta name="twitter:image" content="${ogImage}">
 
   <!-- Canonical -->
-  <link rel="canonical" href="${bountyUrl}">
+  <link rel="canonical" href="${canonicalUrl}">
   
   <!-- Redirect browsers only (crawlers don't execute JS, so they read our meta tags) -->
   <script>window.location.replace("${bountyUrl}");</script>
