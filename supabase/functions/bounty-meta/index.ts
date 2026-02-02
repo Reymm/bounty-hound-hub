@@ -65,20 +65,8 @@ serve(async (req) => {
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
     // Use bounty's first image if available, otherwise use default OG image
-    // Facebook doesn't support SVG, so we use the actual bounty image directly
-    let ogImage = 'https://bountybay.co/og-default.png';
-    
-    if (bounty.images && bounty.images.length > 0) {
-      const firstImage = bounty.images[0];
-      // Ensure we have an absolute URL
-      if (firstImage.startsWith('http')) {
-        ogImage = firstImage;
-      } else if (firstImage.startsWith('/')) {
-        ogImage = `https://bountybay.co${firstImage}`;
-      } else {
-        ogImage = firstImage;
-      }
-    }
+    // Facebook doesn't support SVG, so we can't use the og-image edge function directly
+    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
 
     // Generate HTML with proper meta tags for social crawlers
     const html = `<!DOCTYPE html>
