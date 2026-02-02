@@ -62,7 +62,7 @@ serve(async (req) => {
       : bounty.title;
     const amount = bounty.amount?.toLocaleString() || "0";
 
-    // Generate SVG-based OG image
+    // Generate SVG-based OG image with BLUE brand theme
     const svg = `
       <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -71,8 +71,8 @@ serve(async (req) => {
             <stop offset="100%" style="stop-color:#1e293b"/>
           </linearGradient>
           <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#f97316"/>
-            <stop offset="100%" style="stop-color:#ea580c"/>
+            <stop offset="0%" style="stop-color:#3b82f6"/>
+            <stop offset="100%" style="stop-color:#2563eb"/>
           </linearGradient>
         </defs>
         
@@ -80,19 +80,19 @@ serve(async (req) => {
         <rect width="1200" height="630" fill="url(#bg)"/>
         
         <!-- Decorative elements -->
-        <circle cx="1100" cy="100" r="200" fill="#f97316" opacity="0.1"/>
-        <circle cx="100" cy="530" r="150" fill="#f97316" opacity="0.08"/>
+        <circle cx="1100" cy="100" r="200" fill="#3b82f6" opacity="0.1"/>
+        <circle cx="100" cy="530" r="150" fill="#3b82f6" opacity="0.08"/>
         
         <!-- Top bar with branding -->
         <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
         
         <!-- Logo/Brand area -->
-        <text x="60" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="bold" fill="#f97316">
+        <text x="60" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="bold" fill="#3b82f6">
           🔍 BOUNTYBAY
         </text>
         
         <!-- BOUNTY badge -->
-        <rect x="60" y="120" width="180" height="44" rx="22" fill="#f97316"/>
+        <rect x="60" y="120" width="180" height="44" rx="22" fill="#3b82f6"/>
         <text x="150" y="150" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
           BOUNTY
         </text>
@@ -132,20 +132,20 @@ serve(async (req) => {
         `}
         
         <!-- Right side decorative element -->
-        <rect x="900" y="180" width="240" height="270" rx="16" fill="#1e293b" stroke="#334155" stroke-width="2"/>
-        <text x="1020" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="80" text-anchor="middle" fill="#f97316" opacity="0.3">
+        <rect x="900" y="180" width="240" height="270" rx="16" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+        <text x="1020" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="80" text-anchor="middle" fill="#3b82f6" opacity="0.4">
           💰
         </text>
         
         <!-- CTA text -->
         <text x="1020" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">
-          Join the hunt
+          Claim this bounty
         </text>
         
         <!-- Bottom URL bar -->
         <rect x="0" y="600" width="1200" height="30" fill="#0f172a" opacity="0.8"/>
         <text x="1140" y="622" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#64748b" text-anchor="end">
-          bountybay.lovable.app
+          bountybay.co
         </text>
       </svg>
     `;
