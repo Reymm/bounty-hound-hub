@@ -1,11 +1,18 @@
 import { ArrowLeft } from 'lucide-react';
+import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 
 export default function Privacy() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <Helmet>
+        <title>Privacy Policy | BountyBay</title>
+        <meta name="description" content="Learn how BountyBay collects, uses, and protects your personal information. Read our privacy policy for details on data handling and your rights." />
+        <link rel="canonical" href="https://bountybay.co/legal/privacy" />
+      </Helmet>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Navigation */}
       <div className="mb-6">
         <Button asChild variant="ghost" className="mb-4">
@@ -322,5 +329,6 @@ export default function Privacy() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
