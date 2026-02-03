@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import { 
   Star, 
   MapPin, 
@@ -94,9 +95,15 @@ export default function PublicProfile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      {/* Back Button */}
-      <Button asChild variant="ghost" size="sm">
+    <>
+      <Helmet>
+        <title>{profile.displayName} | BountyBay User Profile</title>
+        <meta name="description" content={`View ${profile.displayName}'s profile on BountyBay. ${profile.totalSuccessfulClaims} successful claims, ${profile.average_rating > 0 ? `${profile.average_rating.toFixed(1)} rating` : 'new user'}.`} />
+        <link rel="canonical" href={`https://bountybay.co/u/${profile.id}`} />
+      </Helmet>
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        {/* Back Button */}
+        <Button asChild variant="ghost" size="sm">
         <Link to="/">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
@@ -259,6 +266,7 @@ export default function PublicProfile() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
