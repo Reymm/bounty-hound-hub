@@ -163,7 +163,7 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
                     <span className="text-muted-foreground/60">({bounty.posterRatingCount})</span>
                   </>
                 ) : (
-                  <Badge variant="secondary" className="text-xs">New</Badge>
+                  <span className="text-muted-foreground/60">Unrated</span>
                 )}
               </div>
             </div>
@@ -181,9 +181,14 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
             </div>
           </div>
 
-          {/* Footer with deadline and poster */}
+          {/* Footer with deadline, posted time, and poster */}
           <div className="flex items-center justify-between pt-2 border-t border-border">
-            {getDeadlineBadge()}
+            <div className="flex items-center gap-2">
+              {getDeadlineBadge()}
+              <span className="text-xs text-muted-foreground">
+                Posted {formatDistanceToNow(new Date(bounty.createdAt))} ago
+              </span>
+            </div>
             
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               by <Link 
