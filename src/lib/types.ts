@@ -366,6 +366,19 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
       'building-sets': 'Building Sets & Blocks',
       'board-games-puzzles': 'Board Games & Puzzles'
     }
+  },
+  'lost-media-threads': {
+    label: 'Lost Media & Threads',
+    subcategories: {
+      'reddit-posts': 'Reddit Posts & Comments',
+      'forum-threads': 'Forum Threads & Discussions',
+      'deleted-videos': 'Deleted Videos',
+      'lost-websites': 'Lost Websites & Pages',
+      'obscure-media': 'Obscure Media',
+      'old-articles': 'Old Articles & News',
+      'internet-mysteries': 'Internet Mysteries',
+      'archived-content': 'Archived Content'
+    }
   }
 };
 
@@ -387,7 +400,8 @@ export enum BountyCategory {
   BUSINESS_INDUSTRIAL = 'business-industrial',
   MISCELLANEOUS = 'miscellaneous',
   RECOVERY_REWARDS = 'recovery-rewards',
-  TOYS_KIDS = 'toys-kids'
+  TOYS_KIDS = 'toys-kids',
+  LOST_MEDIA_THREADS = 'lost-media-threads'
 }
 
 export enum BountyStatus {
