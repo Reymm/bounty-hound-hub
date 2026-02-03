@@ -64,9 +64,8 @@ serve(async (req) => {
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
     
-    // Use bounty's first image if available, otherwise use default OG image
-    // Facebook doesn't support SVG, so we can't use the og-image edge function directly
-    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+    // Generate dynamic OG image using OpenGraph.xyz
+    const ogImage = buildOgImageUrl(bounty);
 
     // Generate HTML with proper meta tags for social crawlers
     const html = `<!DOCTYPE html>
@@ -131,4 +130,35 @@ function escapeHtml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function buildOgImageUrl(bounty: { title: string; amount: number | null; images?: string[] | null }): string {
+  const templateId = "aee1c4ac-33e0-4b6b-a30a-cad7f03d8ff2";
+  const version = "1";
+  
+  // Static branding params
+  const siteText = encodeURIComponent("BountyBay.co");
+  const siteFontFamily = encodeURIComponent("Roboto");
+  const siteColor = encodeURIComponent("rgba(255,255,255,1)");
+  const siteBackgroundColor = encodeURIComponent("rgba(59,130,246,1)");
+  
+  // Dynamic bounty params - truncate title to 60 chars
+  const titleText = encodeURIComponent(
+    bounty.title.length > 60 ? bounty.title.slice(0, 57) + '...' : bounty.title
+  );
+  const titleFontFamily = encodeURIComponent("Roboto");
+  const titleColor = encodeURIComponent("rgba(0,0,0,1)");
+  
+  // Image - use bounty image or default
+  const rawImageUrl = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+  const imageUrl = encodeURIComponent(rawImageUrl);
+  const imageObjectFit = encodeURIComponent("cover");
+  
+  // CTA with bounty amount
+  const ctaText = encodeURIComponent(`$${(bounty.amount || 0).toLocaleString()} Bounty`);
+  const ctaFontFamily = encodeURIComponent("Roboto");
+  const ctaColor = encodeURIComponent("rgba(255,255,255,1)");
+  const ctaBackgroundColor = encodeURIComponent("rgba(34,197,94,1)");
+  
+  return `https://ogcdn.net/${templateId}/v${version}/${siteText}/${siteFontFamily}/${siteColor}/${siteBackgroundColor}/${titleText}/${titleFontFamily}/${titleColor}/${imageUrl}/${imageObjectFit}/${ctaText}/${ctaFontFamily}/${ctaColor}/${ctaBackgroundColor}/og.png`;
 }
