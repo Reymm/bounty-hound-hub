@@ -155,17 +155,13 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
                 <span className="truncate max-w-24">{bounty.location}</span>
               </div>
               
-              <div className="flex items-center gap-1">
-                {bounty.posterRatingCount > 0 ? (
-                  <>
-                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                    <span>{bounty.posterRating.toFixed(1)}</span>
-                    <span className="text-muted-foreground/60">({bounty.posterRatingCount})</span>
-                  </>
-                ) : (
-                  <span className="text-muted-foreground/60">Unrated</span>
-                )}
-              </div>
+              {bounty.posterRatingCount > 0 && (
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                  <span>{bounty.posterRating.toFixed(1)}</span>
+                  <span className="text-muted-foreground/60">({bounty.posterRatingCount})</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
