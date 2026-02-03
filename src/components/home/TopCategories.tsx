@@ -113,7 +113,16 @@ export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
             <Card
               key={category.id}
               className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/50"
-              onClick={() => onCategorySelect(category.id)}
+              onClick={() => {
+                onCategorySelect(category.id);
+                // Scroll to browse section on category select
+                setTimeout(() => {
+                  const browseSection = document.getElementById('browse');
+                  if (browseSection) {
+                    browseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 50);
+              }}
             >
               <CardContent className={`p-6 bg-gradient-to-br ${category.gradient}`}>
                 <div className="flex items-start gap-4">
