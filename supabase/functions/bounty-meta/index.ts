@@ -142,9 +142,10 @@ function buildOgImageUrl(bounty: { title: string; amount: number | null; images?
   const siteColor = encodeURIComponent("rgba(255,255,255,1)");
   const siteBackgroundColor = encodeURIComponent("rgba(59,130,246,1)");
   
-  // Dynamic bounty params - truncate title to 60 chars
+  // Dynamic bounty params - add prefix and truncate
+  const rawTitle = `Help Me Find: ${bounty.title}`;
   const titleText = encodeURIComponent(
-    bounty.title.length > 60 ? bounty.title.slice(0, 57) + '...' : bounty.title
+    rawTitle.length > 60 ? rawTitle.slice(0, 57) + '...' : rawTitle
   );
   const titleFontFamily = encodeURIComponent("Roboto");
   const titleColor = encodeURIComponent("rgba(0,0,0,1)");
@@ -155,7 +156,7 @@ function buildOgImageUrl(bounty: { title: string; amount: number | null; images?
   const imageObjectFit = encodeURIComponent("cover");
   
   // CTA with bounty amount
-  const ctaText = encodeURIComponent(`$${(bounty.amount || 0).toLocaleString()} Bounty`);
+  const ctaText = encodeURIComponent(`View Bounty · $${(bounty.amount || 0).toLocaleString()}`);
   const ctaFontFamily = encodeURIComponent("Roboto");
   const ctaColor = encodeURIComponent("rgba(255,255,255,1)");
   const ctaBackgroundColor = encodeURIComponent("rgba(34,197,94,1)");
