@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil, ShieldCheck } from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil, ShieldCheck, Package, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -271,6 +271,17 @@ export default function BountyDetail() {
             <div className="flex-1 space-y-4">
               <div className="flex items-center gap-4 flex-wrap">
                 {getStatusBadge()}
+                {bounty.requires_shipping ? (
+                  <Badge variant="outline" className="text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-600">
+                    <Package className="h-3 w-3 mr-1" />
+                    Find & Ship
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600">
+                    <Link2 className="h-3 w-3 mr-1" />
+                    Lead Only
+                  </Badge>
+                )}
                 <div className="bounty-amount text-xl font-bold">
                   <CurrencyDisplay amount={bounty.bountyAmount} />
                 </div>
