@@ -6,7 +6,7 @@ interface BountySEOProps {
 }
 
 export function BountySEO({ bounty }: BountySEOProps) {
-  const title = `Help find: ${bounty.title} - $${bounty.bountyAmount} Reward | BountyBay`;
+  const title = `Help me find: ${bounty.title} - $${bounty.bountyAmount} Reward | BountyBay`;
   const description = `$${bounty.bountyAmount} bounty reward! ${bounty.description.slice(0, 120)}${bounty.description.length > 120 ? '...' : ''}`;
   const url = `${window.location.origin}/b/${bounty.id}`;
   
@@ -48,7 +48,7 @@ export function BountySEO({ bounty }: BountySEOProps) {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Product",
-          "name": bounty.title,
+          "name": `Help me find: ${bounty.title}`,
           "description": description,
           "image": fallbackImage,
           "offers": {
