@@ -7,6 +7,7 @@ import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
 import { TopCategories } from '@/components/home/TopCategories';
 import { CompletedBounties } from '@/components/home/CompletedBounties';
+import { HowItWorksPreview } from '@/components/home/HowItWorksPreview';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -186,6 +187,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* How It Works Preview - Only on homepage default view */}
+      {!hasActiveFilters && <HowItWorksPreview />}
 
       {/* Browse Section - Active Bounties First */}
       <section id="browse" className="py-8 lg:py-12">
