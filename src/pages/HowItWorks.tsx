@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { StripeBadge } from '@/components/ui/stripe-badge';
 // Display threshold for How It Works page (production value shown to users)
 const DISPLAY_THRESHOLD = 75;
 
@@ -283,6 +284,7 @@ const HowItWorks = () => {
             <p className="text-sm text-muted-foreground mt-2">
               Cancel anytime before acceptance with no fees for bounties under ${DISPLAY_THRESHOLD}.
             </p>
+            <StripeBadge className="mt-4 justify-center" />
           </div>
         </div>
       </section>
