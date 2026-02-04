@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Bug } from 'lucide-react';
 import { PartnerApplicationDialog } from '@/components/partner/PartnerApplicationDialog';
+import { StripeBadge } from '@/components/ui/stripe-badge';
 
 export function Footer() {
   return (
@@ -22,6 +23,7 @@ export function Footer() {
                 <g fill="#fff"><g id="s18"><g id="s9"><g id="s5"><g id="s4"><path id="s" d="m128 11.7 3.9 12h12.6l-10.2 7.4 3.9 12-10.2-7.4-10.2 7.4 3.9-12-10.2-7.4h12.6z"/><use href="#s" y="42"/></g><use href="#s4" y="84"/></g><use href="#s5" y="42"/></g><use href="#s9" x="64"/></g><use href="#s18" x="128"/><use href="#s9" x="192"/></g>
               </svg>
             </p>
+            <StripeBadge className="mt-2 justify-center md:justify-start" />
           </div>
 
           {/* Links */}
