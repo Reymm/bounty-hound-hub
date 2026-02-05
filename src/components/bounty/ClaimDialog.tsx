@@ -9,8 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabaseApi } from '@/lib/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClaimType } from '@/lib/types';
-import { Plus, X, CreditCard, Loader2, CheckCircle, Info, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Plus, X, CreditCard, Loader2, CheckCircle, Info, ShieldCheck, ExternalLink, Package } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { uploadFile, resolveStorageUrls } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,7 @@ interface ClaimDialogProps {
   bountyId: string;
   bountyTitle: string;
   bountyAmount: number;
+  isLeadOnly?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onClaimSubmitted: () => void;
@@ -31,9 +33,10 @@ interface ExistingSubmission {
   proof_urls: string[] | null;
 }
 
-export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClose, onClaimSubmitted }: ClaimDialogProps) {
+export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isLeadOnly = false, isOpen, onClose, onClaimSubmitted }: ClaimDialogProps) {
   const [message, setMessage] = useState('');
   const [proofUrls, setProofUrls] = useState<string[]>(['']);
+  const [hasItem, setHasItem] = useState(false);
   // uploadedImageRefs stores the storage references (supabase-storage://...)
   const [uploadedImageRefs, setUploadedImageRefs] = useState<string[]>([]);
   // uploadedImageDisplay stores resolved URLs for display in ImageUpload
@@ -643,6 +646,33 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isOpen, onClo
                       <span>Tip: Describe what you found without including specific URLs here—save those for the proof section below.</span>
                     </p>
                   </div>
+
+                  {/* "I have this item" option for Lead Only bounties */}
+                  {isLeadOnly && (
+                    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          id="has-item"
+                          checked={hasItem}
+                          onCheckedChange={(checked) => setHasItem(checked === true)}
+                          className="mt-0.5"
+                        />
+                        <div className="space-y-1">
+                          <label 
+                            htmlFor="has-item" 
+                            className="text-sm font-medium cursor-pointer flex items-center gap-2"
+                          >
+                            <Package className="h-4 w-4 text-primary" />
+                            I have this item and can sell/ship it
+                          </label>
+                          <p className="text-xs text-muted-foreground">
+                            Check this if you own the item and are willing to sell it directly to the poster. 
+                            They can use "Send Additional Funds" to cover the purchase price.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-3">
                     <Label>Proof URLs (Optional)</Label>
