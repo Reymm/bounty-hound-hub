@@ -246,7 +246,13 @@ export default function EditBounty() {
         description: "Your bounty has been successfully updated.",
       });
 
-      navigate(`/b/${id}`);
+      // Reset viewport zoom and scroll before navigating (fixes Safari mobile zoom issues)
+      window.scrollTo(0, 0);
+      
+      // Small delay to ensure viewport resets before navigation
+      setTimeout(() => {
+        navigate(`/b/${id}`, { replace: true });
+      }, 50);
     } catch (error) {
       console.error('Error updating bounty:', error);
       toast({
