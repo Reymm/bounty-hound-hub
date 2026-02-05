@@ -12,8 +12,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle, Clock } from "lucide-react";
-import { FREE_POST_THRESHOLD } from "@/lib/constants";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 
 interface CancelBountyDialogProps {
   bountyId: string;
@@ -78,27 +77,15 @@ export function CancelBountyDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {bountyAmount >= FREE_POST_THRESHOLD ? (
-            <Alert>
-              <Clock className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Refund processing</strong>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Your card was charged when you posted this bounty. You'll receive a full refund within 5-10 business days.
-                </p>
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>No cancellation fees</strong>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Your card was saved but never charged. Cancel anytime before approving a submission.
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
+          <Alert>
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>No cancellation fees</strong>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your card was saved but never charged. Cancel anytime before approving a submission.
+              </p>
+            </AlertDescription>
+          </Alert>
 
           <Alert>
             <AlertDescription className="text-xs text-muted-foreground">

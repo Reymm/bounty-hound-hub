@@ -13,9 +13,6 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-ESCROW] ${step}${detailsStr}`);
 };
 
-// $75 threshold: bounties at or above this amount charge immediately to prevent trolls
-const IMMEDIATE_CHARGE_THRESHOLD = 75;
-
 // Input validation schema
 const escrowPaymentSchema = z.object({
   amount: z.number()
@@ -34,7 +31,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started - THRESHOLD MODEL");
+    logStep("Function started - CARD SAVE ONLY MODEL (no auth holds)");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -86,17 +83,13 @@ serve(async (req) => {
     const totalCharge = Math.round(((amount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE)) * 100) / 100;
     const stripeFee = Math.round((totalCharge - amount) * 100) / 100;
     
-    // Determine payment mode based on threshold
-    const isImmediateCharge = amount >= IMMEDIATE_CHARGE_THRESHOLD;
-    
-    logStep("Amount calculated (threshold model)", {
+    logStep("Amount calculated (card-save model)", {
       bountyAmount: amount, 
       stripeFee: stripeFee,
       totalCharge: totalCharge,
       hunterFee: hunterFee,
       currency,
-      paymentMode: isImmediateCharge ? 'immediate' : 'deferred',
-      threshold: IMMEDIATE_CHARGE_THRESHOLD
+      paymentMode: 'deferred' // Always deferred now - no auth holds
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -115,117 +108,58 @@ serve(async (req) => {
       logStep("Created new customer", { customerId: customer.id });
     }
 
-    // Convert to cents for Stripe
-    const totalChargeCents = Math.round(totalCharge * 100);
-
-    if (isImmediateCharge) {
-      // HIGH VALUE ($150+): Create PaymentIntent with manual capture
-      // This authorizes the card immediately but doesn't capture until claim is accepted
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: totalChargeCents,
-        currency: currency,
-        customer: customer.id,
-        capture_method: 'manual', // Authorize now, capture later
-        payment_method_types: ['card'],
-        metadata: {
-          supabase_user_id: user.id,
-          type: 'bounty_escrow_secured',
-          bounty_amount: amount.toString(),
-          platform_fee: hunterFee.toString()
-        }
-      });
-      logStep("Created PaymentIntent (immediate charge)", { paymentIntentId: paymentIntent.id, status: paymentIntent.status });
-
-      // Store escrow transaction with requires_payment status
-      const { data: escrowData, error: escrowError } = await supabaseClient
-        .from('escrow_transactions')
-        .insert({
-          poster_id: user.id,
-          stripe_payment_intent_id: paymentIntent.id,
-          amount: amount,
-          total_charge_amount: totalCharge,
-          stripe_fee_amount: stripeFee,
-          platform_fee_amount: hunterFee,
-          currency: currency.toLowerCase(),
-          status: 'requires_payment' // Will become 'secured' after card confirmation
-        })
-        .select()
-        .single();
-
-      if (escrowError) {
-        logStep("Database error", { error: escrowError });
-        throw new Error('Failed to create escrow record');
+    // ALWAYS use SetupIntent - card is saved and charged only when claim is accepted
+    // This avoids 7-day authorization hold expiration issues for long-term bounties
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customer.id,
+      payment_method_types: ['card'],
+      usage: 'off_session', // Allow charging later without customer present
+      metadata: {
+        supabase_user_id: user.id,
+        type: 'bounty_escrow',
+        bounty_amount: amount.toString(),
+        platform_fee: hunterFee.toString()
       }
-      logStep("Created escrow record", { escrowId: escrowData.id });
+    });
+    logStep("Created SetupIntent (card-save only)", { setupIntentId: setupIntent.id, status: setupIntent.status });
 
-      return new Response(JSON.stringify({
-        payment_intent_id: paymentIntent.id,
-        client_secret: paymentIntent.client_secret,
-        escrow_id: escrowData.id,
-        bounty_amount: amount,
-        stripe_fee: stripeFee,
-        total_charge: totalCharge,
-        hunter_fee: hunterFee,
-        payment_mode: 'immediate', // Frontend uses this to branch confirmCardPayment vs confirmCardSetup
-        status: 'requires_payment'
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-
-    } else {
-      // LOW VALUE (under $150): Create SetupIntent to save card without charging
-      const setupIntent = await stripe.setupIntents.create({
-        customer: customer.id,
-        payment_method_types: ['card'],
-        usage: 'off_session', // Allow charging later without customer present
-        metadata: {
-          supabase_user_id: user.id,
-          type: 'bounty_escrow',
-          bounty_amount: amount.toString(),
-          platform_fee: hunterFee.toString()
-        }
-      });
-      logStep("Created SetupIntent (deferred charge)", { setupIntentId: setupIntent.id, status: setupIntent.status });
-
-      // Store escrow transaction in database with card_pending status
-      const { data: escrowData, error: escrowError } = await supabaseClient
-        .from('escrow_transactions')
-        .insert({
-          poster_id: user.id,
-          stripe_setup_intent_id: setupIntent.id,
-          stripe_payment_intent_id: `setup_${setupIntent.id}`, // Unique placeholder until we charge
-          amount: amount,
-          total_charge_amount: totalCharge,
-          stripe_fee_amount: stripeFee,
-          platform_fee_amount: hunterFee,
-          currency: currency.toLowerCase(),
-          status: 'card_pending'
-        })
-        .select()
-        .single();
-
-      if (escrowError) {
-        logStep("Database error", { error: escrowError });
-        throw new Error('Failed to create escrow record');
-      }
-      logStep("Created escrow record", { escrowId: escrowData.id });
-
-      return new Response(JSON.stringify({
-        setup_intent_id: setupIntent.id,
-        client_secret: setupIntent.client_secret,
-        escrow_id: escrowData.id,
-        bounty_amount: amount,
-        stripe_fee: stripeFee,
-        total_charge: totalCharge,
-        hunter_fee: hunterFee,
-        payment_mode: 'deferred', // Frontend uses this to branch confirmCardSetup
+    // Store escrow transaction in database with card_pending status
+    const { data: escrowData, error: escrowError } = await supabaseClient
+      .from('escrow_transactions')
+      .insert({
+        poster_id: user.id,
+        stripe_setup_intent_id: setupIntent.id,
+        stripe_payment_intent_id: `setup_${setupIntent.id}`, // Unique placeholder until we charge
+        amount: amount,
+        total_charge_amount: totalCharge,
+        stripe_fee_amount: stripeFee,
+        platform_fee_amount: hunterFee,
+        currency: currency.toLowerCase(),
         status: 'card_pending'
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+      })
+      .select()
+      .single();
+
+    if (escrowError) {
+      logStep("Database error", { error: escrowError });
+      throw new Error('Failed to create escrow record');
     }
+    logStep("Created escrow record", { escrowId: escrowData.id });
+
+    return new Response(JSON.stringify({
+      setup_intent_id: setupIntent.id,
+      client_secret: setupIntent.client_secret,
+      escrow_id: escrowData.id,
+      bounty_amount: amount,
+      stripe_fee: stripeFee,
+      total_charge: totalCharge,
+      hunter_fee: hunterFee,
+      payment_mode: 'deferred', // Always deferred now
+      status: 'card_pending'
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
