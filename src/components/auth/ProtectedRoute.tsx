@@ -23,7 +23,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!user) {
     // Redirect to auth page with return location
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/auth?tab=signin" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
