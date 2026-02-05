@@ -28,7 +28,7 @@ import { uploadFile, deleteFile } from '@/lib/storage';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { useAuth } from '@/contexts/AuthContext';
-import { FREE_POST_THRESHOLD } from '@/lib/constants';
+
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -399,22 +399,19 @@ function PostBountyForm() {
 
       if (error) throw error;
 
-      // Handle both PaymentIntent (immediate) and SetupIntent (deferred) responses
-      setIntentId(paymentData.payment_intent_id || paymentData.setup_intent_id);
+      // All bounties now use SetupIntent (card-save only, no auth holds)
+      setIntentId(paymentData.setup_intent_id);
       setClientSecret(paymentData.client_secret);
       setEscrowId(paymentData.escrow_id);
       setPlatformFee(paymentData.stripe_fee); // Stripe processing fee (what poster pays)
       setTotalCharge(paymentData.total_charge); // Bounty + Stripe fee
-      setPaymentMode(paymentData.payment_mode); // 'immediate' or 'deferred'
+      setPaymentMode('deferred'); // Always deferred now - no auth holds
       setCurrentStep('payment');
       setTimeout(() => window.scrollTo(0, 0), 50);
       
-      const isImmediate = paymentData.payment_mode === 'immediate';
       toast({
-        title: isImmediate ? "Secure your bounty" : "Save your card",
-        description: isImmediate 
-          ? `Your card will be authorized for $${paymentData.total_charge.toFixed(2)}. Charge completes when you accept a claim.`
-          : `Enter your card details to post a $${data.bountyAmount} bounty. You'll only be charged if you accept a submission.`,
+        title: "Save your card",
+        description: `Enter your card details to post a $${data.bountyAmount} bounty. You'll only be charged if you accept a submission.`,
       });
 
     } catch (error: any) {
@@ -452,43 +449,23 @@ function PostBountyForm() {
     setIsPaymentProcessing(true);
 
     try {
-      let confirmResult: { intentId: string; status: string };
-
-      if (paymentMode === 'immediate') {
-        // HIGH VALUE ($150+): Confirm card payment with manual capture
-        const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardNumberElement,
-          }
-        });
-
-        if (paymentError) {
-          throw new Error(paymentError.message);
+      // All bounties use SetupIntent (card-save only, no auth holds)
+      // This avoids 7-day authorization expiration for long-term bounties
+      const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
+        payment_method: {
+          card: cardNumberElement,
         }
+      });
 
-        if (!paymentIntent || paymentIntent.status !== 'requires_capture') {
-          throw new Error('Payment authorization failed. Please try again.');
-        }
-
-        confirmResult = { intentId: paymentIntent.id, status: paymentIntent.status };
-      } else {
-        // LOW VALUE (under $150): Use confirmCardSetup to save card only
-        const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
-          payment_method: {
-            card: cardNumberElement,
-          }
-        });
-
-        if (setupError) {
-          throw new Error(setupError.message);
-        }
-
-        if (!setupIntent || setupIntent.status !== 'succeeded') {
-          throw new Error('Card setup failed. Please try again.');
-        }
-
-        confirmResult = { intentId: setupIntent.id, status: setupIntent.status };
+      if (setupError) {
+        throw new Error(setupError.message);
       }
+
+      if (!setupIntent || setupIntent.status !== 'succeeded') {
+        throw new Error('Card setup failed. Please try again.');
+      }
+
+      const confirmResult = { intentId: setupIntent.id, status: setupIntent.status };
 
       // Only change to processing step after card is confirmed
       setCurrentStep('processing');
@@ -497,11 +474,7 @@ function PostBountyForm() {
       const formData = getValues();
       const { data: bountyData, error: bountyError } = await supabase.functions.invoke('confirm-escrow-and-create-bounty', {
         body: {
-          // Send the correct intent ID based on payment mode
-          ...(paymentMode === 'immediate' 
-            ? { payment_intent_id: confirmResult.intentId }
-            : { setup_intent_id: confirmResult.intentId }
-          ),
+          setup_intent_id: confirmResult.intentId,
           bounty_data: {
             title: formData.title,
             description: formData.description,
@@ -1141,22 +1114,13 @@ function PostBountyForm() {
                   💰 No platform fees for posters. Hunters pay $2 + 5% when paid out.
                 </p>
                 
-                {/* Dynamic payment threshold messaging */}
-                {watchedBountyAmount >= FREE_POST_THRESHOLD ? (
-                  <Alert className="mt-3 border-amber-500/50 bg-amber-500/10">
-                    <CreditCard className="h-4 w-4 text-amber-500 shrink-0" />
-                    <AlertDescription className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm">
-                      <strong>Immediate charge:</strong> For bounties ${FREE_POST_THRESHOLD}+, your card will be charged ${(totalCharge || 0).toFixed(2)} now.
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <Alert className="mt-3 border-emerald-500/50 bg-emerald-500/10">
-                    <CreditCard className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <AlertDescription className="text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm">
-                      <strong>Card saved only:</strong> Not charged until you accept a claim.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                {/* Card-save-only model - always show this message */}
+                <Alert className="mt-3 border-emerald-500/50 bg-emerald-500/10">
+                  <CreditCard className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <AlertDescription className="text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm">
+                    <strong>Card saved only:</strong> Not charged until you accept a claim.
+                  </AlertDescription>
+                </Alert>
               </div>
             )}
 

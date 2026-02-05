@@ -1,8 +1,13 @@
-// Payment threshold: bounties UNDER this amount = card saved only (deferred charge)
-// Bounties AT or ABOVE this amount = immediate authorization hold
+// Payment model: ALL bounties use card-save-only (SetupIntent)
+// Card is saved at posting, charged only when poster accepts a claim
+// This avoids 7-day authorization hold expiration for long-term bounties
 // 
-// IMPORTANT: This value must also be updated in:
-// - supabase/functions/create-escrow-payment/index.ts (IMMEDIATE_CHARGE_THRESHOLD)
-// 
-// Production value: $75
-export const FREE_POST_THRESHOLD = 75;
+// Minimum bounty amount: $10
+export const MINIMUM_BOUNTY_AMOUNT = 10;
+
+// Maximum bounty amount: $10,000
+export const MAXIMUM_BOUNTY_AMOUNT = 10000;
+
+// MVP: No cancellation fees
+// Future: May add fees for cancellations after certain conditions
+export const CANCELLATION_FEE_PERCENT = 0;

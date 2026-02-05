@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
+    logStep("Function started - NO CANCELLATION FEE (MVP)");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -72,7 +72,7 @@ serve(async (req) => {
       throw new Error("Cannot cancel bounty with accepted submissions. Escrow is non-refundable after hunter acceptance.");
     }
 
-    // Get escrow transaction first (need total_charged_amount)
+    // Get escrow transaction
     const { data: escrowData, error: escrowError } = await supabaseClient
       .from('escrow_transactions')
       .select('*')
@@ -83,36 +83,36 @@ serve(async (req) => {
       throw new Error("Escrow transaction not found");
     }
 
-    // Calculate cancellation fee (2% of bounty amount only, not the total charged)
-    const { data: feeData, error: feeError } = await supabaseClient
-      .rpc('calculate_cancellation_fee', { 
-        bounty_id_param: bountyId 
-      });
-
-    if (feeError) throw new Error(`Failed to calculate fee: ${feeError.message}`);
+    // MVP: No cancellation fee
+    const cancellationFee = 0;
     
-    const cancellationFee = feeData || 0;
-    // For captured payments, refund total charged minus fee
-    // For authorized-only payments (secured), the full bounty amount authorization is released
-    const totalCharged = escrowData.total_charged_amount || 0;
-    const refundAmount = totalCharged > 0 
-      ? totalCharged - cancellationFee 
-      : bounty.amount; // Authorization release = full bounty amount returned
-    
-    logStep("Cancellation fee calculated", { 
+    logStep("Processing cancellation (no fee for MVP)", { 
       bountyAmount: bounty.amount,
-      totalCharged,
-      escrowStatus: escrowData.status,
-      cancellationFee, 
-      refundAmount 
+      escrowStatus: escrowData.status
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Handle cancellation based on escrow status
-    if (escrowData.status === 'secured') {
-      // HIGH VALUE ($150+): Cancel the uncaptured PaymentIntent (authorized but not captured)
-      // No refund needed since money was only authorized, not captured
+    // With card-save-only model, most bounties will be 'card_saved' status
+    if (escrowData.status === 'card_saved' || escrowData.status === 'card_pending') {
+      // Card was saved but never charged - nothing to refund
+      logStep("Card-saved bounty cancelled (no charge to refund)");
+      
+      // Update escrow transaction  
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({
+          status: 'cancelled',
+          cancellation_fee_amount: 0,
+          refund_amount: 0,
+          cancelled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', escrowData.id);
+
+    } else if (escrowData.status === 'secured' || escrowData.status === 'requires_capture') {
+      // Legacy: Cancel uncaptured PaymentIntent (authorization was placed but not captured)
       await stripe.paymentIntents.cancel(escrowData.stripe_payment_intent_id);
       logStep("Secured PaymentIntent cancelled (authorization released)", { 
         paymentIntentId: escrowData.stripe_payment_intent_id 
@@ -123,50 +123,17 @@ serve(async (req) => {
         .from('escrow_transactions')
         .update({
           status: 'cancelled',
-          cancellation_fee_amount: cancellationFee,
-          refund_amount: refundAmount, // Full bounty amount returned (auth released)
-          cancelled_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', escrowData.id);
-
-    } else if (escrowData.status === 'card_saved' || escrowData.status === 'card_pending') {
-      // LOW VALUE (under $150): Card was just saved, nothing to cancel/refund
-      // No Stripe action needed - just mark as cancelled
-      logStep("Card-saved bounty cancelled (no charge to refund)");
-      
-      // Update escrow transaction  
-      await supabaseClient
-        .from('escrow_transactions')
-        .update({
-          status: 'cancelled',
-          cancellation_fee_amount: 0, // No fee since nothing was charged
-          refund_amount: 0,
-          cancelled_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', escrowData.id);
-
-    } else if (escrowData.status === 'requires_capture') {
-      // Legacy: Cancel uncaptured payment
-      await stripe.paymentIntents.cancel(escrowData.stripe_payment_intent_id);
-      logStep("Payment intent cancelled", { paymentIntentId: escrowData.stripe_payment_intent_id });
-      
-      // Update escrow transaction
-      await supabaseClient
-        .from('escrow_transactions')
-        .update({
-          status: 'cancelled',
-          cancellation_fee_amount: cancellationFee,
-          refund_amount: refundAmount,
+          cancellation_fee_amount: 0,
+          refund_amount: bounty.amount, // Full bounty amount authorization released
           cancelled_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', escrowData.id);
         
     } else if (escrowData.status === 'succeeded' || escrowData.status === 'captured') {
-      // Issue refund minus cancellation fee
-      const refundAmountCents = Math.round(refundAmount * 100);
+      // Payment was captured - issue full refund (no cancellation fee for MVP)
+      const totalCharged = escrowData.total_charged_amount || bounty.amount;
+      const refundAmountCents = Math.round(totalCharged * 100);
       
       if (refundAmountCents > 0) {
         await stripe.refunds.create({
@@ -175,10 +142,10 @@ serve(async (req) => {
           reason: 'requested_by_customer',
           metadata: {
             bounty_id: bountyId,
-            cancellation_fee: cancellationFee.toString()
+            cancellation_fee: '0'
           }
         });
-        logStep("Refund issued", { refundAmount, cancellationFee });
+        logStep("Full refund issued (no cancellation fee)", { refundAmount: totalCharged });
       }
       
       // Update escrow transaction
@@ -186,8 +153,8 @@ serve(async (req) => {
         .from('escrow_transactions')
         .update({
           status: 'refunded',
-          cancellation_fee_amount: cancellationFee,
-          refund_amount: refundAmount,
+          cancellation_fee_amount: 0,
+          refund_amount: totalCharged,
           cancelled_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -209,22 +176,18 @@ serve(async (req) => {
 
     // Determine appropriate message based on escrow status
     let message: string;
-    if (escrowData.status === 'secured') {
-      // Authorization was released, not a refund
-      message = `Bounty cancelled. The $${bounty.amount.toFixed(2)} authorization hold will be released by your bank within 5-10 business days.`;
-    } else if (escrowData.status === 'card_saved' || escrowData.status === 'card_pending') {
-      // Card was never charged
+    if (escrowData.status === 'card_saved' || escrowData.status === 'card_pending') {
       message = 'Bounty cancelled. Your card was never charged.';
-    } else if (cancellationFee > 0) {
-      message = `Bounty cancelled. $${refundAmount.toFixed(2)} refunded. $${cancellationFee.toFixed(2)} cancellation fee applied (bounty posted >24 hours ago).`;
+    } else if (escrowData.status === 'secured' || escrowData.status === 'requires_capture') {
+      message = `Bounty cancelled. The $${bounty.amount.toFixed(2)} authorization hold will be released by your bank within 5-10 business days.`;
     } else {
-      message = `Bounty cancelled. Full refund of $${refundAmount.toFixed(2)} issued.`;
+      message = `Bounty cancelled. Full refund issued.`;
     }
 
     return new Response(JSON.stringify({
       success: true,
-      cancellationFee,
-      refundAmount,
+      cancellationFee: 0,
+      refundAmount: bounty.amount,
       message
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
