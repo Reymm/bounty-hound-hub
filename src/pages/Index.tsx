@@ -170,7 +170,7 @@ const Index = () => {
                 {!user && (
                   <span className="text-muted-foreground">
                     Already have an account?{' '}
-                    <Link to="/auth" className="text-primary hover:underline font-medium">
+                    <Link to="/auth?tab=signin" className="text-primary hover:underline font-medium">
                       Sign In
                     </Link>
                   </span>

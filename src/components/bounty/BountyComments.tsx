@@ -198,7 +198,7 @@ export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) 
                 Sign in to leave a comment
               </p>
               <Button asChild size="sm" variant="outline">
-                <Link to="/auth">Sign In</Link>
+                <Link to="/auth?tab=signin">Sign In</Link>
               </Button>
             </div>
           )
