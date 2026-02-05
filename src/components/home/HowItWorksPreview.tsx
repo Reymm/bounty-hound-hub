@@ -29,11 +29,6 @@ export function HowItWorksPreview() {
   return (
     <section className="py-10 lg:py-14 bg-muted/30 border-b border-border">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-xl lg:text-2xl font-bold text-foreground">
-            How It Works
-          </h2>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {steps.map((step, index) => (
