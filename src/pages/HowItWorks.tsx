@@ -6,7 +6,7 @@ import {
   DollarSign, 
   ShieldCheck, 
   Users,
-  Plus,
+  Sparkles,
   Eye,
   CreditCard
 } from 'lucide-react';
@@ -110,7 +110,7 @@ const HowItWorks = () => {
 
                 <Button asChild className="w-full mt-8">
                   <Link to={user ? "/post" : "/auth?tab=signup"}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Sparkles className="h-4 w-4 mr-2" />
                     Post a Bounty
                   </Link>
                 </Button>
@@ -302,7 +302,7 @@ const HowItWorks = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg">
               <Link to={user ? "/post" : "/auth?tab=signup"}>
-                <Plus className="h-5 w-5 mr-2" />
+                <Sparkles className="h-5 w-5 mr-2" />
                 Post a Bounty
               </Link>
             </Button>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { Plus, TrendingUp, ShieldCheck, Heart, Search, Users } from 'lucide-react';
+import { Sparkles, TrendingUp, ShieldCheck, Heart, Search, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { supabaseApi } from '@/lib/api/supabase';
@@ -135,7 +135,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground w-full sm:w-auto">
                 <Link to={user ? `/post?category=${config.category}` : "/auth"}>
-                  <Plus className="h-5 w-5 mr-2" />
+                  <Sparkles className="h-5 w-5 mr-2" />
                   {config.ctaText}
                 </Link>
               </Button>
@@ -260,7 +260,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
           </p>
           <Button asChild size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground">
             <Link to={user ? `/post?category=${config.category}` : "/auth"}>
-              <Plus className="h-5 w-5 mr-2" />
+              <Sparkles className="h-5 w-5 mr-2" />
               {config.ctaText}
             </Link>
           </Button>

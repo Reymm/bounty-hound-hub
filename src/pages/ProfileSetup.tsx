@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, User, CheckCircle, Plus, Search, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, User, CheckCircle, Sparkles, Search, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -437,7 +437,7 @@ const ProfileSetup = () => {
               onClick={() => handleChoice('post')}
               className="h-12 bg-primary hover:bg-primary-hover text-primary-foreground"
             >
-              <Plus className="h-5 w-5 mr-2" />
+              <Sparkles className="h-5 w-5 mr-2" />
               Post a Bounty
             </Button>
             <Button
