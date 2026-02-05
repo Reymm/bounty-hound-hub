@@ -6,14 +6,13 @@ interface BountySEOProps {
 }
 
 export function BountySEO({ bounty }: BountySEOProps) {
-  // Use "$X Bounty:" format for social sharing - more attention-grabbing
-  const title = `$${bounty.bountyAmount} Bounty: ${bounty.title} | BountyBay`;
+  // Match edge function format for consistency
+  const title = `Help me find: $${bounty.bountyAmount} Bounty — ${bounty.title} | BountyBay`;
   const description = `$${bounty.bountyAmount} reward to find this item! ${bounty.description.slice(0, 120)}${bounty.description.length > 120 ? '...' : ''}`;
   const url = `https://bountybay.co/b/${bounty.id}`;
   
-  // Use actual bounty image directly - SVG from edge function doesn't work with social platforms
-  // Priority: bounty image > default OG image
-  const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+  // Use OpenGraph.xyz dynamic image via bounty-meta edge function
+  const ogImage = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bounty-meta?id=${bounty.id}`;
 
   return (
     <Helmet>
@@ -47,9 +46,9 @@ export function BountySEO({ bounty }: BountySEOProps) {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Product",
-          "name": `$${bounty.bountyAmount} Bounty: ${bounty.title}`,
+          "name": `Help me find: ${bounty.title}`,
           "description": description,
-          "image": ogImage,
+          "image": bounty.images?.[0] || 'https://bountybay.co/og-default.png',
           "offers": {
             "@type": "Offer",
             "price": bounty.bountyAmount,
