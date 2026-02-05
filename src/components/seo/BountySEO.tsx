@@ -6,15 +6,14 @@ interface BountySEOProps {
 }
 
 export function BountySEO({ bounty }: BountySEOProps) {
-  const title = `Help me find: ${bounty.title} - $${bounty.bountyAmount} Reward | BountyBay`;
-  const description = `$${bounty.bountyAmount} bounty reward! ${bounty.description.slice(0, 120)}${bounty.description.length > 120 ? '...' : ''}`;
-  const url = `${window.location.origin}/b/${bounty.id}`;
+  // Use "$X Bounty:" format for social sharing - more attention-grabbing
+  const title = `$${bounty.bountyAmount} Bounty: ${bounty.title} | BountyBay`;
+  const description = `$${bounty.bountyAmount} reward to find this item! ${bounty.description.slice(0, 120)}${bounty.description.length > 120 ? '...' : ''}`;
+  const url = `https://bountybay.co/b/${bounty.id}`;
   
-  // Use dynamic OG image from edge function
-  const ogImage = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${bounty.id}`;
-  
-  // Fallback to bounty image or default
-  const fallbackImage = bounty.images?.[0] || 'https://bountybay.lovable.app/og-default.png';
+  // Use actual bounty image directly - SVG from edge function doesn't work with social platforms
+  // Priority: bounty image > default OG image
+  const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
 
   return (
     <Helmet>
@@ -48,9 +47,9 @@ export function BountySEO({ bounty }: BountySEOProps) {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Product",
-          "name": `Help me find: ${bounty.title}`,
+          "name": `$${bounty.bountyAmount} Bounty: ${bounty.title}`,
           "description": description,
-          "image": fallbackImage,
+          "image": ogImage,
           "offers": {
             "@type": "Offer",
             "price": bounty.bountyAmount,
