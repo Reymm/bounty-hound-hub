@@ -29,28 +29,31 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Direct bounty URL for sharing - cleaner and more reliable
-  const bountyUrl = `https://bountybay.co/b/${bountyId}`;
+  // Use bounty-meta edge function for social sharing - generates dynamic OG images via OpenGraph.xyz
+  // This URL serves proper meta tags to crawlers, then redirects users to the actual bounty page
+  const metaUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bounty-meta?id=${bountyId}`;
+  const directUrl = `https://bountybay.co/b/${bountyId}`;
   
   const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
-  const encodedUrl = encodeURIComponent(bountyUrl);
+  const encodedMetaUrl = encodeURIComponent(metaUrl);
+  
   const encodedText = encodeURIComponent(shareText);
 
   const shareLinks = {
-    // Use fb-messenger deep link for better mobile app opening
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
-    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`$${amount} Bounty: ${title}`)}`,
-    pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
+    // Social platforms use meta URL for proper OG image generation
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
+    reddit: `https://reddit.com/submit?url=${encodedMetaUrl}&title=${encodeURIComponent(`$${amount.toLocaleString()} Bounty: ${title}`)}`,
+    pinterest: `https://pinterest.com/pin/create/button/?url=${encodedMetaUrl}&description=${encodedText}`,
   };
 
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
           await navigator.share({
-            title: `$${amount} Bounty: ${title}`,
+            title: `$${amount.toLocaleString()} Bounty: ${title}`,
             text: shareText,
-            url: bountyUrl,
+            url: metaUrl, // Use meta URL for proper OG generation
           });
       } catch (error) {
         // User cancelled or error
@@ -63,7 +66,8 @@ export function ShareBountyButton({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(bountyUrl);
+      // Copy clean direct URL for users (not the meta URL)
+      await navigator.clipboard.writeText(directUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
