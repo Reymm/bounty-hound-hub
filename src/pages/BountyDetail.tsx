@@ -694,6 +694,7 @@ export default function BountyDetail() {
         bountyId={bounty.id}
         bountyTitle={bounty.title}
         bountyAmount={bounty.bountyAmount}
+        isLeadOnly={bounty.requires_shipping === false}
         isOpen={isClaimDialogOpen}
         onClose={() => setIsClaimDialogOpen(false)}
         onClaimSubmitted={handleClaimSubmitted}
