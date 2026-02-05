@@ -307,6 +307,8 @@ export default function EditBounty() {
                 id="title"
                 {...register('title', { required: 'Title is required' })}
                 placeholder="What are you looking for?"
+                className="overflow-x-auto"
+                style={{ textOverflow: 'clip' }}
               />
               {errors.title && (
                 <p className="text-sm text-destructive">{errors.title.message}</p>

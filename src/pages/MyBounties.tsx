@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Eye, MessageCircle, Plus, Package, Users, CheckCircle, DollarSign, Truck, Bookmark, Star } from 'lucide-react';
+import { Eye, MessageCircle, Sparkles, Package, Users, CheckCircle, DollarSign, Truck, Bookmark, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -267,7 +267,7 @@ export default function MyBounties() {
         
         <Button asChild className="bg-primary hover:bg-primary-hover text-primary-foreground">
           <Link to="/post">
-            <Plus className="h-4 w-4 mr-2" />
+            <Sparkles className="h-4 w-4 mr-2" />
             Post New Bounty
           </Link>
         </Button>
@@ -322,7 +322,7 @@ export default function MyBounties() {
               action={
                 <Button asChild className="bg-primary hover:bg-primary-hover text-primary-foreground">
                   <Link to="/post">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Sparkles className="h-4 w-4 mr-2" />
                     Post Your First Bounty
                   </Link>
                 </Button>

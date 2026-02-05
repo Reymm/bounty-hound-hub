@@ -813,7 +813,8 @@ function PostBountyForm() {
                 placeholder="What are you looking for? Be specific..."
                 spellCheck={true}
                 {...register('title')}
-                className={errors.title ? 'border-destructive' : ''}
+                className={`${errors.title ? 'border-destructive' : ''} overflow-x-auto`}
+                style={{ textOverflow: 'clip' }}
               />
               {errors.title && (
                 <p className="text-sm text-destructive">{errors.title.message}</p>
