@@ -89,12 +89,21 @@ export function ShareBountyButton({
   };
 
   const handleCopyLink = async () => {
+    // Guard against missing bountyId
+    if (!bountyId) {
+      console.error('ShareBountyButton: bountyId is missing!', { bountyId, directUrl });
+      toast.error('Unable to copy link - bounty ID missing');
+      return;
+    }
+    
     try {
+      console.log('Copying bounty link:', directUrl);
       await navigator.clipboard.writeText(directUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } catch (err) {
+      console.error('Copy failed:', err);
       toast.error('Failed to copy link');
     }
   };
