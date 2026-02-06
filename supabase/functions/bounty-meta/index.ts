@@ -73,7 +73,7 @@ serve(async (req) => {
       encodeURIComponent("bountybay.co")
     }/${encodeURIComponent("Roboto")}/${
       encodeURIComponent("rgba(59,130,246,1)")
-    }/${encodeURIComponent("rgba(219,234,254,1)")}/${
+    }/${encodeURIComponent("rgba(59,130,246,1)")}/${
       encodeURIComponent(`${bountyType} · $${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle}`)
     }/${encodeURIComponent("Roboto")}/${
       encodeURIComponent("rgba(15,23,42,1)")
