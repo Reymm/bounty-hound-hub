@@ -34,7 +34,8 @@ export function ShareBountyButton({
   const metaUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bounty-meta?id=${bountyId}`;
   const directUrl = `https://bountybay.co/b/${bountyId}`;
   
-  const shareText = `Help find: "${title}" - $${amount.toLocaleString()} reward on BountyBay`;
+  // Social share text - lead with dollar amount for attention
+  const shareText = `$${amount.toLocaleString()} Bounty: "${title}" - Find this on BountyBay`;
   const encodedMetaUrl = encodeURIComponent(metaUrl);
   
   const encodedText = encodeURIComponent(shareText);

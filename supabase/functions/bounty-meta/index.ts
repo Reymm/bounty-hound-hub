@@ -51,11 +51,11 @@ serve(async (req) => {
       });
     }
 
-    // Clean title format for social previews
-    const truncatedTitle = bounty.title.length > 45 
-      ? bounty.title.slice(0, 42) + '...' 
+    // Title format: Lead with dollar amount for social attention
+    const truncatedTitle = bounty.title.length > 50 
+      ? bounty.title.slice(0, 47) + '...' 
       : bounty.title;
-    const title = `Help me find: $${(bounty.amount || 0).toLocaleString()} Bounty — ${truncatedTitle} | BountyBay`;
+    const title = `$${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle} | BountyBay`;
     
     // Description with bounty type prefix
     const bountyType = bounty.requires_shipping ? 'Find & Ship' : 'Lead Only';
