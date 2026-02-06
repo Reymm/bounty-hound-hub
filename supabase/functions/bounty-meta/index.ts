@@ -64,8 +64,8 @@ serve(async (req) => {
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-    // Use direct Supabase URL for og:url so crawlers don't follow to the SPA
-    const crawlableUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bounty.id}`;
+    // Use the edge function URL as og:url so crawlers use the meta tags from this function
+    const crawlableUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
     // Generate dynamic OG image using OpenGraph.xyz
     const ogImage = buildOgImageUrl(bounty);
 
