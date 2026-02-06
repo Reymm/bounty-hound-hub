@@ -45,10 +45,6 @@ export function ShareBountyButton({
   const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const shareLinks = {
-    // Facebook: Always use web sharer - it opens the app AND fetches OG metadata for rich previews
-    // The fb:// scheme skips OG fetching, resulting in plain URL shares
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
-    // Twitter/X: Use twitter:// scheme on mobile for direct app open
     twitter: isMobile
       ? `twitter://post?message=${encodedText}%20${encodedDirectUrl}`
       : `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
@@ -62,10 +58,9 @@ export function ShareBountyButton({
           await navigator.share({
             title: `$${amount.toLocaleString()} Bounty: ${title}`,
             text: shareText,
-            url: directUrl, // Use clean URL - native share handles it better
+            url: directUrl,
           });
       } catch (error) {
-        // User cancelled or error
         if ((error as Error).name !== 'AbortError') {
           console.error('Share failed:', error);
         }
@@ -73,9 +68,25 @@ export function ShareBountyButton({
     }
   };
 
+  // Facebook: Use native share on mobile (opens app with rich preview), web on desktop
+  const handleFacebookShare = () => {
+    if (isMobile && navigator.share) {
+      navigator.share({
+        title: `$${amount.toLocaleString()} Bounty: ${title}`,
+        text: shareText,
+        url: directUrl,
+      }).catch(() => {});
+    } else {
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
+        '_blank',
+        'width=600,height=400,menubar=no,toolbar=no'
+      );
+    }
+  };
+
   const handleCopyLink = async () => {
     try {
-      // Copy clean direct URL for users (not the meta URL)
       await navigator.clipboard.writeText(directUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
@@ -87,13 +98,10 @@ export function ShareBountyButton({
 
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-  // On mobile, use regular links to trigger app deep links instead of window.open popups
   const openShareLink = (url: string) => {
     if (isMobile) {
-      // On mobile, use location.href to properly trigger app deep links
       window.location.href = url;
     } else {
-      // On desktop, open popup window
       window.open(url, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
     }
   };
@@ -117,7 +125,7 @@ export function ShareBountyButton({
           </>
         )}
         
-        <DropdownMenuItem onClick={() => openShareLink(shareLinks.facebook)}>
+        <DropdownMenuItem onClick={handleFacebookShare}>
           <Facebook className="h-4 w-4 mr-2" />
           Facebook
         </DropdownMenuItem>
