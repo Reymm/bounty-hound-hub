@@ -68,21 +68,12 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use native share on mobile for best app integration
-  // Pass directUrl (clean bountybay.co) - not the ugly edge function URL
+  // Facebook: Use web sharer with metaUrl for rich OG previews
+  // metaUrl (auth.bountybay.co) serves proper OG tags that Facebook crawls for preview cards
   const handleFacebookShare = () => {
     if (isMobile) {
-      // Native share opens OS share sheet, user picks Facebook - cleanest experience
-      if (navigator.share) {
-        navigator.share({
-          title: `$${amount.toLocaleString()} Bounty: ${title}`,
-          text: shareText,
-          url: directUrl,
-        }).catch(() => {});
-      } else {
-        // Fallback to mobile web sharer with clean URL
-        window.location.href = `https://m.facebook.com/sharer/sharer.php?u=${encodedDirectUrl}&quote=${encodedText}`;
-      }
+      // Use m.facebook.com sharer - this triggers Facebook's OG crawler for rich previews
+      window.location.href = `https://m.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}`;
     } else {
       // Desktop: Use www with popup
       window.open(
