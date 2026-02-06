@@ -45,11 +45,10 @@ export function ShareBountyButton({
   const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const shareLinks = {
-    // Facebook: Use fb:// scheme on mobile to open native app, web URL on desktop
-    facebook: isMobile 
-      ? `fb://share?link=${encodedDirectUrl}`
-      : `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
-    // Twitter/X: Use twitter:// scheme on mobile
+    // Facebook: Always use web sharer - it opens the app AND fetches OG metadata for rich previews
+    // The fb:// scheme skips OG fetching, resulting in plain URL shares
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
+    // Twitter/X: Use twitter:// scheme on mobile for direct app open
     twitter: isMobile
       ? `twitter://post?message=${encodedText}%20${encodedDirectUrl}`
       : `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
