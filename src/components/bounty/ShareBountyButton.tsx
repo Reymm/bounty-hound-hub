@@ -31,8 +31,8 @@ export function ShareBountyButton({
   
   // metaUrl = edge function that serves OG tags for crawlers, then redirects users to the real page
   const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
-  // directUrl = the clean canonical URL users see and copy
-  const directUrl = `https://bountybay.co/b/${bountyId}`;
+  // directUrl kept for canonical reference (og:url points here)
+  const _directUrl = `https://bountybay.co/b/${bountyId}`;
   
   const shareText = `$${amount.toLocaleString()} Bounty: ${title}`;
   const encodedMetaUrl = encodeURIComponent(metaUrl);
@@ -47,15 +47,15 @@ export function ShareBountyButton({
     pinterest: `https://pinterest.com/pin/create/button/?url=${encodedMetaUrl}&description=${encodedText}`,
   };
 
-  // Native share (iOS/Android share sheet) uses the clean directUrl
-  // This sends to contacts via Messages/WhatsApp/etc — not for social crawlers
+  // Native share uses metaUrl so pasted links show OG template
+  // Users still land on bountybay.co via 302 redirect
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: `$${amount.toLocaleString()} Bounty: ${title}`,
           text: shareText,
-          url: directUrl,
+          url: metaUrl,
         });
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
@@ -71,7 +71,7 @@ export function ShareBountyButton({
       return;
     }
     try {
-      await navigator.clipboard.writeText(directUrl);
+      await navigator.clipboard.writeText(metaUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
