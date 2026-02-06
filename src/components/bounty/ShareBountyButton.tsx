@@ -29,37 +29,34 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Use custom domain for social sharing - auth.bountybay.co is the Supabase custom domain
-  // This provides clean URLs and proper metadata for social crawlers
+  // metaUrl = edge function that serves OG tags for crawlers, then redirects users to the real page
   const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
+  // directUrl = the clean canonical URL users see and copy
   const directUrl = `https://bountybay.co/b/${bountyId}`;
   
-  // Social share text - simple, just the bounty info
   const shareText = `$${amount.toLocaleString()} Bounty: ${title}`;
   const encodedMetaUrl = encodeURIComponent(metaUrl);
   const encodedText = encodeURIComponent(shareText);
 
-  // Detect mobile for app-specific URL schemes
-  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
+  // All social platform links use metaUrl so their crawlers fetch OG tags (image, title, description)
+  // The edge function's og:url points to bountybay.co so previews show the clean domain
   const shareLinks = {
-    // Twitter: Always use metaUrl so Twitter crawls OG tags for rich preview
-    // The edge function redirects users to the clean URL after crawling
-    twitter: isMobile
-      ? `twitter://post?message=${encodedText}%20${encodedMetaUrl}`
-      : `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
     reddit: `https://reddit.com/submit?url=${encodedMetaUrl}&title=${encodeURIComponent(`$${amount.toLocaleString()} Bounty: ${title}`)}`,
     pinterest: `https://pinterest.com/pin/create/button/?url=${encodedMetaUrl}&description=${encodedText}`,
   };
 
+  // Native share (iOS/Android share sheet) uses the clean directUrl
+  // This sends to contacts via Messages/WhatsApp/etc — not for social crawlers
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-          await navigator.share({
-            title: `$${amount.toLocaleString()} Bounty: ${title}`,
-            text: shareText,
-            url: directUrl,
-          });
+        await navigator.share({
+          title: `$${amount.toLocaleString()} Bounty: ${title}`,
+          text: shareText,
+          url: directUrl,
+        });
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.error('Share failed:', error);
@@ -68,36 +65,12 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use native share on mobile - the ONLY reliable way to open Facebook app's share composer
-  // fb:// schemes are unreliable, web sharers redirect to desktop
-  const handleFacebookShare = () => {
-    if (isMobile && navigator.share) {
-      // Native share opens OS share sheet, user taps Facebook - this actually works
-      navigator.share({
-        title: `$${amount.toLocaleString()} Bounty: ${title}`,
-        text: shareText,
-        url: metaUrl, // Use metaUrl so Facebook crawls for OG preview
-      }).catch(() => {});
-    } else {
-      // Desktop or no native share: Use web sharer
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
-        '_blank',
-        'width=600,height=400,menubar=no,toolbar=no'
-      );
-    }
-  };
-
   const handleCopyLink = async () => {
-    // Guard against missing bountyId
     if (!bountyId) {
-      console.error('ShareBountyButton: bountyId is missing!', { bountyId, directUrl });
       toast.error('Unable to copy link - bounty ID missing');
       return;
     }
-    
     try {
-      console.log('Copying bounty link:', directUrl);
       await navigator.clipboard.writeText(directUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
@@ -111,11 +84,7 @@ export function ShareBountyButton({
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   const openShareLink = (url: string) => {
-    if (isMobile) {
-      window.location.href = url;
-    } else {
-      window.open(url, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
-    }
+    window.open(url, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
   };
 
   return (
@@ -137,7 +106,7 @@ export function ShareBountyButton({
           </>
         )}
         
-        <DropdownMenuItem onClick={handleFacebookShare}>
+        <DropdownMenuItem onClick={() => openShareLink(shareLinks.facebook)}>
           <Facebook className="h-4 w-4 mr-2" />
           Facebook
         </DropdownMenuItem>

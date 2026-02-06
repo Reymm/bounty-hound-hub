@@ -47,7 +47,8 @@ serve(async (req) => {
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-    const ogImage = buildOgImageUrl(bounty);
+    // Use the bounty's actual image directly — ogcdn.net was unreliable
+    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -103,23 +104,3 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-function buildOgImageUrl(bounty: { title: string; amount: number | null; images?: string[] | null }): string {
-  const templateId = "aee1c4ac-33e0-4b6b-a30a-cad7f03d8ff2";
-  const siteText = encodeURIComponent("BountyBay.co");
-  const siteFontFamily = encodeURIComponent("Roboto");
-  const siteColor = encodeURIComponent("rgba(255,255,255,1)");
-  const siteBackgroundColor = encodeURIComponent("rgba(59,130,246,1)");
-  const rawTitle = `Help Me Find: ${bounty.title}`;
-  const titleText = encodeURIComponent(rawTitle.length > 60 ? rawTitle.slice(0, 57) + '...' : rawTitle);
-  const titleFontFamily = encodeURIComponent("Roboto");
-  const titleColor = encodeURIComponent("rgba(0,0,0,1)");
-  const rawImageUrl = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
-  const imageUrl = encodeURIComponent(rawImageUrl);
-  const imageObjectFit = encodeURIComponent("cover");
-  const ctaText = encodeURIComponent(`View Bounty · $${(bounty.amount || 0).toLocaleString()}`);
-  const ctaFontFamily = encodeURIComponent("Roboto");
-  const ctaColor = encodeURIComponent("rgba(255,255,255,1)");
-  const ctaBackgroundColor = encodeURIComponent("rgba(34,197,94,1)");
-  
-  return `https://ogcdn.net/${templateId}/v1/${siteText}/${siteFontFamily}/${siteColor}/${siteBackgroundColor}/${titleText}/${titleFontFamily}/${titleColor}/${imageUrl}/${imageObjectFit}/${ctaText}/${ctaFontFamily}/${ctaColor}/${ctaBackgroundColor}/og.png`;
-}
