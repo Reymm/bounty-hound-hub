@@ -42,7 +42,8 @@ export function ShareBountyButton({
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   // metaUrl = edge function that serves OG tags for crawlers, then redirects users to the real page
-  const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
+  // Path-based URL avoids apps stripping query params (e.g. Reddit via native share)
+  const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bountyId}`;
   // directUrl kept for canonical reference (og:url points here)
   const _directUrl = `https://bountybay.co/b/${bountyId}`;
   
