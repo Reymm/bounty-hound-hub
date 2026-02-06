@@ -11,25 +11,8 @@ export function BountySEO({ bounty }: BountySEOProps) {
   const description = `$${bounty.bountyAmount} reward to find this item! ${bounty.description.slice(0, 120)}${bounty.description.length > 120 ? '...' : ''}`;
   const url = `https://bountybay.co/b/${bounty.id}`;
   
-  // Use OpenGraph.xyz dynamic image directly (matches edge function logic)
-  const templateId = "aee1c4ac-33e0-4b6b-a30a-cad7f03d8ff2";
-  const siteText = encodeURIComponent("BountyBay.co");
-  const siteFontFamily = encodeURIComponent("Roboto");
-  const siteColor = encodeURIComponent("rgba(255,255,255,1)");
-  const siteBackgroundColor = encodeURIComponent("rgba(59,130,246,1)");
-  const rawTitle = `Help Me Find: ${bounty.title}`;
-  const titleText = encodeURIComponent(rawTitle.length > 60 ? rawTitle.slice(0, 57) + '...' : rawTitle);
-  const titleFontFamily = encodeURIComponent("Roboto");
-  const titleColor = encodeURIComponent("rgba(0,0,0,1)");
-  const rawImageUrl = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
-  const imageUrl = encodeURIComponent(rawImageUrl);
-  const imageObjectFit = encodeURIComponent("cover");
-  const ctaText = encodeURIComponent(`View Bounty · $${bounty.bountyAmount.toLocaleString()}`);
-  const ctaFontFamily = encodeURIComponent("Roboto");
-  const ctaColor = encodeURIComponent("rgba(255,255,255,1)");
-  const ctaBackgroundColor = encodeURIComponent("rgba(34,197,94,1)");
-  
-  const ogImage = `https://ogcdn.net/${templateId}/v1/${siteText}/${siteFontFamily}/${siteColor}/${siteBackgroundColor}/${titleText}/${titleFontFamily}/${titleColor}/${imageUrl}/${imageObjectFit}/${ctaText}/${ctaFontFamily}/${ctaColor}/${ctaBackgroundColor}/og.png`;
+  // Use the bounty's actual first image — reliable and fast
+  const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
 
   return (
     <Helmet>
