@@ -68,12 +68,11 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use fb:// scheme on mobile to open app directly
-  // metaUrl already uses auth.bountybay.co for proper OG metadata
+  // Facebook: Use fb://share scheme to open share composer directly in app
   const handleFacebookShare = () => {
     if (isMobile) {
-      // fb:// scheme triggers "Open in app?" prompt and opens Facebook app
-      window.location.href = `fb://facewebmodal/f?href=${encodedMetaUrl}`;
+      // fb://share opens the Facebook app's share composer with the link
+      window.location.href = `fb://share?link=${encodedMetaUrl}`;
     } else {
       // Desktop: Use www with popup
       window.open(
