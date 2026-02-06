@@ -15,7 +15,15 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const bountyId = url.searchParams.get("id");
+
+    // Support both path-based (/bounty-meta/{id}) and query-based (?id=...)
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    // If the last path segment looks like a UUID, use it; otherwise fall back to query param
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const bountyId = (lastSegment && isUUID.test(lastSegment))
+      ? lastSegment
+      : url.searchParams.get("id");
 
     if (!bountyId) {
       return new Response(null, {
@@ -85,8 +93,8 @@ serve(async (req) => {
       encodeURIComponent("rgba(34,197,94,1)")
     }/og.png`;
 
-    // Point og:url to THIS endpoint so bots stay here and read tags
-    const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
+    // Point og:url to THIS endpoint so bots stay here and read tags (path-based)
+    const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bounty.id}`;
 
     const html = `<!DOCTYPE html>
 <html lang="en">
