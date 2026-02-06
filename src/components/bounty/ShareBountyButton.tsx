@@ -29,24 +29,24 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Use custom domain for social sharing - auth.bountybay.co is the Supabase custom domain
-  // This provides clean URLs and proper metadata for social crawlers
-  const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
+  // Use direct Supabase URL for social sharing - custom domain doesn't route edge functions
+  // This ensures crawlers can fetch OG tags; the function redirects users to the clean URL
+  const metaUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bountyId}`;
   const directUrl = `https://bountybay.co/b/${bountyId}`;
   
   // Social share text - lead with dollar amount for attention
   const shareText = `$${amount.toLocaleString()} Bounty: "${title}" - Find this on BountyBay`;
   const encodedMetaUrl = encodeURIComponent(metaUrl);
-  
   const encodedText = encodeURIComponent(shareText);
-  const encodedDirectUrl = encodeURIComponent(directUrl);
 
   // Detect mobile for app-specific URL schemes
   const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const shareLinks = {
+    // Twitter: Always use metaUrl so Twitter crawls OG tags for rich preview
+    // The edge function redirects users to the clean URL after crawling
     twitter: isMobile
-      ? `twitter://post?message=${encodedText}%20${encodedDirectUrl}`
+      ? `twitter://post?message=${encodedText}%20${encodedMetaUrl}`
       : `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
     reddit: `https://reddit.com/submit?url=${encodedMetaUrl}&title=${encodeURIComponent(`$${amount.toLocaleString()} Bounty: ${title}`)}`,
     pinterest: `https://pinterest.com/pin/create/button/?url=${encodedMetaUrl}&description=${encodedText}`,

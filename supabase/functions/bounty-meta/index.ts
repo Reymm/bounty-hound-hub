@@ -1,3 +1,4 @@
+// Bounty meta edge function for social sharing OG tags
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 
@@ -63,7 +64,8 @@ serve(async (req) => {
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-    
+    // Use direct Supabase URL for og:url so crawlers don't follow to the SPA
+    const crawlableUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/bounty-meta?id=${bounty.id}`;
     // Generate dynamic OG image using OpenGraph.xyz
     const ogImage = buildOgImageUrl(bounty);
 
@@ -81,7 +83,7 @@ serve(async (req) => {
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${bountyUrl}">
+  <meta property="og:url" content="${crawlableUrl}">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${ogImage}">
@@ -91,7 +93,7 @@ serve(async (req) => {
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${bountyUrl}">
+  <meta name="twitter:url" content="${crawlableUrl}">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
   <meta name="twitter:image" content="${ogImage}">
