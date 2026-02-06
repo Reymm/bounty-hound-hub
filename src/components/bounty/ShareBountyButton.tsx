@@ -68,19 +68,18 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use web sharer with metaUrl for rich OG previews
-  // metaUrl (auth.bountybay.co) serves proper OG tags that Facebook crawls for preview cards
+  // Facebook: Open Facebook app with sharer page inside app's webview
+  // This triggers OG crawling for rich previews while staying in the app
   const handleFacebookShare = () => {
+    const sharerUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`;
+    
     if (isMobile) {
-      // Use m.facebook.com sharer - this triggers Facebook's OG crawler for rich previews
-      window.location.href = `https://m.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}`;
+      // fb://facewebmodal opens Facebook app and loads the URL in an in-app modal
+      // This keeps us in the app while still triggering Facebook's OG crawler
+      window.location.href = `fb://facewebmodal/f?href=${encodeURIComponent(sharerUrl)}`;
     } else {
       // Desktop: Use www with popup
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
-        '_blank',
-        'width=600,height=400,menubar=no,toolbar=no'
-      );
+      window.open(sharerUrl, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
     }
   };
 
