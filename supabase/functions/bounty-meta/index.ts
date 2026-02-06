@@ -47,7 +47,6 @@ serve(async (req) => {
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
     const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-    const crawlableUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
     const ogImage = buildOgImageUrl(bounty);
 
     const html = `<!DOCTYPE html>
@@ -59,7 +58,7 @@ serve(async (req) => {
   <meta name="title" content="${escapeHtml(title)}">
   <meta name="description" content="${escapeHtml(description)}">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${crawlableUrl}">
+  <meta property="og:url" content="${bountyUrl}">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${ogImage}">
@@ -67,7 +66,7 @@ serve(async (req) => {
   <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="BountyBay">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${crawlableUrl}">
+  <meta name="twitter:url" content="${bountyUrl}">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
   <meta name="twitter:image" content="${ogImage}">
