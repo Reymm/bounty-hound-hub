@@ -1,10 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
+import { ImageResponse } from "https://deno.land/x/og_edge@0.0.6/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const FALLBACK_IMAGE = "https://bountybay.co/og-default.png";
+
+// Pre-load font at module startup (cached across requests)
+let fontData: ArrayBuffer | null = null;
+try {
+  const res = await fetch(
+    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff"
+  );
+  if (res.ok) {
+    fontData = await res.arrayBuffer();
+    if (fontData.byteLength === 0) fontData = null;
+  }
+} catch (e) {
+  console.error("Font load failed:", e);
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -16,166 +34,249 @@ serve(async (req) => {
     const bountyId = url.searchParams.get("id");
 
     if (!bountyId) {
-      return new Response("Missing bounty ID", { status: 400, headers: corsHeaders });
+      return new Response(null, {
+        status: 302,
+        headers: { ...corsHeaders, Location: FALLBACK_IMAGE },
+      });
     }
 
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
-    // Fetch bounty details
     const { data: bounty, error } = await supabase
       .from("Bounties")
-      .select(`
-        id,
-        title,
-        amount,
-        status,
-        images,
-        poster_id
-      `)
+      .select("id, title, amount, status, requires_shipping, poster_id")
       .eq("id", bountyId)
       .single();
 
     if (error || !bounty) {
-      console.error("Bounty not found:", error);
-      return new Response("Bounty not found", { status: 404, headers: corsHeaders });
+      return new Response(null, {
+        status: 302,
+        headers: { ...corsHeaders, Location: FALLBACK_IMAGE },
+      });
     }
 
-    // Fetch poster profile separately
-    const { data: posterProfile } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("username, full_name")
       .eq("id", bounty.poster_id)
       .single();
 
-    const posterName = posterProfile?.username || posterProfile?.full_name || "Someone";
+    const posterName = profile?.username || profile?.full_name || "Someone";
+    const title =
+      bounty.title.length > 45
+        ? bounty.title.slice(0, 42) + "..."
+        : bounty.title;
+    const amount = `$${(bounty.amount || 0).toLocaleString()}`;
+    const bountyType = bounty.requires_shipping ? "Find & Ship" : "Lead Only";
+    const isOpen = bounty.status === "open";
 
-    if (error || !bounty) {
-      console.error("Bounty not found:", error);
-      return new Response("Bounty not found", { status: 404, headers: corsHeaders });
+    const element = {
+      type: "div",
+      props: {
+        style: {
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          padding: "60px",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+          color: "white",
+          fontFamily: "Inter, sans-serif",
+        },
+        children: [
+          // Top bar
+          {
+            type: "div",
+            props: {
+              style: {
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              },
+              children: [
+                {
+                  type: "div",
+                  props: {
+                    style: { fontSize: 28, fontWeight: 700, color: "#3b82f6" },
+                    children: "🔍 BOUNTYBAY",
+                  },
+                },
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      fontSize: 16,
+                      fontWeight: 600,
+                      backgroundColor:
+                        bountyType === "Find & Ship" ? "#ea580c" : "#3b82f6",
+                      color: "white",
+                      padding: "8px 20px",
+                      borderRadius: 20,
+                    },
+                    children: bountyType,
+                  },
+                },
+              ],
+            },
+          },
+          // Middle: title
+          {
+            type: "div",
+            props: {
+              style: {
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              },
+              children: [
+                {
+                  type: "div",
+                  props: {
+                    style: { fontSize: 22, color: "#94a3b8", marginBottom: 8 },
+                    children: "Help find:",
+                  },
+                },
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      fontSize: 42,
+                      fontWeight: 700,
+                      color: "white",
+                      lineHeight: 1.2,
+                    },
+                    children: title,
+                  },
+                },
+              ],
+            },
+          },
+          // Bottom: reward + meta
+          {
+            type: "div",
+            props: {
+              style: {
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                borderTop: "1px solid #334155",
+                paddingTop: 24,
+              },
+              children: [
+                {
+                  type: "div",
+                  props: {
+                    style: { display: "flex", flexDirection: "column" },
+                    children: [
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 16,
+                            color: "#94a3b8",
+                            marginBottom: 4,
+                            letterSpacing: 2,
+                          },
+                          children: "REWARD",
+                        },
+                      },
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 64,
+                            fontWeight: 700,
+                            color: "#22c55e",
+                          },
+                          children: amount,
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                    },
+                    children: [
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 13,
+                            fontWeight: 600,
+                            backgroundColor: isOpen
+                              ? "rgba(34, 197, 94, 0.15)"
+                              : "rgba(100, 116, 139, 0.15)",
+                            color: isOpen ? "#22c55e" : "#94a3b8",
+                            padding: "6px 16px",
+                            borderRadius: 16,
+                            marginBottom: 12,
+                          },
+                          children: isOpen ? "OPEN" : "CLOSED",
+                        },
+                      },
+                      {
+                        type: "div",
+                        props: {
+                          style: { fontSize: 16, color: "#64748b" },
+                          children: `Posted by @${posterName}`,
+                        },
+                      },
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 16,
+                            color: "#475569",
+                            marginTop: 4,
+                          },
+                          children: "bountybay.co",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const options: Record<string, unknown> = { width: 1200, height: 630 };
+    if (fontData) {
+      options.fonts = [
+        {
+          name: "Inter",
+          data: fontData.slice(0),
+          style: "normal",
+          weight: 400,
+        },
+      ];
     }
 
-    const truncatedTitle = bounty.title.length > 50 
-      ? bounty.title.substring(0, 47) + "..." 
-      : bounty.title;
-    const amount = bounty.amount?.toLocaleString() || "0";
+    const response = new ImageResponse(element, options);
+    response.headers.set(
+      "Cache-Control",
+      "public, max-age=3600, s-maxage=3600"
+    );
+    response.headers.set("X-Content-Type-Options", "nosniff");
 
-    // Generate SVG-based OG image with BLUE brand theme
-    const svg = `
-      <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#0f172a"/>
-            <stop offset="100%" style="stop-color:#1e293b"/>
-          </linearGradient>
-          <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#3b82f6"/>
-            <stop offset="100%" style="stop-color:#2563eb"/>
-          </linearGradient>
-        </defs>
-        
-        <!-- Background -->
-        <rect width="1200" height="630" fill="url(#bg)"/>
-        
-        <!-- Decorative elements -->
-        <circle cx="1100" cy="100" r="200" fill="#3b82f6" opacity="0.1"/>
-        <circle cx="100" cy="530" r="150" fill="#3b82f6" opacity="0.08"/>
-        
-        <!-- Top bar with branding -->
-        <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
-        
-        <!-- Logo/Brand area -->
-        <text x="60" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="bold" fill="#3b82f6">
-          🔍 BOUNTYBAY
-        </text>
-        
-        <!-- BOUNTY badge -->
-        <rect x="60" y="120" width="180" height="44" rx="22" fill="#3b82f6"/>
-        <text x="150" y="150" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
-          BOUNTY
-        </text>
-        
-        <!-- Main title area -->
-        <text x="60" y="230" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#94a3b8">
-          Help find:
-        </text>
-        <text x="60" y="290" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="bold" fill="white">
-          ${escapeXml(truncatedTitle)}
-        </text>
-        
-        <!-- Reward amount -->
-        <text x="60" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#94a3b8">
-          REWARD
-        </text>
-        <text x="60" y="450" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="bold" fill="#22c55e">
-          $${amount}
-        </text>
-        
-        <!-- Posted by -->
-        <text x="60" y="530" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#64748b">
-          Posted by @${escapeXml(posterName)}
-        </text>
-        
-        <!-- Status badge -->
-        ${bounty.status === 'open' ? `
-          <rect x="60" y="560" width="100" height="32" rx="16" fill="#22c55e" opacity="0.2"/>
-          <text x="110" y="582" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#22c55e" text-anchor="middle">
-            OPEN
-          </text>
-        ` : `
-          <rect x="60" y="560" width="120" height="32" rx="16" fill="#64748b" opacity="0.2"/>
-          <text x="120" y="582" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#64748b" text-anchor="middle">
-            ${bounty.status?.toUpperCase() || 'CLOSED'}
-          </text>
-        `}
-        
-        <!-- Right side decorative element -->
-        <rect x="900" y="180" width="240" height="270" rx="16" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
-        <text x="1020" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="80" text-anchor="middle" fill="#3b82f6" opacity="0.4">
-          💰
-        </text>
-        
-        <!-- CTA text -->
-        <text x="1020" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">
-          Claim this bounty
-        </text>
-        
-        <!-- Bottom URL bar -->
-        <rect x="0" y="600" width="1200" height="30" fill="#0f172a" opacity="0.8"/>
-        <text x="1140" y="622" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#64748b" text-anchor="end">
-          bountybay.co
-        </text>
-      </svg>
-    `;
-
-    // Convert SVG to PNG using resvg-js via external service
-    // For now, return SVG directly with proper content type
-    // Social platforms support SVG in many cases, but for maximum compatibility
-    // we return it as an image
-    
-    return new Response(svg, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "image/svg+xml",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
-      },
-    });
+    return response;
   } catch (error) {
-    console.error("OG image generation error:", error);
-    return new Response("Error generating image", { 
-      status: 500, 
-      headers: corsHeaders 
+    console.error("OG image generation failed:", error);
+    return new Response(null, {
+      status: 302,
+      headers: { ...corsHeaders, Location: FALLBACK_IMAGE },
     });
   }
 });
-
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}

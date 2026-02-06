@@ -63,7 +63,7 @@ serve(async (req) => {
     const rawDesc = bounty.description || '';
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
-    const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+    const ogImage = `${supabaseUrl}/functions/v1/og-image?id=${bounty.id}`;
     // Point og:url to THIS endpoint so bots stay here and read tags
     // (pointing to bountybay.co SPA causes bots to re-crawl and lose our tags)
     const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
