@@ -68,11 +68,21 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use fb://share scheme to open share composer directly in app
+  // Facebook: Use native share on mobile for best app integration
+  // Pass directUrl (clean bountybay.co) - not the ugly edge function URL
   const handleFacebookShare = () => {
     if (isMobile) {
-      // fb://share opens the Facebook app's share composer with the link
-      window.location.href = `fb://share?link=${encodedMetaUrl}`;
+      // Native share opens OS share sheet, user picks Facebook - cleanest experience
+      if (navigator.share) {
+        navigator.share({
+          title: `$${amount.toLocaleString()} Bounty: ${title}`,
+          text: shareText,
+          url: directUrl,
+        }).catch(() => {});
+      } else {
+        // Fallback to mobile web sharer with clean URL
+        window.location.href = `https://m.facebook.com/sharer/sharer.php?u=${encodedDirectUrl}&quote=${encodedText}`;
+      }
     } else {
       // Desktop: Use www with popup
       window.open(
