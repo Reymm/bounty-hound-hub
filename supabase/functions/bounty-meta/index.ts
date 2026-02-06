@@ -63,9 +63,29 @@ serve(async (req) => {
     const rawDesc = bounty.description || '';
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
-    const ogImage = `${supabaseUrl}/functions/v1/og-image?id=${bounty.id}`;
+
+    // OpenGraph.xyz dynamic image template
+    const templateId = "84c1943a-3f50-4c3b-95b1-be902cea8016";
+    const ogVersion = 1;
+    const bountyImage = bounty.images?.[0] || "https://bountybay.co/og-default.png";
+    
+    const ogImage = `https://ogcdn.net/${templateId}/v${ogVersion}/${
+      encodeURIComponent("bountybay.co")
+    }/${encodeURIComponent("Roboto")}/${
+      encodeURIComponent("rgba(255,255,255,1)")
+    }/${encodeURIComponent("rgba(1,1,1,0.06)")}/${
+      encodeURIComponent(`$${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle}`)
+    }/${encodeURIComponent("Roboto")}/${
+      encodeURIComponent("rgba(255,255,255,1)")
+    }/${encodeURIComponent(bountyImage)}/${
+      encodeURIComponent("cover")
+    }/${encodeURIComponent(bountyType)}/${
+      encodeURIComponent("Roboto")
+    }/${encodeURIComponent("rgba(255,255,255,1)")}/${
+      encodeURIComponent("rgba(59,130,246,1)")
+    }/og.png`;
+
     // Point og:url to THIS endpoint so bots stay here and read tags
-    // (pointing to bountybay.co SPA causes bots to re-crawl and lose our tags)
     const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
 
     const html = `<!DOCTYPE html>
