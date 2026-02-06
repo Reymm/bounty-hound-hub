@@ -68,20 +68,16 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use native share on mobile (opens app with rich preview), web on desktop
+  // Facebook: Use fb:// scheme on mobile to open app directly with OG preview
+  // The facewebmodal scheme opens Facebook app and loads the share dialog with metadata
   const handleFacebookShare = () => {
-    if (isMobile && navigator.share) {
-      navigator.share({
-        title: `$${amount.toLocaleString()} Bounty: ${title}`,
-        text: shareText,
-        url: directUrl,
-      }).catch(() => {});
+    const fbWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`;
+    
+    if (isMobile) {
+      // Try Facebook app first via universal link, falls back to web automatically
+      window.location.href = fbWebUrl;
     } else {
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
-        '_blank',
-        'width=600,height=400,menubar=no,toolbar=no'
-      );
+      window.open(fbWebUrl, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
     }
   };
 
