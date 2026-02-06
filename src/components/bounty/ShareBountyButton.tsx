@@ -68,18 +68,23 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Open Facebook app with sharer page inside app's webview
-  // This triggers OG crawling for rich previews while staying in the app
+  // Facebook: Use native share on mobile - the ONLY reliable way to open Facebook app's share composer
+  // fb:// schemes are unreliable, web sharers redirect to desktop
   const handleFacebookShare = () => {
-    const sharerUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`;
-    
-    if (isMobile) {
-      // fb://facewebmodal opens Facebook app and loads the URL in an in-app modal
-      // This keeps us in the app while still triggering Facebook's OG crawler
-      window.location.href = `fb://facewebmodal/f?href=${encodeURIComponent(sharerUrl)}`;
+    if (isMobile && navigator.share) {
+      // Native share opens OS share sheet, user taps Facebook - this actually works
+      navigator.share({
+        title: `$${amount.toLocaleString()} Bounty: ${title}`,
+        text: shareText,
+        url: metaUrl, // Use metaUrl so Facebook crawls for OG preview
+      }).catch(() => {});
     } else {
-      // Desktop: Use www with popup
-      window.open(sharerUrl, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
+      // Desktop or no native share: Use web sharer
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
+        '_blank',
+        'width=600,height=400,menubar=no,toolbar=no'
+      );
     }
   };
 
