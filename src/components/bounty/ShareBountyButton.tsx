@@ -39,11 +39,20 @@ export function ShareBountyButton({
   const encodedMetaUrl = encodeURIComponent(metaUrl);
   
   const encodedText = encodeURIComponent(shareText);
+  const encodedDirectUrl = encodeURIComponent(directUrl);
+
+  // Detect mobile for app-specific URL schemes
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const shareLinks = {
-    // Social platforms use meta URL for proper OG image generation
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
+    // Facebook: Use fb:// scheme on mobile to open native app, web URL on desktop
+    facebook: isMobile 
+      ? `fb://share?link=${encodedDirectUrl}`
+      : `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
+    // Twitter/X: Use twitter:// scheme on mobile
+    twitter: isMobile
+      ? `twitter://post?message=${encodedText}%20${encodedDirectUrl}`
+      : `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
     reddit: `https://reddit.com/submit?url=${encodedMetaUrl}&title=${encodeURIComponent(`$${amount.toLocaleString()} Bounty: ${title}`)}`,
     pinterest: `https://pinterest.com/pin/create/button/?url=${encodedMetaUrl}&description=${encodedText}`,
   };
@@ -77,8 +86,6 @@ export function ShareBountyButton({
     }
   };
 
-  // Detect mobile device - use native share to open actual apps
-  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   // On mobile, use regular links to trigger app deep links instead of window.open popups
