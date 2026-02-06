@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const BOT_PATTERN = /bot|facebookexternalhit|facebot|twitterbot|pinterest|googlebot|whatsapp|slackbot|discordbot|telegrambot|linkedinbot|skypeuripreview|redditbot/i;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,9 +18,25 @@ serve(async (req) => {
     const bountyId = url.searchParams.get("id");
 
     if (!bountyId) {
-      return new Response("Missing bounty ID", { status: 400, headers: corsHeaders });
+      return new Response(null, {
+        status: 302,
+        headers: { ...corsHeaders, "Location": "https://bountybay.co" },
+      });
     }
 
+    const userAgent = req.headers.get("user-agent") || "";
+    const isBot = BOT_PATTERN.test(userAgent);
+    const bountyUrl = `https://bountybay.co/b/${bountyId}`;
+
+    // Humans get instant 302 redirect — no flash of HTML, no "garbage" page
+    if (!isBot) {
+      return new Response(null, {
+        status: 302,
+        headers: { ...corsHeaders, "Location": bountyUrl },
+      });
+    }
+
+    // Bots get HTML with OG tags
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -30,10 +48,9 @@ serve(async (req) => {
       .single();
 
     if (error || !bounty) {
-      console.error("Bounty not found:", error);
       return new Response(null, {
         status: 302,
-        headers: { ...corsHeaders, "Location": "https://bountybay.co" },
+        headers: { ...corsHeaders, "Location": bountyUrl },
       });
     }
 
@@ -46,56 +63,54 @@ serve(async (req) => {
     const rawDesc = bounty.description || '';
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
-    const bountyUrl = `https://bountybay.co/b/${bounty.id}`;
-    // Use the bounty's actual image directly — ogcdn.net was unreliable
     const ogImage = bounty.images?.[0] || 'https://bountybay.co/og-default.png';
+    // Point og:url to THIS endpoint so bots stay here and read tags
+    // (pointing to bountybay.co SPA causes bots to re-crawl and lose our tags)
+    const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bounty.id}`;
 
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(title)}</title>
-  <meta name="title" content="${escapeHtml(title)}">
-  <meta name="description" content="${escapeHtml(description)}">
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(description)}">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${bountyUrl}">
-  <meta property="og:title" content="${escapeHtml(title)}">
-  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${metaUrl}">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(description)}">
   <meta property="og:image" content="${ogImage}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="BountyBay">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${bountyUrl}">
-  <meta name="twitter:title" content="${escapeHtml(title)}">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <meta name="twitter:url" content="${metaUrl}">
+  <meta name="twitter:title" content="${esc(title)}">
+  <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${ogImage}">
   <link rel="canonical" href="${bountyUrl}">
-  <script>window.location.replace("${bountyUrl}");</script>
 </head>
-<body>
-  <p>Redirecting to <a href="${bountyUrl}">${escapeHtml(bounty.title)}</a>...</p>
-</body>
+<body></body>
 </html>`;
 
     return new Response(html, {
+      status: 200,
       headers: {
         ...corsHeaders,
         "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
         "Cache-Control": "public, max-age=300, s-maxage=300",
       },
     });
   } catch (error) {
-    console.error("Bounty meta generation error:", error);
-    return new Response("Error generating meta", { 
-      status: 500, 
-      headers: corsHeaders 
+    console.error("Bounty meta error:", error);
+    return new Response(null, {
+      status: 302,
+      headers: { ...corsHeaders, "Location": "https://bountybay.co" },
     });
   }
 });
 
-function escapeHtml(str: string): string {
+function esc(str: string): string {
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -103,4 +118,3 @@ function escapeHtml(str: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
