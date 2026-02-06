@@ -68,16 +68,20 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use fb:// scheme on mobile to open app directly with OG preview
-  // The facewebmodal scheme opens Facebook app and loads the share dialog with metadata
+  // Facebook: Use m.facebook.com on mobile to prevent redirect loop to desktop
+  // The www subdomain triggers a "share_channel" redirect that breaks the app flow
+  // The m subdomain stays within the mobile app's native dialog
   const handleFacebookShare = () => {
-    const fbWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`;
-    
     if (isMobile) {
-      // Try Facebook app first via universal link, falls back to web automatically
-      window.location.href = fbWebUrl;
+      // Mobile: Use m.facebook.com to prevent redirect loop
+      window.location.href = `https://m.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`;
     } else {
-      window.open(fbWebUrl, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
+      // Desktop: Use www with popup
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
+        '_blank',
+        'width=600,height=400,menubar=no,toolbar=no'
+      );
     }
   };
 
