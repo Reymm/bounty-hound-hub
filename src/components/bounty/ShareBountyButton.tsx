@@ -68,13 +68,12 @@ export function ShareBountyButton({
     }
   };
 
-  // Facebook: Use m.facebook.com on mobile to prevent redirect loop to desktop
-  // The www subdomain triggers a "share_channel" redirect that breaks the app flow
-  // The m subdomain stays within the mobile app's native dialog
+  // Facebook: Use fb:// scheme on mobile to open app directly
+  // metaUrl already uses auth.bountybay.co for proper OG metadata
   const handleFacebookShare = () => {
     if (isMobile) {
-      // Mobile: Use m.facebook.com to prevent redirect loop
-      window.location.href = `https://m.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`;
+      // fb:// scheme triggers "Open in app?" prompt and opens Facebook app
+      window.location.href = `fb://facewebmodal/f?href=${encodedMetaUrl}`;
     } else {
       // Desktop: Use www with popup
       window.open(
