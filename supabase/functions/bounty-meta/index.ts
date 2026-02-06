@@ -72,17 +72,17 @@ serve(async (req) => {
     const ogImage = `https://ogcdn.net/${templateId}/v${ogVersion}/${
       encodeURIComponent("bountybay.co")
     }/${encodeURIComponent("Roboto")}/${
-      encodeURIComponent("rgba(255,255,255,1)")
-    }/${encodeURIComponent("rgba(1,1,1,0.06)")}/${
-      encodeURIComponent(`$${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle}`)
+      encodeURIComponent("rgba(59,130,246,1)")
+    }/${encodeURIComponent("rgba(219,234,254,1)")}/${
+      encodeURIComponent(`${bountyType} · $${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle}`)
     }/${encodeURIComponent("Roboto")}/${
-      encodeURIComponent("rgba(255,255,255,1)")
+      encodeURIComponent("rgba(15,23,42,1)")
     }/${encodeURIComponent(bountyImage)}/${
       encodeURIComponent("cover")
-    }/${encodeURIComponent(bountyType)}/${
+    }/${encodeURIComponent("View Now")}/${
       encodeURIComponent("Roboto")
     }/${encodeURIComponent("rgba(255,255,255,1)")}/${
-      encodeURIComponent("rgba(59,130,246,1)")
+      encodeURIComponent("rgba(34,197,94,1)")
     }/og.png`;
 
     // Point og:url to THIS endpoint so bots stay here and read tags
