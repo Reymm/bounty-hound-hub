@@ -76,7 +76,7 @@ serve(async (req) => {
     }/${encodeURIComponent("rgba(59,130,246,1)")}/${
       encodeURIComponent(`${bountyType} · $${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle}`)
     }/${encodeURIComponent("Roboto")}/${
-      encodeURIComponent("rgba(15,23,42,1)")
+      encodeURIComponent("rgba(255,255,255,1)")
     }/${encodeURIComponent(bountyImage)}/${
       encodeURIComponent("cover")
     }/${encodeURIComponent("View Now")}/${
