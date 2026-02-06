@@ -29,9 +29,9 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  // Use bounty-meta edge function for social sharing - generates dynamic OG images via OpenGraph.xyz
-  // This URL serves proper meta tags to crawlers, then redirects users to the actual bounty page
-  const metaUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bounty-meta?id=${bountyId}`;
+  // Use custom domain for social sharing - auth.bountybay.co is the Supabase custom domain
+  // This provides clean URLs and proper metadata for social crawlers
+  const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta?id=${bountyId}`;
   const directUrl = `https://bountybay.co/b/${bountyId}`;
   
   // Social share text - lead with dollar amount for attention
