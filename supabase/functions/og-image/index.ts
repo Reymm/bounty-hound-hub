@@ -92,7 +92,7 @@ serve(async (req) => {
       ? bounty.images[0]
       : null;
 
-    // Left side: bounty image — fills the entire left column with shadow
+    // Left side: bounty image — contained (not cropped), slightly tilted, with shadow
     const imageSection = bountyImageUrl
       ? {
           type: "div",
@@ -100,25 +100,43 @@ serve(async (req) => {
             style: {
               width: 440,
               height: 500,
-              borderRadius: 16,
-              overflow: "hidden",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1)",
               flexShrink: 0,
               display: "flex",
-              background: GRAY_100,
+              alignItems: "center",
+              justifyContent: "center",
+              background: WHITE,
             },
             children: [
               {
-                type: "img",
+                type: "div",
                 props: {
-                  src: bountyImageUrl,
-                  width: 440,
-                  height: 500,
                   style: {
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
+                    width: 380,
+                    height: 440,
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: WHITE,
+                    transform: "rotate(-3deg)",
                   },
+                  children: [
+                    {
+                      type: "img",
+                      props: {
+                        src: bountyImageUrl,
+                        width: 380,
+                        height: 440,
+                        style: {
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                        },
+                      },
+                    },
+                  ],
                 },
               },
             ],
