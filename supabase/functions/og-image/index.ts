@@ -14,8 +14,8 @@ const FALLBACK_IMAGE = "https://bountybay.co/og-default.png";
 const BLUE = "#3b82f6";
 const GREEN = "#16a34a";
 const WHITE = "#ffffff";
-const GRAY_100 = "#f3f4f6";
-const GRAY_200 = "#e5e7eb";
+const _GRAY_100 = "#f3f4f6";
+const _GRAY_200 = "#e5e7eb";
 const GRAY_500 = "#6b7280";
 const GRAY_900 = "#111827";
 
@@ -197,6 +197,31 @@ serve(async (req) => {
               },
             },
           },
+          // BountyBay logo header
+          {
+            type: "div",
+            props: {
+              style: {
+                display: "flex",
+                alignItems: "center",
+                padding: "20px 52px 0",
+              },
+              children: [
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      fontSize: 26,
+                      fontWeight: 700,
+                      color: BLUE,
+                      letterSpacing: -0.5,
+                    },
+                    children: "BountyBay",
+                  },
+                },
+              ],
+            },
+          },
           // Main content
           {
             type: "div",
@@ -205,7 +230,7 @@ serve(async (req) => {
                 flex: 1,
                 display: "flex",
                 flexDirection: "row",
-                padding: "36px 52px 28px",
+                padding: "12px 52px 28px",
                 gap: 52,
                 alignItems: "center",
               },
