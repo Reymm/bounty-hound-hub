@@ -149,6 +149,20 @@ All colors MUST be HSL for consistency */
   body {
     @apply bg-background text-foreground font-sans;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    /* Prevent iOS overscroll bounce / pull-to-refresh artifacts */
+    -webkit-overflow-scrolling: touch;
+    /* Disable iOS text size adjust */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Capacitor iOS: prevent rubber-banding on the html/body level */
+  html, body {
+    overscroll-behavior-y: none;
+  }
+
+  /* Disable tap highlight on iOS */
+  * {
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Mobile-first safe areas */

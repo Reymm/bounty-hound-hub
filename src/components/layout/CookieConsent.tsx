@@ -42,7 +42,7 @@ export function CookieConsent() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom-5 duration-300">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-safe animate-in slide-in-from-bottom-5 duration-300">
       <Card className="max-w-2xl mx-auto shadow-lg border-2">
         <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start">
