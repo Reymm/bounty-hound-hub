@@ -5,20 +5,40 @@ import { ImageResponse } from "https://deno.land/x/og_edge@0.0.6/mod.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type",
 };
 
 const FALLBACK_IMAGE = "https://bountybay.co/og-default.png";
 
-// Pre-load font at module startup (cached across requests)
-let fontData: ArrayBuffer | null = null;
+// Brand colors
+const BLUE = "#3b82f6";
+const GREEN = "#22c55e";
+const DARK_BG = "#0c1222";
+const DARK_BG_2 = "#14203a";
+const SLATE_50 = "#f8fafc";
+const SLATE_200 = "#e2e8f0";
+const SLATE_400 = "#94a3b8";
+const SLATE_500 = "#64748b";
+const SLATE_600 = "#475569";
+const SLATE_700 = "#334155";
+const SLATE_800 = "#1e293b";
+
+// Pre-load fonts at module startup (cached across requests)
+let fontRegular: ArrayBuffer | null = null;
+let fontBold: ArrayBuffer | null = null;
+
 try {
-  const res = await fetch(
-    "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff"
-  );
-  if (res.ok) {
-    fontData = await res.arrayBuffer();
-    if (fontData.byteLength === 0) fontData = null;
+  const [reg, bold] = await Promise.all([
+    fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff"),
+    fetch("https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff"),
+  ]);
+  if (reg.ok) {
+    fontRegular = await reg.arrayBuffer();
+    if (fontRegular.byteLength === 0) fontRegular = null;
+  }
+  if (bold.ok) {
+    fontBold = await bold.arrayBuffer();
+    if (fontBold.byteLength === 0) fontBold = null;
   }
 } catch (e) {
   console.error("Font load failed:", e);
@@ -31,7 +51,14 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const bountyId = url.searchParams.get("id");
+
+    // Support both path-based (/og-image/{id}) and query-based (?id=...)
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const bountyId = (lastSegment && isUUID.test(lastSegment))
+      ? lastSegment
+      : url.searchParams.get("id");
 
     if (!bountyId) {
       return new Response(null, {
@@ -42,7 +69,7 @@ serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     const { data: bounty, error } = await supabase
@@ -66,8 +93,8 @@ serve(async (req) => {
 
     const posterName = profile?.username || profile?.full_name || "Someone";
     const title =
-      bounty.title.length > 45
-        ? bounty.title.slice(0, 42) + "..."
+      bounty.title.length > 50
+        ? bounty.title.slice(0, 47) + "..."
         : bounty.title;
     const amount = `$${(bounty.amount || 0).toLocaleString()}`;
     const bountyType = bounty.requires_shipping ? "Find & Ship" : "Lead Only";
@@ -81,48 +108,39 @@ serve(async (req) => {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: "60px",
-          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-          color: "white",
+          background: `linear-gradient(150deg, ${DARK_BG} 0%, ${DARK_BG_2} 50%, ${DARK_BG} 100%)`,
           fontFamily: "Inter, sans-serif",
+          position: "relative",
+          overflow: "hidden",
         },
         children: [
-          // Top bar
+          // Decorative gradient orb (top-right)
           {
             type: "div",
             props: {
               style: {
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                position: "absolute",
+                top: -120,
+                right: -80,
+                width: 400,
+                height: 400,
+                borderRadius: 200,
+                background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)",
               },
-              children: [
-                {
-                  type: "div",
-                  props: {
-                    style: { fontSize: 28, fontWeight: 700, color: "#3b82f6" },
-                    children: "🔍 BOUNTYBAY",
-                  },
-                },
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      fontSize: 16,
-                      fontWeight: 600,
-                      backgroundColor:
-                        bountyType === "Find & Ship" ? "#ea580c" : "#3b82f6",
-                      color: "white",
-                      padding: "8px 20px",
-                      borderRadius: 20,
-                    },
-                    children: bountyType,
-                  },
-                },
-              ],
             },
           },
-          // Middle: title
+          // Top accent line — blue gradient
+          {
+            type: "div",
+            props: {
+              style: {
+                width: "100%",
+                height: 4,
+                background: `linear-gradient(90deg, ${BLUE}, #60a5fa, ${BLUE})`,
+              },
+            },
+          },
+          // Main content wrapper
           {
             type: "div",
             props: {
@@ -130,114 +148,233 @@ serve(async (req) => {
                 flex: 1,
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
+                padding: "44px 56px 36px",
               },
               children: [
-                {
-                  type: "div",
-                  props: {
-                    style: { fontSize: 22, color: "#94a3b8", marginBottom: 8 },
-                    children: "Help find:",
-                  },
-                },
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      fontSize: 42,
-                      fontWeight: 700,
-                      color: "white",
-                      lineHeight: 1.2,
-                    },
-                    children: title,
-                  },
-                },
-              ],
-            },
-          },
-          // Bottom: reward + meta
-          {
-            type: "div",
-            props: {
-              style: {
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-end",
-                borderTop: "1px solid #334155",
-                paddingTop: 24,
-              },
-              children: [
-                {
-                  type: "div",
-                  props: {
-                    style: { display: "flex", flexDirection: "column" },
-                    children: [
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 16,
-                            color: "#94a3b8",
-                            marginBottom: 4,
-                            letterSpacing: 2,
-                          },
-                          children: "REWARD",
-                        },
-                      },
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 64,
-                            fontWeight: 700,
-                            color: "#22c55e",
-                          },
-                          children: amount,
-                        },
-                      },
-                    ],
-                  },
-                },
+                // ─── Header: Logo + Bounty Type ───
                 {
                   type: "div",
                   props: {
                     style: {
                       display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-end",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 32,
                     },
                     children: [
+                      // Logo mark + wordmark
                       {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 13,
-                            fontWeight: 600,
-                            backgroundColor: isOpen
-                              ? "rgba(34, 197, 94, 0.15)"
-                              : "rgba(100, 116, 139, 0.15)",
-                            color: isOpen ? "#22c55e" : "#94a3b8",
-                            padding: "6px 16px",
-                            borderRadius: 16,
-                            marginBottom: 12,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
                           },
-                          children: isOpen ? "OPEN" : "CLOSED",
+                          children: [
+                            // Logo square
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  width: 38,
+                                  height: 38,
+                                  borderRadius: 10,
+                                  background: `linear-gradient(135deg, ${BLUE}, #2563eb)`,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: 20,
+                                  fontWeight: 700,
+                                  color: "white",
+                                },
+                                children: "B",
+                              },
+                            },
+                            // Wordmark
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 22,
+                                  fontWeight: 700,
+                                  color: SLATE_200,
+                                  letterSpacing: 1.5,
+                                },
+                                children: "BOUNTYBAY",
+                              },
+                            },
+                          ],
                         },
                       },
-                      {
-                        type: "div",
-                        props: {
-                          style: { fontSize: 16, color: "#64748b" },
-                          children: `Posted by @${posterName}`,
-                        },
-                      },
+                      // Bounty type pill
                       {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 16,
-                            color: "#475569",
-                            marginTop: 4,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: SLATE_400,
+                            padding: "8px 20px",
+                            borderRadius: 20,
+                            border: `1px solid ${SLATE_700}`,
+                            letterSpacing: 0.5,
+                          },
+                          children: bountyType,
+                        },
+                      },
+                    ],
+                  },
+                },
+                // ─── Center Content: Amount + Title ───
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      gap: 20,
+                    },
+                    children: [
+                      // Reward amount row
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            display: "flex",
+                            alignItems: "baseline",
+                            gap: 14,
+                          },
+                          children: [
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 72,
+                                  fontWeight: 700,
+                                  color: GREEN,
+                                  lineHeight: 1,
+                                },
+                                children: amount,
+                              },
+                            },
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 18,
+                                  fontWeight: 600,
+                                  color: SLATE_500,
+                                  letterSpacing: 3,
+                                },
+                                children: "BOUNTY",
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      // Title
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 38,
+                            fontWeight: 700,
+                            color: SLATE_50,
+                            lineHeight: 1.25,
+                          },
+                          children: title,
+                        },
+                      },
+                    ],
+                  },
+                },
+                // ─── Footer: Status + Meta ───
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      borderTop: `1px solid ${SLATE_800}`,
+                      paddingTop: 20,
+                    },
+                    children: [
+                      // Left: status + poster
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 16,
+                          },
+                          children: [
+                            // Status indicator
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                  fontSize: 14,
+                                  fontWeight: 600,
+                                  color: isOpen ? GREEN : SLATE_400,
+                                },
+                                children: [
+                                  // Dot
+                                  {
+                                    type: "div",
+                                    props: {
+                                      style: {
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: 4,
+                                        backgroundColor: isOpen ? GREEN : SLATE_500,
+                                      },
+                                    },
+                                  },
+                                  isOpen ? "Open" : "Closed",
+                                ],
+                              },
+                            },
+                            // Divider
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  width: 1,
+                                  height: 16,
+                                  backgroundColor: SLATE_700,
+                                },
+                              },
+                            },
+                            // Posted by
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 14,
+                                  color: SLATE_500,
+                                },
+                                children: `by @${posterName}`,
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      // Right: domain
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 15,
+                            fontWeight: 600,
+                            color: SLATE_600,
                           },
                           children: "bountybay.co",
                         },
@@ -252,23 +389,21 @@ serve(async (req) => {
       },
     };
 
+    const fonts: Array<Record<string, unknown>> = [];
+    if (fontRegular) {
+      fonts.push({ name: "Inter", data: fontRegular.slice(0), style: "normal", weight: 400 });
+    }
+    if (fontBold) {
+      fonts.push({ name: "Inter", data: fontBold.slice(0), style: "normal", weight: 700 });
+    }
+
     const options: Record<string, unknown> = { width: 1200, height: 630 };
-    if (fontData) {
-      options.fonts = [
-        {
-          name: "Inter",
-          data: fontData.slice(0),
-          style: "normal",
-          weight: 400,
-        },
-      ];
+    if (fonts.length > 0) {
+      options.fonts = fonts;
     }
 
     const response = new ImageResponse(element, options);
-    response.headers.set(
-      "Cache-Control",
-      "public, max-age=3600, s-maxage=3600"
-    );
+    response.headers.set("Cache-Control", "public, max-age=3600, s-maxage=3600");
     response.headers.set("X-Content-Type-Options", "nosniff");
 
     return response;

@@ -72,26 +72,8 @@ serve(async (req) => {
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
 
-    // OpenGraph.xyz dynamic image template
-    const templateId = "84c1943a-3f50-4c3b-95b1-be902cea8016";
-    const ogVersion = 1;
-    const bountyImage = bounty.images?.[0] || "https://bountybay.co/og-default.png";
-    
-    const ogImage = `https://ogcdn.net/${templateId}/v${ogVersion}/${
-      encodeURIComponent("bountybay.co")
-    }/${encodeURIComponent("Roboto")}/${
-      encodeURIComponent("rgba(255,255,255,1)")
-    }/${encodeURIComponent("rgba(59,130,246,1)")}/${
-      encodeURIComponent(`${bountyType} · $${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle}`)
-    }/${encodeURIComponent("Roboto")}/${
-      encodeURIComponent("rgba(59,130,246,1)")
-    }/${encodeURIComponent(bountyImage)}/${
-      encodeURIComponent("cover")
-    }/${encodeURIComponent("View Now")}/${
-      encodeURIComponent("Roboto")
-    }/${encodeURIComponent("rgba(255,255,255,1)")}/${
-      encodeURIComponent("rgba(34,197,94,1)")
-    }/og.png`;
+    // Dynamic OG image via our og-image edge function (Satori)
+    const ogImage = `${supabaseUrl}/functions/v1/og-image/${bounty.id}`;
 
     // Point og:url to THIS endpoint so bots stay here and read tags (path-based)
     const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bounty.id}`;
