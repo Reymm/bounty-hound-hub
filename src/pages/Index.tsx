@@ -118,9 +118,6 @@ const Index = () => {
     <>
       <Helmet>
         <title>BountyBay - Find The Unfindable</title>
-        <link rel="icon" type="image/png" href="/bb-icon.png" />
-        <link rel="apple-touch-icon" href="/bb-icon.png" />
-        <link rel="shortcut icon" href="/bb-icon.png" />
       </Helmet>
       
       {/* Hero Section */}
