@@ -511,12 +511,9 @@ function PostBountyForm() {
         // Don't fail the bounty posting if email fails
       }
 
-      const isSecured = paymentMode === 'immediate';
       toast({
         title: "Bounty posted successfully!",
-        description: isSecured 
-          ? "Your funds are secured. Payment will be captured when you accept a submission."
-          : "Your bounty is now live. Your card will be charged when you accept a submission.",
+        description: "Your bounty is now live. Your card will be charged when you accept a submission.",
       });
 
       // Clear the bounty posting flag and draft
@@ -539,19 +536,14 @@ function PostBountyForm() {
 
 
   if (currentStep === 'payment') {
-    const isImmediate = paymentMode === 'immediate';
-    
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            {isImmediate ? 'Secure Your Bounty' : 'Verify Your Payment Method'}
+            Verify Your Payment Method
           </h1>
           <p className="text-muted-foreground">
-            {isImmediate 
-              ? `Your card will be authorized for $${totalCharge.toFixed(2)}. This secures your bounty and shows hunters you're serious.`
-              : "We'll save your card securely. You're only charged when you approve a submission."
-            }
+            We'll save your card securely. You're only charged when you approve a submission.
           </p>
         </div>
 
@@ -560,11 +552,6 @@ function PostBountyForm() {
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
               Bounty: ${watchedBountyAmount?.toFixed(2) || '0.00'} USD
-              {isImmediate && (
-                <Badge variant="secondary" className="ml-2">
-                  Funds Secured
-                </Badge>
-              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -572,24 +559,15 @@ function PostBountyForm() {
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                {isImmediate ? (
-                  <>
-                    <strong>Authorization hold:</strong> We'll authorize ${totalCharge.toFixed(2)} on your card now. 
-                    The charge only completes when you accept a claim. If you cancel or your bounty expires, the hold is released.
-                  </>
-                ) : (
-                  <>
-                    <strong>No charge today:</strong> We verify and securely save your card. 
-                    You're only charged when you approve a hunter's submission. If no one claims your bounty, you pay nothing.
-                  </>
-                )}
+                <strong>No charge today:</strong> We verify and securely save your card. 
+                You're only charged when you approve a hunter's submission. If no one claims your bounty, you pay nothing.
               </AlertDescription>
             </Alert>
 
             {/* Payment Breakdown */}
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <h4 className="font-medium text-sm">
-                {isImmediate ? 'Authorization Amount' : 'When You Approve a Submission'}
+                When You Approve a Submission
               </h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
@@ -601,7 +579,7 @@ function PostBountyForm() {
                   <span>${platformFee.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>{isImmediate ? 'Authorization hold:' : 'Total you pay:'}</span>
+                  <span>Total you pay:</span>
                   <span>${totalCharge.toFixed(2)}</span>
                 </div>
               </div>
@@ -616,12 +594,7 @@ function PostBountyForm() {
               <ol className="space-y-2 text-muted-foreground">
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">1.</span>
-                  <span>
-                    {isImmediate 
-                      ? `We authorize $${totalCharge.toFixed(2)} on your card (not charged yet)`
-                      : 'We verify and securely save your card (no charge)'
-                    }
-                  </span>
+                  <span>We verify and securely save your card (no charge)</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">2.</span>
@@ -637,16 +610,11 @@ function PostBountyForm() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-foreground">5.</span>
-                  <span>
-                    {isImmediate 
-                      ? `Authorization is captured: $${totalCharge.toFixed(2)} charged`
-                      : `Only then: $${totalCharge.toFixed(2)} charged to you`
-                    }
-                  </span>
+                  <span>Only then: ${totalCharge.toFixed(2)} charged to you</span>
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                💡 If your bounty expires or you cancel, {isImmediate ? 'the authorization is released' : 'you pay nothing'}.
+                💡 If your bounty expires or you cancel, you pay nothing.
               </p>
             </div>
 
@@ -745,7 +713,7 @@ function PostBountyForm() {
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      {isImmediate ? 'Authorize & Post Bounty' : 'Save Card & Post Bounty'}
+                      Save Card & Post Bounty
                     </>
                   )}
                 </Button>

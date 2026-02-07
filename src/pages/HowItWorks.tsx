@@ -14,8 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { StripeBadge } from '@/components/ui/stripe-badge';
-// Display threshold for How It Works page (production value shown to users)
-const DISPLAY_THRESHOLD = 75;
 
 const HowItWorks = () => {
   const { user } = useAuth();
@@ -249,40 +247,26 @@ const HowItWorks = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card className="border-2 border-primary/20">
-              <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  <span className="text-2xl font-bold text-primary">Under ${DISPLAY_THRESHOLD}</span>
-                </div>
-                <h3 className="font-semibold text-foreground text-center mb-3">Card Saved Only</h3>
-                <p className="text-sm text-muted-foreground text-center">
-                  For smaller bounties, we simply save your payment method securely. 
-                  You're <strong>only charged when you accept a claim</strong> and the bounty is completed.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-warning/30 bg-warning/5">
-              <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  <span className="text-2xl font-bold text-warning">${DISPLAY_THRESHOLD}+</span>
-                </div>
-                <h3 className="font-semibold text-foreground text-center mb-3">Authorization Hold</h3>
-                <p className="text-sm text-muted-foreground text-center">
-                  For larger bounties, we place an authorization hold on your card. 
-                  This reserves the funds but <strong>you're still only charged upon acceptance</strong>.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="border-2 border-primary/20 mb-8">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <CreditCard className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground text-lg">Card Saved Securely</h3>
+              </div>
+              <p className="text-sm text-muted-foreground text-center max-w-lg mx-auto">
+                When you post a bounty, we securely save your payment method. 
+                You're <strong>only charged when you accept a claim</strong> and the bounty is completed. 
+                No find = no charge.
+              </p>
+            </CardContent>
+          </Card>
 
           <div className="bg-success/10 border border-success/30 rounded-lg p-6 text-center">
             <p className="text-lg font-medium text-foreground">
               ✓ No find = No charge. You're never billed unless you accept a claim.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Cancel anytime before acceptance with no fees for bounties under ${DISPLAY_THRESHOLD}.
+              Cancel anytime before acceptance with no fees.
             </p>
             <StripeBadge className="mt-4 justify-center" />
           </div>

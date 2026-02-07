@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Bug } from 'lucide-react';
 import { PartnerApplicationDialog } from '@/components/partner/PartnerApplicationDialog';
+import { StripeBadge } from '@/components/ui/stripe-badge';
 
 export function Footer() {
   return (
@@ -71,6 +72,11 @@ export function Footer() {
             </Link>
             <PartnerApplicationDialog />
           </nav>
+
+          {/* Trust badge */}
+          <div className="mt-4 md:mt-0">
+            <StripeBadge />
+          </div>
         </div>
       </div>
     </footer>
