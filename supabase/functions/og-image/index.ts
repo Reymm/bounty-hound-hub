@@ -217,6 +217,9 @@ serve(async (req) => {
           },
         };
 
+    // Status badge — only show OPEN for open bounties
+    const isOpen = bounty.status === "open";
+
     const element = {
       type: "div",
       props: {
@@ -228,8 +231,25 @@ serve(async (req) => {
           background: `linear-gradient(160deg, ${WHITE} 0%, #f0f6ff 100%)`,
           fontFamily: "Inter, sans-serif",
           position: "relative",
+          overflow: "hidden",
         },
         children: [
+          // Subtle dot texture overlay
+          {
+            type: "div",
+            props: {
+              style: {
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundImage: "radial-gradient(circle, #cbd5e1 0.8px, transparent 0.8px)",
+                backgroundSize: "24px 24px",
+                opacity: 0.18,
+              },
+            },
+          },
           // Main content
           {
             type: "div",
@@ -238,9 +258,10 @@ serve(async (req) => {
                 flex: 1,
                 display: "flex",
                 flexDirection: "row",
-                padding: "40px 52px 28px",
+                padding: "36px 52px 20px",
                 gap: 52,
                 alignItems: "center",
+                position: "relative",
               },
               children: [
                 // LEFT: Bounty photo
@@ -254,23 +275,86 @@ serve(async (req) => {
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
-                      gap: 18,
+                      gap: 14,
                     },
                     children: [
-                      // BountyBay logo — replaces the old small "bountybay.co" text
+                      // BountyBay logo — large and bold
                       {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 32,
+                            fontSize: 46,
                             fontWeight: 700,
                             color: BLUE,
-                            letterSpacing: -0.5,
+                            letterSpacing: -1,
+                            lineHeight: 1,
                           },
                           children: "BountyBay",
                         },
                       },
-                      // Combined line: "Lead Only · $1,000 Bounty:"
+                      // Type label with OPEN badge
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            marginTop: 4,
+                          },
+                          children: [
+                            // OPEN outline badge
+                            ...(isOpen
+                              ? [
+                                  {
+                                    type: "div",
+                                    props: {
+                                      style: {
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        color: GREEN,
+                                        border: `2px solid ${GREEN}`,
+                                        padding: "3px 12px",
+                                        borderRadius: 12,
+                                        letterSpacing: 1,
+                                        textTransform: "uppercase",
+                                      },
+                                      children: "OPEN",
+                                    },
+                                  },
+                                ]
+                              : []),
+                            // Bounty type label
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 18,
+                                  fontWeight: 600,
+                                  color: GRAY_500,
+                                  letterSpacing: 0.3,
+                                },
+                                children: bountyType,
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      // Amount — big and blue, the hero number
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 48,
+                            fontWeight: 700,
+                            color: BLUE,
+                            lineHeight: 1.1,
+                            letterSpacing: -1,
+                          },
+                          children: `${amount} Bounty`,
+                        },
+                      },
+                      // Title — clear and readable
                       {
                         type: "div",
                         props: {
@@ -279,19 +363,6 @@ serve(async (req) => {
                             fontWeight: 700,
                             color: GRAY_900,
                             lineHeight: 1.3,
-                          },
-                          children: `${bountyType} · ${amount} Bounty:`,
-                        },
-                      },
-                      // Title — large and bold
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 32,
-                            fontWeight: 700,
-                            color: GRAY_900,
-                            lineHeight: 1.25,
                           },
                           children: title,
                         },
@@ -303,7 +374,7 @@ serve(async (req) => {
                           style: {
                             display: "flex",
                             alignItems: "center",
-                            marginTop: 8,
+                            marginTop: 6,
                           },
                           children: [
                             {
@@ -338,7 +409,8 @@ serve(async (req) => {
               style: {
                 display: "flex",
                 justifyContent: "flex-end",
-                padding: "0 52px 16px",
+                padding: "0 52px 14px",
+                position: "relative",
               },
               children: [
                 {
