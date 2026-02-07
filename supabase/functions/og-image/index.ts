@@ -10,12 +10,11 @@ const corsHeaders = {
 
 const FALLBACK_IMAGE = "https://bountybay.co/og-default.png";
 
-// Brand colors — LIGHT theme, matching site
+// Brand colors — matching the actual site
 const BLUE = "#3b82f6";
-const BLUE_LIGHT = "#dbeafe";
-const GREEN = "#16a34a";
+const GREEN = "#15803d";
 const WHITE = "#ffffff";
-const GRAY_50 = "#f9fafb";
+const GRAY_100 = "#f3f4f6";
 const GRAY_200 = "#e5e7eb";
 const GRAY_500 = "#6b7280";
 const GRAY_900 = "#111827";
@@ -83,8 +82,8 @@ serve(async (req) => {
     }
 
     const title =
-      bounty.title.length > 55
-        ? bounty.title.slice(0, 52) + "..."
+      bounty.title.length > 60
+        ? bounty.title.slice(0, 57) + "..."
         : bounty.title;
     const amount = `$${(bounty.amount || 0).toLocaleString()}`;
     const bountyType = bounty.requires_shipping ? "Find & Ship" : "Lead Only";
@@ -93,30 +92,31 @@ serve(async (req) => {
       ? bounty.images[0]
       : null;
 
-    // Image section — fitted with shadow container
+    // Left side: bounty image — fills the entire left column with shadow
     const imageSection = bountyImageUrl
       ? {
           type: "div",
           props: {
             style: {
-              width: 340,
-              height: 340,
-              borderRadius: 20,
+              width: 440,
+              height: 500,
+              borderRadius: 16,
               overflow: "hidden",
-              boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06)",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1)",
               flexShrink: 0,
               display: "flex",
+              background: GRAY_100,
             },
             children: [
               {
                 type: "img",
                 props: {
                   src: bountyImageUrl,
-                  width: 340,
-                  height: 340,
+                  width: 440,
+                  height: 500,
                   style: {
-                    width: 340,
-                    height: 340,
+                    width: "100%",
+                    height: "100%",
                     objectFit: "cover",
                   },
                 },
@@ -128,20 +128,30 @@ serve(async (req) => {
           type: "div",
           props: {
             style: {
-              width: 340,
-              height: 340,
-              borderRadius: 20,
-              background: BLUE_LIGHT,
+              width: 440,
+              height: 500,
+              borderRadius: 16,
+              background: `linear-gradient(135deg, #dbeafe, #bfdbfe)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 100,
-              fontWeight: 700,
-              color: BLUE,
               flexShrink: 0,
-              boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06)",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1)",
             },
-            children: "B",
+            children: [
+              {
+                type: "div",
+                props: {
+                  style: {
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: BLUE,
+                    letterSpacing: 1,
+                  },
+                  children: "BountyBay",
+                },
+              },
+            ],
           },
         };
 
@@ -153,23 +163,23 @@ serve(async (req) => {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          background: `linear-gradient(135deg, ${WHITE} 0%, #f0f7ff 100%)`,
+          background: `linear-gradient(160deg, ${WHITE} 0%, #f0f6ff 100%)`,
           fontFamily: "Inter, sans-serif",
           position: "relative",
         },
         children: [
-          // Top accent bar — blue
+          // Top accent bar
           {
             type: "div",
             props: {
               style: {
                 width: "100%",
                 height: 5,
-                background: `linear-gradient(90deg, ${BLUE}, #60a5fa)`,
+                background: `linear-gradient(90deg, ${BLUE}, #60a5fa, ${BLUE})`,
               },
             },
           },
-          // Main content area
+          // Main content
           {
             type: "div",
             props: {
@@ -177,14 +187,14 @@ serve(async (req) => {
                 flex: 1,
                 display: "flex",
                 flexDirection: "row",
-                padding: "44px 56px 24px",
-                gap: 48,
+                padding: "36px 52px 28px",
+                gap: 52,
                 alignItems: "center",
               },
               children: [
-                // LEFT: Bounty photo with shadow
+                // LEFT: Bounty photo
                 imageSection,
-                // RIGHT: Text content
+                // RIGHT: All text content
                 {
                   type: "div",
                   props: {
@@ -193,50 +203,19 @@ serve(async (req) => {
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
-                      gap: 14,
+                      gap: 18,
                     },
                     children: [
-                      // Logo: Blue square + BOUNTYBAY
+                      // Logo: "BountyBay" text — PascalCase, matching the site
                       {
                         type: "div",
                         props: {
                           style: {
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
+                            fontSize: 28,
+                            fontWeight: 700,
+                            color: BLUE,
                           },
-                          children: [
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: 8,
-                                  background: `linear-gradient(135deg, ${BLUE}, #2563eb)`,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 18,
-                                  fontWeight: 700,
-                                  color: WHITE,
-                                },
-                                children: "B",
-                              },
-                            },
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  fontSize: 20,
-                                  fontWeight: 700,
-                                  color: BLUE,
-                                  letterSpacing: 1.5,
-                                },
-                                children: "BOUNTYBAY",
-                              },
-                            },
-                          ],
+                          children: "BountyBay",
                         },
                       },
                       // Bounty type pill with shadow
@@ -252,14 +231,14 @@ serve(async (req) => {
                               type: "div",
                               props: {
                                 style: {
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   fontWeight: 600,
                                   color: GRAY_500,
-                                  padding: "6px 16px",
-                                  borderRadius: 14,
+                                  padding: "6px 18px",
+                                  borderRadius: 16,
                                   background: WHITE,
                                   border: `1px solid ${GRAY_200}`,
-                                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
+                                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                                 },
                                 children: bountyType,
                               },
@@ -267,12 +246,12 @@ serve(async (req) => {
                           ],
                         },
                       },
-                      // Title
+                      // Title — large and bold
                       {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 32,
+                            fontSize: 36,
                             fontWeight: 700,
                             color: GRAY_900,
                             lineHeight: 1.2,
@@ -280,14 +259,14 @@ serve(async (req) => {
                           children: title,
                         },
                       },
-                      // Bounty amount row
+                      // BOUNTY + Amount — amount in black
                       {
                         type: "div",
                         props: {
                           style: {
                             display: "flex",
                             alignItems: "baseline",
-                            gap: 12,
+                            gap: 14,
                             marginTop: 4,
                           },
                           children: [
@@ -295,7 +274,7 @@ serve(async (req) => {
                               type: "div",
                               props: {
                                 style: {
-                                  fontSize: 20,
+                                  fontSize: 24,
                                   fontWeight: 700,
                                   color: GRAY_500,
                                   letterSpacing: 2,
@@ -307,7 +286,7 @@ serve(async (req) => {
                               type: "div",
                               props: {
                                 style: {
-                                  fontSize: 54,
+                                  fontSize: 58,
                                   fontWeight: 700,
                                   color: GRAY_900,
                                   lineHeight: 1,
@@ -318,28 +297,28 @@ serve(async (req) => {
                           ],
                         },
                       },
-                      // Green "View Now" pill with shadow
+                      // Green "View Now" pill — darker green with shadow
                       {
                         type: "div",
                         props: {
                           style: {
                             display: "flex",
                             alignItems: "center",
-                            marginTop: 8,
+                            marginTop: 6,
                           },
                           children: [
                             {
                               type: "div",
                               props: {
                                 style: {
-                                  fontSize: 16,
+                                  fontSize: 17,
                                   fontWeight: 700,
                                   color: WHITE,
                                   background: GREEN,
-                                  padding: "12px 32px",
+                                  padding: "12px 34px",
                                   borderRadius: 24,
                                   letterSpacing: 0.5,
-                                  boxShadow: "0 4px 14px rgba(22, 163, 74, 0.3), 0 2px 6px rgba(22, 163, 74, 0.15)",
+                                  boxShadow: "0 6px 20px rgba(21, 128, 61, 0.35), 0 2px 8px rgba(21, 128, 61, 0.2)",
                                 },
                                 children: "View Now",
                               },
@@ -353,22 +332,21 @@ serve(async (req) => {
               ],
             },
           },
-          // Bottom: domain
+          // Footer: domain
           {
             type: "div",
             props: {
               style: {
                 display: "flex",
                 justifyContent: "flex-end",
-                alignItems: "center",
-                padding: "0 56px 18px",
+                padding: "0 52px 16px",
               },
               children: [
                 {
                   type: "div",
                   props: {
                     style: {
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: 600,
                       color: GRAY_500,
                     },
