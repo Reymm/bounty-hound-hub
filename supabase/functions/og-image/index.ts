@@ -12,7 +12,7 @@ const FALLBACK_IMAGE = "https://bountybay.co/og-default.png";
 
 // Brand colors — matching the actual site
 const BLUE = "#3b82f6";
-const GREEN = "#15803d";
+const GREEN = "#16a34a";
 const WHITE = "#ffffff";
 const GRAY_100 = "#f3f4f6";
 const GRAY_200 = "#e5e7eb";
@@ -224,44 +224,29 @@ serve(async (req) => {
                       gap: 18,
                     },
                     children: [
-                      // Logo: "BountyBay" text — PascalCase, matching the site
+                      // Small "bountybay.co" branding
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 16,
+                            fontWeight: 600,
+                            color: GRAY_500,
+                          },
+                          children: "bountybay.co",
+                        },
+                      },
+                      // Combined line: "Lead Only · $1,000 Bounty:"
                       {
                         type: "div",
                         props: {
                           style: {
                             fontSize: 28,
                             fontWeight: 700,
-                            color: BLUE,
+                            color: GRAY_900,
+                            lineHeight: 1.3,
                           },
-                          children: "BountyBay",
-                        },
-                      },
-                      // Bounty type pill with shadow
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            display: "flex",
-                            alignItems: "center",
-                          },
-                          children: [
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  fontSize: 14,
-                                  fontWeight: 600,
-                                  color: GRAY_500,
-                                  padding: "6px 18px",
-                                  borderRadius: 16,
-                                  background: WHITE,
-                                  border: `1px solid ${GRAY_200}`,
-                                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                                },
-                                children: bountyType,
-                              },
-                            },
-                          ],
+                          children: `${bountyType} · ${amount} Bounty:`,
                         },
                       },
                       // Title — large and bold
@@ -269,74 +254,36 @@ serve(async (req) => {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 36,
+                            fontSize: 32,
                             fontWeight: 700,
                             color: GRAY_900,
-                            lineHeight: 1.2,
+                            lineHeight: 1.25,
                           },
                           children: title,
                         },
                       },
-                      // BOUNTY + Amount — amount in black
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            display: "flex",
-                            alignItems: "baseline",
-                            gap: 14,
-                            marginTop: 4,
-                          },
-                          children: [
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  fontSize: 24,
-                                  fontWeight: 700,
-                                  color: GRAY_500,
-                                  letterSpacing: 2,
-                                },
-                                children: "BOUNTY",
-                              },
-                            },
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  fontSize: 58,
-                                  fontWeight: 700,
-                                  color: GRAY_900,
-                                  lineHeight: 1,
-                                },
-                                children: amount,
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      // Green "View Now" pill — darker green with shadow
+                      // Green "View Now" pill
                       {
                         type: "div",
                         props: {
                           style: {
                             display: "flex",
                             alignItems: "center",
-                            marginTop: 6,
+                            marginTop: 8,
                           },
                           children: [
                             {
                               type: "div",
                               props: {
                                 style: {
-                                  fontSize: 17,
+                                  fontSize: 16,
                                   fontWeight: 700,
                                   color: WHITE,
                                   background: GREEN,
-                                  padding: "12px 34px",
-                                  borderRadius: 24,
+                                  padding: "10px 28px",
+                                  borderRadius: 20,
                                   letterSpacing: 0.5,
-                                  boxShadow: "0 6px 20px rgba(21, 128, 61, 0.35), 0 2px 8px rgba(21, 128, 61, 0.2)",
+                                  boxShadow: "0 4px 14px rgba(22, 163, 74, 0.35)",
                                 },
                                 children: "View Now",
                               },
