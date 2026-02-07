@@ -97,10 +97,14 @@ export default function Auth() {
         console.log('PASSWORD_RECOVERY event - showing reset form');
         setIsRecoveryMode(true);
         setError(null);
-      } else if (event === 'SIGNED_IN') {
+      } else if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && session)) {
         // Mark OAuth processing as complete when we get a confirmed sign-in
+        // CRITICAL: Also handle INITIAL_SESSION because Supabase may process the
+        // OAuth hash fragment BEFORE this listener is set up (during createClient).
+        // In that case SIGNED_IN fires before we're listening, and we only receive
+        // INITIAL_SESSION with the already-established session.
         setIsProcessingOAuth(false);
-        console.log('SIGNED_IN event - OAuth processing complete');
+        console.log(`${event} event - OAuth processing complete, session:`, !!session);
       } else if (event === 'USER_UPDATED') {
         // Password was successfully updated
         console.log('USER_UPDATED event - password changed');
