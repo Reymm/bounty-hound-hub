@@ -304,6 +304,7 @@ serve(async (req) => {
                             lineHeight: 1.15,
                             letterSpacing: -0.5,
                             marginTop: 4,
+                            textShadow: "0 2px 8px rgba(17, 24, 39, 0.2)",
                           },
                           children: `${amount} Bounty:`,
                         },
