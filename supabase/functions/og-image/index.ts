@@ -278,32 +278,77 @@ serve(async (req) => {
                       gap: 14,
                     },
                     children: [
-                      // BountyBay logo — large and bold
+                      // BountyBay logo
                       {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 46,
+                            fontSize: 38,
                             fontWeight: 700,
                             color: BLUE,
-                            letterSpacing: -1,
+                            letterSpacing: -0.5,
                             lineHeight: 1,
                           },
                           children: "BountyBay",
                         },
                       },
-                      // Type label with OPEN badge
+                      // Amount line — "$1,000 Bounty:" in bold black
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 42,
+                            fontWeight: 700,
+                            color: GRAY_900,
+                            lineHeight: 1.15,
+                            letterSpacing: -0.5,
+                            marginTop: 4,
+                          },
+                          children: `${amount} Bounty:`,
+                        },
+                      },
+                      // Title — clear and readable
+                      {
+                        type: "div",
+                        props: {
+                          style: {
+                            fontSize: 28,
+                            fontWeight: 700,
+                            color: GRAY_900,
+                            lineHeight: 1.3,
+                          },
+                          children: title,
+                        },
+                      },
+                      // Badges row: "Lead Only" blue outline + "OPEN" green outline
                       {
                         type: "div",
                         props: {
                           style: {
                             display: "flex",
                             alignItems: "center",
-                            gap: 12,
+                            gap: 10,
                             marginTop: 4,
                           },
                           children: [
-                            // OPEN outline badge
+                            // Lead Only / Find & Ship — blue outline badge
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: BLUE,
+                                  border: `2px solid ${BLUE}`,
+                                  padding: "3px 12px",
+                                  borderRadius: 12,
+                                  letterSpacing: 1,
+                                  textTransform: "uppercase",
+                                },
+                                children: bountyType.toUpperCase(),
+                              },
+                            },
+                            // OPEN badge — green outline (only for open bounties)
                             ...(isOpen
                               ? [
                                   {
@@ -324,47 +369,7 @@ serve(async (req) => {
                                   },
                                 ]
                               : []),
-                            // Bounty type label
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  fontSize: 18,
-                                  fontWeight: 600,
-                                  color: GRAY_500,
-                                  letterSpacing: 0.3,
-                                },
-                                children: bountyType,
-                              },
-                            },
                           ],
-                        },
-                      },
-                      // Amount — big and blue, the hero number
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 48,
-                            fontWeight: 700,
-                            color: BLUE,
-                            lineHeight: 1.1,
-                            letterSpacing: -1,
-                          },
-                          children: `${amount} Bounty`,
-                        },
-                      },
-                      // Title — clear and readable
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 28,
-                            fontWeight: 700,
-                            color: GRAY_900,
-                            lineHeight: 1.3,
-                          },
-                          children: title,
                         },
                       },
                       // Green "View Now" pill
