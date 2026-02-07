@@ -88,9 +88,24 @@ serve(async (req) => {
     const amount = `$${(bounty.amount || 0).toLocaleString()}`;
     const bountyType = bounty.requires_shipping ? "Find & Ship" : "Lead Only";
 
-    const bountyImageUrl = bounty.images && bounty.images.length > 0
+    // Check first image — Satori only supports PNG, JPEG, GIF (not WebP)
+    const rawImageUrl = bounty.images && bounty.images.length > 0
       ? bounty.images[0]
       : null;
+
+    let bountyImageUrl = rawImageUrl;
+    if (rawImageUrl) {
+      try {
+        const probe = await fetch(rawImageUrl, { method: "HEAD" });
+        const ct = probe.headers.get("content-type") || "";
+        if (ct.includes("webp") || rawImageUrl.toLowerCase().endsWith(".webp")) {
+          // WebP not supported by Satori — fall back to placeholder
+          bountyImageUrl = null;
+        }
+      } catch {
+        // If HEAD fails, still try to use the URL (Satori will handle the error)
+      }
+    }
 
     // Left side: bounty image — contained (not cropped), slightly tilted, with shadow
     const imageSection = bountyImageUrl
