@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Share2, Facebook, Twitter, Link2, Check, MessageSquare } from 'lucide-react';
+import { useState } from 'react';
+import { Share2, Link2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,15 +19,6 @@ interface ShareBountyButtonProps {
   className?: string;
 }
 
-/** Simple mobile check — touch device with narrow viewport */
-function getIsMobile(): boolean {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.innerWidth <= 768 &&
-    ('ontouchstart' in window || navigator.maxTouchPoints > 0)
-  );
-}
-
 export function ShareBountyButton({ 
   bountyId, 
   title, 
@@ -38,22 +29,12 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  const isMobile = useMemo(() => getIsMobile(), []);
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   // metaUrl = edge function that serves OG tags for crawlers, then redirects users to the real page
   const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bountyId}`;
   
   const shareText = `$${amount.toLocaleString()} Bounty: ${title}`;
-  const encodedMetaUrl = encodeURIComponent(metaUrl);
-  const encodedText = encodeURIComponent(shareText);
-
-  // Desktop-only: social platform share links (web-based popups)
-  const shareLinks = {
-    twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedMetaUrl}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedMetaUrl}&quote=${encodedText}`,
-    reddit: `https://reddit.com/submit?url=${encodedMetaUrl}&title=${encodeURIComponent(`$${amount.toLocaleString()} Bounty: ${title}`)}`,
-  };
 
   // Native share — hands URL to OS share sheet which opens real apps
   const handleNativeShare = async () => {
@@ -88,10 +69,6 @@ export function ShareBountyButton({
     }
   };
 
-  const openShareLink = (url: string) => {
-    window.open(url, '_blank', 'width=600,height=400,menubar=no,toolbar=no');
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -101,34 +78,15 @@ export function ShareBountyButton({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        {/* MOBILE: Native Share first (opens OS share sheet → real apps) */}
-        {isMobile && supportsNativeShare && (
-          <>
-            <DropdownMenuItem onClick={handleNativeShare}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Share via...
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
+        {/* Native Share — opens OS share sheet (works on mobile & some desktops) */}
+        {supportsNativeShare && (
+          <DropdownMenuItem onClick={handleNativeShare}>
+            <Share2 className="h-4 w-4 mr-2" />
+            Share via...
+          </DropdownMenuItem>
         )}
 
-        {/* Platform buttons — on mobile they trigger native share, on desktop they open web popups */}
-        <DropdownMenuItem onClick={() => isMobile && supportsNativeShare ? handleNativeShare() : openShareLink(shareLinks.facebook)}>
-          <Facebook className="h-4 w-4 mr-2" />
-          Facebook
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem onClick={() => isMobile && supportsNativeShare ? handleNativeShare() : openShareLink(shareLinks.twitter)}>
-          <Twitter className="h-4 w-4 mr-2" />
-          Twitter / X
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem onClick={() => isMobile && supportsNativeShare ? handleNativeShare() : openShareLink(shareLinks.reddit)}>
-          <MessageSquare className="h-4 w-4 mr-2" />
-          Reddit
-        </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
+        {supportsNativeShare && <DropdownMenuSeparator />}
         
         {/* Copy Link — always available */}
         <DropdownMenuItem onClick={handleCopyLink}>

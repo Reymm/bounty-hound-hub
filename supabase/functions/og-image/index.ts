@@ -186,42 +186,6 @@ serve(async (req) => {
           position: "relative",
         },
         children: [
-          // Top accent bar
-          {
-            type: "div",
-            props: {
-              style: {
-                width: "100%",
-                height: 5,
-                background: `linear-gradient(90deg, ${BLUE}, #60a5fa, ${BLUE})`,
-              },
-            },
-          },
-          // BountyBay logo header
-          {
-            type: "div",
-            props: {
-              style: {
-                display: "flex",
-                alignItems: "center",
-                padding: "20px 52px 0",
-              },
-              children: [
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      fontSize: 26,
-                      fontWeight: 700,
-                      color: BLUE,
-                      letterSpacing: -0.5,
-                    },
-                    children: "BountyBay",
-                  },
-                },
-              ],
-            },
-          },
           // Main content
           {
             type: "div",
@@ -230,7 +194,7 @@ serve(async (req) => {
                 flex: 1,
                 display: "flex",
                 flexDirection: "row",
-                padding: "12px 52px 28px",
+                padding: "40px 52px 28px",
                 gap: 52,
                 alignItems: "center",
               },
@@ -249,16 +213,17 @@ serve(async (req) => {
                       gap: 18,
                     },
                     children: [
-                      // Small "bountybay.co" branding
+                      // BountyBay logo — replaces the old small "bountybay.co" text
                       {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 16,
-                            fontWeight: 600,
-                            color: GRAY_500,
+                            fontSize: 32,
+                            fontWeight: 700,
+                            color: BLUE,
+                            letterSpacing: -0.5,
                           },
-                          children: "bountybay.co",
+                          children: "BountyBay",
                         },
                       },
                       // Combined line: "Lead Only · $1,000 Bounty:"
