@@ -81,10 +81,14 @@ serve(async (req) => {
       });
     }
 
+    // Strip "help me find" / "help find" prefix if poster already included it
+    const rawTitle = bounty.title || "";
+    const alreadyHasPrefix = /^help\s+(me\s+)?find[:\s]/i.test(rawTitle);
+    const displayTitle = alreadyHasPrefix ? rawTitle : `Help me find: ${rawTitle}`;
     const title =
-      bounty.title.length > 60
-        ? bounty.title.slice(0, 57) + "..."
-        : bounty.title;
+      displayTitle.length > 70
+        ? displayTitle.slice(0, 67) + "..."
+        : displayTitle;
     const amount = `$${(bounty.amount || 0).toLocaleString()}`;
     const bountyType = bounty.requires_shipping ? "Find & Ship" : "Lead Only";
 
