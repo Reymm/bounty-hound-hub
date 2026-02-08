@@ -47,6 +47,3 @@ verify_jwt = true
 
 [functions.bounty-meta]
 verify_jwt = false
-
-[functions.og-home-image]
-verify_jwt = false
