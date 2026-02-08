@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Image as ImageIcon, Package, Link2 } from 'lucide-react';
+import { Image as ImageIcon, Package, Link2, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { SafeImage } from '@/components/ui/safe-image';
-import { Bounty } from '@/lib/types';
+import { Bounty, BountyStatus } from '@/lib/types';
 
 interface BountyCardCompactProps {
   bounty: Bounty;
@@ -46,17 +46,32 @@ export function BountyCardCompact({ bounty }: BountyCardCompactProps) {
             {bounty.title}
           </h3>
 
-          {/* Type badge */}
-          {bounty.requires_shipping ? (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-600 gap-0.5">
-              <Package className="h-2.5 w-2.5" />
-              Ship
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600 gap-0.5">
-              <Link2 className="h-2.5 w-2.5" />
-              Lead
-            </Badge>
+          {/* Badges row */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {bounty.status === BountyStatus.OPEN && (
+              <Badge className="bg-green-500 text-white hover:bg-green-600 text-[10px] px-1.5 py-0 h-5">
+                Open
+              </Badge>
+            )}
+            {bounty.requires_shipping ? (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-600 gap-0.5">
+                <Package className="h-2.5 w-2.5" />
+                Ship
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600 gap-0.5">
+                <Link2 className="h-2.5 w-2.5" />
+                Lead
+              </Badge>
+            )}
+          </div>
+
+          {/* Location */}
+          {bounty.location && (
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate">{bounty.location}</span>
+            </div>
           )}
         </div>
       </div>
