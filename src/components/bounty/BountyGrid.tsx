@@ -1,9 +1,11 @@
 import { BountyCard } from './BountyCard';
+import { BountyCardCompact } from './BountyCardCompact';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Bounty } from '@/lib/types';
 import { Package } from 'lucide-react';
 import { useSavedBounties } from '@/hooks/use-saved-bounties';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BountyGridProps {
   bounties: Bounty[];
@@ -21,12 +23,13 @@ export function BountyGrid({
   showSaveButton = true
 }: BountyGridProps) {
   const { isSaved, toggleSave } = useSavedBounties();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className={isMobile ? "grid grid-cols-2 gap-3" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}>
         {Array.from({ length: 6 }).map((_, i) => (
-          <LoadingSkeleton key={i} className="h-64" />
+          <LoadingSkeleton key={i} className={isMobile ? "h-48" : "h-64"} />
         ))}
       </div>
     );
@@ -40,6 +43,21 @@ export function BountyGrid({
         description={emptyDescription}
         className="col-span-full py-12"
       />
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="grid grid-cols-2 gap-3">
+          {bounties.map((bounty) => (
+            <BountyCardCompact key={bounty.id} bounty={bounty} />
+          ))}
+        </div>
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          Showing {bounties.length} bounties
+        </div>
+      </>
     );
   }
 
@@ -57,8 +75,6 @@ export function BountyGrid({
           </div>
         ))}
       </div>
-      
-      {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         Showing {bounties.length} bounties
       </div>
