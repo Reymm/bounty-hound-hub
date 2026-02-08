@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Image as ImageIcon, Package, Link2, MapPin, Eye, BadgeCheck } from 'lucide-react';
+import { Image as ImageIcon, Package, Link2, MapPin, Eye, BadgeCheck, Star, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { SafeImage } from '@/components/ui/safe-image';
 import { SaveBountyButton } from './SaveBountyButton';
 import { Bounty, BountyStatus } from '@/lib/types';
+import { formatDistanceToNowStrict } from 'date-fns';
 
 interface BountyCardCompactProps {
   bounty: Bounty;
@@ -59,7 +60,7 @@ export function BountyCardCompact({ bounty, isSaved = false, onToggleSave, showS
         </div>
 
         {/* Info */}
-        <div className="p-2.5 space-y-1.5">
+        <div className="p-2.5 space-y-1">
           {/* Price */}
           <CurrencyDisplayCompact
             amount={bounty.bountyAmount}
@@ -84,23 +85,45 @@ export function BountyCardCompact({ bounty, isSaved = false, onToggleSave, showS
                 Lead
               </Badge>
             )}
-            {bounty.isOfficial && (
+          </div>
+
+          {/* Poster row: Official badge OR poster name + rating */}
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground min-w-0">
+            {bounty.isOfficial ? (
               <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-1.5 py-0 h-5 gap-0.5">
                 <BadgeCheck className="h-2.5 w-2.5" />
                 Official
               </Badge>
+            ) : (
+              <>
+                <span className="truncate font-medium text-foreground">{bounty.posterName}</span>
+                {bounty.posterRating > 0 && (
+                  <span className="flex items-center gap-0.5 shrink-0">
+                    <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
+                    <span>{bounty.posterRating.toFixed(1)}</span>
+                  </span>
+                )}
+              </>
             )}
           </div>
 
-          {/* Meta row: location + views */}
+          {/* Meta row: location + deadline + views */}
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            {bounty.location && (
-              <div className="flex items-center gap-1 min-w-0 flex-1">
-                <MapPin className="h-3 w-3 shrink-0" />
-                <span className="truncate">{bounty.location}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-1 shrink-0 ml-1">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {bounty.location && (
+                <div className="flex items-center gap-0.5 min-w-0">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="truncate max-w-[60px]">{bounty.location}</span>
+                </div>
+              )}
+              {bounty.deadline && (
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <Clock className="h-3 w-3" />
+                  <span>{formatDistanceToNowStrict(new Date(bounty.deadline), { addSuffix: false })}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-0.5 shrink-0 ml-1">
               <Eye className="h-3 w-3" />
               <span>{bounty.viewsCount}</span>
             </div>
