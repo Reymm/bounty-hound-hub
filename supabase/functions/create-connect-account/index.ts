@@ -111,6 +111,13 @@ serve(async (req) => {
     // Create new Connect account if one doesn't exist
     // If a country is specified, use it. Otherwise let Stripe determine based on IP.
     if (!accountId) {
+      // Parse the hunter's full name into first/last for Stripe individual fields
+      const fullName = profile?.full_name || '';
+      const nameParts = fullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+      logStep("Pre-filling hunter name", { firstName, lastName });
+
       const accountParams: any = {
         type: 'express',
         email: user.email,
@@ -119,6 +126,11 @@ serve(async (req) => {
           transfers: { requested: true },
         },
         business_type: 'individual',
+        individual: {
+          ...(firstName && { first_name: firstName }),
+          ...(lastName && { last_name: lastName }),
+          email: user.email,
+        },
         business_profile: {
           product_description: 'Freelance finder services - locating items and leads for bounty posters on BountyBay marketplace',
           mcc: '7299', // Miscellaneous personal services
