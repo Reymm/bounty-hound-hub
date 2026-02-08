@@ -10,7 +10,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
           {/* Logo and Copyright */}
           <div className="text-center md:text-left">
-            <div className="text-lg font-semibold text-primary mb-2">BountyBay</div>
+            <div className="text-lg font-semibold mb-2"><span className="text-primary">Bounty</span><span className="text-foreground">Bay</span></div>
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} BountyBay. All rights reserved.
             </p>
