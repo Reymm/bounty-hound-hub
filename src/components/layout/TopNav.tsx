@@ -147,10 +147,10 @@ export function TopNav({ onSearch }: TopNavProps) {
           <div className="flex items-center gap-4">
             <Link 
               to="/" 
-              className="text-2xl font-bold hover:opacity-80 transition-opacity"
+              className="text-2xl font-bold text-primary hover:text-primary-hover transition-colors"
               aria-label="BountyBay Home"
             >
-              <span className="text-primary">Bounty</span><span className="text-foreground">Bay</span>
+              BountyBay
             </Link>
 
             {/* Explore Dropdown - Desktop */}
