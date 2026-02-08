@@ -282,19 +282,44 @@ serve(async (req) => {
                       gap: 14,
                     },
                     children: [
-                      // BountyBay logo
+                      // BountyBay logo — two-tone: Bounty (blue) + Bay (black)
                       {
                         type: "div",
                         props: {
                           style: {
-                            fontSize: 38,
-                            fontWeight: 700,
-                            color: BLUE,
-                            letterSpacing: -0.5,
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "baseline",
                             lineHeight: 1,
-                            textShadow: "0 2px 8px rgba(59, 130, 246, 0.3)",
                           },
-                          children: "BountyBay",
+                          children: [
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 38,
+                                  fontWeight: 700,
+                                  color: BLUE,
+                                  letterSpacing: -0.5,
+                                  textShadow: "0 2px 8px rgba(59, 130, 246, 0.3)",
+                                },
+                                children: "Bounty",
+                              },
+                            },
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  fontSize: 38,
+                                  fontWeight: 700,
+                                  color: GRAY_900,
+                                  letterSpacing: -0.5,
+                                  textShadow: "0 2px 8px rgba(17, 24, 39, 0.2)",
+                                },
+                                children: "Bay",
+                              },
+                            },
+                          ],
                         },
                       },
                       // Amount line — "$1,000 Bounty:" in bold black
