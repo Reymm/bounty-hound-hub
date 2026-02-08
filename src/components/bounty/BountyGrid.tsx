@@ -51,7 +51,13 @@ export function BountyGrid({
       <>
         <div className="grid grid-cols-2 gap-3">
           {bounties.map((bounty) => (
-            <BountyCardCompact key={bounty.id} bounty={bounty} />
+            <BountyCardCompact
+              key={bounty.id}
+              bounty={bounty}
+              isSaved={isSaved(bounty.id)}
+              onToggleSave={() => toggleSave(bounty.id)}
+              showSaveButton={showSaveButton}
+            />
           ))}
         </div>
         <div className="sr-only" aria-live="polite" aria-atomic="true">
