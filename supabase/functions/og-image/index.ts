@@ -86,8 +86,8 @@ serve(async (req) => {
     const alreadyHasPrefix = /^help\s+(me\s+)?find[:\s]/i.test(rawTitle);
     const displayTitle = alreadyHasPrefix ? rawTitle : `Help me find: ${rawTitle}`;
     const title =
-      displayTitle.length > 70
-        ? displayTitle.slice(0, 67) + "..."
+      displayTitle.length > 90
+        ? displayTitle.slice(0, 87) + "..."
         : displayTitle;
     const amount = `$${(bounty.amount || 0).toLocaleString()}`;
     const bountyType = bounty.requires_shipping ? "Find & Ship" : "Lead Only";
