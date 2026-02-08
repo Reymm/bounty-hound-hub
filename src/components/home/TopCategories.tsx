@@ -17,6 +17,20 @@ interface CategoryCard {
 
 const topCategories: CategoryCard[] = [
   {
+    id: BountyCategory.FASHION_APPAREL,
+    label: 'Fashion & Sneakers',
+    icon: <Shirt className="h-6 w-6" />,
+    description: 'Rare sneakers, vintage clothing, designer items',
+    gradient: 'from-pink-500/10 to-pink-600/5'
+  },
+  {
+    id: BountyCategory.TOYS_KIDS,
+    label: 'Toys & Kids',
+    icon: <Baby className="h-6 w-6" />,
+    description: 'Discontinued toys, plushies, stuffed animals, baby gear',
+    gradient: 'from-cyan-500/10 to-cyan-600/5'
+  },
+  {
     id: BountyCategory.COLLECTIBLES,
     label: 'Collectibles',
     icon: <Sparkles className="h-6 w-6" />,
@@ -29,13 +43,6 @@ const topCategories: CategoryCard[] = [
     icon: <Car className="h-6 w-6" />,
     description: 'Classic cars, rare parts, vintage motorcycles',
     gradient: 'from-blue-500/10 to-blue-600/5'
-  },
-  {
-    id: BountyCategory.FASHION_APPAREL,
-    label: 'Fashion & Sneakers',
-    icon: <Shirt className="h-6 w-6" />,
-    description: 'Rare sneakers, vintage clothing, designer items',
-    gradient: 'from-pink-500/10 to-pink-600/5'
   },
   {
     id: BountyCategory.ELECTRONICS,
@@ -86,13 +93,6 @@ const topCategories: CategoryCard[] = [
     description: 'Stolen vehicles, lost items, recovery tips',
     gradient: 'from-red-500/10 to-red-600/5'
   },
-  {
-    id: BountyCategory.TOYS_KIDS,
-    label: 'Toys & Kids',
-    icon: <Baby className="h-6 w-6" />,
-    description: 'Discontinued toys, stuffed animals, baby gear',
-    gradient: 'from-cyan-500/10 to-cyan-600/5'
-  }
 ];
 
 export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
