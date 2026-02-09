@@ -1175,7 +1175,16 @@ export const supabaseApi = {
         total_failed_claims: 0 // Default for public access
       } : null;
 
-      return (data || []).map(bounty => transformBountyRow(bounty, profile));
+      // Fetch claims counts for all bounties
+      const claimsCounts = await Promise.all(
+        (data || []).map(async (bounty) => {
+          const { data: count } = await supabase.rpc('get_bounty_claims_count', { p_bounty_id: bounty.id });
+          return { id: bounty.id, count: count || 0 };
+        })
+      );
+      const countsMap = new Map(claimsCounts.map(c => [c.id, c.count]));
+
+      return (data || []).map(bounty => transformBountyRow(bounty, profile, countsMap.get(bounty.id) || 0));
     } catch (error) {
       console.error('Error fetching user bounties:', error);
       return [];
