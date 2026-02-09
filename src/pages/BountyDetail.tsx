@@ -297,7 +297,6 @@ export default function BountyDetail() {
                   bountyId={bounty.id}
                   title={bounty.title}
                   amount={bounty.bountyAmount}
-                  imageUrl={bounty.images?.[0]}
                   variant="ghost"
                   size="sm"
                 />
