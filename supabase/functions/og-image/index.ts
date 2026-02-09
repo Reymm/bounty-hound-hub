@@ -9,13 +9,12 @@ const corsHeaders = {
 };
 
 const FALLBACK_IMAGE = "https://bountybay.co/og-default.png";
+const OG_BUCKET = "og-images";
 
-// Brand colors — matching the actual site
+// Brand colors
 const BLUE = "#3b82f6";
 const GREEN = "#16a34a";
 const WHITE = "#ffffff";
-const _GRAY_100 = "#f3f4f6";
-const _GRAY_200 = "#e5e7eb";
 const GRAY_500 = "#6b7280";
 const GRAY_900 = "#111827";
 
@@ -63,11 +62,29 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabase = createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // --- CHECK CACHE FIRST ---
+    const cachedPath = `${bountyId}.png`;
+    const { data: cachedFile } = await supabase.storage
+      .from(OG_BUCKET)
+      .createSignedUrl(cachedPath, 60); // just checking existence
+
+    if (cachedFile?.signedUrl) {
+      // Serve the public URL directly
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/${OG_BUCKET}/${cachedPath}`;
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          Location: publicUrl,
+          "Cache-Control": "public, max-age=3600, s-maxage=3600",
+        },
+      });
+    }
+
+    // --- NO CACHE — GENERATE IMAGE ---
     const { data: bounty, error } = await supabase
       .from("Bounties")
       .select("id, title, amount, status, requires_shipping, poster_id, images")
@@ -81,7 +98,7 @@ serve(async (req) => {
       });
     }
 
-    // Strip "help me find" / "help find" prefix if poster already included it
+    // Strip "help me find" prefix if already present
     const rawTitle = bounty.title || "";
     const alreadyHasPrefix = /^help\s+(me\s+)?find[:\s]/i.test(rawTitle);
     const displayTitle = alreadyHasPrefix ? rawTitle : `Help me find: ${rawTitle}`;
@@ -92,9 +109,7 @@ serve(async (req) => {
     const amount = `$${(bounty.amount || 0).toLocaleString()}`;
     const bountyType = bounty.requires_shipping ? "Find & Ship" : "Lead Only";
 
-    // Resolve bounty image — Satori supports PNG, JPEG, GIF but NOT WebP.
-    // For WebP images we fetch the bytes and convert to a base64 PNG data-URL
-    // using Supabase Storage's image transformation endpoint.
+    // Resolve bounty image — convert WebP to PNG for Satori compatibility
     const rawImageUrl = bounty.images && bounty.images.length > 0
       ? bounty.images[0]
       : null;
@@ -107,8 +122,6 @@ serve(async (req) => {
         const isWebp = ct.includes("webp") || rawImageUrl.toLowerCase().endsWith(".webp");
 
         if (isWebp) {
-          // Try Supabase Storage transform endpoint to convert WebP → PNG
-          // URL pattern: /storage/v1/render/image/public/bucket/path
           const transformUrl = rawImageUrl.replace(
             "/storage/v1/object/public/",
             "/storage/v1/render/image/public/",
@@ -118,331 +131,27 @@ serve(async (req) => {
           const imgCt = imgRes.headers.get("content-type") || "";
 
           if (imgRes.ok && !imgCt.includes("webp")) {
-            // Transform endpoint returned a non-WebP format — use as data URL
             const buf = await imgRes.arrayBuffer();
             const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
             bountyImageUrl = `data:${imgCt};base64,${b64}`;
           } else if (imgRes.ok) {
-            // Transform still returned WebP — try fetching raw bytes and
-            // encode as data URL anyway; some Satori forks handle it
             const buf = await imgRes.arrayBuffer();
             const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
             bountyImageUrl = `data:image/png;base64,${b64}`;
           } else {
-            // Transform failed — fall back to placeholder
             bountyImageUrl = null;
           }
         }
       } catch (e) {
         console.error("Image probe/convert failed:", e);
-        // If anything fails, fall back to placeholder
         bountyImageUrl = null;
       }
     }
 
-    // Left side: bounty image — contained (not cropped), slightly tilted, with shadow
-    const imageSection = bountyImageUrl
-      ? {
-          type: "div",
-          props: {
-            style: {
-              width: 440,
-              height: 500,
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: WHITE,
-            },
-            children: [
-              {
-                type: "div",
-                props: {
-                  style: {
-                    width: 380,
-                    height: 440,
-                    borderRadius: 16,
-                    overflow: "hidden",
-                    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: WHITE,
-                    transform: "rotate(-3deg)",
-                  },
-                  children: [
-                    {
-                      type: "img",
-                      props: {
-                        src: bountyImageUrl,
-                        width: 380,
-                        height: 440,
-                        style: {
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                        },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        }
-      : {
-          type: "div",
-          props: {
-            style: {
-              width: 440,
-              height: 500,
-              borderRadius: 16,
-              background: `linear-gradient(135deg, #dbeafe, #bfdbfe)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1)",
-            },
-            children: [
-              {
-                type: "div",
-                props: {
-                  style: {
-                    fontSize: 28,
-                    fontWeight: 700,
-                    color: BLUE,
-                    letterSpacing: 1,
-                  },
-                  children: "BountyBay",
-                },
-              },
-            ],
-          },
-        };
-
-    // Status badge — only show OPEN for open bounties
+    // Build the OG image element tree
+    const imageSection = buildImageSection(bountyImageUrl);
     const isOpen = bounty.status === "open";
-
-    const element = {
-      type: "div",
-      props: {
-        style: {
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          background: `linear-gradient(160deg, ${WHITE} 0%, #f0f6ff 100%)`,
-          fontFamily: "Inter, sans-serif",
-          position: "relative",
-          overflow: "hidden",
-        },
-        children: [
-          // Subtle dot texture overlay
-          {
-            type: "div",
-            props: {
-              style: {
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundImage: "radial-gradient(circle, #cbd5e1 0.8px, transparent 0.8px)",
-                backgroundSize: "24px 24px",
-                opacity: 0.18,
-              },
-            },
-          },
-          // Main content
-          {
-            type: "div",
-            props: {
-              style: {
-                flex: 1,
-                display: "flex",
-                flexDirection: "row",
-                padding: "36px 52px 20px",
-                gap: 52,
-                alignItems: "center",
-                position: "relative",
-              },
-              children: [
-                // LEFT: Bounty photo
-                imageSection,
-                // RIGHT: All text content
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      flex: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      gap: 14,
-                    },
-                    children: [
-                      // BountyBay logo
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 38,
-                            fontWeight: 700,
-                            color: BLUE,
-                            letterSpacing: -0.5,
-                            lineHeight: 1,
-                            textShadow: "0 2px 8px rgba(59, 130, 246, 0.3)",
-                          },
-                          children: "BountyBay",
-                        },
-                      },
-                      // Amount line — "$1,000 Bounty:" in bold black
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 42,
-                            fontWeight: 700,
-                            color: GRAY_900,
-                            lineHeight: 1.15,
-                            letterSpacing: -0.5,
-                            marginTop: 4,
-                            textShadow: "0 2px 8px rgba(17, 24, 39, 0.2)",
-                          },
-                          children: `${amount} Bounty:`,
-                        },
-                      },
-                      // Title — clear and readable
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: 28,
-                            fontWeight: 700,
-                            color: GRAY_900,
-                            lineHeight: 1.3,
-                          },
-                          children: title,
-                        },
-                      },
-                      // Badges row: "Lead Only" blue outline + "OPEN" green outline
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            marginTop: 4,
-                          },
-                          children: [
-                            // Lead Only / Find & Ship — blue outline badge
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  fontSize: 13,
-                                  fontWeight: 700,
-                                  color: BLUE,
-                                  border: `2px solid ${BLUE}`,
-                                  padding: "3px 12px",
-                                  borderRadius: 12,
-                                  letterSpacing: 1,
-                                  textTransform: "uppercase",
-                                  boxShadow: "0 2px 8px rgba(59, 130, 246, 0.25)",
-                                },
-                                children: bountyType.toUpperCase(),
-                              },
-                            },
-                            // OPEN badge — green outline (only for open bounties)
-                            ...(isOpen
-                              ? [
-                                  {
-                                    type: "div",
-                                    props: {
-                                      style: {
-                                        fontSize: 13,
-                                        fontWeight: 700,
-                                        color: GREEN,
-                                        border: `2px solid ${GREEN}`,
-                                        padding: "3px 12px",
-                                        borderRadius: 12,
-                                        letterSpacing: 1,
-                                        textTransform: "uppercase",
-                                        boxShadow: "0 2px 8px rgba(22, 163, 74, 0.25)",
-                                      },
-                                      children: "OPEN",
-                                    },
-                                  },
-                                ]
-                              : []),
-                          ],
-                        },
-                      },
-                      // Green "View Now" pill
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            display: "flex",
-                            alignItems: "center",
-                            marginTop: 6,
-                          },
-                          children: [
-                            {
-                              type: "div",
-                              props: {
-                                style: {
-                                  fontSize: 16,
-                                  fontWeight: 700,
-                                  color: WHITE,
-                                  background: GREEN,
-                                  padding: "10px 28px",
-                                  borderRadius: 20,
-                                  letterSpacing: 0.5,
-                                  boxShadow: "0 4px 14px rgba(22, 163, 74, 0.35)",
-                                },
-                                children: "View Now",
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-          // Footer: domain
-          {
-            type: "div",
-            props: {
-              style: {
-                display: "flex",
-                justifyContent: "flex-end",
-                padding: "0 52px 14px",
-                position: "relative",
-              },
-              children: [
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: GRAY_500,
-                    },
-                    children: "bountybay.co",
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    };
+    const element = buildOgElement(imageSection, title, amount, bountyType, isOpen);
 
     const fonts: Array<Record<string, unknown>> = [];
     if (fontRegular) {
@@ -458,12 +167,30 @@ serve(async (req) => {
     }
 
     const response = new ImageResponse(element, options);
-    response.headers.set("Cache-Control", "public, max-age=3600, s-maxage=3600");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    // CORS — allow browser-side downloads
-    response.headers.set("Access-Control-Allow-Origin", "*");
 
-    return response;
+    // Get PNG bytes and cache to storage
+    const pngBytes = await response.arrayBuffer();
+
+    // Upload to cache (fire-and-forget, don't block response)
+    supabase.storage
+      .from(OG_BUCKET)
+      .upload(cachedPath, pngBytes, {
+        contentType: "image/png",
+        upsert: true,
+      })
+      .then(({ error: uploadErr }) => {
+        if (uploadErr) console.error("OG cache upload failed:", uploadErr);
+        else console.log("OG image cached:", cachedPath);
+      });
+
+    return new Response(pngBytes, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch (error) {
     console.error("OG image generation failed:", error);
     return new Response(null, {
@@ -472,3 +199,146 @@ serve(async (req) => {
     });
   }
 });
+
+// --- Helper functions ---
+
+function buildImageSection(bountyImageUrl: string | null) {
+  if (bountyImageUrl) {
+    return {
+      type: "div",
+      props: {
+        style: {
+          width: 440, height: 500, flexShrink: 0, display: "flex",
+          alignItems: "center", justifyContent: "center", background: WHITE,
+        },
+        children: [{
+          type: "div",
+          props: {
+            style: {
+              width: 380, height: 440, borderRadius: 16, overflow: "hidden",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.1)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: WHITE, transform: "rotate(-3deg)",
+            },
+            children: [{
+              type: "img",
+              props: {
+                src: bountyImageUrl, width: 380, height: 440,
+                style: { width: "100%", height: "100%", objectFit: "contain" },
+              },
+            }],
+          },
+        }],
+      },
+    };
+  }
+  return {
+    type: "div",
+    props: {
+      style: {
+        width: 440, height: 500, borderRadius: 16,
+        background: "linear-gradient(135deg, #dbeafe, #bfdbfe)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0, boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.1)",
+      },
+      children: [{
+        type: "div",
+        props: {
+          style: { fontSize: 28, fontWeight: 700, color: BLUE, letterSpacing: 1 },
+          children: "BountyBay",
+        },
+      }],
+    },
+  };
+}
+
+function buildOgElement(
+  imageSection: Record<string, unknown>,
+  title: string,
+  amount: string,
+  bountyType: string,
+  isOpen: boolean,
+) {
+  return {
+    type: "div",
+    props: {
+      style: {
+        width: "100%", height: "100%", display: "flex", flexDirection: "column",
+        background: `linear-gradient(160deg, ${WHITE} 0%, #f0f6ff 100%)`,
+        fontFamily: "Inter, sans-serif", position: "relative", overflow: "hidden",
+      },
+      children: [
+        // Dot texture overlay
+        {
+          type: "div",
+          props: {
+            style: {
+              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+              backgroundImage: "radial-gradient(circle, #cbd5e1 0.8px, transparent 0.8px)",
+              backgroundSize: "24px 24px", opacity: 0.18,
+            },
+          },
+        },
+        // Main content row
+        {
+          type: "div",
+          props: {
+            style: {
+              flex: 1, display: "flex", flexDirection: "row",
+              padding: "36px 52px 20px", gap: 52,
+              alignItems: "center", position: "relative",
+            },
+            children: [
+              imageSection,
+              // Right side: text content
+              {
+                type: "div",
+                props: {
+                  style: {
+                    flex: 1, display: "flex", flexDirection: "column",
+                    justifyContent: "center", gap: 14,
+                  },
+                  children: [
+                    // BountyBay logo
+                    { type: "div", props: { style: { fontSize: 38, fontWeight: 700, color: BLUE, letterSpacing: -0.5, lineHeight: 1, textShadow: "0 2px 8px rgba(59,130,246,0.3)" }, children: "BountyBay" } },
+                    // Amount
+                    { type: "div", props: { style: { fontSize: 42, fontWeight: 700, color: GRAY_900, lineHeight: 1.15, letterSpacing: -0.5, marginTop: 4, textShadow: "0 2px 8px rgba(17,24,39,0.2)" }, children: `${amount} Bounty:` } },
+                    // Title
+                    { type: "div", props: { style: { fontSize: 28, fontWeight: 700, color: GRAY_900, lineHeight: 1.3 }, children: title } },
+                    // Badges
+                    {
+                      type: "div",
+                      props: {
+                        style: { display: "flex", alignItems: "center", gap: 10, marginTop: 4 },
+                        children: [
+                          { type: "div", props: { style: { fontSize: 13, fontWeight: 700, color: BLUE, border: `2px solid ${BLUE}`, padding: "3px 12px", borderRadius: 12, letterSpacing: 1, textTransform: "uppercase", boxShadow: "0 2px 8px rgba(59,130,246,0.25)" }, children: bountyType.toUpperCase() } },
+                          ...(isOpen ? [{ type: "div", props: { style: { fontSize: 13, fontWeight: 700, color: GREEN, border: `2px solid ${GREEN}`, padding: "3px 12px", borderRadius: 12, letterSpacing: 1, textTransform: "uppercase", boxShadow: "0 2px 8px rgba(22,163,74,0.25)" }, children: "OPEN" } }] : []),
+                        ],
+                      },
+                    },
+                    // CTA
+                    {
+                      type: "div",
+                      props: {
+                        style: { display: "flex", alignItems: "center", marginTop: 6 },
+                        children: [{ type: "div", props: { style: { fontSize: 16, fontWeight: 700, color: WHITE, background: GREEN, padding: "10px 28px", borderRadius: 20, letterSpacing: 0.5, boxShadow: "0 4px 14px rgba(22,163,74,0.35)" }, children: "View Now" } }],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        // Footer
+        {
+          type: "div",
+          props: {
+            style: { display: "flex", justifyContent: "flex-end", padding: "0 52px 14px", position: "relative" },
+            children: [{ type: "div", props: { style: { fontSize: 15, fontWeight: 600, color: GRAY_500 }, children: "bountybay.co" } }],
+          },
+        },
+      ],
+    },
+  };
+}
