@@ -460,6 +460,8 @@ serve(async (req) => {
     const response = new ImageResponse(element, options);
     response.headers.set("Cache-Control", "public, max-age=3600, s-maxage=3600");
     response.headers.set("X-Content-Type-Options", "nosniff");
+    // CORS — allow browser-side downloads
+    response.headers.set("Access-Control-Allow-Origin", "*");
 
     return response;
   } catch (error) {
