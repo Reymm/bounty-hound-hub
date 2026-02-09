@@ -14,7 +14,6 @@ interface ShareBountyButtonProps {
   bountyId: string;
   title: string;
   amount: number;
-  imageUrl?: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
@@ -24,7 +23,6 @@ export function ShareBountyButton({
   bountyId, 
   title, 
   amount, 
-  imageUrl,
   variant = 'outline',
   size = 'default',
   className 
@@ -73,31 +71,21 @@ export function ShareBountyButton({
   };
 
   const handleDownloadImage = async () => {
-    if (!imageUrl) {
-      toast.error('No image available for this bounty');
-      return;
-    }
     setDownloading(true);
     try {
-      const response = await fetch(imageUrl);
+      const ogImageUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/og-image/${bountyId}`;
+      const response = await fetch(ogImageUrl);
       if (!response.ok) throw new Error('Failed to fetch image');
       const blob = await response.blob();
-      
-      // Determine file extension from content type
-      const contentType = response.headers.get('content-type') || 'image/png';
-      const ext = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' 
-        : contentType.includes('webp') ? 'webp' 
-        : 'png';
-      
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bounty-${bountyId.slice(0, 8)}.${ext}`;
+      a.download = `bounty-${bountyId.slice(0, 8)}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('Image saved!');
+      toast.success('Image downloaded!');
     } catch (err) {
       console.error('Download failed:', err);
       toast.error('Failed to download image');
@@ -135,20 +123,17 @@ export function ShareBountyButton({
           {copied ? 'Copied!' : 'Copy Link'}
         </DropdownMenuItem>
 
-        {/* Download Image — for Reddit/social image posts */}
-        {imageUrl && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleDownloadImage} disabled={downloading}>
-              {downloading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              {downloading ? 'Saving...' : 'Save Image'}
-            </DropdownMenuItem>
-          </>
-        )}
+        <DropdownMenuSeparator />
+
+        {/* Download OG Image — the full branded bounty card */}
+        <DropdownMenuItem onClick={handleDownloadImage} disabled={downloading}>
+          {downloading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
+          {downloading ? 'Generating...' : 'Download Image'}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
