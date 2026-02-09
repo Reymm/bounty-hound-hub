@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Share2, Link2, Check, Download, Loader2 } from 'lucide-react';
+import { Share2, Link2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,7 +28,6 @@ export function ShareBountyButton({
   className 
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
-  const [downloading, setDownloading] = useState(false);
   
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
@@ -70,30 +69,6 @@ export function ShareBountyButton({
     }
   };
 
-  const handleDownloadImage = async () => {
-    setDownloading(true);
-    try {
-      const ogImageUrl = `https://lenyuvobgktgdearflim.supabase.co/functions/v1/og-image/${bountyId}`;
-      const response = await fetch(ogImageUrl);
-      if (!response.ok) throw new Error('Failed to fetch image');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `bounty-${bountyId.slice(0, 8)}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('Image downloaded!');
-    } catch (err) {
-      console.error('Download failed:', err);
-      toast.error('Failed to download image');
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -123,17 +98,6 @@ export function ShareBountyButton({
           {copied ? 'Copied!' : 'Copy Link'}
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
-
-        {/* Download OG Image — the full branded bounty card */}
-        <DropdownMenuItem onClick={handleDownloadImage} disabled={downloading}>
-          {downloading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Download className="h-4 w-4 mr-2" />
-          )}
-          {downloading ? 'Generating...' : 'Download Image'}
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
