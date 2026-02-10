@@ -237,12 +237,19 @@ export default function Auth() {
 
       if (error) {
         // Check for various duplicate user error messages
+        const errorLower = error.message.toLowerCase();
         if (error.message.includes('User already registered') || 
             error.message.includes('already been registered') ||
             error.message.includes('already exists')) {
           setError('An account with this email already exists. Please sign in instead.');
         } else if (error.message.includes('Password should be at least')) {
           setError('Password must meet all security requirements above.');
+        } else if (errorLower.includes('weak') || 
+                   errorLower.includes('pwned') ||
+                   errorLower.includes('breach') ||
+                   errorLower.includes('compromised') ||
+                   errorLower.includes('known to be')) {
+          setError('This password has been found in a data breach and cannot be used. Please choose a different, unique password — even though it met the strength requirements above.');
         } else {
           setError(error.message);
         }
