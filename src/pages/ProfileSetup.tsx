@@ -307,7 +307,7 @@ const ProfileSetup = () => {
                 <Label>Profile Photo (Optional)</Label>
                 <AvatarUpload
                   currentAvatarUrl={avatarUrl}
-                  fallbackText={watch('username')?.substring(0, 2).toUpperCase() || 'BB'}
+                  fallbackText=""
                   onAvatarChange={(url) => setAvatarUrl(url || '')}
                 />
                 <p className="text-sm text-muted-foreground">

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, Upload, X } from 'lucide-react';
+import { Camera, Upload, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -151,7 +151,7 @@ export function AvatarUpload({
             <AvatarImage src={displayUrl} alt="Profile picture" />
           ) : null}
           <AvatarFallback className="text-2xl">
-            {fallbackText}
+            {fallbackText || <User className="h-10 w-10 text-muted-foreground" />}
           </AvatarFallback>
         </Avatar>
         
