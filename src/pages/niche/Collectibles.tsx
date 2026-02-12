@@ -7,7 +7,7 @@ const collectiblesConfig: NicheConfig = {
   category: BountyCategory.COLLECTIBLES,
   title: 'Find Rare Collectibles & Treasures',
   subtitle: 'The marketplace for impossible finds.',
-  description: 'Searching for that rare vinyl, vintage toy, limited edition trading card, or antique piece? Post a bounty and let our community of collectors and hunters track it down for you.',
+  description: 'Searching for that rare trading card, limited edition figurine, coin, or antique piece? Post a bounty and let our community of collectors and hunters track it down for you.',
   heroGradient: 'bg-gradient-to-br from-amber-500/10 via-background to-orange-500/5',
   icon: <Gem className="h-10 w-10 text-amber-500" />,
   trustBadgeText: 'Verified hunters. Secure escrow. No scams.',
