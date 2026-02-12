@@ -72,7 +72,8 @@ export function TopNav({ onSearch }: TopNavProps) {
     if (profileData.username) {
       return profileData.username.substring(0, 2).toUpperCase();
     }
-    return (user?.email || 'U').substring(0, 2).toUpperCase();
+    // Fallback: use first letter only to avoid exposing email prefix
+    return (user?.email?.charAt(0) || 'U').toUpperCase();
   };
 
   // Fetch real unread message count with real-time updates
