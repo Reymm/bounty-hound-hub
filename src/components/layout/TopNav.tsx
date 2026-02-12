@@ -32,6 +32,9 @@ export function TopNav({ onSearch }: TopNavProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   
+  // Profile data for avatar display
+  const [profileData, setProfileData] = useState<{ username: string | null; avatar_url: string | null }>({ username: null, avatar_url: null });
+
   // Verification status for mobile menu
   const [verificationStatus, setVerificationStatus] = useState<{
     identity: boolean;
@@ -65,8 +68,11 @@ export function TopNav({ onSearch }: TopNavProps) {
     navigate('/');
   };
 
-  const getUserInitials = (email: string) => {
-    return email.substring(0, 2).toUpperCase();
+  const getUserInitials = () => {
+    if (profileData.username) {
+      return profileData.username.substring(0, 2).toUpperCase();
+    }
+    return (user?.email || 'U').substring(0, 2).toUpperCase();
   };
 
   // Fetch real unread message count with real-time updates
@@ -95,6 +101,22 @@ export function TopNav({ onSearch }: TopNavProps) {
       }
     };
 
+    // Fetch profile data (username + avatar)
+    const fetchProfile = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', user.id)
+          .single();
+        if (data) {
+          setProfileData({ username: data.username, avatar_url: data.avatar_url });
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
     // Fetch verification status for mobile menu indicator
     const fetchVerificationStatus = async () => {
       try {
@@ -115,6 +137,7 @@ export function TopNav({ onSearch }: TopNavProps) {
     };
 
     fetchUnreadCount();
+    fetchProfile();
     fetchVerificationStatus();
 
     // Set up real-time subscription
@@ -240,9 +263,9 @@ export function TopNav({ onSearch }: TopNavProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 focus-ring">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src="" alt={user.email} />
+                        <AvatarImage src={profileData.avatar_url || ''} alt={profileData.username || user.email} />
                         <AvatarFallback className="text-xs">
-                          {getUserInitials(user.email || 'U')}
+                          {getUserInitials()}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -250,7 +273,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium text-sm">{user.email}</p>
+                        <p className="font-medium text-sm">{profileData.username || user.email}</p>
                         <p className="w-[200px] truncate text-xs text-muted-foreground">
                           Welcome to BountyBay
                         </p>
