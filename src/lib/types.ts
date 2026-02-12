@@ -157,7 +157,6 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
   'collectibles': {
     label: 'Collectibles',
     subcategories: {
-      'vintage-toys': 'Vintage Toys',
       'rare-coins': 'Rare Coins',
       'comic-books': 'Comic Books',
       'sports-memorabilia': 'Sports Memorabilia',
@@ -357,6 +356,7 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
   'toys-kids': {
     label: 'Toys & Kids',
     subcategories: {
+      'vintage-toys': 'Vintage Toys',
       'plushies': 'Plushies',
       'stuffed-animals': 'Stuffed Animals & Plush',
       'action-figures': 'Action Figures & Dolls',
