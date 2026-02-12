@@ -27,14 +27,14 @@ const topCategories: CategoryCard[] = [
     id: BountyCategory.TOYS_KIDS,
     label: 'Toys & Kids',
     icon: <Baby className="h-6 w-6" />,
-    description: 'Discontinued toys, plushies, stuffed animals, baby gear',
+    description: 'Vintage toys, discontinued toys, plushies, stuffed animals, baby gear',
     gradient: 'from-cyan-500/10 to-cyan-600/5'
   },
   {
     id: BountyCategory.COLLECTIBLES,
     label: 'Collectibles',
     icon: <Sparkles className="h-6 w-6" />,
-    description: 'Pokémon cards, sports cards, vintage toys, coins',
+    description: 'Pokémon cards, sports cards, coins, figurines',
     gradient: 'from-amber-500/10 to-amber-600/5'
   },
   {
