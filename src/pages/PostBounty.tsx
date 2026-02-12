@@ -450,7 +450,6 @@ function PostBountyForm() {
 
     try {
       // All bounties use SetupIntent (card-save only, no auth holds)
-      // This avoids 7-day authorization expiration for long-term bounties
       const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
         payment_method: {
           card: cardNumberElement,
@@ -458,7 +457,25 @@ function PostBountyForm() {
       });
 
       if (setupError) {
-        throw new Error(setupError.message);
+        // Parse Stripe error for specific, user-friendly messages
+        let userMessage = setupError.message || 'Card verification failed.';
+        const code = setupError.code;
+        const declineCode = (setupError as any).decline_code;
+        
+        if (code === 'incorrect_cvc' || declineCode === 'incorrect_cvc') {
+          userMessage = 'Incorrect CVC/security code. Please check the 3-digit code on the back of your card.';
+        } else if (code === 'invalid_expiry_month' || code === 'invalid_expiry_year' || code === 'card_declined' && declineCode === 'expired_card') {
+          userMessage = 'Invalid expiry date. Please check your card\'s expiration date.';
+        } else if (code === 'incorrect_number' || code === 'invalid_number') {
+          userMessage = 'Invalid card number. Please double-check your card number.';
+        } else if (code === 'card_declined') {
+          userMessage = `Card declined${declineCode ? ` (${declineCode})` : ''}. Please try a different card.`;
+        } else if (code === 'processing_error') {
+          userMessage = 'Processing error. Please try again in a moment.';
+        }
+        
+        console.error('[Payment] Stripe error:', { code, declineCode, message: setupError.message });
+        throw new Error(userMessage);
       }
 
       if (!setupIntent || setupIntent.status !== 'succeeded') {
@@ -493,7 +510,24 @@ function PostBountyForm() {
         }
       });
 
-      if (bountyError) throw bountyError;
+      if (bountyError) {
+        // Parse edge function errors for specific messages
+        let errorMsg = 'Failed to create bounty. Please try again.';
+        try {
+          const parsed = typeof bountyError === 'string' ? JSON.parse(bountyError) : bountyError;
+          if (parsed?.error) errorMsg = parsed.error;
+          if (parsed?.code === 'CVC_ERROR') {
+            errorMsg = 'Card security code (CVC) verification failed. Please go back and re-enter your card details.';
+            // Reset to payment step so user can re-enter card
+            setClientSecret(null);
+            setIntentId(null);
+            setCurrentStep('details');
+          }
+        } catch { 
+          if (typeof bountyError.message === 'string') errorMsg = bountyError.message;
+        }
+        throw new Error(errorMsg);
+      }
 
       // Send confirmation email
       try {
@@ -508,7 +542,6 @@ function PostBountyForm() {
         });
       } catch (emailError) {
         console.error('Failed to send confirmation email:', emailError);
-        // Don't fail the bounty posting if email fails
       }
 
       toast({
@@ -516,7 +549,6 @@ function PostBountyForm() {
         description: "Your bounty is now live. Your card will be charged when you accept a submission.",
       });
 
-      // Clear the bounty posting flag and draft
       sessionStorage.removeItem('bounty_post_in_progress');
       sessionStorage.removeItem('bounty_draft');
 

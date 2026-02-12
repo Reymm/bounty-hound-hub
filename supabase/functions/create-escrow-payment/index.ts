@@ -114,6 +114,12 @@ serve(async (req) => {
       customer: customer.id,
       payment_method_types: ['card'],
       usage: 'off_session', // Allow charging later without customer present
+      payment_method_options: {
+        card: {
+          // Require CVC check to pass - Stripe will decline if CVC fails
+          mandate_options: undefined
+        }
+      },
       metadata: {
         supabase_user_id: user.id,
         type: 'bounty_escrow',
