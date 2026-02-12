@@ -95,6 +95,23 @@ serve(async (req) => {
     }
     logStep("SetupIntent verified", { status: setupIntent.status, paymentMethodId });
 
+    // CRITICAL: Verify CVC check passed on the payment method
+    // Some issuers allow SetupIntent to succeed even with wrong CVC
+    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+    const cvcCheck = paymentMethod.card?.checks?.cvc_check;
+    logStep("CVC check result", { cvcCheck, cardBrand: paymentMethod.card?.brand });
+    
+    if (cvcCheck === 'fail') {
+      // Detach the payment method since CVC failed
+      await stripe.paymentMethods.detach(paymentMethodId);
+      logStep("Payment method detached due to CVC failure");
+      throw new Error("Card verification failed: incorrect security code (CVC). Please try again with the correct code.");
+    }
+    
+    // 'pass' = verified, 'unavailable' = issuer doesn't support, 'unchecked' = not checked yet
+    // We only hard-block on 'fail' — the other states are acceptable
+    logStep("CVC validation passed", { cvcCheck });
+
     // Get escrow transaction
     const { data: escrowData, error: escrowError } = await supabaseClient
       .from('escrow_transactions')
@@ -185,15 +202,16 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in confirm-escrow-and-create-bounty", { message: errorMessage });
-    // Return generic error to client, keep details in server logs
+    // Return specific error for CVC failures so UI can show proper message
     const isAuthError = errorMessage.includes('Authentication') || errorMessage.includes('authorization');
     const isNotFound = errorMessage.includes('not found');
+    const isCvcError = errorMessage.includes('CVC') || errorMessage.includes('security code');
     return new Response(JSON.stringify({ 
-      error: isAuthError ? 'Authentication failed' : isNotFound ? 'Transaction not found' : 'Bounty creation failed',
-      code: isAuthError ? 'AUTH_ERROR' : isNotFound ? 'NOT_FOUND' : 'CREATE_ERROR'
+      error: isCvcError ? errorMessage : isAuthError ? 'Authentication failed' : isNotFound ? 'Transaction not found' : 'Bounty creation failed',
+      code: isCvcError ? 'CVC_ERROR' : isAuthError ? 'AUTH_ERROR' : isNotFound ? 'NOT_FOUND' : 'CREATE_ERROR'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: isAuthError ? 401 : isNotFound ? 404 : 500,
+      status: isCvcError ? 400 : isAuthError ? 401 : isNotFound ? 404 : 500,
     });
   }
 });
