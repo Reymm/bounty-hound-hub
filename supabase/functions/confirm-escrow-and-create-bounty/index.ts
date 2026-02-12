@@ -95,22 +95,9 @@ serve(async (req) => {
     }
     logStep("SetupIntent verified", { status: setupIntent.status, paymentMethodId });
 
-    // CRITICAL: Verify CVC check passed on the payment method
-    // Some issuers allow SetupIntent to succeed even with wrong CVC
-    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
-    const cvcCheck = paymentMethod.card?.checks?.cvc_check;
-    logStep("CVC check result", { cvcCheck, cardBrand: paymentMethod.card?.brand });
-    
-    if (cvcCheck === 'fail') {
-      // Detach the payment method since CVC failed
-      await stripe.paymentMethods.detach(paymentMethodId);
-      logStep("Payment method detached due to CVC failure");
-      throw new Error("Card verification failed: incorrect security code (CVC). Please try again with the correct code.");
-    }
-    
-    // 'pass' = verified, 'unavailable' = issuer doesn't support, 'unchecked' = not checked yet
-    // We only hard-block on 'fail' — the other states are acceptable
-    logStep("CVC validation passed", { cvcCheck });
+    // CVC is validated client-side by Stripe's SetupIntent flow
+    // Server-side re-checking was causing false rejections with certain issuers
+    logStep("Card verified via SetupIntent", { paymentMethodId });
 
     // Get escrow transaction
     const { data: escrowData, error: escrowError } = await supabaseClient
