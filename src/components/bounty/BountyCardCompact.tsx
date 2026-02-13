@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { SafeImage } from '@/components/ui/safe-image';
 import { SaveBountyButton } from './SaveBountyButton';
-import { Bounty, BountyStatus } from '@/lib/types';
+import { Bounty, BountyStatus, BountyCategory } from '@/lib/types';
+import lostMediaPlaceholder from '@/assets/lost-media-placeholder.jpg';
 import { formatDistanceToNowStrict } from 'date-fns';
 
 interface BountyCardCompactProps {
@@ -23,6 +24,8 @@ export function BountyCardCompact({ bounty, isSaved = false, onToggleSave, showS
       fallbackClassName="w-full h-full"
       showFallbackIcon={true}
     />
+  ) : bounty.category === BountyCategory.LOST_MEDIA_THREADS ? (
+    <img src={lostMediaPlaceholder} alt="Lost Media" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
   ) : (
     <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
       <ImageIcon className="h-6 w-6 text-muted-foreground/30" />
