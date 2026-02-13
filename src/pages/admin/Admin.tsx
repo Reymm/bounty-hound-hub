@@ -8,7 +8,8 @@ import { AdminFinances } from '@/components/admin/AdminFinances';
 import { AdminPartnerManagement } from '@/components/admin/AdminPartnerManagement';
 import { AdminPartnerPayouts } from '@/components/admin/AdminPartnerPayouts';
 import { AdminPartnerApplications } from '@/components/admin/AdminPartnerApplications';
-import { adminSupportApi } from '@/lib/api/admin-support';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -26,15 +27,32 @@ export function Admin() {
   const activeTab = searchParams.get('tab') || 'overview';
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   const setActiveTab = (tab: string) => {
     setSearchParams({ tab });
   };
 
   useEffect(() => {
+    if (loading) return;
+    
+    if (!user) {
+      setIsAdmin(false);
+      navigate('/');
+      return;
+    }
+
     const checkAdminAccess = async () => {
       try {
-        const hasAccess = await adminSupportApi.checkAdminStatus();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_support_admin')
+          .eq('id', user.id)
+          .single();
+
+        console.log('Admin check for user:', user.id, 'result:', data, 'error:', error);
+        
+        const hasAccess = data?.is_support_admin || false;
         setIsAdmin(hasAccess);
         
         if (!hasAccess) {
@@ -53,7 +71,7 @@ export function Admin() {
     };
 
     checkAdminAccess();
-  }, [toast, navigate]);
+  }, [user, loading, toast, navigate]);
 
   if (isAdmin === null) {
     return (
