@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Database, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Loader2, Database, Trash2, AlertTriangle, RefreshCw, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -27,11 +27,13 @@ export function AdminDemoSeeder() {
   const [seeding, setSeeding] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [resettingStripe, setResettingStripe] = useState(false);
+  const [seedingUsers, setSeedingUsers] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState('');
   const [progress, setProgress] = useState(0);
   const [seedDialogOpen, setSeedDialogOpen] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [stripeResetDialogOpen, setStripeResetDialogOpen] = useState(false);
+  const [seedUsersDialogOpen, setSeedUsersDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const createBounty = async (bounty: DemoBounty): Promise<boolean> => {
@@ -109,16 +111,13 @@ export function AdminDemoSeeder() {
     setClearDialogOpen(false);
 
     try {
-      // Delete bounties that contain the demo marker in their description
       const { error, count } = await supabase
         .from('Bounties')
         .delete({ count: 'exact' })
         .eq('poster_id', ADMIN_USER_ID)
         .like('description', `%${DEMO_MARKER}%`);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Demo bounties cleared",
@@ -133,6 +132,33 @@ export function AdminDemoSeeder() {
       });
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleSeedUsers = async () => {
+    setSeedingUsers(true);
+    setSeedUsersDialogOpen(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-users', {
+        body: { action: 'create_users' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Users seeded! 🎉",
+        description: `Created ${data.created} accounts, skipped ${data.skipped} existing. ${data.errors ? `${data.errors.length} errors.` : ''}`,
+      });
+    } catch (error: any) {
+      console.error('Error seeding users:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to seed users.",
+        variant: "destructive",
+      });
+    } finally {
+      setSeedingUsers(false);
     }
   };
 
@@ -327,6 +353,54 @@ export function AdminDemoSeeder() {
                   disabled={!stripeAccountId.trim()}
                 >
                   Delete & Reset
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          {/* Seed Users Tool */}
+          <AlertDialog open={seedUsersDialogOpen} onOpenChange={setSeedUsersDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                disabled={seeding || clearing || resettingStripe || seedingUsers}
+                className="border-emerald-300 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                {seedingUsers ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating Users...
+                  </>
+                ) : (
+                  <>
+                    <Users className="h-4 w-4 mr-2" />
+                    Seed 67 User Accounts
+                  </>
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-emerald-600">
+                  <Users className="h-5 w-5" />
+                  Create 67 Seed Accounts?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-3">
+                  <p>This will create <strong>67 unique user accounts</strong> (test4 through test70) using kaylaannrey+testN@gmail.com with realistic profiles.</p>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>Each account has a unique username, bio, and region</li>
+                    <li>All use the same password: <code className="bg-muted px-1 rounded">BountyBay2025!</code></li>
+                    <li>Existing accounts will be skipped</li>
+                    <li>You can log into any account to post real bounties</li>
+                  </ul>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleSeedUsers}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Create Accounts
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

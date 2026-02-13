@@ -77,8 +77,8 @@ function transformBountyRow(row: BountyRow, profile?: any, claimsCount?: number,
     status: row.status as BountyStatus,
     posterId: row.poster_id || '',
     posterName: profile?.full_name || profile?.username || 'Anonymous',
-    posterRating: Number(profile?.reputation_score || 5),
-    posterRatingCount: (profile?.total_successful_claims || 0) + (profile?.total_failed_claims || 0),
+    posterRating: Number(profile?.average_rating || 0),
+    posterRatingCount: Number(profile?.total_ratings_received || 0),
     isOfficial: isOfficial || false,
     verificationRequirements: row.verification_requirements || [],
     createdAt: parseDbTimestamp(row.created_at as any),
@@ -97,7 +97,7 @@ const transformSubmissionRow = (row: any): Claim => ({
   bountyId: row.bounty_id,
   hunterId: row.hunter_id,
   hunterName: 'Anonymous', // Will be overridden with actual profile data
-  hunterRating: 5, // Will be overridden with actual profile data
+  hunterRating: 0, // Will be overridden with actual profile data
   hunterRatingCount: 0, // Will be overridden with actual profile data
   type: 'found' as any, // Default to 'found' - adjust based on your needs
   message: row.message || '',
@@ -462,7 +462,7 @@ export const supabaseApi = {
       return (data || []).map(submission => ({
         ...transformSubmissionRow(submission),
         hunterName: profileMap.get(submission.hunter_id)?.username || 'Anonymous',
-        hunterRating: profileMap.get(submission.hunter_id)?.reputation_score || 5,
+        hunterRating: profileMap.get(submission.hunter_id)?.average_rating || 0,
         hunterRatingCount: profileMap.get(submission.hunter_id)?.total_ratings_received || 0
       }));
     } catch (error) {
