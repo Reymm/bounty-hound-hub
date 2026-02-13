@@ -20,13 +20,14 @@ const SUCCESS_STORIES = [
     subcategory: "Sports Cards",
     amount: 85,
     tags: ["baseball", "rookie card", "topps", "vintage"],
-    poster_idx: 0, // mike_collects
-    hunter_idx: 8, // collectorcraig (PSA graded expert)
+    poster_idx: 0,
+    hunter_idx: 8,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Craig found the card in like 4 days. Near mint condition too. Way better than what I expected.",
     review_hunter: "Mike was super clear about what he wanted. Easy transaction, paid right away.",
     days_ago: 22,
+    image: "/seed/baseball-card.jpg",
   },
   {
     title: "Looking for Jordan 4 Military Black size 11",
@@ -35,13 +36,14 @@ const SUCCESS_STORIES = [
     subcategory: "Sneakers",
     amount: 65,
     tags: ["jordan", "nike", "sneakers", "size 11"],
-    poster_idx: 10, // dustin_hunts
-    hunter_idx: 22, // marcusmoves
+    poster_idx: 10,
+    hunter_idx: 22,
     rating_poster: 5,
     rating_hunter: 4,
     review_poster: "Got the shoes, legit pair, good condition. Marcus came through.",
     review_hunter: "Dustin was cool. Shipped fast once I found them.",
     days_ago: 18,
+    image: "/seed/jordan-sneakers.jpg",
   },
   {
     title: "Vintage Polaroid SX-70 that actually works",
@@ -50,13 +52,14 @@ const SUCCESS_STORIES = [
     subcategory: "Cameras",
     amount: 120,
     tags: ["polaroid", "vintage camera", "instant film", "sx-70"],
-    poster_idx: 25, // sophieseeks
-    hunter_idx: 12, // alexscouts
+    poster_idx: 25,
+    hunter_idx: 12,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Alex found a beautiful one at an estate sale. Works perfectly. Took some test shots before shipping too which was a nice touch.",
     review_hunter: "Sophie knew exactly what she wanted which made it easy. Great bounty poster.",
     days_ago: 30,
+    image: "/seed/polaroid-camera.jpg",
   },
   {
     title: "First edition Harry Potter and the Philosopher's Stone",
@@ -65,13 +68,14 @@ const SUCCESS_STORIES = [
     subcategory: "Books",
     amount: 200,
     tags: ["harry potter", "first edition", "books", "bloomsbury"],
-    poster_idx: 19, // jen_discovers
-    hunter_idx: 4, // sarah_vintage
+    poster_idx: 19,
+    hunter_idx: 4,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Sarah found a 2nd print Bloomsbury hardcover in great shape. Dust jacket and everything. Couldn't be happier.",
     review_hunter: "Jen was patient while I searched. The book community came through on this one. Love this platform.",
     days_ago: 45,
+    image: "/seed/harry-potter-book.jpg",
   },
   {
     title: "Lost touch with my college roommate from 2009",
@@ -80,13 +84,14 @@ const SUCCESS_STORIES = [
     subcategory: "Lost Friends",
     amount: 75,
     tags: ["lost friend", "college", "reconnection"],
-    poster_idx: 21, // katelocates
-    hunter_idx: 15, // nadia_seeks
+    poster_idx: 21,
+    hunter_idx: 15,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Nadia tracked him down through the UBC alumni network. We've been texting nonstop since. This was worth every penny.",
     review_hunter: "These reconnection bounties are my favorite. The look on people's faces when they reconnect is priceless.",
     days_ago: 35,
+    image: "/seed/friends-reunion.jpg",
   },
   {
     title: "Parts for 1969 Camaro SS restoration",
@@ -95,13 +100,14 @@ const SUCCESS_STORIES = [
     subcategory: "Classic Cars",
     amount: 150,
     tags: ["camaro", "1969", "restoration", "car parts"],
-    poster_idx: 14, // tomfindsit
-    hunter_idx: 28, // chrislocator
+    poster_idx: 14,
+    hunter_idx: 28,
     rating_poster: 4,
     rating_hunter: 5,
     review_poster: "Chris found the wheels at a swap meet. Hood scoop was repo but decent quality. Got me 80% of the way there.",
     review_hunter: "Tom knows his stuff. Very specific about what he needed which made sourcing easier.",
     days_ago: 15,
+    image: "/seed/camaro-classic.jpg",
   },
   {
     title: "Sealed copy of Chrono Trigger SNES",
@@ -110,13 +116,14 @@ const SUCCESS_STORIES = [
     subcategory: "Video Games",
     amount: 250,
     tags: ["snes", "chrono trigger", "retro gaming", "sealed"],
-    poster_idx: 18, // carlostracker
-    hunter_idx: 32, // kevinseeker
+    poster_idx: 18,
+    hunter_idx: 32,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Kevin found a CIB copy with the map and everything. Not sealed but honestly better than I expected. Manual looks unread.",
     review_hunter: "Took me a while but found it through a local game store that had been sitting on it. Carlos was pumped.",
     days_ago: 40,
+    image: "/seed/retro-gaming.jpg",
   },
   {
     title: "Discontinued Jo Malone fragrance",
@@ -125,13 +132,14 @@ const SUCCESS_STORIES = [
     subcategory: "Fragrances",
     amount: 90,
     tags: ["perfume", "jo malone", "discontinued", "fragrance"],
-    poster_idx: 20, // ryanhunter
-    hunter_idx: 39, // tiffanyfinds
+    poster_idx: 20,
+    hunter_idx: 39,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Tiffany found a nearly full bottle. My wife literally cried. Best money I ever spent.",
     review_hunter: "Found it at an estate sale of all places. Love making people happy like this.",
     days_ago: 12,
+    image: "/seed/perfume-bottle.jpg",
   },
   {
     title: "Rare pressing of Miles Davis Kind of Blue",
@@ -140,13 +148,14 @@ const SUCCESS_STORIES = [
     subcategory: "Vinyl Records",
     amount: 175,
     tags: ["vinyl", "miles davis", "jazz", "rare pressing"],
-    poster_idx: 7, // vinylvince
-    hunter_idx: 24, // danielscouter
+    poster_idx: 7,
+    hunter_idx: 24,
     rating_poster: 4,
     rating_hunter: 5,
     review_poster: "Daniel found a VG+ copy. Small ring wear on the jacket but the vinyl plays beautifully. Fair price too.",
     review_hunter: "Vince is a real collector, he knew the exact pressing details. Found it at a record fair in Philly.",
     days_ago: 28,
+    image: "/seed/vinyl-record.jpg",
   },
   {
     title: "Vintage Omega Seamaster from the 1960s",
@@ -155,13 +164,14 @@ const SUCCESS_STORIES = [
     subcategory: "Watches",
     amount: 200,
     tags: ["omega", "seamaster", "vintage watch", "1960s"],
-    poster_idx: 30, // brettfinds
-    hunter_idx: 9, // lisafinds
+    poster_idx: 30,
+    hunter_idx: 9,
     rating_poster: 5,
     rating_hunter: 4,
     review_poster: "Lisa sourced a 166.010 with a gorgeous silver dial. Runs about 30 seconds fast per day but that's normal for the age. Really happy with this.",
     review_hunter: "Brett knew what he was after. Good communication throughout the search.",
     days_ago: 50,
+    image: "/seed/vintage-watch.jpg",
   },
   {
     title: "Matching set of vintage Pyrex Butterprint bowls",
@@ -170,13 +180,14 @@ const SUCCESS_STORIES = [
     subcategory: "Vintage",
     amount: 110,
     tags: ["pyrex", "butterprint", "vintage kitchen", "retro"],
-    poster_idx: 45, // amberseeks
-    hunter_idx: 6, // emma_finds
+    poster_idx: 45,
+    hunter_idx: 6,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Emma found the whole set at different thrift stores over 2 weeks. No chips, patterns look great. She even wrapped them individually for shipping. 10/10.",
     review_hunter: "Amber was so sweet about this. The grandma connection made me want to find the perfect set. Glad I could deliver.",
     days_ago: 20,
+    image: "/seed/pyrex-bowls.jpg",
   },
   {
     title: "1st gen Pokemon cards from base set",
@@ -185,13 +196,14 @@ const SUCCESS_STORIES = [
     subcategory: "Trading Cards",
     amount: 180,
     tags: ["pokemon", "base set", "charizard", "trading cards"],
-    poster_idx: 48, // dylanscouts
-    hunter_idx: 12, // alexscouts
+    poster_idx: 48,
+    hunter_idx: 12,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Alex came through with all 3 cards. Unlimited base set but in surprisingly good shape. Charizard has a tiny whitening on the back but who cares. Stoked.",
     review_hunter: "Found them at a garage sale where some kid was selling his old collection. The nostalgia on this one was real.",
     days_ago: 8,
+    image: "/seed/pokemon-cards.jpg",
   },
   {
     title: "Help finding my birth mother",
@@ -200,13 +212,14 @@ const SUCCESS_STORIES = [
     subcategory: "Family",
     amount: 150,
     tags: ["adoption", "birth parent", "family", "ontario"],
-    poster_idx: 27, // megan_tracks
-    hunter_idx: 21, // katelocates
+    poster_idx: 27,
+    hunter_idx: 21,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Kate helped me find her. We've exchanged letters. I can't even put into words what this means to me. Thank you BountyBay for making this possible.",
     review_hunter: "This was the most meaningful search I've ever done. Megan deserved this connection. Glad the platform exists for moments like these.",
     days_ago: 60,
+    image: "/seed/family-reunion.jpg",
   },
   {
     title: "Vintage Coach purse from the 90s",
@@ -215,13 +228,14 @@ const SUCCESS_STORIES = [
     subcategory: "Handbags",
     amount: 95,
     tags: ["coach", "vintage purse", "willis bag", "leather"],
-    poster_idx: 35, // nicole_finds
-    hunter_idx: 13, // rachelantics
+    poster_idx: 35,
+    hunter_idx: 13,
     rating_poster: 5,
     rating_hunter: 5,
     review_poster: "Rachel found one in amazing condition. The leather has that perfect aged look. Mom's going to lose it on her birthday. Thank you!!",
     review_hunter: "Nicole gave me great details about what to look for. Found it at a consignment shop in Portland. Love these sentimental bounties.",
     days_ago: 14,
+    image: "/seed/vintage-purse.jpg",
   },
   {
     title: "Vintage Fender Deluxe Reverb amp 1965",
@@ -230,13 +244,14 @@ const SUCCESS_STORIES = [
     subcategory: "Musical Instruments",
     amount: 225,
     tags: ["fender", "guitar amp", "vintage", "blackface"],
-    poster_idx: 7, // vinylvince
-    hunter_idx: 14, // tomfindsit
+    poster_idx: 7,
+    hunter_idx: 14,
     rating_poster: 4,
     rating_hunter: 5,
     review_poster: "Tom found a 65 with replaced filter caps but original transformers. Sounds incredible. Reverb is dreamy. Only ding is the tolex has some wear but thats expected for 60 years old.",
     review_hunter: "Found this one through a music teacher who was downsizing. Vince drove 3 hours to pick it up. Respect.",
     days_ago: 38,
+    image: "/seed/guitar-amp.jpg",
   },
 ];
 
@@ -283,7 +298,7 @@ serve(async (req) => {
     logStep("Admin verified", { userId: userData.user.id });
 
     const body = await req.json();
-    const { action = 'create_stories' } = body;
+    const { action = 'create_stories', site_url = 'https://bountybay.lovable.app' } = body;
 
     if (action === 'assign_avatars') {
       // Fetch all seeded users (those with bios, excluding admin accounts)
@@ -393,6 +408,7 @@ serve(async (req) => {
               created_at: createdAt.toISOString(),
               updated_at: fulfilledAt.toISOString(),
               view_count: 20 + Math.floor(Math.random() * 200),
+              images: story.image ? [`${site_url}${story.image}`] : [],
             })
             .select('id')
             .single();
