@@ -406,6 +406,7 @@ export default function EditBounty() {
                 uploadedImages={uploadedImages}
                 onUpload={handleImageUpload}
                 onRemove={handleImageRemove}
+                onReorder={(reordered) => setUploadedImages(reordered)}
                 maxFiles={5}
               />
             </div>
