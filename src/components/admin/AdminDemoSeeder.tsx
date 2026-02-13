@@ -29,6 +29,7 @@ export function AdminDemoSeeder() {
   const [resettingStripe, setResettingStripe] = useState(false);
   const [seedingUsers, setSeedingUsers] = useState(false);
   const [seedingStories, setSeedingStories] = useState(false);
+  const [clearingStories, setClearingStories] = useState(false);
   const [assigningAvatars, setAssigningAvatars] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState('');
   const [progress, setProgress] = useState(0);
@@ -190,6 +191,29 @@ export function AdminDemoSeeder() {
       });
     } finally {
       setSeedingStories(false);
+    }
+  };
+
+  const handleClearStories = async () => {
+    setClearingStories(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-success-stories', {
+        body: { action: 'clear_stories' }
+      });
+      if (error) throw error;
+      toast({
+        title: "Stories cleared",
+        description: `Deleted ${data.deleted} seeded bounties, submissions, and ratings.`,
+      });
+    } catch (error: any) {
+      console.error('Error clearing stories:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to clear stories.",
+        variant: "destructive",
+      });
+    } finally {
+      setClearingStories(false);
     }
   };
 
@@ -475,6 +499,20 @@ export function AdminDemoSeeder() {
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creating Stories...</>
             ) : (
               <><Trophy className="h-4 w-4 mr-2" />Seed 15 Success Stories</>
+            )}
+          </Button>
+
+          {/* Clear Success Stories */}
+          <Button 
+            variant="outline" 
+            disabled={clearingStories}
+            onClick={handleClearStories}
+            className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            {clearingStories ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Clearing Stories...</>
+            ) : (
+              <><Trash2 className="h-4 w-4 mr-2" />Clear All Stories</>
             )}
           </Button>
 

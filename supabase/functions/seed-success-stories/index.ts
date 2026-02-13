@@ -300,6 +300,49 @@ serve(async (req) => {
     const body = await req.json();
     const { action = 'create_stories', site_url = 'https://bountybay.lovable.app' } = body;
 
+    if (action === 'clear_stories') {
+      // Get all seeded user IDs
+      const { data: seededUsers } = await supabase
+        .from('profiles')
+        .select('id')
+        .not('bio', 'is', null)
+        .not('username', 'in', '("BountyBay","Frank")');
+      
+      const seededIds = (seededUsers || []).map(u => u.id);
+      if (seededIds.length === 0) {
+        return new Response(JSON.stringify({ success: true, deleted: 0 }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Find all fulfilled bounties posted by seeded users
+      const { data: bounties } = await supabase
+        .from('Bounties')
+        .select('id')
+        .eq('status', 'fulfilled')
+        .in('poster_id', seededIds);
+      
+      const bountyIds = (bounties || []).map(b => b.id);
+      logStep("Found seeded bounties to delete", { count: bountyIds.length });
+
+      if (bountyIds.length > 0) {
+        // Delete ratings, submissions, then bounties
+        await supabase.from('user_ratings').delete().in('bounty_id', bountyIds);
+        await supabase.from('Submissions').delete().in('bounty_id', bountyIds);
+        await supabase.from('Bounties').delete().in('id', bountyIds);
+      }
+
+      // Recalculate ratings for all seeded users
+      for (const id of seededIds) {
+        await supabase.rpc('recalculate_user_rating', { user_id_param: id });
+      }
+
+      logStep("Stories cleared", { deleted: bountyIds.length });
+      return new Response(JSON.stringify({ success: true, deleted: bountyIds.length }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === 'assign_avatars') {
       // Fetch all seeded users (those with bios, excluding admin accounts)
       const { data: seededUsers, error: fetchError } = await supabase
