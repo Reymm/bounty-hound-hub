@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X, Upload, Loader2, CheckCircle2, Expand } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { X, Upload, Loader2, CheckCircle2, Expand, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -19,6 +20,7 @@ interface FileProgress {
 interface ImageUploadProps {
   onUpload: (files: File[], onProgress?: (fileName: string, progress: number) => void) => Promise<void>;
   onRemove: (imageUrl: string) => Promise<void>;
+  onReorder?: (images: string[]) => void;
   uploadedImages: string[];
   maxFiles?: number;
   maxSize?: number;
@@ -29,6 +31,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   onUpload,
   onRemove,
+  onReorder,
   uploadedImages,
   maxFiles = 5,
   maxSize = 10 * 1024 * 1024,
@@ -222,16 +225,40 @@ export function ImageUpload({
           {uploadedImages.map((imageUrl, index) => (
             <div
               key={index}
-              className="relative group border rounded-lg overflow-hidden bg-muted aspect-square cursor-pointer"
+              className={cn(
+                "relative group border rounded-lg overflow-hidden bg-muted aspect-square cursor-pointer",
+                index === 0 && "ring-2 ring-primary"
+              )}
               onClick={() => setLightboxImage(imageUrl)}
             >
+              {index === 0 && (
+                <Badge className="absolute top-2 left-2 z-10 gap-1 bg-primary text-primary-foreground text-xs">
+                  <Star className="h-3 w-3 fill-current" />
+                  Main
+                </Badge>
+              )}
               <img
                 src={imageUrl}
                 alt={`Upload ${index + 1}`}
                 className="w-full h-full object-contain"
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <Button
+                {index !== 0 && onReorder && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const reordered = [imageUrl, ...uploadedImages.filter((_, i) => i !== index)];
+                      onReorder(reordered);
+                    }}
+                    title="Set as main photo"
+                  >
+                    <Star className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
                   type="button"
                   size="sm"
                   variant="secondary"

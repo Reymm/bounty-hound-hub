@@ -1315,6 +1315,7 @@ function PostBountyForm() {
             <ImageUpload
               onUpload={handleImageUpload}
               onRemove={handleImageRemove}
+              onReorder={(reordered) => setUploadedImages(reordered)}
               uploadedImages={uploadedImages}
               maxFiles={5}
               maxSize={20 * 1024 * 1024} // 20MB
