@@ -38,7 +38,7 @@ import IdentityComplete from "./pages/IdentityComplete";
 import Auth from "./pages/Auth";
 import EditBounty from "./pages/EditBounty";
 // Niche landing pages
-import Reconnections from "./pages/niche/Reconnections";
+import LostMedia from "./pages/niche/LostMedia";
 import Collectibles from "./pages/niche/Collectibles";
 import VintageCars from "./pages/niche/VintageCars";
 const queryClient = new QueryClient();
@@ -79,7 +79,7 @@ const App = () => (
                       <Route path="/how-it-works" element={<HowItWorks />} />
                       
                       {/* Niche landing pages */}
-                      <Route path="/reconnections" element={<Reconnections />} />
+                      <Route path="/lost-media" element={<LostMedia />} />
                       <Route path="/collectibles" element={<Collectibles />} />
                       <Route path="/vintage-cars" element={<VintageCars />} />
                       

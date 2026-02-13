@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Heart, Sparkles, Car, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, ShieldCheck, HelpCircle, FileSearch, BookOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationBell } from './NotificationBell';
 
 const nichePages = [
-  { title: 'Reconnections', description: 'Find lost loved ones', href: '/reconnections', icon: Heart },
+  { title: 'Lost Media', description: 'Deleted Reddit threads, YouTube videos & more', href: '/lost-media', icon: FileSearch },
   { title: 'Collectibles', description: 'Cards, toys, memorabilia', href: '/collectibles', icon: Sparkles },
+  { title: 'Books & Rare Media', description: 'Out-of-print books, rare editions & media', href: '/collectibles?sub=books', icon: BookOpen },
   { title: 'Classic Cars', description: 'Vintage vehicles & parts', href: '/vintage-cars', icon: Car },
 ];
 
