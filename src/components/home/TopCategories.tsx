@@ -1,6 +1,5 @@
-import { Car, Heart, Sparkles, Shirt, Disc3, Trophy, Gamepad2, BookOpen, Palette, Shield, Baby } from 'lucide-react';
+import { Car, Sparkles, Shirt, Disc3, Trophy, Gamepad2, FileSearch, Shield, ToyBrick } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { BountyCategory } from '@/lib/types';
 
 interface TopCategoriesProps {
@@ -18,17 +17,10 @@ interface CategoryCard {
 const topCategories: CategoryCard[] = [
   {
     id: BountyCategory.FASHION_APPAREL,
-    label: 'Fashion & Sneakers',
+    label: 'Fashion',
     icon: <Shirt className="h-6 w-6" />,
     description: 'Rare sneakers, vintage clothing, designer items',
     gradient: 'from-pink-500/10 to-pink-600/5'
-  },
-  {
-    id: BountyCategory.TOYS_KIDS,
-    label: 'Toys & Kids',
-    icon: <Baby className="h-6 w-6" />,
-    description: 'Vintage toys, discontinued toys, plushies, stuffed animals, baby gear',
-    gradient: 'from-cyan-500/10 to-cyan-600/5'
   },
   {
     id: BountyCategory.COLLECTIBLES,
@@ -38,11 +30,25 @@ const topCategories: CategoryCard[] = [
     gradient: 'from-amber-500/10 to-amber-600/5'
   },
   {
+    id: BountyCategory.TOYS_KIDS,
+    label: 'Toys',
+    icon: <ToyBrick className="h-6 w-6" />,
+    description: 'Vintage toys, discontinued toys, plushies, stuffed animals',
+    gradient: 'from-cyan-500/10 to-cyan-600/5'
+  },
+  {
     id: BountyCategory.VEHICLES,
     label: 'Vehicles & Parts',
     icon: <Car className="h-6 w-6" />,
     description: 'Classic cars, rare parts, vintage motorcycles',
     gradient: 'from-blue-500/10 to-blue-600/5'
+  },
+  {
+    id: BountyCategory.LOST_MEDIA_THREADS,
+    label: 'Lost & Rare Media',
+    icon: <FileSearch className="h-6 w-6" />,
+    description: 'Deleted Reddit threads, lost YouTube videos, rare films',
+    gradient: 'from-violet-500/10 to-violet-600/5'
   },
   {
     id: BountyCategory.ELECTRONICS,
@@ -52,13 +58,6 @@ const topCategories: CategoryCard[] = [
     gradient: 'from-purple-500/10 to-purple-600/5'
   },
   {
-    id: BountyCategory.MUSIC_VINYL,
-    label: 'Music & Vinyl',
-    icon: <Disc3 className="h-6 w-6" />,
-    description: 'Rare vinyl, signed albums, concert memorabilia',
-    gradient: 'from-rose-500/10 to-rose-600/5'
-  },
-  {
     id: BountyCategory.SPORTS_OUTDOORS,
     label: 'Sports & Memorabilia',
     icon: <Trophy className="h-6 w-6" />,
@@ -66,25 +65,11 @@ const topCategories: CategoryCard[] = [
     gradient: 'from-green-500/10 to-green-600/5'
   },
   {
-    id: BountyCategory.RECONNECTIONS,
-    label: 'Reconnections',
-    icon: <Heart className="h-6 w-6" />,
-    description: 'Lost family, old friends, missing pets',
-    gradient: 'from-teal-500/10 to-teal-600/5'
-  },
-  {
-    id: BountyCategory.BOOKS_MEDIA,
-    label: 'Books & Rare Media',
-    icon: <BookOpen className="h-6 w-6" />,
-    description: 'First editions, out-of-print books, rare films',
-    gradient: 'from-orange-500/10 to-orange-600/5'
-  },
-  {
-    id: BountyCategory.CRAFTS_HOBBIES,
-    label: 'Art & Crafts',
-    icon: <Palette className="h-6 w-6" />,
-    description: 'Original art, handmade items, craft supplies',
-    gradient: 'from-indigo-500/10 to-indigo-600/5'
+    id: BountyCategory.MUSIC_VINYL,
+    label: 'Music & Vinyl',
+    icon: <Disc3 className="h-6 w-6" />,
+    description: 'Rare vinyl, signed albums, concert memorabilia',
+    gradient: 'from-rose-500/10 to-rose-600/5'
   },
   {
     id: BountyCategory.RECOVERY_REWARDS,
