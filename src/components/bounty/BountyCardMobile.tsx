@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { SafeImage } from '@/components/ui/safe-image';
-import { Bounty, BountyStatus } from '@/lib/types';
+import { Bounty, BountyStatus, BountyCategory } from '@/lib/types';
+import lostMediaPlaceholder from '@/assets/lost-media-placeholder.jpg';
 import { formatTimeRemaining } from '@/lib/utils';
 interface BountyCardMobileProps {
   bounty: Bounty;
@@ -29,6 +30,12 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
               fallbackClassName="w-full h-full"
               showFallbackIcon={true}
             />
+          </div>
+        </Link>
+      ) : bounty.category === BountyCategory.LOST_MEDIA_THREADS ? (
+        <Link to={`/b/${bounty.id}`} className="block">
+          <div className="relative aspect-video w-full overflow-hidden bg-muted">
+            <img src={lostMediaPlaceholder} alt="Lost Media" className="w-full h-full object-cover" />
           </div>
         </Link>
       ) : (
