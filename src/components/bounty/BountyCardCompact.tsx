@@ -97,11 +97,13 @@ export function BountyCardCompact({ bounty, isSaved = false, onToggleSave, showS
             ) : (
               <>
                 <span className="truncate font-medium text-foreground">{bounty.posterName}</span>
-                {bounty.posterRating > 0 && (
+                {bounty.posterRatingCount > 0 ? (
                   <span className="flex items-center gap-0.5 shrink-0">
                     <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
                     <span>{bounty.posterRating.toFixed(1)}</span>
                   </span>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground/60">New</span>
                 )}
               </>
             )}
