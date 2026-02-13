@@ -16,64 +16,64 @@ const logStep = (step: string, details?: any) => {
 const PERSONAS = [
   { suffix: 4, username: "mike_collects", avatar_id: 11, bio: "Looking for vintage 80s action figures to complete my collection.", region: "Toronto, ON" },
   { suffix: 5, username: "sarah_vintage", avatar_id: 9, bio: "Searching for rare thrift store finds. Mid-century modern obsessed.", region: "Vancouver, BC" },
-  { suffix: 6, username: "jakethetracker", avatar_id: 14, bio: "Need help tracking down discontinued tech products.", region: "Calgary, AB" },
-  { suffix: 7, username: "emma_finds", avatar_id: 5, bio: "Desperately seeking a specific estate sale piece. Help me find it!", region: "Montreal, QC" },
-  { suffix: 8, username: "vinylvince", avatar_id: 18, bio: "Hunting for rare vinyl pressings. Willing to pay top dollar.", region: "Austin, TX" },
+  { suffix: 6, username: "jakethetracker", avatar_id: 14, bio: "Need help tracking down discontinued tech products.", region: "Austin, TX" },
+  { suffix: 7, username: "emma_finds", avatar_id: 5, bio: "Desperately seeking a specific estate sale piece. Help me find it!", region: "New York, NY" },
+  { suffix: 8, username: "vinylvince", avatar_id: 18, bio: "Hunting for rare vinyl pressings. Willing to pay top dollar.", region: "Nashville, TN" },
   { suffix: 9, username: "collectorcraig", avatar_id: 15, bio: "Need PSA graded sports cards. Specific years and players.", region: "Chicago, IL" },
-  { suffix: 10, username: "lisafinds", avatar_id: 20, bio: "Looking for a specific designer piece from the 2012 runway.", region: "New York, NY" },
-  { suffix: 11, username: "dustin_hunts", avatar_id: 33, bio: "ISO rare sneakers in size 11. Jordan, Yeezy, Dunks.", region: "Los Angeles, CA" },
+  { suffix: 10, username: "lisafinds", avatar_id: 20, bio: "Looking for a specific designer piece from the 2012 runway.", region: "Los Angeles, CA" },
+  { suffix: 11, username: "dustin_hunts", avatar_id: 33, bio: "ISO rare sneakers in size 11. Jordan, Yeezy, Dunks.", region: "Atlanta, GA" },
   { suffix: 12, username: "maria_garcia", avatar_id: 23, bio: "Searching for mid-century modern furniture. Eames, Knoll, Herman Miller.", region: "Miami, FL" },
   { suffix: 13, username: "alexscouts", avatar_id: 35, bio: "Need someone to find a specific vintage board game for me.", region: "Seattle, WA" },
   { suffix: 14, username: "rachelantics", avatar_id: 24, bio: "Looking for 90s vintage clothing. Specific band tees needed.", region: "Portland, OR" },
   { suffix: 15, username: "tomfindsit", avatar_id: 37, bio: "Need rare classic car parts. Mustang, Camaro, Chevelle.", region: "Detroit, MI" },
-  { suffix: 16, username: "nadia_seeks", avatar_id: 25, bio: "Searching for lost media. Old TV recordings, unreleased music.", region: "Ottawa, ON" },
+  { suffix: 16, username: "nadia_seeks", avatar_id: 25, bio: "Searching for lost media. Old TV recordings, unreleased music.", region: "Montreal, QC" },
   { suffix: 17, username: "benthedigger", avatar_id: 42, bio: "Looking for key issue comics. Silver age Marvel preferred.", region: "Denver, CO" },
-  { suffix: 18, username: "ashley_hunts", avatar_id: 26, bio: "Need help finding a family heirloom that was sold at auction.", region: "Nashville, TN" },
+  { suffix: 18, username: "ashley_hunts", avatar_id: 26, bio: "Need help finding a family heirloom that was sold at auction.", region: "Dallas, TX" },
   { suffix: 19, username: "carlostracker", avatar_id: 46, bio: "Searching for retro gaming consoles. CIB Neo Geo, TurboGrafx.", region: "Houston, TX" },
   { suffix: 20, username: "jen_discovers", avatar_id: 29, bio: "ISO first edition books. Specific titles from the 1960s.", region: "Boston, MA" },
   { suffix: 21, username: "ryanhunter", avatar_id: 50, bio: "Looking for vintage watches. Omega Speedmaster pre-moon.", region: "Phoenix, AZ" },
   { suffix: 22, username: "katelocates", avatar_id: 32, bio: "Trying to reconnect with a childhood friend. Last seen in 2005.", region: "San Francisco, CA" },
-  { suffix: 23, username: "marcusmoves", avatar_id: 51, bio: "Need someone to find limited edition sneaker collabs.", region: "Atlanta, GA" },
-  { suffix: 24, username: "olivia_finds", avatar_id: 34, bio: "Searching for a specific vintage engagement ring style.", region: "Dallas, TX" },
-  { suffix: 25, username: "danielscouter", avatar_id: 52, bio: "Looking for antique woodworking tools. Stanley planes, Disston saws.", region: "Philadelphia, PA" },
-  { suffix: 26, username: "sophieseeks", avatar_id: 36, bio: "ISO vintage cameras. Leica M3, Hasselblad 500C.", region: "Minneapolis, MN" },
-  { suffix: 27, username: "jasondigger", avatar_id: 53, bio: "Need rare electronic components for a restoration project.", region: "San Diego, CA" },
-  { suffix: 28, username: "megan_tracks", avatar_id: 38, bio: "Searching for a biological relative. Adoption reunion.", region: "Edmonton, AB" },
+  { suffix: 23, username: "marcusmoves", avatar_id: 51, bio: "Need someone to find limited edition sneaker collabs.", region: "Philadelphia, PA" },
+  { suffix: 24, username: "olivia_finds", avatar_id: 34, bio: "Searching for a specific vintage engagement ring style.", region: "San Diego, CA" },
+  { suffix: 25, username: "danielscouter", avatar_id: 52, bio: "Looking for antique woodworking tools. Stanley planes, Disston saws.", region: "Minneapolis, MN" },
+  { suffix: 26, username: "sophieseeks", avatar_id: 36, bio: "ISO vintage cameras. Leica M3, Hasselblad 500C.", region: "Charlotte, NC" },
+  { suffix: 27, username: "jasondigger", avatar_id: 53, bio: "Need rare electronic components for a restoration project.", region: "San Antonio, TX" },
+  { suffix: 28, username: "megan_tracks", avatar_id: 38, bio: "Searching for a biological relative. Adoption reunion.", region: "Calgary, AB" },
   { suffix: 29, username: "chrislocator", avatar_id: 54, bio: "Need a specific transmission for a 1969 Camaro rebuild.", region: "Indianapolis, IN" },
   { suffix: 30, username: "amyexplorer", avatar_id: 39, bio: "Looking for vintage Polly Pocket compacts. 1989-1995 era.", region: "Columbus, OH" },
-  { suffix: 31, username: "brettfinds", avatar_id: 55, bio: "ISO a specific Rolex Submariner ref. Willing to pay premium.", region: "Charlotte, NC" },
-  { suffix: 32, username: "heather_digs", avatar_id: 40, bio: "Searching for discontinued craft supplies. Specific yarn brands.", region: "Winnipeg, MB" },
-  { suffix: 33, username: "kevinseeker", avatar_id: 56, bio: "Need complete-in-box retro games. N64, SNES, Genesis.", region: "San Antonio, TX" },
-  { suffix: 34, username: "laurahunts", avatar_id: 41, bio: "Looking for rare houseplants. Variegated monstera, pink princess.", region: "Raleigh, NC" },
-  { suffix: 35, username: "mattscouts", avatar_id: 57, bio: "Searching for vintage power tools in working condition.", region: "Kansas City, MO" },
-  { suffix: 36, username: "nicole_finds", avatar_id: 43, bio: "Need a specific Chanel bag from the 2008 collection.", region: "Las Vegas, NV" },
-  { suffix: 37, username: "patrickdigger", avatar_id: 58, bio: "Looking for WWII memorabilia. Letters, medals, uniforms.", region: "Jacksonville, FL" },
+  { suffix: 31, username: "brettfinds", avatar_id: 55, bio: "ISO a specific Rolex Submariner ref. Willing to pay premium.", region: "Raleigh, NC" },
+  { suffix: 32, username: "heather_digs", avatar_id: 40, bio: "Searching for discontinued craft supplies. Specific yarn brands.", region: "Kansas City, MO" },
+  { suffix: 33, username: "kevinseeker", avatar_id: 56, bio: "Need complete-in-box retro games. N64, SNES, Genesis.", region: "Tampa, FL" },
+  { suffix: 34, username: "laurahunts", avatar_id: 41, bio: "Looking for rare houseplants. Variegated monstera, pink princess.", region: "Jacksonville, FL" },
+  { suffix: 35, username: "mattscouts", avatar_id: 57, bio: "Searching for vintage power tools in working condition.", region: "Las Vegas, NV" },
+  { suffix: 36, username: "nicole_finds", avatar_id: 43, bio: "Need a specific Chanel bag from the 2008 collection.", region: "Scottsdale, AZ" },
+  { suffix: 37, username: "patrickdigger", avatar_id: 58, bio: "Looking for WWII memorabilia. Letters, medals, uniforms.", region: "Richmond, VA" },
   { suffix: 38, username: "rebeccaseeks", avatar_id: 44, bio: "Searching for vintage quilt patterns from the 1940s.", region: "Salt Lake City, UT" },
   { suffix: 39, username: "stevetracker", avatar_id: 59, bio: "Need pre-war wooden fishing lures. Creek Chub, Heddon.", region: "Milwaukee, WI" },
-  { suffix: 40, username: "tiffanyfinds", avatar_id: 45, bio: "ISO discontinued perfumes. Tom Ford, Guerlain, vintage Dior.", region: "Tampa, FL" },
+  { suffix: 40, username: "tiffanyfinds", avatar_id: 45, bio: "ISO discontinued perfumes. Tom Ford, Guerlain, vintage Dior.", region: "Savannah, GA" },
   { suffix: 41, username: "vincelocates", avatar_id: 60, bio: "Need rare Harley-Davidson parts for a knucklehead rebuild.", region: "Tucson, AZ" },
-  { suffix: 42, username: "wendy_hunts", avatar_id: 47, bio: "Looking for sealed vintage board games. 70s and 80s era.", region: "Richmond, VA" },
+  { suffix: 42, username: "wendy_hunts", avatar_id: 47, bio: "Looking for sealed vintage board games. 70s and 80s era.", region: "Pittsburgh, PA" },
   { suffix: 43, username: "xavierscouts", avatar_id: 61, bio: "ISO rare Supreme and BAPE pieces from 2005-2010.", region: "Brooklyn, NY" },
-  { suffix: 44, username: "yasminfinds", avatar_id: 48, bio: "Searching for a specific studio pottery piece. Signed ceramics.", region: "Savannah, GA" },
+  { suffix: 44, username: "yasminfinds", avatar_id: 48, bio: "Searching for a specific studio pottery piece. Signed ceramics.", region: "Charleston, SC" },
   { suffix: 45, username: "zachtracker", avatar_id: 62, bio: "Need signed comic con memorabilia from specific events.", region: "San Jose, CA" },
-  { suffix: 46, username: "amberseeks", avatar_id: 49, bio: "Looking for vintage Pyrex and kitchen collectibles.", region: "Pittsburgh, PA" },
-  { suffix: 47, username: "blakedigger", avatar_id: 63, bio: "Need specific error coins for my collection. US Mint errors.", region: "St. Louis, MO" },
+  { suffix: 46, username: "amberseeks", avatar_id: 49, bio: "Looking for vintage Pyrex and kitchen collectibles.", region: "St. Louis, MO" },
+  { suffix: 47, username: "blakedigger", avatar_id: 63, bio: "Need specific error coins for my collection. US Mint errors.", region: "Sacramento, CA" },
   { suffix: 48, username: "clairelocates", avatar_id: 1, bio: "Searching for depression glass and carnival glass pieces.", region: "Cincinnati, OH" },
   { suffix: 49, username: "dylanscouts", avatar_id: 64, bio: "ISO Sony Trinitron CRT for retro gaming setup.", region: "Orlando, FL" },
-  { suffix: 50, username: "erinfinds", avatar_id: 10, bio: "Looking for rare stamps. Inverted Jenny, Penny Black.", region: "Halifax, NS" },
+  { suffix: 50, username: "erinfinds", avatar_id: 10, bio: "Looking for rare stamps. Inverted Jenny, Penny Black.", region: "Ottawa, ON" },
   { suffix: 51, username: "franktracker", avatar_id: 65, bio: "Need vintage Stanley planes. No. 1, No. 2, bedrock series.", region: "Cleveland, OH" },
   { suffix: 52, username: "gracehunts", avatar_id: 16, bio: "Searching for retired American Girl dolls. Specific outfits needed.", region: "Memphis, TN" },
   { suffix: 53, username: "henrydigger", avatar_id: 66, bio: "Looking for antique maps. Pre-1800 North American cartography.", region: "Boise, ID" },
   { suffix: 54, username: "ireneseeks", avatar_id: 21, bio: "Need discontinued yarn colorways. Madelinetosh, Hedgehog Fibres.", region: "Burlington, VT" },
   { suffix: 55, username: "jameslocates", avatar_id: 67, bio: "Searching for rare speed parts for a hot rod build.", region: "Albuquerque, NM" },
-  { suffix: 56, username: "kaylascouts", avatar_id: 1, bio: "Looking for undervalued vintage pieces at thrift stores.", region: "Regina, SK" },
+  { suffix: 56, username: "kaylascouts", avatar_id: 1, bio: "Looking for undervalued vintage pieces at thrift stores.", region: "Omaha, NE" },
   { suffix: 57, username: "liamfinds", avatar_id: 68, bio: "Need a specific Olivetti or Hermes typewriter model.", region: "Asheville, NC" },
-  { suffix: 58, username: "monatracker", avatar_id: 10, bio: "Searching for vintage neon signs and tin advertising.", region: "Omaha, NE" },
-  { suffix: 59, username: "noahdigger", avatar_id: 69, bio: "ISO rare pocket knives. Pre-war Case, vintage Buck.", region: "Louisville, KY" },
+  { suffix: 58, username: "monatracker", avatar_id: 10, bio: "Searching for vintage neon signs and tin advertising.", region: "Louisville, KY" },
+  { suffix: 59, username: "noahdigger", avatar_id: 69, bio: "ISO rare pocket knives. Pre-war Case, vintage Buck.", region: "Baltimore, MD" },
   { suffix: 60, username: "opalhunts", avatar_id: 16, bio: "Looking for a working antique spinning wheel.", region: "Madison, WI" },
-  { suffix: 61, username: "peterlocates", avatar_id: 70, bio: "Need specific HO scale model trains. Brass imports.", region: "Baltimore, MD" },
+  { suffix: 61, username: "peterlocates", avatar_id: 70, bio: "Need specific HO scale model trains. Brass imports.", region: "Knoxville, TN" },
   { suffix: 62, username: "quinnseeks", avatar_id: 22, bio: "Searching for vintage camping gear. 1960s Coleman, canvas tents.", region: "Boulder, CO" },
-  { suffix: 63, username: "rosascouts", avatar_id: 21, bio: "Looking for vintage cross-stitch patterns. Specific designers.", region: "Saskatoon, SK" },
+  { suffix: 63, username: "rosascouts", avatar_id: 21, bio: "Looking for vintage cross-stitch patterns. Specific designers.", region: "Spokane, WA" },
   { suffix: 64, username: "samfinds", avatar_id: 30, bio: "Need a vintage Schwinn Stingray in original condition.", region: "Providence, RI" },
   { suffix: 65, username: "theresatracks", avatar_id: 29, bio: "ISO signed first edition cookbooks. Julia Child, James Beard.", region: "New Orleans, LA" },
   { suffix: 66, username: "ulrichdigger", avatar_id: 31, bio: "Looking for rare breweriana. Pre-prohibition beer trays and signs.", region: "Fort Worth, TX" },
@@ -151,7 +151,6 @@ serve(async (req) => {
             email,
             password,
             email_confirm: true,
-            user_metadata: { full_name: persona.full_name }
           });
 
           if (authError) {
@@ -164,14 +163,15 @@ serve(async (req) => {
 
           if (!authData.user) throw new Error(`No user returned for ${email}`);
 
-          // Update profile with persona data
+          // Update profile with persona data including avatar
+          const avatarUrl = `https://i.pravatar.cc/150?img=${persona.avatar_id}`;
           const { error: profileError } = await supabase
             .from('profiles')
             .update({
               username: persona.username,
-              full_name: persona.full_name,
               bio: persona.bio,
               region: persona.region,
+              avatar_url: avatarUrl,
               average_rating: 0,
               total_ratings_received: 0,
               reputation_score: 5.0,
@@ -205,6 +205,58 @@ serve(async (req) => {
         skipped,
         errors: errors.length > 0 ? errors.slice(0, 10) : undefined,
         total_personas: PERSONAS.length
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    if (action === 'update_profiles') {
+      // Update existing profiles with new bios, avatars, and regions
+      let updated = 0;
+      let notFound = 0;
+      let errors: string[] = [];
+
+      for (let i = 0; i < PERSONAS.length; i += 5) {
+        const batch = PERSONAS.slice(i, i + 5);
+        const results = await Promise.allSettled(batch.map(async (persona) => {
+          const avatarUrl = `https://i.pravatar.cc/150?img=${persona.avatar_id}`;
+          
+          const { data, error } = await supabase
+            .from('profiles')
+            .update({
+              bio: persona.bio,
+              region: persona.region,
+              avatar_url: avatarUrl,
+            })
+            .eq('username', persona.username)
+            .select('id')
+            .maybeSingle();
+
+          if (error) throw new Error(`Update error for ${persona.username}: ${error.message}`);
+          if (!data) return 'not_found';
+          
+          logStep("Updated profile", { username: persona.username });
+          return 'updated';
+        }));
+
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
+            if (result.value === 'updated') updated++;
+            else notFound++;
+          } else {
+            errors.push(result.reason?.message || 'Unknown error');
+          }
+        }
+      }
+
+      logStep("Profile update complete", { updated, notFound, errors: errors.length });
+
+      return new Response(JSON.stringify({
+        success: true,
+        updated,
+        not_found: notFound,
+        errors: errors.length > 0 ? errors.slice(0, 10) : undefined,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
