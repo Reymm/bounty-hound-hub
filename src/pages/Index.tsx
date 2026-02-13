@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Trophy, ShieldCheck, CreditCard, HelpCircle, Sparkles } from 'lucide-react';
+import { Trophy, ShieldCheck, CreditCard, HelpCircle, Sparkles, Share2 } from 'lucide-react';
+import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
@@ -182,6 +183,25 @@ const Index = () => {
                   <HelpCircle className="h-4 w-4" />
                   How It Works
                 </Link>
+                <button
+                  onClick={async () => {
+                    const shareData = {
+                      title: 'BountyBay - Find The Unfindable',
+                      text: 'Post a bounty for hard-to-find items and let hunters find them for you!',
+                      url: 'https://bountybay.co',
+                    };
+                    if (navigator.share) {
+                      try { await navigator.share(shareData); } catch (e) { if ((e as Error).name !== 'AbortError') console.error(e); }
+                    } else {
+                      await navigator.clipboard.writeText('https://bountybay.co');
+                      sonnerToast.success('Link copied to clipboard!');
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share BountyBay
+                </button>
               </div>
             </div>
           </div>
