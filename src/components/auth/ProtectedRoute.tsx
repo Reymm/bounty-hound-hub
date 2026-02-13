@@ -57,8 +57,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth?tab=signin" state={{ from: location }} replace />;
   }
 
-  // If user has no username and isn't already on the setup page, redirect there
-  if (!profileCheck.hasUsername && location.pathname !== '/setup') {
+  // If user has no username and isn't already on the setup page or admin routes, redirect there
+  if (!profileCheck.hasUsername && location.pathname !== '/setup' && !location.pathname.startsWith('/admin')) {
     return <Navigate to="/setup" replace />;
   }
 
