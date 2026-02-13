@@ -189,7 +189,8 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
       'handbags-accessories': 'Handbags & Accessories',
       'vintage-fashion': 'Vintage Fashion',
       'designer-items': 'Designer Items',
-      'activewear': 'Activewear & Sportswear'
+      'activewear': 'Activewear & Sportswear',
+      'hats': 'Hats & Headwear'
     }
   },
   'books-media': {
