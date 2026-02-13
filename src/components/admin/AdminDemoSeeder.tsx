@@ -28,6 +28,7 @@ export function AdminDemoSeeder() {
   const [clearing, setClearing] = useState(false);
   const [resettingStripe, setResettingStripe] = useState(false);
   const [seedingUsers, setSeedingUsers] = useState(false);
+  const [updatingProfiles, setUpdatingProfiles] = useState(false);
   const [seedingStories, setSeedingStories] = useState(false);
   const [clearingStories, setClearingStories] = useState(false);
   const [assigningAvatars, setAssigningAvatars] = useState(false);
@@ -219,7 +220,6 @@ export function AdminDemoSeeder() {
 
   const handleAssignAvatars = async () => {
     setAssigningAvatars(true);
-    
 
     try {
       const { data, error } = await supabase.functions.invoke('seed-success-stories', {
@@ -241,6 +241,32 @@ export function AdminDemoSeeder() {
       });
     } finally {
       setAssigningAvatars(false);
+    }
+  };
+
+  const handleUpdateProfiles = async () => {
+    setUpdatingProfiles(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-users', {
+        body: { action: 'update_profiles' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profiles updated! 🎉",
+        description: `Updated ${data.updated} profiles. ${data.not_found} not found.`,
+      });
+    } catch (error: any) {
+      console.error('Error updating profiles:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profiles.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingProfiles(false);
     }
   };
 
@@ -527,6 +553,20 @@ export function AdminDemoSeeder() {
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Assigning...</>
             ) : (
               <><UserCircle className="h-4 w-4 mr-2" />Assign Avatars</>
+            )}
+          </Button>
+
+          {/* Update All Profiles (bios, avatars, regions) */}
+          <Button 
+            variant="outline" 
+            disabled={updatingProfiles}
+            onClick={handleUpdateProfiles}
+            className="border-teal-300 text-teal-600 hover:bg-teal-50 hover:text-teal-700"
+          >
+            {updatingProfiles ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Updating...</>
+            ) : (
+              <><RefreshCw className="h-4 w-4 mr-2" />Update All Profiles</>
             )}
           </Button>
         </div>
