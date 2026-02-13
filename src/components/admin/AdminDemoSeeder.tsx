@@ -172,7 +172,7 @@ export function AdminDemoSeeder() {
 
     try {
       const { data, error } = await supabase.functions.invoke('seed-success-stories', {
-        body: { action: 'create_stories' }
+        body: { action: 'create_stories', site_url: window.location.origin }
       });
 
       if (error) throw error;
