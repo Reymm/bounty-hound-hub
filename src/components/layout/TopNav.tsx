@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, ShieldCheck, HelpCircle, FileSearch } from 'lucide-react';
+import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, Shirt, ShieldCheck, HelpCircle, FileSearch } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,9 +17,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationBell } from './NotificationBell';
 
 const nichePages = [
-  { title: 'Lost Media', description: 'Deleted Reddit threads, YouTube videos & more', href: '/lost-media', icon: FileSearch },
+  { title: 'Fashion', description: 'Rare sneakers, vintage clothing, designer items', href: '/bounties?category=fashion_apparel', icon: Shirt },
   { title: 'Collectibles', description: 'Cards, toys, memorabilia', href: '/collectibles', icon: Sparkles },
-  { title: 'Classic Cars', description: 'Vintage vehicles & parts', href: '/vintage-cars', icon: Car },
+  { title: 'Vehicles & Parts', description: 'Classic cars, rare parts, vintage motorcycles', href: '/vintage-cars', icon: Car },
+  { title: 'Lost Media', description: 'Deleted Reddit threads, YouTube videos & more', href: '/lost-media', icon: FileSearch },
 ];
 
 interface TopNavProps {
