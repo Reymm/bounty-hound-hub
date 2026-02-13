@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.seed-users]
 verify_jwt = true
+
+[functions.seed-success-stories]
+verify_jwt = true

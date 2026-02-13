@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Database, Trash2, AlertTriangle, RefreshCw, Users } from 'lucide-react';
+import { Loader2, Database, Trash2, AlertTriangle, RefreshCw, Users, Trophy, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -21,19 +21,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { ALL_DEMO_BOUNTIES, DemoBounty } from '@/lib/demo-bounties-data';
 
 const ADMIN_USER_ID = '8f050746-36d4-4ac7-99d8-a2419e09cc55';
-const DEMO_MARKER = '[DEMO]'; // Added to description to identify demo bounties
+const DEMO_MARKER = '[DEMO]';
 
 export function AdminDemoSeeder() {
   const [seeding, setSeeding] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [resettingStripe, setResettingStripe] = useState(false);
   const [seedingUsers, setSeedingUsers] = useState(false);
+  const [seedingStories, setSeedingStories] = useState(false);
+  const [assigningAvatars, setAssigningAvatars] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState('');
   const [progress, setProgress] = useState(0);
   const [seedDialogOpen, setSeedDialogOpen] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [stripeResetDialogOpen, setStripeResetDialogOpen] = useState(false);
   const [seedUsersDialogOpen, setSeedUsersDialogOpen] = useState(false);
+
+
   const { toast } = useToast();
 
   const createBounty = async (bounty: DemoBounty): Promise<boolean> => {
@@ -159,6 +163,60 @@ export function AdminDemoSeeder() {
       });
     } finally {
       setSeedingUsers(false);
+    }
+  };
+
+  const handleSeedStories = async () => {
+    setSeedingStories(true);
+    
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-success-stories', {
+        body: { action: 'create_stories' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success stories created! 🎉",
+        description: `Created ${data.created}/${data.total} completed bounties with ratings. ${data.errors ? `${data.errors.length} errors.` : ''}`,
+      });
+    } catch (error: any) {
+      console.error('Error seeding stories:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to seed success stories.",
+        variant: "destructive",
+      });
+    } finally {
+      setSeedingStories(false);
+    }
+  };
+
+  const handleAssignAvatars = async () => {
+    setAssigningAvatars(true);
+    
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-success-stories', {
+        body: { action: 'assign_avatars' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Avatars assigned! 🎉",
+        description: `Updated ${data.updated} profiles with unique avatar photos.`,
+      });
+    } catch (error: any) {
+      console.error('Error assigning avatars:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign avatars.",
+        variant: "destructive",
+      });
+    } finally {
+      setAssigningAvatars(false);
     }
   };
 
@@ -405,6 +463,34 @@ export function AdminDemoSeeder() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          {/* Seed Success Stories */}
+          <Button 
+            variant="outline" 
+            disabled={seedingStories}
+            onClick={handleSeedStories}
+            className="border-blue-300 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+          >
+            {seedingStories ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creating Stories...</>
+            ) : (
+              <><Trophy className="h-4 w-4 mr-2" />Seed 15 Success Stories</>
+            )}
+          </Button>
+
+          {/* Assign Avatars */}
+          <Button 
+            variant="outline" 
+            disabled={assigningAvatars}
+            onClick={handleAssignAvatars}
+            className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+          >
+            {assigningAvatars ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Assigning...</>
+            ) : (
+              <><UserCircle className="h-4 w-4 mr-2" />Assign Avatars</>
+            )}
+          </Button>
         </div>
 
         <p className="text-xs text-muted-foreground">
