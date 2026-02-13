@@ -48,5 +48,8 @@ verify_jwt = true
 [functions.bounty-meta]
 verify_jwt = false
 
+[functions.delete-account]
+verify_jwt = false
+
 [functions.og-home]
 verify_jwt = false

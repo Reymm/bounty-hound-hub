@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Settings as SettingsIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ConnectedAccounts } from '@/components/profile/ConnectedAccounts';
 import { Profile as ProfileType } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -17,7 +19,8 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadProfile();
@@ -45,20 +48,36 @@ export default function Settings() {
   const handleDeleteAccount = async () => {
     try {
       setDeleting(true);
-      
-      // TODO: Implement account deletion
-      console.log('TODO: Implement account deletion');
-      
-      toast({
-        title: "Account deletion requested",
-        description: "This feature is coming soon.",
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await supabase.functions.invoke('delete-account', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
-      
-    } catch (error) {
+
+      if (response.error || response.data?.error) {
+        throw new Error(response.data?.error || response.error?.message || 'Deletion failed');
+      }
+
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted. Goodbye!",
+      });
+
+      // Sign out and redirect
+      await signOut();
+      navigate('/');
+
+    } catch (error: any) {
       console.error('Error deleting account:', error);
       toast({
         title: "Error deleting account",
-        description: "Please try again later.",
+        description: error.message || "Please try again later.",
         variant: "destructive",
       });
     } finally {
