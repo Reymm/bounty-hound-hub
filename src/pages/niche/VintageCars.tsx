@@ -5,15 +5,15 @@ import { BountyCategory } from '@/lib/types';
 const vintageCarsConfig: NicheConfig = {
   slug: 'vintage-cars',
   category: BountyCategory.VEHICLES,
-  title: 'Track Down Your Dream Car',
-  subtitle: 'Classic, vintage, and rare vehicles found.',
-  description: 'Looking for a specific muscle car, classic truck, or rare import? Post a bounty and let our network of car enthusiasts, mechanics, and collectors help you find it.',
+  title: 'Find the Car You Let Go',
+  subtitle: 'Track down the car you sold, traded, or lost years ago.',
+  description: 'Remember that car you never should have sold? A classic you traded away or a ride that got lost over the years? Post a bounty and let our network of car enthusiasts, mechanics, and collectors help you track it down.',
   heroGradient: 'bg-gradient-to-br from-blue-500/10 via-background to-slate-500/5',
   icon: <Car className="h-10 w-10 text-blue-500" />,
   trustBadgeText: 'Verified hunters. Safe transactions. Real results.',
   ctaText: 'Post a Vehicle Bounty',
   emptyMessage: 'No vehicle bounties yet',
-  emptyDescription: 'Post the first bounty and let our community help you find your dream ride.',
+  emptyDescription: 'Post the first bounty and let our community help you find that car again.',
   features: [
     {
       icon: <Search className="h-6 w-6 text-primary" />,
