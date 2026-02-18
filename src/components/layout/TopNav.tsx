@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, Shirt, ShieldCheck, HelpCircle, FileSearch } from 'lucide-react';
+import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, Shirt, ShieldCheck, HelpCircle, FileSearch, Heart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ const nichePages = [
   { title: 'Collectibles', description: 'Cards, toys, memorabilia', href: '/collectibles', icon: Sparkles },
   { title: 'Vehicles & Parts', description: 'Classic cars, rare parts, vintage motorcycles', href: '/vintage-cars', icon: Car },
   { title: 'Lost Media', description: 'Deleted Reddit threads, YouTube videos & more', href: '/lost-media', icon: FileSearch },
+  { title: 'Plushies & Blankets', description: 'Discontinued stuffed animals, baby blankets, comfort items', href: '/plushies-blankets', icon: Heart },
 ];
 
 interface TopNavProps {
