@@ -42,6 +42,7 @@ import LostMedia from "./pages/niche/LostMedia";
 import Collectibles from "./pages/niche/Collectibles";
 import VintageCars from "./pages/niche/VintageCars";
 import PlushiesBlankets from "./pages/niche/PlushiesBlankets";
+import Fashion from "./pages/niche/Fashion";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -84,6 +85,7 @@ const App = () => (
                       <Route path="/collectibles" element={<Collectibles />} />
                       <Route path="/vintage-cars" element={<VintageCars />} />
                       <Route path="/plushies-blankets" element={<PlushiesBlankets />} />
+                      <Route path="/fashion" element={<Fashion />} />
                       
                       {/* Protected routes */}
                       <Route path="/post" element={
