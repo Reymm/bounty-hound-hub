@@ -136,7 +136,9 @@ export const supabaseApi = {
         query = query.ilike('category', filters.category);
       }
       
-      if (filters.subcategory) {
+      if (filters.subcategories && filters.subcategories.length > 0) {
+        query = query.in('subcategory', filters.subcategories);
+      } else if (filters.subcategory) {
         query = query.ilike('subcategory', filters.subcategory);
       }
       
