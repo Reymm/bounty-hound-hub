@@ -41,6 +41,7 @@ import EditBounty from "./pages/EditBounty";
 import LostMedia from "./pages/niche/LostMedia";
 import Collectibles from "./pages/niche/Collectibles";
 import VintageCars from "./pages/niche/VintageCars";
+import PlushiesBlankets from "./pages/niche/PlushiesBlankets";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -82,6 +83,7 @@ const App = () => (
                       <Route path="/lost-media" element={<LostMedia />} />
                       <Route path="/collectibles" element={<Collectibles />} />
                       <Route path="/vintage-cars" element={<VintageCars />} />
+                      <Route path="/plushies-blankets" element={<PlushiesBlankets />} />
                       
                       {/* Protected routes */}
                       <Route path="/post" element={
