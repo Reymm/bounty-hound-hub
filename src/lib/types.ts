@@ -461,6 +461,7 @@ export interface ClaimForm {
 export interface SearchFilters {
   keyword?: string;
   category?: BountyCategory;
+  categories?: BountyCategory[];
   subcategory?: string;
   subcategories?: string[];
   minBounty?: number;

@@ -5,6 +5,8 @@ import { BountyCategory } from '@/lib/types';
 const plushiesBlankets: NicheConfig = {
   slug: 'plushies-blankets',
   category: BountyCategory.TOYS_KIDS,
+  categories: [BountyCategory.TOYS_KIDS, BountyCategory.HOME_GARDEN],
+  subcategories: ['plushies', 'stuffed-animals', 'baby-toddler', 'blankets-throws'],
   title: 'Find That Favorite Plushie or Blanket',
   subtitle: 'Because some things can\'t be replaced. Until now.',
   description: 'Whether it\'s a discontinued stuffed animal, a worn out baby blanket, or a comfort item you just can\'t sleep without, post a bounty and let our hunters track it down.',

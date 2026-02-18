@@ -132,7 +132,9 @@ export const supabaseApi = {
         );
       }
       
-      if (filters.category) {
+      if (filters.categories && filters.categories.length > 0) {
+        query = query.in('category', filters.categories);
+      } else if (filters.category) {
         query = query.ilike('category', filters.category);
       }
       
