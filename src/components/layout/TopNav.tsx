@@ -19,7 +19,6 @@ import { NotificationBell } from './NotificationBell';
 const nichePages = [
   { title: 'Plushies & Blankets', description: 'Discontinued stuffed animals, baby blankets, comfort items', href: '/plushies-blankets', icon: Heart },
   { title: 'Lost Media', description: 'Deleted Reddit threads, YouTube videos & more', href: '/lost-media', icon: FileSearch },
-  { title: 'Fashion', description: 'Rare sneakers, vintage clothing, designer items', href: '/bounties?category=fashion_apparel', icon: Sparkles },
   { title: 'Collectibles', description: 'Cards, toys, memorabilia', href: '/collectibles', icon: Sparkles },
   { title: 'Vehicles & Parts', description: 'Classic cars, rare parts, vintage motorcycles', href: '/vintage-cars', icon: Car },
 ];

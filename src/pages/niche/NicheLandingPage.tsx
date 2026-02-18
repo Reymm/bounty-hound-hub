@@ -47,21 +47,12 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
     ...(config.subcategories && { subcategories: config.subcategories }),
   };
 
-  const fallbackFilters: SearchFilters = {
-    category: config.category,
-  };
-
   const loadBounties = async (reset = false) => {
     try {
       setLoading(true);
       const currentPage = reset ? 1 : page;
-      let response = await supabaseApi.getBounties(currentPage, 12, filters);
+      const response = await supabaseApi.getBounties(currentPage, 12, filters);
       
-      // If subcategory filter returns nothing, fall back to full category
-      if (reset && response.data.length === 0 && config.subcategories) {
-        response = await supabaseApi.getBounties(currentPage, 12, fallbackFilters);
-      }
-
       if (reset) {
         setBounties(response.data);
         setPage(2);
@@ -116,27 +107,27 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
 
       {/* Hero Section */}
       <section className={`${config.heroGradient} border-b border-border`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="text-center max-w-3xl mx-auto">
             {/* Icon */}
-            <div className="hidden lg:flex justify-center mb-6">
+            <div className="flex justify-center mb-6">
               <div className="p-4 rounded-2xl bg-background border border-border shadow-lg">
                 {config.icon}
               </div>
             </div>
             
-            <h1 className="text-2xl lg:text-5xl font-bold text-foreground mb-2 lg:mb-4">
+            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
               {config.title}
             </h1>
-            <h2 className="text-base lg:text-2xl font-semibold text-primary mb-3 lg:mb-6">
+            <h2 className="text-xl lg:text-2xl font-semibold text-primary mb-6">
               {config.subtitle}
             </h2>
-            <p className="hidden lg:block text-xl text-muted-foreground mb-6 leading-relaxed">
+            <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
               {config.description}
             </p>
             
             {/* Trust Badge */}
-            <div className="hidden lg:inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2 mb-8">
+            <div className="inline-flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-4 py-2 mb-8">
               <ShieldCheck className="h-5 w-5 text-success" />
               <span className="text-sm font-medium text-success">
                 {config.trustBadgeText}
@@ -163,7 +154,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
       </section>
 
       {/* Features Section */}
-      <section className="hidden lg:block py-12 bg-muted/30">
+      <section className="py-12 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {config.features.map((feature, index) => (
