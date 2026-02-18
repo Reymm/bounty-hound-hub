@@ -545,6 +545,15 @@ export function TopNav({ onSearch }: TopNavProps) {
                     Browse Bounties
                   </Link>
                 </Button>
+
+                {nichePages.map((niche) => (
+                  <Button key={niche.href} asChild variant="ghost" className="w-full justify-start pl-8 text-muted-foreground">
+                    <Link to={niche.href} onClick={() => setIsMobileMenuOpen(false)}>
+                      <niche.icon className="h-4 w-4 mr-2" />
+                      {niche.title}
+                    </Link>
+                  </Button>
+                ))}
                 
                 <Button asChild variant="ghost" className="w-full justify-start">
                   <Link to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
