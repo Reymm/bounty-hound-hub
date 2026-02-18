@@ -462,6 +462,7 @@ export interface SearchFilters {
   keyword?: string;
   category?: BountyCategory;
   subcategory?: string;
+  subcategories?: string[];
   minBounty?: number;
   maxBounty?: number;
   location?: string;

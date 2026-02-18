@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface NicheConfig {
   slug: string;
   category: BountyCategory;
+  subcategories?: string[];
   title: string;
   subtitle: string;
   description: string;
@@ -43,6 +44,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
 
   const filters: SearchFilters = {
     category: config.category,
+    ...(config.subcategories && { subcategories: config.subcategories }),
   };
 
   const loadBounties = async (reset = false) => {
