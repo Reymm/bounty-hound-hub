@@ -7,7 +7,7 @@ const lostMediaConfig: NicheConfig = {
   category: BountyCategory.LOST_MEDIA_THREADS,
   title: 'Find Lost Reddit Threads, YouTube Videos & More',
   subtitle: 'Track down deleted posts, lost videos, and forgotten internet content.',
-  description: 'Remember that Reddit thread you saved but can\'t find? A YouTube video that got taken down? A forum post from years ago? Post a bounty and let internet sleuths dig it up for you.',
+  description: 'Remember that Reddit thread you saved but can\'t find? A YouTube video that got taken down? A forum post from years ago? Post a bounty and let our hunters dig it up for you.',
   heroGradient: 'bg-gradient-to-br from-violet-500/10 via-background to-indigo-500/5',
   icon: <FileSearch className="h-10 w-10 text-violet-500" />,
   trustBadgeText: 'Community-powered internet archaeology.',
