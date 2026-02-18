@@ -5,9 +5,9 @@ import { BountyCategory } from '@/lib/types';
 const plushiesBlankets: NicheConfig = {
   slug: 'plushies-blankets',
   category: BountyCategory.TOYS_KIDS,
-  title: 'Find Their Favorite Plushie or Blanket',
+  title: 'Find That Favorite Plushie or Blanket',
   subtitle: 'Because some things can\'t be replaced — until now.',
-  description: 'Whether it\'s a discontinued stuffed animal, a worn-out baby blanket, or a comfort item your child can\'t sleep without — post a bounty and let our hunters track it down.',
+  description: 'Whether it\'s a discontinued stuffed animal, a worn out baby blanket, or a comfort item your child can\'t sleep without — post a bounty and let our hunters track it down.',
   heroGradient: 'bg-gradient-to-br from-pink-400/10 via-background to-purple-400/5',
   icon: <Heart className="h-10 w-10 text-pink-500" />,
   trustBadgeText: 'ID-verified hunters. Secure escrow. You only pay when found.',
