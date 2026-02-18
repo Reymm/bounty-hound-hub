@@ -466,6 +466,16 @@ export function TopNav({ onSearch }: TopNavProps) {
                   </Link>
                 </Button>
 
+                {/* Niche Pages */}
+                {nichePages.map((niche) => (
+                  <Button key={niche.href} asChild variant="ghost" className="w-full justify-start pl-8 text-muted-foreground">
+                    <Link to={niche.href} onClick={() => setIsMobileMenuOpen(false)}>
+                      <niche.icon className="h-4 w-4 mr-2" />
+                      {niche.title}
+                    </Link>
+                  </Button>
+                ))}
+
                 <Button asChild variant="ghost" className="w-full justify-start">
                   <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
                     <FolderOpen className="h-4 w-4 mr-2" />
