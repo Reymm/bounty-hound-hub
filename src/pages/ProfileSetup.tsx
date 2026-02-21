@@ -72,6 +72,7 @@ const ProfileSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showChooserModal, setShowChooserModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [usernameIsLocked, setUsernameIsLocked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -112,7 +113,10 @@ const ProfileSetup = () => {
         .single();
       
       if (data) {
-        if (data.username) setValue('username', data.username);
+        if (data.username) {
+          setValue('username', data.username);
+          setUsernameIsLocked(true);
+        }
         if (data.avatar_url) setAvatarUrl(data.avatar_url);
       }
     };
@@ -293,10 +297,14 @@ const ProfileSetup = () => {
                   id="username"
                   placeholder="Choose a unique username"
                   {...register('username')}
-                  className={errors.username ? 'border-destructive' : ''}
+                  readOnly={usernameIsLocked}
+                  disabled={usernameIsLocked}
+                  className={`${errors.username ? 'border-destructive' : ''} ${usernameIsLocked ? 'bg-muted cursor-not-allowed' : ''}`}
                 />
                 <p className="text-sm text-muted-foreground">
-                  This will be your public display name on BountyBay.
+                  {usernameIsLocked 
+                    ? 'Your username is permanent and cannot be changed.'
+                    : 'This will be your public display name on BountyBay.'}
                 </p>
                 {errors.username && (
                   <p className="text-sm text-destructive">{errors.username.message}</p>
