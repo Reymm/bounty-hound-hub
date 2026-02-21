@@ -72,7 +72,6 @@ const ProfileSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showChooserModal, setShowChooserModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
-  const [usernameIsLocked, setUsernameIsLocked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -101,7 +100,7 @@ const ProfileSetup = () => {
 
   const passwordValue = watch('password');
 
-  // Load existing profile data if any
+  // Load existing profile data — if username already set, redirect away
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -114,15 +113,16 @@ const ProfileSetup = () => {
       
       if (data) {
         if (data.username) {
-          setValue('username', data.username);
-          setUsernameIsLocked(true);
+          // User already has a username — they shouldn't be here
+          navigate('/', { replace: true });
+          return;
         }
         if (data.avatar_url) setAvatarUrl(data.avatar_url);
       }
     };
     
     loadProfile();
-  }, [user, setValue]);
+  }, [user, navigate]);
 
   const onSubmit = async (data: ProfileSetupFormData) => {
     if (!user) {
@@ -297,14 +297,10 @@ const ProfileSetup = () => {
                   id="username"
                   placeholder="Choose a unique username"
                   {...register('username')}
-                  readOnly={usernameIsLocked}
-                  disabled={usernameIsLocked}
-                  className={`${errors.username ? 'border-destructive' : ''} ${usernameIsLocked ? 'bg-muted cursor-not-allowed' : ''}`}
+                  className={errors.username ? 'border-destructive' : ''}
                 />
                 <p className="text-sm text-muted-foreground">
-                  {usernameIsLocked 
-                    ? 'Your username is permanent and cannot be changed.'
-                    : 'This will be your public display name on BountyBay.'}
+                  This will be your public display name on BountyBay.
                 </p>
                 {errors.username && (
                   <p className="text-sm text-destructive">{errors.username.message}</p>
