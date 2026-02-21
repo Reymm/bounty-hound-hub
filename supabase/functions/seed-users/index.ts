@@ -18,7 +18,7 @@ const PERSONAS = [
   { suffix: 5, username: "sarah_vintage", avatar_id: 9, bio: "Searching for rare thrift store finds. Mid-century modern obsessed.", region: "Vancouver, BC" },
   { suffix: 6, username: "jakethetracker", avatar_id: 14, bio: "Need help tracking down discontinued tech products.", region: "Austin, TX" },
   { suffix: 7, username: "emma_finds", avatar_id: 5, bio: "Desperately seeking a specific estate sale piece. Help me find it!", region: "New York, NY" },
-  { suffix: 8, username: "vinylvince", avatar_id: 18, bio: "Hunting for rare vinyl pressings. Willing to pay top dollar.", region: "Nashville, TN" },
+  { suffix: 8, username: "mama_bear32", avatar_id: 18, bio: "Mom of two looking for comfort items for my kids. If you have what we need, let's talk.", region: "Nashville, TN" },
   { suffix: 9, username: "collectorcraig", avatar_id: 15, bio: "Need PSA graded sports cards. Specific years and players.", region: "Chicago, IL" },
   { suffix: 10, username: "lisafinds", avatar_id: 20, bio: "Looking for a specific designer piece from the 2012 runway.", region: "Los Angeles, CA" },
   { suffix: 11, username: "dustin_hunts", avatar_id: 33, bio: "ISO rare sneakers in size 11. Jordan, Yeezy, Dunks.", region: "Atlanta, GA" },
