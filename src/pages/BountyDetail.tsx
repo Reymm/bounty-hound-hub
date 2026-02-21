@@ -18,6 +18,7 @@ import { ShippingDetailsDialog } from '@/components/bounty/ShippingDetailsDialog
 import { ShareBountyButton } from '@/components/bounty/ShareBountyButton';
 import { SendFundsDialog } from '@/components/bounty/SendFundsDialog';
 import { BountyComments } from '@/components/bounty/BountyComments';
+import { SimilarBounties } from '@/components/bounty/SimilarBounties';
 import { BountySEO } from '@/components/seo/BountySEO';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
@@ -493,19 +494,6 @@ export default function BountyDetail() {
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    <p className="whitespace-pre-wrap text-foreground leading-relaxed">
-                      {bounty.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
               {bounty.images && bounty.images.length > 0 ? (
                 <Card>
                   <CardHeader>
@@ -538,6 +526,19 @@ export default function BountyDetail() {
                   </CardContent>
                 </Card>
               )}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose prose-sm max-w-none">
+                    <p className="whitespace-pre-wrap text-foreground leading-relaxed">
+                      {bounty.description}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="requirements">
@@ -688,6 +689,9 @@ export default function BountyDetail() {
           </Card>
         </div>
       </div>
+
+      {/* Similar Bounties */}
+      <SimilarBounties bountyId={bounty.id} category={bounty.category} />
 
       {/* Claim Dialog */}
       <ClaimDialog
