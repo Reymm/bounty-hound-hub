@@ -212,7 +212,7 @@ serve(async (req) => {
     }
 
     if (action === 'update_profiles') {
-      // Update existing profiles with new bios, avatars, and regions
+      // Update existing profiles by matching via email (stable identifier)
       let updated = 0;
       let notFound = 0;
       let errors: string[] = [];
@@ -220,23 +220,32 @@ serve(async (req) => {
       for (let i = 0; i < PERSONAS.length; i += 5) {
         const batch = PERSONAS.slice(i, i + 5);
         const results = await Promise.allSettled(batch.map(async (persona) => {
+          const email = `${baseEmail}+test${persona.suffix}@gmail.com`;
           const avatarUrl = `https://i.pravatar.cc/150?img=${persona.avatar_id}`;
           
+          // Look up user by email to get their ID
+          const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+          if (listError) throw new Error(`List error: ${listError.message}`);
+          
+          const user = users.users.find(u => u.email === email);
+          if (!user) return 'not_found';
+
           const { data, error } = await supabase
             .from('profiles')
             .update({
+              username: persona.username,
               bio: persona.bio,
               region: persona.region,
               avatar_url: avatarUrl,
             })
-            .eq('username', persona.username)
+            .eq('id', user.id)
             .select('id')
             .maybeSingle();
 
           if (error) throw new Error(`Update error for ${persona.username}: ${error.message}`);
           if (!data) return 'not_found';
           
-          logStep("Updated profile", { username: persona.username });
+          logStep("Updated profile", { email, username: persona.username });
           return 'updated';
         }));
 
