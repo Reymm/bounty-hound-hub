@@ -21,7 +21,7 @@ const PERSONAS = [
   { suffix: 8, username: "mama_bear32", avatar_id: 18, bio: "Mom of two looking for comfort items for my kids. If you have what we need, let's talk.", region: "Nashville, TN" },
   { suffix: 9, username: "travelin_kate", avatar_id: 15, bio: "Need PSA graded sports cards. Specific years and players.", region: "Chicago, IL" },
   { suffix: 10, username: "lisafinds", avatar_id: 20, bio: "Looking for a specific designer piece from the 2012 runway.", region: "Los Angeles, CA" },
-  { suffix: 11, username: "dustin_hunts", avatar_id: 33, bio: "ISO rare sneakers in size 11. Jordan, Yeezy, Dunks.", region: "Atlanta, GA" },
+  { suffix: 11, username: "bella_seeks", avatar_id: 33, bio: "", region: "Atlanta, GA" },
   { suffix: 12, username: "maria_garcia", avatar_id: 23, bio: "Searching for mid-century modern furniture. Eames, Knoll, Herman Miller.", region: "Miami, FL" },
   { suffix: 13, username: "alexscouts", avatar_id: 35, bio: "Need someone to find a specific vintage board game for me.", region: "Seattle, WA" },
   { suffix: 14, username: "rachelantics", avatar_id: 24, bio: "Looking for 90s vintage clothing. Specific band tees needed.", region: "Portland, OR" },
