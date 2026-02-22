@@ -212,7 +212,24 @@ serve(async (req) => {
     }
 
     if (action === 'update_profiles') {
-      // Update existing profiles by matching via email (stable identifier)
+      // Fetch ALL auth users first (paginated) to build email->id map
+      let allUsers: any[] = [];
+      let page = 1;
+      const perPage = 1000;
+      while (true) {
+        const { data: batch, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage });
+        if (listErr) throw new Error(`listUsers error: ${listErr.message}`);
+        allUsers = allUsers.concat(batch.users);
+        if (batch.users.length < perPage) break;
+        page++;
+      }
+      logStep("Fetched all auth users", { count: allUsers.length });
+
+      const emailToId = new Map<string, string>();
+      for (const u of allUsers) {
+        if (u.email) emailToId.set(u.email, u.id);
+      }
+
       let updated = 0;
       let notFound = 0;
       let errors: string[] = [];
@@ -223,12 +240,11 @@ serve(async (req) => {
           const email = `${baseEmail}+test${persona.suffix}@gmail.com`;
           const avatarUrl = `https://i.pravatar.cc/150?img=${persona.avatar_id}`;
           
-          // Look up user by email to get their ID
-          const { data: users, error: listError } = await supabase.auth.admin.listUsers();
-          if (listError) throw new Error(`List error: ${listError.message}`);
-          
-          const user = users.users.find(u => u.email === email);
-          if (!user) return 'not_found';
+          const userId = emailToId.get(email);
+          if (!userId) {
+            logStep("User not found by email", { email });
+            return 'not_found';
+          }
 
           const { data, error } = await supabase
             .from('profiles')
@@ -238,7 +254,7 @@ serve(async (req) => {
               region: persona.region,
               avatar_url: avatarUrl,
             })
-            .eq('id', user.id)
+            .eq('id', userId)
             .select('id')
             .maybeSingle();
 
