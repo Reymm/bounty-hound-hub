@@ -126,14 +126,11 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
-              Helping People Find the Unfindable.
+              Post a bounty. Get it found.
             </h1>
-            <h2 className="text-xl lg:text-2xl font-semibold text-primary mb-6">
-              Powered by crowdsourced hunting.
-            </h2>
             <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
-              Post a bounty for hard-to-find items and let our community of hunters 
-              help you discover exactly what you're looking for.
+              Describe what you're looking for, set a reward, and let verified hunters 
+              compete to find it. You only pay when they succeed.
             </p>
             
             {/* Trust Badges */}
