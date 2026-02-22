@@ -173,7 +173,7 @@ export const supabaseApi = {
       } else if (filters.sortBy === 'soonest' || filters.deadline === 'soonest') {
         query = query.order('deadline', { ascending: true }); // Closest deadlines first
       } else {
-        query = query.order('created_at', { ascending: false }); // Newest first by default
+        query = query.order('display_order', { ascending: true }).order('created_at', { ascending: false }); // Custom order, then newest
       }
 
       // Get total count for pagination
