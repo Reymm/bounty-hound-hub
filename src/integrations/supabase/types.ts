@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           deadline: string | null
           description: string | null
+          display_order: number | null
           escrow_amount: number | null
           escrow_status: string | null
           has_milestones: boolean | null
@@ -51,6 +52,7 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          display_order?: number | null
           escrow_amount?: number | null
           escrow_status?: string | null
           has_milestones?: boolean | null
@@ -81,6 +83,7 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          display_order?: number | null
           escrow_amount?: number | null
           escrow_status?: string | null
           has_milestones?: boolean | null
