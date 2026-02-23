@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil, ShieldCheck, Package, Link2 } from 'lucide-react';
+import { Calendar, MapPin, Eye, MessageCircle, Flag, ArrowLeft, Star, Users, Clock, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, DollarSign, Pencil, ShieldCheck, Package, Link2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -283,8 +283,13 @@ export default function BountyDetail() {
                     Lead Only
                   </Badge>
                 )}
-                <div className="bounty-amount text-xl font-bold">
-                  <CurrencyDisplay amount={bounty.bountyAmount} />
+                <div>
+                  <div className="bounty-amount text-xl font-bold">
+                    <CurrencyDisplay amount={bounty.bountyAmount} />
+                  </div>
+                  {!bounty.requires_shipping && (
+                    <p className="text-xs text-muted-foreground">Reward for a link or tip</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Eye className="h-4 w-4" />
@@ -458,6 +463,19 @@ export default function BountyDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Lead Only info callout */}
+      {!bounty.requires_shipping && !isOwnBounty && (
+        <div className="mb-8 flex items-start gap-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 p-4">
+          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-medium text-blue-800 dark:text-blue-300">This is a Lead Only bounty</p>
+            <p className="text-blue-700 dark:text-blue-400 mt-1">
+              The reward is for providing a useful link, tip, or location — not for purchasing or shipping the item. Just point the poster in the right direction.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

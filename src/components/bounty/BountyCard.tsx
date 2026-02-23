@@ -117,10 +117,15 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
                 <SaveBountyButton isSaved={isSaved} onToggle={onToggleSave} />
               )}
             </div>
-            <CurrencyDisplayCompact 
-              amount={bounty.bountyAmount} 
-              className="bounty-amount font-bold"
-            />
+            <div className="text-right">
+              <CurrencyDisplayCompact 
+                amount={bounty.bountyAmount} 
+                className="bounty-amount font-bold"
+              />
+              {!bounty.requires_shipping && (
+                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">for a lead</p>
+              )}
+            </div>
           </div>
 
           {/* Title */}
