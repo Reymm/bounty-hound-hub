@@ -33,7 +33,7 @@ const PERSONAS = [
   { suffix: 20, username: "jen_reads", avatar_id: 29, bio: "ISO first edition books. Specific titles from the 1960s.", region: "Boston, MA" },
   { suffix: 21, username: "chloe_watches", avatar_id: 32, bio: "Looking for vintage watches. Omega Speedmaster pre-moon.", region: "Quebec City, QC" },
   { suffix: 22, username: "kate_sf", avatar_id: 32, bio: "Trying to reconnect with a childhood friend. Last seen in 2005.", region: "San Francisco, CA" },
-  { suffix: 23, username: "marcus_kicks", avatar_id: 51, bio: "Need someone to find limited edition sneaker collabs.", region: "Philadelphia, PA" },
+  { suffix: 23, username: "maya_kicks", avatar_id: 34, bio: "Need someone to find limited edition sneaker collabs.", region: "Philadelphia, PA" },
   { suffix: 24, username: "olivia_rings", avatar_id: 34, bio: "Searching for a specific vintage engagement ring style.", region: "San Diego, CA" },
   { suffix: 25, username: "daniel_wood", avatar_id: 52, bio: "Looking for antique woodworking tools. Stanley planes, Disston saws.", region: "Minneapolis, MN" },
   { suffix: 26, username: "sophie_cam", avatar_id: 36, bio: "ISO vintage cameras. Leica M3, Hasselblad 500C.", region: "Charlotte, NC" },
