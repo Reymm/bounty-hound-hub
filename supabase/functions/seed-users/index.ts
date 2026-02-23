@@ -31,7 +31,7 @@ const PERSONAS = [
   { suffix: 18, username: "ashley_tx", avatar_id: 26, bio: "Need help finding a family heirloom that was sold at auction.", region: "Dallas, TX" },
   { suffix: 19, username: "carlos_retro", avatar_id: 46, bio: "Searching for retro gaming consoles. CIB Neo Geo, TurboGrafx.", region: "Houston, TX" },
   { suffix: 20, username: "jen_reads", avatar_id: 29, bio: "ISO first edition books. Specific titles from the 1960s.", region: "Boston, MA" },
-  { suffix: 21, username: "ryan_watches", avatar_id: 50, bio: "Looking for vintage watches. Omega Speedmaster pre-moon.", region: "Phoenix, AZ" },
+  { suffix: 21, username: "chloe_watches", avatar_id: 32, bio: "Looking for vintage watches. Omega Speedmaster pre-moon.", region: "Quebec City, QC" },
   { suffix: 22, username: "kate_sf", avatar_id: 32, bio: "Trying to reconnect with a childhood friend. Last seen in 2005.", region: "San Francisco, CA" },
   { suffix: 23, username: "marcus_kicks", avatar_id: 51, bio: "Need someone to find limited edition sneaker collabs.", region: "Philadelphia, PA" },
   { suffix: 24, username: "olivia_rings", avatar_id: 34, bio: "Searching for a specific vintage engagement ring style.", region: "San Diego, CA" },
