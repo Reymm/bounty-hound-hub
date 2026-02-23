@@ -31,8 +31,8 @@ export function ShareBountyButton({
   
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-  // Cloudflare worker serves OG tags for crawlers, proxies browsers to SPA
-  const metaUrl = `https://bountybay.co/b/${bountyId}`;
+  // metaUrl = edge function that serves OG tags for crawlers, then redirects users to the real page
+  const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bountyId}`;
   
   const shareText = `$${amount.toLocaleString()} Bounty: ${title}`;
 
