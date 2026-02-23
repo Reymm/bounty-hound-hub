@@ -61,10 +61,15 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
               </h3>
             </Link>
             
-            <CurrencyDisplayCompact 
-              amount={bounty.bountyAmount} 
-              className="text-xl font-bold text-primary ml-3"
-            />
+            <div className="text-right ml-3">
+              <CurrencyDisplayCompact 
+                amount={bounty.bountyAmount} 
+                className="text-xl font-bold text-primary"
+              />
+              {!bounty.requires_shipping && (
+                <p className="text-[10px] text-muted-foreground">for a lead</p>
+              )}
+            </div>
           </div>
           
           <p className="text-muted-foreground text-sm line-clamp-2 mb-2">

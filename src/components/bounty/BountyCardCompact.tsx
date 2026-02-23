@@ -65,10 +65,15 @@ export function BountyCardCompact({ bounty, isSaved = false, onToggleSave, showS
         {/* Info */}
         <div className="p-2.5 space-y-1">
           {/* Price */}
-          <CurrencyDisplayCompact
-            amount={bounty.bountyAmount}
-            className="bounty-amount font-bold text-xs px-2 py-0.5"
-          />
+          <div className="flex items-baseline gap-1">
+            <CurrencyDisplayCompact
+              amount={bounty.bountyAmount}
+              className="bounty-amount font-bold text-xs px-2 py-0.5"
+            />
+            {!bounty.requires_shipping && (
+              <span className="text-[10px] text-muted-foreground">for a lead</span>
+            )}
+          </div>
 
           {/* Title */}
           <h3 className="text-sm font-medium text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
