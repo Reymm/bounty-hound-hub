@@ -288,7 +288,7 @@ export default function BountyDetail() {
                     <CurrencyDisplay amount={bounty.bountyAmount} />
                   </div>
                   {!bounty.requires_shipping && (
-                    <p className="text-xs text-muted-foreground">Reward for a link or tip</p>
+                    <p className="text-xs text-muted-foreground md:hidden">Reward for a link or tip</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
