@@ -33,16 +33,12 @@ export function ShareBountyButton({
 
   // metaUrl = edge function that serves OG tags for crawlers, then redirects users to the real page
   const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bountyId}`;
-  
-  const shareText = `$${amount.toLocaleString()} Bounty: ${title}`;
 
   // Native share — hands URL to OS share sheet which opens real apps
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `$${amount.toLocaleString()} Bounty: ${title}`,
-          text: shareText,
           url: metaUrl,
         });
       } catch (error) {
@@ -100,7 +96,7 @@ export function ShareBountyButton({
 
         {/* Send via Text — opens SMS app with pre-filled message */}
         <DropdownMenuItem asChild>
-          <a href={`sms:?&body=${encodeURIComponent(`${shareText}\n${metaUrl}`)}`}>
+          <a href={`sms:?&body=${encodeURIComponent(metaUrl)}`}>
             <MessageSquare className="h-4 w-4 mr-2" />
             Send via Text
           </a>
