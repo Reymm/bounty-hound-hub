@@ -1,0 +1,1 @@
+UPDATE profiles SET username = 'maya_kicks', avatar_url = 'https://i.pravatar.cc/150?img=34' WHERE id = '09e55cee-bd01-4aec-8489-6bfd966883be';
