@@ -1,0 +1,1 @@
+UPDATE profiles SET username = 'dana_wood', avatar_url = 'https://i.pravatar.cc/150?img=36' WHERE username = 'daniel_wood';
