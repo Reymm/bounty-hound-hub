@@ -358,8 +358,7 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
     label: 'Toys & Kids',
     subcategories: {
       'vintage-toys': 'Vintage Toys',
-      'plushies': 'Plushies',
-      'stuffed-animals': 'Stuffed Animals & Plush',
+      'plushies': 'Plushies & Stuffed Animals',
       'action-figures': 'Action Figures & Dolls',
       'discontinued-toys': 'Discontinued Toys',
       'baby-toddler': 'Baby & Toddler Toys',

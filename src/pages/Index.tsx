@@ -6,7 +6,7 @@ import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
-import { TopCategories } from '@/components/home/TopCategories';
+
 import { CompletedBounties } from '@/components/home/CompletedBounties';
 import { HowItWorksPreview } from '@/components/home/HowItWorksPreview';
 import { supabaseApi } from '@/lib/api/supabase';
@@ -95,22 +95,6 @@ const Index = () => {
     setFilters(prev => ({ ...prev, keyword: query }));
   };
 
-  const handleCategorySelect = (category: string) => {
-    if (category) {
-      setFilters(prev => ({ ...prev, category: category as any }));
-      
-      // Update URL params
-      const params = new URLSearchParams(searchParams);
-      params.set('category', category);
-      setSearchParams(params);
-    }
-    
-    // Scroll to browse section
-    const browseSection = document.getElementById('browse');
-    if (browseSection) {
-      browseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   // Check if any filters are active
   const hasActiveFilters = Object.keys(filters).length > 0;
@@ -251,7 +235,7 @@ const Index = () => {
           </div>
 
           <BountyGrid 
-            bounties={hasActiveFilters ? bounties : bounties.slice(0, 6)}
+            bounties={hasActiveFilters ? bounties : bounties.slice(0, 12)}
             loading={loading && page === 1}
             emptyMessage="No bounties match your criteria"
             emptyDescription="Try adjusting your filters or check back later for new bounties."
@@ -274,7 +258,7 @@ const Index = () => {
             )
           ) : (
             // On homepage default view, show "View All" button
-            bounties.length > 6 && (
+            bounties.length > 12 && (
               <div className="mt-8 text-center">
                 <Button 
                   asChild
@@ -288,11 +272,6 @@ const Index = () => {
           )}
         </div>
       </section>
-
-      {/* Top Categories Section - Hidden when filters active */}
-      {!hasActiveFilters && (
-        <TopCategories onCategorySelect={handleCategorySelect} />
-      )}
 
       {/* Success Stories Section - Hidden when filters active */}
       {!hasActiveFilters && (
