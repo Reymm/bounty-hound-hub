@@ -1,0 +1,1 @@
+UPDATE profiles SET username = 'chloe_watches', avatar_url = 'https://i.pravatar.cc/150?img=32', region = 'Quebec City, QC' WHERE id = '0d3802e8-ed92-4d9b-b8f7-cb44a83470b3';
