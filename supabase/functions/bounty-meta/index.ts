@@ -72,8 +72,11 @@ serve(async (req) => {
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
 
-    // Dynamic OG image via our og-image edge function (Satori)
-    const ogImage = `${supabaseUrl}/functions/v1/og-image/${bounty.id}`;
+    // Use the bounty's actual image directly — avoids a second edge function cold-start
+    // which causes iOS iMessage crawlers to timeout before the image loads
+    const ogImage = (Array.isArray(bounty.images) && bounty.images.length > 0)
+      ? bounty.images[0]
+      : `https://bountybay.co/og-default.png`;
 
     // Point og:url to THIS endpoint so bots stay here and read tags (path-based)
     const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bounty.id}`;
