@@ -35,7 +35,7 @@ const PERSONAS = [
   { suffix: 22, username: "kate_sf", avatar_id: 32, bio: "Trying to reconnect with a childhood friend. Last seen in 2005.", region: "San Francisco, CA" },
   { suffix: 23, username: "maya_kicks", avatar_id: 34, bio: "Need someone to find limited edition sneaker collabs.", region: "Philadelphia, PA" },
   { suffix: 24, username: "olivia_rings", avatar_id: 34, bio: "Searching for a specific vintage engagement ring style.", region: "San Diego, CA" },
-  { suffix: 25, username: "daniel_wood", avatar_id: 52, bio: "Looking for antique woodworking tools. Stanley planes, Disston saws.", region: "Minneapolis, MN" },
+  { suffix: 25, username: "dana_wood", avatar_id: 36, bio: "Looking for antique woodworking tools. Stanley planes, Disston saws.", region: "Minneapolis, MN" },
   { suffix: 26, username: "sophie_cam", avatar_id: 36, bio: "ISO vintage cameras. Leica M3, Hasselblad 500C.", region: "Charlotte, NC" },
   { suffix: 27, username: "jason_builds", avatar_id: 53, bio: "Need rare electronic components for a restoration project.", region: "San Antonio, TX" },
   { suffix: 28, username: "megan_yyc", avatar_id: 38, bio: "Searching for a biological relative. Adoption reunion.", region: "Calgary, AB" },
