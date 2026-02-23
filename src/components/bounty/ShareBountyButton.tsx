@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Share2, Link2, Check } from 'lucide-react';
+import { Share2, Link2, Check, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -96,6 +96,14 @@ export function ShareBountyButton({
             <Link2 className="h-4 w-4 mr-2" />
           )}
           {copied ? 'Copied!' : 'Copy Link'}
+        </DropdownMenuItem>
+
+        {/* Send via Text — opens SMS app with pre-filled message */}
+        <DropdownMenuItem asChild>
+          <a href={`sms:?&body=${encodeURIComponent(`${shareText}\n${metaUrl}`)}`}>
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Send via Text
+          </a>
         </DropdownMenuItem>
 
       </DropdownMenuContent>
