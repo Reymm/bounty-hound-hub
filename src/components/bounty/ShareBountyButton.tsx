@@ -21,8 +21,6 @@ interface ShareBountyButtonProps {
 
 export function ShareBountyButton({ 
   bountyId, 
-  title, 
-  amount, 
   variant = 'outline',
   size = 'default',
   className 
@@ -31,8 +29,7 @@ export function ShareBountyButton({
   
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-  // Clean URL for display/copy — looks professional in chat apps
-  const cleanUrl = `https://bountybay.co/b/${bountyId}`;
+  // Edge function URL — serves OG tags for crawlers, 302 redirects humans to bountybay.co
   // Edge function URL for native share — serves OG tags for iMessage crawlers
   const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bountyId}`;
 
@@ -57,7 +54,9 @@ export function ShareBountyButton({
       return;
     }
     try {
-      await navigator.clipboard.writeText(cleanUrl);
+      // Use edge function URL so platforms (Facebook, iMessage, etc.) get OG preview cards
+      // Humans clicking the link get instant 302 redirect to bountybay.co
+      await navigator.clipboard.writeText(metaUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
@@ -98,7 +97,7 @@ export function ShareBountyButton({
 
         {/* Send via Text — opens SMS app with pre-filled message */}
         <DropdownMenuItem asChild>
-          <a href={`sms:?&body=${encodeURIComponent(cleanUrl)}`}>
+          <a href={`sms:?&body=${encodeURIComponent(metaUrl)}`}>
             <MessageSquare className="h-4 w-4 mr-2" />
             Send via Text
           </a>
