@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 
+const OG_BUCKET = "og-images";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -62,21 +64,26 @@ serve(async (req) => {
       });
     }
 
-    const truncatedTitle = bounty.title.length > 50 
-      ? bounty.title.slice(0, 47) + '...' 
-      : bounty.title;
-    const title = `$${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle} | BountyBay`;
+    // Use the branded OG image: check cache first, then fall back to generator
+    const cachedPath = `${bountyId}.png`;
+    const cachedPublicUrl = `${supabaseUrl}/storage/v1/object/public/${OG_BUCKET}/${cachedPath}`;
+    const generatorUrl = `https://auth.bountybay.co/functions/v1/og-image/${bountyId}`;
     
-    const bountyType = bounty.requires_shipping ? 'Find & Ship' : 'Lead Only';
-    const rawDesc = bounty.description || '';
-    const shortDesc = rawDesc.slice(0, 80);
-    const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
-
-    // Use the bounty's actual image directly — avoids a second edge function cold-start
-    // which causes iOS iMessage crawlers to timeout before the image loads
-    const ogImage = (Array.isArray(bounty.images) && bounty.images.length > 0)
-      ? bounty.images[0]
-      : `https://bountybay.co/og-default.png`;
+    // Check if a cached branded image exists
+    let ogImage = generatorUrl; // fallback to generator
+    try {
+      const { data: cachedFile } = await supabase.storage
+        .from(OG_BUCKET)
+        .createSignedUrl(cachedPath, 60);
+      if (cachedFile?.signedUrl) {
+        ogImage = cachedPublicUrl; // use cached branded image (fast!)
+      } else {
+        // No cache yet — trigger generation in the background so it's cached for next time
+        fetch(generatorUrl).catch(() => {});
+      }
+    } catch {
+      // Storage check failed, use generator URL
+    }
 
     // Point og:url to THIS endpoint so bots stay here and read tags (path-based)
     const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bounty.id}`;
