@@ -87,6 +87,7 @@ serve(async (req) => {
   <meta charset="UTF-8">
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}">
+  <meta name="theme-color" content="#ffffff">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${metaUrl}">
   <meta property="og:title" content="${esc(title)}">
