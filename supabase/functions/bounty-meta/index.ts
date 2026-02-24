@@ -64,30 +64,36 @@ serve(async (req) => {
       });
     }
 
+    // Build title & description
+    const truncatedTitle = bounty.title.length > 50 
+      ? bounty.title.slice(0, 47) + '...' 
+      : bounty.title;
+    const title = `$${(bounty.amount || 0).toLocaleString()} Bounty: ${truncatedTitle}`;
+    const bountyType = bounty.requires_shipping ? 'Find & Ship' : 'Lead Only';
+    const rawDesc = bounty.description || '';
+    const shortDesc = rawDesc.slice(0, 80);
+    const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
+
     // Use the branded OG image: check cache first, then fall back to generator
     const cachedPath = `${bountyId}.png`;
     const cachedPublicUrl = `${supabaseUrl}/storage/v1/object/public/${OG_BUCKET}/${cachedPath}`;
     const generatorUrl = `https://auth.bountybay.co/functions/v1/og-image/${bountyId}`;
     
-    // Check if a cached branded image exists
-    let ogImage = generatorUrl; // fallback to generator
+    let ogImage = generatorUrl;
     try {
       const { data: cachedFile } = await supabase.storage
         .from(OG_BUCKET)
         .createSignedUrl(cachedPath, 60);
       if (cachedFile?.signedUrl) {
-        ogImage = cachedPublicUrl; // use cached branded image (fast!)
+        ogImage = cachedPublicUrl;
       } else {
-        // No cache yet — trigger generation in the background so it's cached for next time
         fetch(generatorUrl).catch(() => {});
       }
     } catch {
       // Storage check failed, use generator URL
     }
 
-    // Point og:url to THIS endpoint so bots stay here and read tags (path-based)
-    const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bounty.id}`;
-
+    // og:url must point to bountybay.co so iMessage shows the right domain
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,7 +102,7 @@ serve(async (req) => {
   <meta name="description" content="${esc(description)}">
   <meta name="theme-color" content="#ffffff">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${metaUrl}">
+  <meta property="og:url" content="${bountyUrl}">
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:image" content="${ogImage}">
@@ -104,7 +110,7 @@ serve(async (req) => {
   <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="BountyBay">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${metaUrl}">
+  <meta name="twitter:url" content="${bountyUrl}">
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${ogImage}">
