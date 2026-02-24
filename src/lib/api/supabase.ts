@@ -189,29 +189,42 @@ export const supabaseApi = {
       if (error) throw error;
 
       // Fetch profile data for all bounties using secure function
+      // Use a timeout to prevent infinite loading on slow connections
       const posterIds = data?.map(bounty => bounty.poster_id).filter(Boolean) || [];
       const uniquePosterIds = [...new Set(posterIds)];
       
-      // Fetch profiles and official status in parallel
-      const profilePromises = uniquePosterIds.map(async (posterId) => {
-        const [profileResult, officialResult] = await Promise.all([
-          supabase.rpc('get_public_profile_data', { profile_id: posterId }),
-          supabase.rpc('is_official_account', { p_user_id: posterId })
-        ]);
-        return profileResult.data?.[0] ? { 
-          id: posterId, 
-          ...profileResult.data[0],
-          total_failed_claims: 0,
-          isOfficial: officialResult.data || false
-        } : null;
-      });
+      let profileMap = new Map<string, any>();
       
-      const profiles = await Promise.all(profilePromises);
-      const profileMap = new Map(
-        profiles
-          .filter(Boolean)
-          .map(p => [p.id, p])
-      );
+      try {
+        // Fetch profiles and official status in parallel with a 5-second timeout
+        const profileFetchPromise = Promise.all(
+          uniquePosterIds.map(async (posterId) => {
+            const [profileResult, officialResult] = await Promise.all([
+              supabase.rpc('get_public_profile_data', { profile_id: posterId }),
+              supabase.rpc('is_official_account', { p_user_id: posterId })
+            ]);
+            return profileResult.data?.[0] ? { 
+              id: posterId, 
+              ...profileResult.data[0],
+              total_failed_claims: 0,
+              isOfficial: officialResult.data || false
+            } : null;
+          })
+        );
+        
+        const timeoutPromise = new Promise<null[]>((_, reject) => 
+          setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+        );
+        
+        const profiles = await Promise.race([profileFetchPromise, timeoutPromise]);
+        profileMap = new Map(
+          (profiles || [])
+            .filter(Boolean)
+            .map(p => [p!.id, p])
+        );
+      } catch (profileError) {
+        console.warn('Profile data fetch timed out or failed, showing bounties without profile data:', profileError);
+      }
 
       return {
         data: data?.map(bounty => {
