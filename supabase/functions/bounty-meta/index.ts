@@ -76,7 +76,7 @@ serve(async (req) => {
 
     // Use the branded OG image: check cache first, then fall back to generator
     const cachedPath = `${bountyId}.png`;
-    const cachedPublicUrl = `${supabaseUrl}/storage/v1/object/public/${OG_BUCKET}/${cachedPath}`;
+    const cachedPublicUrl = `https://auth.bountybay.co/storage/v1/object/public/${OG_BUCKET}/${cachedPath}`;
     const generatorUrl = `https://auth.bountybay.co/functions/v1/og-image/${bountyId}`;
     
     let ogImage = generatorUrl;
