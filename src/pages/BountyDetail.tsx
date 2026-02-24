@@ -370,6 +370,24 @@ export default function BountyDetail() {
                   ))}
                 </div>
               )}
+
+              {/* Images in header — desktop only */}
+              {bounty.images && bounty.images.length > 0 && (
+                <div className="hidden lg:block mt-2">
+                  <div className="grid grid-cols-3 gap-3">
+                    {bounty.images.map((image, index) => (
+                      <SafeImage
+                        key={index}
+                        src={image}
+                        alt={`Bounty image ${index + 1}`}
+                        className="rounded-lg object-cover w-full h-36 cursor-pointer hover:opacity-80 transition-opacity"
+                        fallbackClassName="rounded-lg w-full h-36"
+                        onClick={() => setSelectedImageIndex(index)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {isOwnBounty && bounty.status === BountyStatus.OPEN && !acceptedHunter && (
                 <div className="flex flex-col sm:flex-row gap-2 mt-4">
@@ -512,8 +530,9 @@ export default function BountyDetail() {
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
-              {bounty.images && bounty.images.length > 0 ? (
-                <Card>
+              {/* Images — mobile only (desktop shows them in header) */}
+              {bounty.images && bounty.images.length > 0 && (
+                <Card className="lg:hidden">
                   <CardHeader>
                     <CardTitle>Images</CardTitle>
                   </CardHeader>
@@ -532,8 +551,9 @@ export default function BountyDetail() {
                     </div>
                   </CardContent>
                 </Card>
-              ) : (
-                <Card>
+              )}
+              {!bounty.images?.length && (
+                <Card className="lg:hidden">
                   <CardHeader>
                     <CardTitle>Images</CardTitle>
                   </CardHeader>
