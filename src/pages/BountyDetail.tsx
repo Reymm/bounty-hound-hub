@@ -468,7 +468,7 @@ export default function BountyDetail() {
                                 <li>• Verify your ID (government-issued photo ID)</li>
                                 <li>• Set up payouts (bank account or debit card)</li>
                               </ul>
-                              <p className="text-xs">Takes about 5 minutes total.</p>
+                              <p className="text-xs text-center">Takes about 5 minutes total.</p>
                             </div>
                           )}
                         </>
@@ -716,7 +716,7 @@ export default function BountyDetail() {
                             <li>• Verify your ID (government-issued photo ID)</li>
                             <li>• Set up payouts (bank account or debit card)</li>
                           </ul>
-                          <p className="text-xs">Takes about 5 minutes total.</p>
+                          <p className="text-xs text-center">Takes about 5 minutes total.</p>
                         </div>
                       )}
                     </>
