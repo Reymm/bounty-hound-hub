@@ -98,7 +98,7 @@ export function ShareBountyButton({
 
         {/* Send via Text — opens SMS app with pre-filled message */}
         <DropdownMenuItem asChild>
-          <a href={`sms:?&body=${encodeURIComponent(cleanUrl)}`}>
+          <a href={`sms:?&body=${encodeURIComponent(metaUrl)}`}>
             <MessageSquare className="h-4 w-4 mr-2" />
             Send via Text
           </a>
