@@ -74,23 +74,31 @@ serve(async (req) => {
     const shortDesc = rawDesc.slice(0, 80);
     const description = `${bountyType} bounty. ${shortDesc}${rawDesc.length > 80 ? '...' : ''}`;
 
-    // Use the branded OG image: check cache first, then fall back to generator
+    // Use the branded OG image: check cache first, then fall back to bounty's own image
     const cachedPath = `${bountyId}.png`;
     const cachedPublicUrl = `https://auth.bountybay.co/storage/v1/object/public/${OG_BUCKET}/${cachedPath}`;
     const generatorUrl = `https://auth.bountybay.co/functions/v1/og-image/${bountyId}`;
     
-    let ogImage = generatorUrl;
+    // Default to the bounty's actual first image (fast, reliable for iMessage)
+    const bountyFirstImage = Array.isArray(bounty.images) && bounty.images.length > 0
+      ? bounty.images[0]
+      : 'https://bountybay.co/og-default.png';
+    let ogImage = bountyFirstImage;
+    
     try {
       const { data: cachedFile } = await supabase.storage
         .from(OG_BUCKET)
         .createSignedUrl(cachedPath, 60);
       if (cachedFile?.signedUrl) {
+        // Cached branded card exists — use it
         ogImage = cachedPublicUrl;
       } else {
+        // No cache yet — trigger background generation for next time
         fetch(generatorUrl).catch(() => {});
+        // ogImage stays as bountyFirstImage (fast, always works)
       }
     } catch {
-      // Storage check failed, use generator URL
+      // Storage check failed — ogImage stays as bountyFirstImage
     }
 
     // og:url must point to bountybay.co so iMessage shows the right domain
