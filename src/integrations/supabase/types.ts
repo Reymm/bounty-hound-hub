@@ -32,6 +32,7 @@ export type Database = {
           milestone_data: Json | null
           poster_id: string | null
           requires_shipping: boolean | null
+          search_vector: unknown
           shipping_details: Json | null
           shipping_status:
             | Database["public"]["Enums"]["shipping_status_type"]
@@ -63,6 +64,7 @@ export type Database = {
           milestone_data?: Json | null
           poster_id?: string | null
           requires_shipping?: boolean | null
+          search_vector?: unknown
           shipping_details?: Json | null
           shipping_status?:
             | Database["public"]["Enums"]["shipping_status_type"]
@@ -94,6 +96,7 @@ export type Database = {
           milestone_data?: Json | null
           poster_id?: string | null
           requires_shipping?: boolean | null
+          search_vector?: unknown
           shipping_details?: Json | null
           shipping_status?:
             | Database["public"]["Enums"]["shipping_status_type"]
@@ -1664,6 +1667,34 @@ export type Database = {
       recalculate_user_rating: {
         Args: { user_id_param: string }
         Returns: undefined
+      }
+      search_bounties_fts: {
+        Args: {
+          category_filter?: string
+          result_limit?: number
+          result_offset?: number
+          search_query: string
+          status_filter?: string
+        }
+        Returns: {
+          amount: number
+          category: string
+          created_at: string
+          deadline: string
+          description: string
+          hunter_purchases_item: boolean
+          id: string
+          images: string[]
+          location: string
+          poster_id: string
+          rank: number
+          requires_shipping: boolean
+          status: string
+          subcategory: string
+          tags: string[]
+          title: string
+          view_count: number
+        }[]
       }
       update_submission_status: {
         Args: {
