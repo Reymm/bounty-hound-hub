@@ -22,7 +22,7 @@ export function getOptimizedImageUrl(
     return url;
   }
 
-  const { width, height, quality = 75, resize = 'cover' } = options;
+  const { width, height, quality = 75, resize } = options;
 
   // Replace /object/public/ with /render/image/public/ for transformation endpoint
   const renderUrl = url.replace(
@@ -34,22 +34,22 @@ export function getOptimizedImageUrl(
   if (width) params.set('width', String(width));
   if (height) params.set('height', String(height));
   params.set('quality', String(quality));
-  params.set('resize', resize);
+  if (resize && width && height) params.set('resize', resize);
 
   return `${renderUrl}?${params.toString()}`;
 }
 
-/** Preset for card thumbnails (~400px wide) */
+/** Preset for card thumbnails (no crop to avoid zoomed mobile cards) */
 export function getThumbnailUrl(url: string): string {
-  return getOptimizedImageUrl(url, { width: 400, quality: 70, resize: 'cover' });
+  return url;
 }
 
-/** Preset for compact card thumbnails (~200px wide) */
+/** Preset for compact card thumbnails (no crop to avoid zoomed mobile cards) */
 export function getSmallThumbnailUrl(url: string): string {
-  return getOptimizedImageUrl(url, { width: 200, quality: 65, resize: 'cover' });
+  return url;
 }
 
 /** Preset for full-size detail view */
 export function getFullSizeUrl(url: string): string {
-  return getOptimizedImageUrl(url, { width: 1200, quality: 85, resize: 'cover' });
+  return getOptimizedImageUrl(url, { width: 1200, quality: 85, resize: 'contain' });
 }
