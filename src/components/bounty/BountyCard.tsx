@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { SafeImage } from '@/components/ui/safe-image';
 import { Bounty, BountyStatus, BountyCategory } from '@/lib/types';
+import { getThumbnailUrl } from '@/lib/image-utils';
 import lostMediaPlaceholder from '@/assets/lost-media-placeholder.jpg';
 import { formatDistanceToNow, isAfter, subDays } from 'date-fns';
 import { SaveBountyButton } from './SaveBountyButton';
@@ -78,7 +79,7 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
           <Link to={`/b/${bounty.id}`} className="block">
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
               <SafeImage
-                src={bounty.images[0]}
+                src={getThumbnailUrl(bounty.images[0])}
                 alt={bounty.title}
                 className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                 fallbackClassName="w-full h-full"

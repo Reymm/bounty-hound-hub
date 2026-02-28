@@ -5,6 +5,7 @@ import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { SafeImage } from '@/components/ui/safe-image';
 import { SaveBountyButton } from './SaveBountyButton';
 import { Bounty, BountyStatus, BountyCategory } from '@/lib/types';
+import { getSmallThumbnailUrl } from '@/lib/image-utils';
 import lostMediaPlaceholder from '@/assets/lost-media-placeholder.jpg';
 import { formatDistanceToNowStrict } from 'date-fns';
 
@@ -18,7 +19,7 @@ interface BountyCardCompactProps {
 export function BountyCardCompact({ bounty, isSaved = false, onToggleSave, showSaveButton = true }: BountyCardCompactProps) {
   const imageContent = bounty.images && bounty.images.length > 0 ? (
     <SafeImage
-      src={bounty.images[0]}
+      src={getSmallThumbnailUrl(bounty.images[0])}
       alt={bounty.title}
       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
       fallbackClassName="w-full h-full"
