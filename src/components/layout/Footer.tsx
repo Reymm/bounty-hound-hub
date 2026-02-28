@@ -66,9 +66,9 @@ export function Footer() {
             <a 
               href="mailto:support@bountybay.co" 
               className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
-              aria-label="Email support"
+              aria-label="Contact us"
             >
-              Email Support
+              Contact
             </a>
             <PartnerApplicationDialog />
           </nav>
