@@ -63,13 +63,13 @@ export function Footer() {
             >
               Privacy
             </Link>
-            <Link 
-              to="/support" 
+            <a 
+              href="mailto:matt@bountybay.co" 
               className="text-muted-foreground hover:text-foreground transition-colors focus-ring rounded px-1 py-1"
               aria-label="Contact us"
             >
               Contact
-            </Link>
+            </a>
             <PartnerApplicationDialog />
           </nav>
 
