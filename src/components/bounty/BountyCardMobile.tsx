@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
 import { SafeImage } from '@/components/ui/safe-image';
 import { Bounty, BountyStatus, BountyCategory } from '@/lib/types';
+import { getThumbnailUrl } from '@/lib/image-utils';
 import lostMediaPlaceholder from '@/assets/lost-media-placeholder.jpg';
 import { formatTimeRemaining } from '@/lib/utils';
 interface BountyCardMobileProps {
@@ -24,7 +25,7 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
         <Link to={`/b/${bounty.id}`} className="block">
           <div className="relative aspect-video w-full overflow-hidden bg-muted">
             <SafeImage
-              src={bounty.images[0]}
+              src={getThumbnailUrl(bounty.images[0])}
               alt={bounty.title}
               className="w-full h-full object-cover"
               fallbackClassName="w-full h-full"
