@@ -81,7 +81,7 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
               <SafeImage
                 src={getThumbnailUrl(bounty.images[0])}
                 alt={bounty.title}
-                className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 fallbackClassName="w-full h-full"
                 showFallbackIcon={true}
               />
