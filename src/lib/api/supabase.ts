@@ -114,24 +114,16 @@ export const supabaseApi = {
   // Bounties
   async getBounties(page = 1, limit = 20, filters: SearchFilters = {}): Promise<PaginatedResponse<Bounty>> {
     try {
+      // Use full-text search RPC when keyword is provided
+      if (filters.keyword && filters.keyword.trim().length > 0) {
+        return this._getBountiesFTS(page, limit, filters);
+      }
+
       let query = supabase
         .from('Bounties')
         .select('*')
         .eq('status', 'open');
 
-      // Apply filters
-      if (filters.keyword) {
-        // Search across title, description, location, category, and subcategory
-        const searchTerm = filters.keyword;
-        query = query.or(
-          `title.ilike.%${searchTerm}%,` +
-          `description.ilike.%${searchTerm}%,` +
-          `location.ilike.%${searchTerm}%,` +
-          `category.ilike.%${searchTerm}%,` +
-          `subcategory.ilike.%${searchTerm}%`
-        );
-      }
-      
       if (filters.categories && filters.categories.length > 0) {
         query = query.in('category', filters.categories);
       } else if (filters.category) {
@@ -189,42 +181,7 @@ export const supabaseApi = {
       if (error) throw error;
 
       // Fetch profile data for all bounties using secure function
-      // Use a timeout to prevent infinite loading on slow connections
-      const posterIds = data?.map(bounty => bounty.poster_id).filter(Boolean) || [];
-      const uniquePosterIds = [...new Set(posterIds)];
-      
-      let profileMap = new Map<string, any>();
-      
-      try {
-        // Fetch profiles and official status in parallel with a 5-second timeout
-        const profileFetchPromise = Promise.all(
-          uniquePosterIds.map(async (posterId) => {
-            const [profileResult, officialResult] = await Promise.all([
-              supabase.rpc('get_public_profile_data', { profile_id: posterId }),
-              supabase.rpc('is_official_account', { p_user_id: posterId })
-            ]);
-            return profileResult.data?.[0] ? { 
-              id: posterId, 
-              ...profileResult.data[0],
-              total_failed_claims: 0,
-              isOfficial: officialResult.data || false
-            } : null;
-          })
-        );
-        
-        const timeoutPromise = new Promise<null[]>((_, reject) => 
-          setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-        );
-        
-        const profiles = await Promise.race([profileFetchPromise, timeoutPromise]);
-        profileMap = new Map(
-          (profiles || [])
-            .filter(Boolean)
-            .map(p => [p!.id, p])
-        );
-      } catch (profileError) {
-        console.warn('Profile data fetch timed out or failed, showing bounties without profile data:', profileError);
-      }
+      const profileMap = await this._fetchProfileMap(data);
 
       return {
         data: data?.map(bounty => {
@@ -243,6 +200,124 @@ export const supabaseApi = {
       console.error('Error fetching bounties:', error);
       throw error;
     }
+  },
+
+  /** Full-text search using Postgres tsvector */
+  async _getBountiesFTS(page = 1, limit = 20, filters: SearchFilters = {}): Promise<PaginatedResponse<Bounty>> {
+    const offset = (page - 1) * limit;
+    
+    const { data, error } = await supabase.rpc('search_bounties_fts', {
+      search_query: filters.keyword!,
+      category_filter: filters.category || (filters.categories?.length === 1 ? filters.categories[0] : null),
+      status_filter: 'open',
+      result_limit: limit,
+      result_offset: offset,
+    });
+
+    if (error) {
+      console.warn('FTS search failed, falling back to ilike:', error);
+      // Fallback: run ilike search if FTS fails (e.g., empty tsvector)
+      return this._getBountiesIlikeFallback(page, limit, filters);
+    }
+
+    if (!data || data.length === 0) {
+      // FTS returned no results — try ilike fallback for partial matches
+      return this._getBountiesIlikeFallback(page, limit, filters);
+    }
+
+    // Fetch profile data
+    const profileMap = await this._fetchProfileMap(data);
+
+    return {
+      data: data.map((row: any) => {
+        const profile = profileMap.get(row.poster_id);
+        return transformBountyRow(row as BountyRow, profile, 0, profile?.isOfficial);
+      }),
+      total: data.length + offset, // Approximate; FTS doesn't give exact count easily
+      page,
+      limit,
+      hasMore: data.length === limit
+    };
+  },
+
+  /** Fallback ilike search for when FTS returns no results */
+  async _getBountiesIlikeFallback(page = 1, limit = 20, filters: SearchFilters = {}): Promise<PaginatedResponse<Bounty>> {
+    const searchTerm = filters.keyword || '';
+    let query = supabase
+      .from('Bounties')
+      .select('*')
+      .eq('status', 'open')
+      .or(
+        `title.ilike.%${searchTerm}%,` +
+        `description.ilike.%${searchTerm}%,` +
+        `location.ilike.%${searchTerm}%,` +
+        `category.ilike.%${searchTerm}%,` +
+        `subcategory.ilike.%${searchTerm}%`
+      );
+
+    if (filters.categories?.length) {
+      query = query.in('category', filters.categories);
+    }
+    
+    query = query.order('created_at', { ascending: false });
+    
+    const start = (page - 1) * limit;
+    const { data, error } = await query.range(start, start + limit - 1);
+    if (error) throw error;
+
+    const profileMap = await this._fetchProfileMap(data);
+
+    return {
+      data: data?.map(bounty => {
+        const sanitizedBounty = { ...bounty };
+        delete sanitizedBounty.shipping_details;
+        const profile = profileMap.get(bounty.poster_id);
+        return transformBountyRow(sanitizedBounty, profile, 0, profile?.isOfficial);
+      }) || [],
+      total: data?.length || 0,
+      page,
+      limit,
+      hasMore: (data?.length || 0) === limit
+    };
+  },
+
+  /** Shared helper to fetch profile data for a list of bounty rows */
+  async _fetchProfileMap(data: any[] | null): Promise<Map<string, any>> {
+    const posterIds = data?.map(b => b.poster_id).filter(Boolean) || [];
+    const uniquePosterIds = [...new Set(posterIds)];
+    let profileMap = new Map<string, any>();
+    
+    try {
+      const profileFetchPromise = Promise.all(
+        uniquePosterIds.map(async (posterId) => {
+          const [profileResult, officialResult] = await Promise.all([
+            supabase.rpc('get_public_profile_data', { profile_id: posterId }),
+            supabase.rpc('is_official_account', { p_user_id: posterId })
+          ]);
+          return profileResult.data?.[0] ? { 
+            id: posterId, 
+            ...profileResult.data[0],
+            total_failed_claims: 0,
+            isOfficial: officialResult.data || false
+          } : null;
+        })
+      );
+      
+      const timeoutPromise = new Promise<null[]>((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+      );
+      
+      const profiles = await Promise.race([profileFetchPromise, timeoutPromise]);
+      profileMap = new Map(
+        (profiles || [])
+          .filter(Boolean)
+          .map(p => [p!.id, p])
+      );
+    } catch (profileError) {
+      console.warn('Profile data fetch timed out or failed:', profileError);
+    }
+
+    return profileMap;
   },
 
   async getBounty(id: string): Promise<Bounty | null> {
