@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import {
   Select,
   SelectContent,
@@ -64,7 +64,7 @@ function PostBountyForm() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
   const [bountyType, setBountyType] = useState<'lead-only' | 'find-and-ship'>('lead-only');
-  const [adultConfirmed, setAdultConfirmed] = useState(false);
+  
 
   // Derive requiresShipping and hunterPurchasesItem from bountyType
   // Find & Ship = shipping ON + hunter purchases ON (bundled together)
@@ -93,10 +93,8 @@ function PostBountyForm() {
   const watchedTargetMin = watch('targetPriceMin');
   const watchedTargetMax = watch('targetPriceMax');
   const selectedCategory = watch('category');
-  const selectedSubcategory = watch('subcategory');
+  
 
-  // Only require 18+ confirmation for person-finding reconnections, not lost pets
-  const requiresAdultConfirmation = selectedCategory === 'reconnections' && selectedSubcategory !== 'lost-pets';
 
   // Track if draft has already been loaded (prevents overwrites)
   const draftLoadedRef = useRef(false);
@@ -319,10 +317,6 @@ function PostBountyForm() {
         errors.push("Please select a category for your bounty.");
       }
 
-      // Validate adult confirmation for person-finding reconnections (not lost pets)
-      if (data.category === 'reconnections' && data.subcategory !== 'lost-pets' && !adultConfirmed) {
-        errors.push("Please confirm that the person you're searching for is 18 years or older.");
-      }
       
       // CRITICAL: Validate verification requirements - filter empty strings and check count
       const validRequirements = verificationRequirements.filter(req => req.trim().length > 0);
@@ -898,28 +892,6 @@ function PostBountyForm() {
               )}
             </div>
 
-            {/* Adult Confirmation for Person-Finding Reconnections (not lost pets) */}
-            {requiresAdultConfirmation && (
-              <Alert className="border-amber-500/50 bg-amber-500/10">
-                <AlertCircle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="ml-2">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id="adultConfirmation"
-                      checked={adultConfirmed}
-                      onCheckedChange={(checked) => setAdultConfirmed(checked === true)}
-                      className="mt-0.5"
-                    />
-                    <label htmlFor="adultConfirmation" className="text-sm cursor-pointer">
-                      <span className="font-medium">I confirm that the person I am searching for is 18 years of age or older.</span>
-                      <span className="block text-muted-foreground text-xs mt-1">
-                        BountyBay does not allow bounties for locating minors. For missing children, please contact local authorities or the National Center for Missing & Exploited Children.
-                      </span>
-                    </label>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
 
             <div className="space-y-2">
               <label htmlFor="location" className="text-sm font-medium">

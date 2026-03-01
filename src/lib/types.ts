@@ -233,19 +233,6 @@ export const CATEGORY_STRUCTURE: CategoryStructure = {
       'vehicle-parts': 'Vehicle Parts'
     }
   },
-  'reconnections': {
-    label: 'Reconnections',
-    subcategories: {
-      'biological-parents': 'Biological Parents',
-      'family-members': 'Family Members',
-      'old-friends': 'Old Friends',
-      'adoption-search': 'Adoption Search',
-      'lost-pets': 'Lost Pets',
-      'lost-contact': 'Lost Contact',
-      'genealogy': 'Genealogy Research',
-      'family-history': 'Family History'
-    }
-  },
   'music-vinyl': {
     label: 'Music & Vinyl',
     subcategories: {
@@ -391,7 +378,7 @@ export enum BountyCategory {
   ELECTRONICS = 'electronics',
   MUSIC_VINYL = 'music-vinyl',
   SPORTS_OUTDOORS = 'sports-outdoors',
-  RECONNECTIONS = 'reconnections',
+  
   BOOKS_MEDIA = 'books-media',
   HOME_GARDEN = 'home-garden',
   AUTOMOTIVE = 'automotive',

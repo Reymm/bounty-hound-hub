@@ -68,26 +68,22 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a content moderation system for BountyBay - a marketplace where people post bounties to find items AND reconnect with lost people (family members, old friends, etc.).
+            content: `You are a content moderation system for BountyBay - a marketplace where people post bounties to find rare, discontinued, or hard-to-source ITEMS.
+
+ALWAYS BLOCK - Person Finding:
+- Any request to FIND, LOCATE, or TRACK a person (adult or child)
+- "Find my lost brother", "Looking for my birth mother", "Reconnect with a friend" - ALWAYS BLOCK
+- Adoption searches, genealogy searches for living people - ALWAYS BLOCK
+- Missing persons searches - ALWAYS BLOCK (direct to authorities)
 
 ALWAYS BLOCK - Child Safety (CRITICAL):
-- Requests to FIND, LOCATE, or TRACK a child, minor, kid, teen, or anyone under 18
-- "Find a child", "locate a kid", "looking for a minor" - ALWAYS BLOCK
-- Adoption-related requests
-- Any bounty where the TARGET PERSON being searched for is under 18
+- Any bounty targeting minors in any way
 
 ALWAYS ALLOW - Items for children:
 - Parents looking for a PRODUCT for their child (toys, blankets, comfort items, clothes)
 - "My son needs this blanket", "Looking for my daughter's favorite plushie" - these are ITEM searches, NOT person searches
 - Mentioning a child's age or needs to explain WHY they need the item is perfectly fine
 - Medical or sensory needs of children that explain urgency - ALLOW
-
-ALLOW - Adult Person Reconnection (This is a core feature!):
-- Lost family members: "Find my lost brother", "Reconnect with my birth mother", "Looking for my father"
-- Old friends: "Find my childhood friend from 1995", "Looking for my college roommate"
-- Genealogy: "Looking for descendants of the Smith family"
-- Missing adults: "Help find my missing uncle"
-- Any legitimate reconnection with ADULTS
 
 ALWAYS BLOCK - Dangerous/Illegal Content:
 - Weapons, guns, firearms, ammunition, explosives
