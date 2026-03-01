@@ -269,15 +269,7 @@ export default function Terms() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">9.2 Trademarks</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    "BountyBay," "Nostalgia Intelligence," and all related logos, designs, and trade dress are 
-                    trademarks or registered trademarks of Bountybay Ltd. You may not use these marks without 
-                    prior written permission from Bountybay Ltd.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">9.3 User Content</h3>
+                  <h3 className="font-medium mb-2">9.2 User Content</h3>
                   <p className="text-muted-foreground leading-relaxed">
                     By posting content on the Platform, you grant BountyBay a non-exclusive, royalty-free, 
                     worldwide license to use, display, and distribute such content in connection with operating 
