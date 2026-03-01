@@ -319,7 +319,6 @@ export function AdminDemoSeeder() {
                   <p>This will create <strong>{ALL_DEMO_BOUNTIES.length} realistic demo bounties</strong> for showcasing the platform:</p>
                   <ul className="list-disc list-inside space-y-1 text-sm">
                     <li><strong>1 Hero Bounty:</strong> Emotional blanket search ($500)</li>
-                    <li><strong>8 Reconnections:</strong> Family & friend searches ($50-$200)</li>
                     <li><strong>6 Classic Cars:</strong> Vintage vehicle hunts ($125-$250)</li>
                     <li><strong>14 Collectibles:</strong> Cards, watches, vintage items ($50-$250)</li>
                   </ul>

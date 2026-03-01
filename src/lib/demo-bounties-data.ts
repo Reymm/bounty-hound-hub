@@ -19,7 +19,7 @@ export interface DemoBounty {
 
 // All images use external Unsplash URLs for reliability in database storage
 const BLANKET_IMAGE = 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=800&q=80'; // child's comfort blanket
-const FAMILY_IMAGE = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80'; // family silhouette
+
 const WATCH_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80'; // vintage watch
 const BOOK_IMAGE = 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&q=80'; // old books
 const TOY_IMAGE = 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800&q=80'; // vintage toys
@@ -57,130 +57,6 @@ export const HERO_BOUNTY: DemoBounty = {
   view_count: 247,
   deadline_days: 90
 };
-
-// Reconnections bounties
-export const RECONNECTION_BOUNTIES: DemoBounty[] = [
-  {
-    title: "Help Find My Birth Father - Denver Area, Born 1988",
-    description: "I was adopted at birth in Denver in 1988. My birth mother passed away before I could meet her, but I know my biological father was a musician who played at local venues in the late 80s. His first name was Michael and he played guitar. My 23andMe shows strong Colorado roots. I have some photos from that era my adoptive parents saved. Any leads would mean the world to me.",
-    category: "reconnections",
-    subcategory: "family",
-    amount: 200,
-    location: "Denver, CO",
-    tags: ["adoption-search", "denver", "dna-match", "1988", "birth-father", "musician"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["Verified connection to the person", "Contact information"],
-    poster_display_name: "AdopteeSearching",
-    days_ago: 3,
-    view_count: 89,
-    deadline_days: 60
-  },
-  {
-    title: "Looking for Childhood Best Friend from Camp Lakewood 1998",
-    description: "Jenny Martinez and I were inseparable at Camp Lakewood in Wisconsin during summers of 1996-1998. We lost touch when her family moved suddenly. She had curly brown hair, loved horses, and we made friendship bracelets together. I still have mine. Would love to reconnect and see how life turned out for her.",
-    category: "reconnections",
-    subcategory: "friends",
-    amount: 75,
-    location: "Milwaukee, WI",
-    tags: ["camp-friends", "90s-kids", "summer-camp", "lost-contact", "wisconsin", "childhood-friend"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["Proof of camp attendance", "Shared memory verification"],
-    poster_display_name: "NostalgicNancy",
-    days_ago: 7,
-    view_count: 42,
-    deadline_days: 45
-  },
-  {
-    title: "Birth Mother Search - Adopted from Chicago Hospital 1990",
-    description: "I was adopted from Northwestern Memorial Hospital in Chicago in August 1990. I'm now 34 and would love to know my medical history and potentially connect with my biological mother. I have my original birth certificate with limited information. She was 19 at the time. This is about finding answers, not judgment.",
-    category: "reconnections",
-    subcategory: "family",
-    amount: 175,
-    location: "Chicago, IL",
-    tags: ["birth-mother", "chicago", "closed-adoption", "medical-history", "1990", "northwestern"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["DNA match confirmation", "Hospital records reference"],
-    poster_display_name: "HopefulDaughter22",
-    days_ago: 5,
-    view_count: 67,
-    deadline_days: 90
-  },
-  {
-    title: "Find My College Roommate - Last Seen NYC 2015",
-    description: "Marcus Johnson was my roommate at NYU from 2011-2015. We were best friends but lost touch after graduation when I moved abroad. He was studying film and wanted to become a documentary filmmaker. Last I heard he was working in Brooklyn. Miss our late-night conversations about movies.",
-    category: "reconnections",
-    subcategory: "friends",
-    amount: 50,
-    location: "New York, NY",
-    tags: ["college-friends", "nyc", "reconnect", "2015", "nyu", "filmmaker"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["Confirmed identity", "Current contact info"],
-    poster_display_name: "MissMyRoomie",
-    days_ago: 10,
-    view_count: 31,
-    deadline_days: 30
-  },
-  {
-    title: "Grandmother's Family in County Cork, Ireland",
-    description: "My grandmother Mary O'Sullivan emigrated from County Cork in 1952. She passed in 2019 and always regretted losing touch with her siblings who stayed in Ireland. Looking for any descendants of the O'Sullivan family from the Bantry area. I have old family photos and letters I'd love to share with relatives.",
-    category: "reconnections",
-    subcategory: "family",
-    amount: 150,
-    location: "Boston, MA",
-    tags: ["irish-ancestry", "genealogy", "cork-ireland", "family-tree", "osullivan", "bantry"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["Family tree documentation", "Shared family photos"],
-    poster_display_name: "IrishRootsSeeker",
-    days_ago: 8,
-    view_count: 53,
-    deadline_days: 60
-  },
-  {
-    title: "Reconnect with Army Buddy - 2nd Infantry 2008-2012",
-    description: "Looking for Sergeant James 'Jimmy' Williams who served with me in the 2nd Infantry Division, deployed to Iraq 2009-2010. We were close during deployment but I moved around a lot after getting out. He was from Texas originally. Want to catch up and make sure he's doing okay.",
-    category: "reconnections",
-    subcategory: "colleagues",
-    amount: 100,
-    location: "San Antonio, TX",
-    tags: ["military", "veteran", "army-buddy", "deployment", "2nd-infantry", "iraq"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["Military service verification", "Shared deployment memory"],
-    poster_display_name: "VeteranVince",
-    days_ago: 6,
-    view_count: 78,
-    deadline_days: 45
-  },
-  {
-    title: "Finding Biological Siblings After 23andMe Discovery",
-    description: "Recently discovered through 23andMe that I have at least 2 half-siblings I never knew about. My biological father apparently had other children. I'm not looking to disrupt anyone's life, just hoping to connect with family I never knew existed. DNA shows strong matches in the Georgia/Florida area.",
-    category: "reconnections",
-    subcategory: "family",
-    amount: 200,
-    location: "Atlanta, GA",
-    tags: ["dna-surprise", "half-siblings", "genetic-testing", "family", "23andme", "georgia"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["DNA match confirmation", "Willingness to connect"],
-    poster_display_name: "DNASurprise2023",
-    days_ago: 4,
-    view_count: 92,
-    deadline_days: 90
-  },
-  {
-    title: "Find Teacher Who Inspired Me - Mr. Henderson, Lincoln High School",
-    description: "Mr. David Henderson taught English at Lincoln High School in Minneapolis from 1995-2005. He believed in me when no one else did and pushed me to go to college. I'm now a published author and want to thank him properly. He'd be in his 60s now. Hoping he's still out there.",
-    category: "reconnections",
-    subcategory: "colleagues",
-    amount: 60,
-    location: "Minneapolis, MN",
-    tags: ["teacher", "mentor", "high-school", "thank-you", "lincoln-high", "english-teacher"],
-    images: [FAMILY_IMAGE],
-    verification_requirements: ["Confirmed identity", "Contact information"],
-    poster_display_name: "GratefulGrad",
-    days_ago: 12,
-    view_count: 28,
-    deadline_days: 60
-  }
-];
 
 // Classic cars bounties
 export const CLASSIC_CAR_BOUNTIES: DemoBounty[] = [
@@ -493,7 +369,6 @@ export const COLLECTIBLE_BOUNTIES: DemoBounty[] = [
 // Combine all bounties for easy access
 export const ALL_DEMO_BOUNTIES: DemoBounty[] = [
   HERO_BOUNTY,
-  ...RECONNECTION_BOUNTIES,
   ...CLASSIC_CAR_BOUNTIES,
   ...COLLECTIBLE_BOUNTIES
 ];
