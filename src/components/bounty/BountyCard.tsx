@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Star, Eye, Users, Image as ImageIcon, BadgeCheck, Package, Link2 } from 'lucide-react';
+import { Calendar, MapPin, Star, Eye, Users, BadgeCheck, Package, Link2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyDisplayCompact } from '@/components/ui/currency-display';
@@ -7,6 +7,7 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { Bounty, BountyStatus, BountyCategory } from '@/lib/types';
 import { getThumbnailUrl } from '@/lib/image-utils';
 import lostMediaPlaceholder from '@/assets/lost-media-placeholder.jpg';
+import noPhotoPlaceholder from '@/assets/no-photo-placeholder.png';
 import { formatDistanceToNow, isAfter, subDays } from 'date-fns';
 import { SaveBountyButton } from './SaveBountyButton';
 interface BountyCardProps {
@@ -99,11 +100,12 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
           </Link>
         ) : (
           <Link to={`/b/${bounty.id}`} className="block">
-            <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p className="text-xs">No image</p>
-              </div>
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+              <img
+                src={noPhotoPlaceholder}
+                alt="No photo provided"
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              />
             </div>
           </Link>
         )}

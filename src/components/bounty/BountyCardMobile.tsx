@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Eye, Clock, Image as ImageIcon, BadgeCheck, Package, Link2 } from 'lucide-react';
+import { Calendar, MapPin, Eye, Clock, BadgeCheck, Package, Link2 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { SafeImage } from '@/components/ui/safe-image';
 import { Bounty, BountyStatus, BountyCategory } from '@/lib/types';
 import { getThumbnailUrl } from '@/lib/image-utils';
 import lostMediaPlaceholder from '@/assets/lost-media-placeholder.jpg';
+import noPhotoPlaceholder from '@/assets/no-photo-placeholder.png';
 import { formatTimeRemaining } from '@/lib/utils';
 interface BountyCardMobileProps {
   bounty: Bounty;
@@ -41,11 +42,12 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
         </Link>
       ) : (
         <Link to={`/b/${bounty.id}`} className="block">
-          <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No image</p>
-            </div>
+          <div className="relative aspect-video w-full overflow-hidden bg-muted">
+            <img
+              src={noPhotoPlaceholder}
+              alt="No photo provided"
+              className="w-full h-full object-cover"
+            />
           </div>
         </Link>
       )}
