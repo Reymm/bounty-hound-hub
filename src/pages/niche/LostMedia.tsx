@@ -4,7 +4,7 @@ import { BountyCategory } from '@/lib/types';
 
 const lostMediaConfig: NicheConfig = {
   slug: 'lost-media',
-  category: BountyCategory.LOST_MEDIA_THREADS,
+  category: BountyCategory.LOST_MEDIA,
   title: 'Find Lost Reddit Threads, YouTube Videos & More',
   subtitle: 'Track down deleted posts, lost videos, and forgotten internet content.',
   description: 'Remember that Reddit thread you saved but can\'t find? A YouTube video that got taken down? A forum post from years ago? Post a bounty and let our hunters dig it up for you.',

@@ -4,7 +4,7 @@ import { BountyCategory } from '@/lib/types';
 
 const fashionConfig: NicheConfig = {
   slug: 'fashion',
-  category: BountyCategory.FASHION_APPAREL,
+  category: BountyCategory.FASHION,
   title: 'Track Down Fashion Pieces You Miss',
   subtitle: 'Find discontinued clothing, vintage designer items, and fashion pieces you regret letting go.',
   description: 'Whether it\'s a vintage handbag, a discontinued pair of shoes, or a designer piece you once owned — post a bounty and let our community of fashion hunters find it for you.',

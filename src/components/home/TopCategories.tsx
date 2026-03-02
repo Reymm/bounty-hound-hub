@@ -1,4 +1,4 @@
-import { Car, Sparkles, Shirt, Disc3, Trophy, Gamepad2, FileSearch, Shield, ToyBrick } from 'lucide-react';
+import { Car, Sparkles, Shirt, Gamepad2, FileSearch, Heart, Package } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { BountyCategory } from '@/lib/types';
 
@@ -16,67 +16,53 @@ interface CategoryCard {
 
 const topCategories: CategoryCard[] = [
   {
-    id: BountyCategory.FASHION_APPAREL,
-    label: 'Fashion',
-    icon: <Shirt className="h-6 w-6" />,
-    description: 'Rare sneakers, vintage clothing, designer items',
+    id: BountyCategory.TOYS_COMFORT,
+    label: 'Toys & Comfort Items',
+    icon: <Heart className="h-6 w-6" />,
+    description: 'Plushies, vintage toys, discontinued stuffed animals',
     gradient: 'from-pink-500/10 to-pink-600/5'
   },
   {
     id: BountyCategory.COLLECTIBLES,
     label: 'Collectibles',
     icon: <Sparkles className="h-6 w-6" />,
-    description: 'Pokémon cards, sports cards, coins, figurines',
+    description: 'Trading cards, coins, vinyl, sports memorabilia',
     gradient: 'from-amber-500/10 to-amber-600/5'
   },
   {
-    id: BountyCategory.TOYS_KIDS,
-    label: 'Toys',
-    icon: <ToyBrick className="h-6 w-6" />,
-    description: 'Vintage toys, discontinued toys, plushies, stuffed animals',
-    gradient: 'from-cyan-500/10 to-cyan-600/5'
-  },
-  {
-    id: BountyCategory.VEHICLES,
-    label: 'Vehicles & Parts',
-    icon: <Car className="h-6 w-6" />,
-    description: 'Classic cars, rare parts, vintage motorcycles',
-    gradient: 'from-blue-500/10 to-blue-600/5'
-  },
-  {
-    id: BountyCategory.LOST_MEDIA_THREADS,
-    label: 'Lost & Rare Media',
-    icon: <FileSearch className="h-6 w-6" />,
-    description: 'Deleted Reddit threads, lost YouTube videos, rare films',
-    gradient: 'from-violet-500/10 to-violet-600/5'
+    id: BountyCategory.FASHION,
+    label: 'Fashion & Accessories',
+    icon: <Shirt className="h-6 w-6" />,
+    description: 'Sneakers, handbags, watches, vintage designer',
+    gradient: 'from-pink-500/10 to-purple-600/5'
   },
   {
     id: BountyCategory.ELECTRONICS,
     label: 'Electronics & Gaming',
     icon: <Gamepad2 className="h-6 w-6" />,
-    description: 'Retro consoles, rare games, vintage tech',
+    description: 'Retro consoles, cameras, phones, audio gear',
     gradient: 'from-purple-500/10 to-purple-600/5'
   },
   {
-    id: BountyCategory.SPORTS_OUTDOORS,
-    label: 'Sports & Memorabilia',
-    icon: <Trophy className="h-6 w-6" />,
-    description: 'Signed jerseys, vintage gear, rare equipment',
+    id: BountyCategory.VEHICLES,
+    label: 'Vehicles & Parts',
+    icon: <Car className="h-6 w-6" />,
+    description: 'Classic cars, motorcycles, rare parts',
+    gradient: 'from-blue-500/10 to-blue-600/5'
+  },
+  {
+    id: BountyCategory.LOST_MEDIA,
+    label: 'Lost Media & Threads',
+    icon: <FileSearch className="h-6 w-6" />,
+    description: 'Deleted posts, lost videos, internet mysteries',
+    gradient: 'from-violet-500/10 to-violet-600/5'
+  },
+  {
+    id: BountyCategory.EVERYTHING_ELSE,
+    label: 'Everything Else',
+    icon: <Package className="h-6 w-6" />,
+    description: 'Home, books, sports, health & anything else',
     gradient: 'from-green-500/10 to-green-600/5'
-  },
-  {
-    id: BountyCategory.MUSIC_VINYL,
-    label: 'Music & Vinyl',
-    icon: <Disc3 className="h-6 w-6" />,
-    description: 'Rare vinyl, signed albums, concert memorabilia',
-    gradient: 'from-rose-500/10 to-rose-600/5'
-  },
-  {
-    id: BountyCategory.RECOVERY_REWARDS,
-    label: 'Recovery Rewards',
-    icon: <Shield className="h-6 w-6" />,
-    description: 'Stolen vehicles, lost items, recovery tips',
-    gradient: 'from-red-500/10 to-red-600/5'
   },
 ];
 
@@ -100,7 +86,6 @@ export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
               className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/50"
               onClick={() => {
                 onCategorySelect(category.id);
-                // Scroll to browse section on category select
                 setTimeout(() => {
                   const browseSection = document.getElementById('browse');
                   if (browseSection) {
@@ -133,7 +118,6 @@ export const TopCategories = ({ onCategorySelect }: TopCategoriesProps) => {
         <div className="mt-8 text-center">
           <button
             onClick={() => {
-              // Clear any category filter and scroll to bounties section
               onCategorySelect('');
               const browseSection = document.getElementById('browse');
               if (browseSection) {

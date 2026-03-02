@@ -88,7 +88,7 @@ export function BountyCard({ bounty, isSaved = false, onToggleSave, showSaveButt
               />
             </div>
           </Link>
-        ) : bounty.category === BountyCategory.LOST_MEDIA_THREADS ? (
+        ) : bounty.category === BountyCategory.LOST_MEDIA ? (
           <Link to={`/b/${bounty.id}`} className="block">
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
               <img

@@ -26,7 +26,7 @@ export function BountyCardCompact({ bounty, isSaved = false, onToggleSave, showS
       fallbackClassName="w-full h-full"
       showFallbackIcon={true}
     />
-  ) : bounty.category === BountyCategory.LOST_MEDIA_THREADS ? (
+  ) : bounty.category === BountyCategory.LOST_MEDIA ? (
     <img src={lostMediaPlaceholder} alt="Lost Media" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
   ) : (
     <img src={noPhotoPlaceholder} alt="No photo provided" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
