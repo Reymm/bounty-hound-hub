@@ -19,9 +19,9 @@ import { NotificationBell } from './NotificationBell';
 const nichePages = [
   { title: 'Plushies & Blankets', description: 'Discontinued stuffed animals, baby blankets, comfort items', href: '/plushies-blankets', icon: Heart },
   { title: 'Lost Media', description: 'Deleted Reddit threads, YouTube videos & more', href: '/lost-media', icon: FileSearch },
-  { title: 'Fashion & Apparel', description: 'Vintage clothing, designer pieces, discontinued styles', href: '/fashion', icon: Shirt },
-  { title: 'Collectibles', description: 'Cards, toys, memorabilia', href: '/collectibles', icon: Sparkles },
-  { title: 'Vehicles & Parts', description: 'Classic cars, rare parts, vintage motorcycles', href: '/vintage-cars', icon: Car },
+  { title: 'Fashion & Accessories', description: 'Vintage clothing, designer pieces, sneakers', href: '/fashion', icon: Shirt },
+  { title: 'Collectibles', description: 'Trading cards, coins, vinyl, memorabilia', href: '/collectibles', icon: Sparkles },
+  { title: 'Vehicles & Parts', description: 'Classic cars, motorcycles, rare parts', href: '/vintage-cars', icon: Car },
 ];
 
 interface TopNavProps {

@@ -34,7 +34,7 @@ export function BountyCardMobile({ bounty, onViewDetails }: BountyCardMobileProp
             />
           </div>
         </Link>
-      ) : bounty.category === BountyCategory.LOST_MEDIA_THREADS ? (
+      ) : bounty.category === BountyCategory.LOST_MEDIA ? (
         <Link to={`/b/${bounty.id}`} className="block">
           <div className="relative aspect-video w-full overflow-hidden bg-muted">
             <img src={lostMediaPlaceholder} alt="Lost Media" className="w-full h-full object-cover" />

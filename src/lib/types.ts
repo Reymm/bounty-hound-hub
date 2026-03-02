@@ -154,242 +154,87 @@ export interface CategoryStructure {
 }
 
 export const CATEGORY_STRUCTURE: CategoryStructure = {
+  'toys-comfort': {
+    label: 'Toys & Comfort Items',
+    subcategories: {
+      'plushies': 'Plushies & Stuffed Animals',
+      'vintage-toys': 'Vintage Toys',
+      'action-figures': 'Action Figures & Dolls',
+      'building-sets': 'Building Sets & Blocks',
+      'baby-toddler': 'Baby & Toddler'
+    }
+  },
   'collectibles': {
     label: 'Collectibles',
     subcategories: {
-      'rare-coins': 'Rare Coins',
-      'comic-books': 'Comic Books',
-      'sports-memorabilia': 'Sports Memorabilia',
-      'antiques': 'Antiques',
       'trading-cards': 'Trading Cards',
-      'stamps': 'Stamps',
-      'vintage-items': 'Vintage Items'
+      'rare-coins': 'Rare Coins',
+      'sports-memorabilia': 'Sports Memorabilia',
+      'vinyl-albums': 'Vinyl & Albums',
+      'antiques': 'Antiques & Vintage'
+    }
+  },
+  'fashion': {
+    label: 'Fashion & Accessories',
+    subcategories: {
+      'shoes-sneakers': 'Shoes & Sneakers',
+      'handbags': 'Handbags & Purses',
+      'jewelry-watches': 'Jewelry & Watches',
+      'vintage-fashion': 'Vintage Fashion',
+      'designer-items': 'Designer Items'
     }
   },
   'electronics': {
-    label: 'Electronics',
+    label: 'Electronics & Gaming',
     subcategories: {
-      'computers': 'Computers & Laptops',
-      'cell-phones': 'Cell Phones & Tablets',
-      'audio-video': 'Audio & Video Equipment',
       'gaming': 'Gaming Consoles & Games',
       'cameras': 'Cameras & Photography',
-      'tv-home-theater': 'TV & Home Theater',
-      'wearable-tech': 'Wearable Technology',
-      'electronics-parts': 'Electronics Parts & Components'
-    }
-  },
-  'fashion-apparel': {
-    label: 'Fashion & Apparel',
-    subcategories: {
-      'mens-clothing': "Men's Clothing",
-      'womens-clothing': "Women's Clothing",
-      'shoes': 'Shoes & Footwear',
-      'jewelry-watches': 'Jewelry & Watches',
-      'handbags-accessories': 'Handbags & Accessories',
-      'vintage-fashion': 'Vintage Fashion',
-      'designer-items': 'Designer Items',
-      'activewear': 'Activewear & Sportswear',
-      'hats': 'Hats & Headwear'
-    }
-  },
-  'books-media': {
-    label: 'Books & Media',
-    subcategories: {
-      'rare-books': 'Rare & Collectible Books',
-      'textbooks': 'Textbooks & Educational',
-      'magazines': 'Magazines & Periodicals',
-      'movies-dvd': 'Movies & DVDs',
-      'music-vinyl': 'Music & Vinyl Records',
-      'video-games': 'Video Games',
-      'digital-media': 'Digital Media',
-      'manuscripts': 'Manuscripts & Documents'
-    }
-  },
-  'home-garden': {
-    label: 'Home & Garden',
-    subcategories: {
-      'furniture': 'Furniture',
-      'decor': 'Home Decor',
-      'blankets-throws': 'Blankets & Throws',
-      'garden-tools': 'Garden Tools & Equipment',
-      'plants-seeds': 'Plants & Seeds',
-      'outdoor-living': 'Outdoor Living',
-      'home-improvement': 'Home Improvement',
-      'kitchen-dining': 'Kitchen & Dining',
-      'bedding-bath': 'Bedding & Bath'
+      'phones-tablets': 'Phones & Tablets',
+      'audio-equipment': 'Audio Equipment',
+      'retro-tech': 'Retro Tech'
     }
   },
   'vehicles': {
-    label: 'Vehicles',
+    label: 'Vehicles & Parts',
     subcategories: {
-      'cars': 'Cars & Automobiles',
+      'classic-cars': 'Cars & Classics',
       'motorcycles': 'Motorcycles',
-      'trucks': 'Trucks',
-      'classic-cars': 'Classic & Vintage Cars',
+      'parts-accessories': 'Parts & Accessories',
       'boats': 'Boats & Watercraft',
-      'rvs': 'RVs & Campers',
-      'atvs-utvs': 'ATVs & UTVs',
-      'vehicle-parts': 'Vehicle Parts'
+      'tires-wheels': 'Tires & Wheels'
     }
   },
-  'music-vinyl': {
-    label: 'Music & Vinyl',
-    subcategories: {
-      'vinyl-records': 'Vinyl Records',
-      'rare-albums': 'Rare Albums',
-      'concert-memorabilia': 'Concert Memorabilia',
-      'band-merch': 'Band Merchandise',
-      'musical-instruments': 'Musical Instruments',
-      'audio-equipment': 'Audio Equipment',
-      'signed-memorabilia': 'Signed Memorabilia'
-    }
-  },
-  'automotive': {
-    label: 'Automotive Parts & Accessories',
-    subcategories: {
-      'car-parts': 'Car Parts',
-      'motorcycle-parts': 'Motorcycle Parts',
-      'truck-parts': 'Truck Parts',
-      'automotive-tools': 'Automotive Tools',
-      'car-electronics': 'Car Electronics',
-      'tires-wheels': 'Tires & Wheels',
-      'car-care': 'Car Care Products',
-      'performance-parts': 'Performance Parts'
-    }
-  },
-  'tools-hardware': {
-    label: 'Tools & Hardware',
-    subcategories: {
-      'hand-tools': 'Hand Tools',
-      'power-tools': 'Power Tools',
-      'hardware': 'Hardware & Fasteners',
-      'safety-equipment': 'Safety Equipment',
-      'measuring-tools': 'Measuring Tools',
-      'electrical-supplies': 'Electrical Supplies',
-      'plumbing-supplies': 'Plumbing Supplies',
-      'workshop-equipment': 'Workshop Equipment'
-    }
-  },
-  'health-beauty': {
-    label: 'Health & Beauty',
-    subcategories: {
-      'skincare': 'Skincare',
-      'makeup': 'Makeup & Cosmetics',
-      'hair-care': 'Hair Care',
-      'fragrances': 'Fragrances',
-      'health-supplements': 'Health Supplements',
-      'medical-devices': 'Medical Devices',
-      'fitness-equipment': 'Fitness Equipment',
-      'personal-care': 'Personal Care'
-    }
-  },
-  'sports-outdoors': {
-    label: 'Sports & Outdoors',
-    subcategories: {
-      'fitness-exercise': 'Fitness & Exercise',
-      'outdoor-recreation': 'Outdoor Recreation',
-      'team-sports': 'Team Sports',
-      'water-sports': 'Water Sports',
-      'winter-sports': 'Winter Sports',
-      'hunting-fishing': 'Hunting & Fishing',
-      'camping-hiking': 'Camping & Hiking',
-      'cycling': 'Cycling'
-    }
-  },
-  'crafts-hobbies': {
-    label: 'Crafts & Hobbies',
-    subcategories: {
-      'art-supplies': 'Art Supplies',
-      'sewing-crafts': 'Sewing & Crafts',
-      'model-kits': 'Model Kits',
-      'woodworking': 'Woodworking',
-      'jewelry-making': 'Jewelry Making',
-      'scrapbooking': 'Scrapbooking',
-      'painting-drawing': 'Painting & Drawing',
-      'musical-instruments': 'Musical Instruments'
-    }
-  },
-  'business-industrial': {
-    label: 'Business & Industrial',
-    subcategories: {
-      'office-supplies': 'Office Supplies',
-      'industrial-equipment': 'Industrial Equipment',
-      'safety-supplies': 'Safety Supplies',
-      'packaging-supplies': 'Packaging Supplies',
-      'restaurant-equipment': 'Restaurant Equipment',
-      'medical-equipment': 'Medical Equipment',
-      'manufacturing': 'Manufacturing Equipment',
-      'warehouse-supplies': 'Warehouse Supplies'
-    }
-  },
-  'miscellaneous': {
-    label: 'Miscellaneous',
-    subcategories: {
-      'other': 'Other Items'
-    }
-  },
-  'recovery-rewards': {
-    label: 'Recovery Rewards',
-    subcategories: {
-      'stolen-vehicles': 'Stolen Vehicles',
-      'stolen-electronics': 'Stolen Electronics',
-      'stolen-bikes': 'Stolen Bikes',
-      'stolen-tools': 'Stolen Tools & Equipment',
-      'lost-pets': 'Lost Pets',
-      'lost-items': 'Lost Items',
-      'other-recovery': 'Other Recovery'
-    }
-  },
-  'toys-kids': {
-    label: 'Toys & Kids',
-    subcategories: {
-      'vintage-toys': 'Vintage Toys',
-      'plushies': 'Plushies & Stuffed Animals',
-      'action-figures': 'Action Figures & Dolls',
-      'discontinued-toys': 'Discontinued Toys',
-      'baby-toddler': 'Baby & Toddler Toys',
-      'educational-stem': 'Educational & STEM',
-      'outdoor-play': 'Outdoor & Ride-On',
-      'building-sets': 'Building Sets & Blocks',
-      'board-games-puzzles': 'Board Games & Puzzles'
-    }
-  },
-  'lost-media-threads': {
+  'lost-media': {
     label: 'Lost Media & Threads',
     subcategories: {
       'reddit-posts': 'Reddit Posts & Comments',
-      'forum-threads': 'Forum Threads & Discussions',
       'deleted-videos': 'Deleted Videos',
       'lost-websites': 'Lost Websites & Pages',
-      'obscure-media': 'Obscure Media',
       'old-articles': 'Old Articles & News',
-      'internet-mysteries': 'Internet Mysteries',
-      'archived-content': 'Archived Content'
+      'internet-mysteries': 'Internet Mysteries'
+    }
+  },
+  'everything-else': {
+    label: 'Everything Else',
+    subcategories: {
+      'home-garden': 'Home & Garden',
+      'books-media': 'Books & Media',
+      'health-beauty': 'Health & Beauty',
+      'sports-outdoors': 'Sports & Outdoors',
+      'other': 'Other Items'
     }
   }
 };
 
 // Enums for backward compatibility and ease of use
 export enum BountyCategory {
+  TOYS_COMFORT = 'toys-comfort',
   COLLECTIBLES = 'collectibles',
-  VEHICLES = 'vehicles',
-  FASHION_APPAREL = 'fashion-apparel',
+  FASHION = 'fashion',
   ELECTRONICS = 'electronics',
-  MUSIC_VINYL = 'music-vinyl',
-  SPORTS_OUTDOORS = 'sports-outdoors',
-  
-  BOOKS_MEDIA = 'books-media',
-  HOME_GARDEN = 'home-garden',
-  AUTOMOTIVE = 'automotive',
-  TOOLS_HARDWARE = 'tools-hardware',
-  HEALTH_BEAUTY = 'health-beauty',
-  CRAFTS_HOBBIES = 'crafts-hobbies',
-  BUSINESS_INDUSTRIAL = 'business-industrial',
-  MISCELLANEOUS = 'miscellaneous',
-  RECOVERY_REWARDS = 'recovery-rewards',
-  TOYS_KIDS = 'toys-kids',
-  LOST_MEDIA_THREADS = 'lost-media-threads'
+  VEHICLES = 'vehicles',
+  LOST_MEDIA = 'lost-media',
+  EVERYTHING_ELSE = 'everything-else'
 }
 
 export enum BountyStatus {
