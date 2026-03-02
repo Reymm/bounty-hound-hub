@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Bounty, BountyStatus } from '@/lib/types';
 import { format, formatDistanceToNow } from 'date-fns';
+import noPhotoPlaceholder from '@/assets/no-photo-placeholder.png';
 
 export default function BountyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -554,12 +555,13 @@ export default function BountyDetail() {
               )}
               {!bounty.images?.length && (
                 <Card className="lg:hidden">
-                  <CardHeader>
-                    <CardTitle>Images</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No images uploaded</p>
+                  <CardContent className="p-4">
+                    <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                      <img
+                        src={noPhotoPlaceholder}
+                        alt="No photo provided"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </CardContent>
                 </Card>

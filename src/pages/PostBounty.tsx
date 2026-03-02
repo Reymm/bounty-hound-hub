@@ -1293,7 +1293,7 @@ function PostBountyForm() {
               maxSize={20 * 1024 * 1024} // 20MB
             />
             <p className="text-xs text-muted-foreground mt-2">
-              Upload up to 5 reference images
+              Upload up to 5 reference images. <span className="text-foreground font-medium">No photo? No problem</span> — hunters can still find your item without one.
             </p>
           </CardContent>
         </Card>
