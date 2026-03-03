@@ -1,7 +1,11 @@
-const CACHE_NAME = 'bountybay-v1';
+const CACHE_NAME = 'bountybay-v2';
 const STATIC_ASSETS = [
   '/',
-  '/bb-icon.png',
+  '/favicon-32x32.png?v=10',
+  '/favicon-16x16.png?v=10',
+  '/apple-touch-icon.png?v=10',
+  '/android-chrome-192x192.png?v=10',
+  '/android-chrome-512x512.png?v=10',
 ];
 
 // Install: cache core assets
