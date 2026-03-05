@@ -38,6 +38,7 @@ import ConnectComplete from "./pages/ConnectComplete";
 import IdentityComplete from "./pages/IdentityComplete";
 import Auth from "./pages/Auth";
 import EditBounty from "./pages/EditBounty";
+import DeleteAccount from "./pages/DeleteAccount";
 // Niche landing pages
 import LostMedia from "./pages/niche/LostMedia";
 import Collectibles from "./pages/niche/Collectibles";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
+              <Route path="/delete-account" element={<DeleteAccount />} />
               
               
               {/* Routes with navigation */}
