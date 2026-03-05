@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { Capacitor } from '@capacitor/core';
 
 interface AuthContextType {
   user: User | null;
@@ -76,6 +77,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    if (Capacitor.isNativePlatform()) {
+      return { error: { message: 'Google OAuth is disabled in the native app. Use email/password.' } };
+    }
+
     // CRITICAL: Use the production domain for OAuth redirect to prevent loops
     // This ensures consistent redirect handling regardless of how user accessed the site
     const redirectUrl = window.location.hostname === 'localhost' 
