@@ -1,37 +1,32 @@
 
-You’re 100% right to be frustrated — and yes, you only need MacinCloud for iOS/Xcode work.
 
-For Android + Google Play, you can stop using MacinCloud now and do everything on Windows.
+## The Problem
 
-## What to do next (Windows-only path)
+You submitted the iOS app with Google Sign-In visible. Apple will likely reject it because native apps with Google OAuth need to follow Apple's specific requirements (Sign in with Apple must also be offered if you offer any social login).
 
-1. Export/pull your project to your Windows machine (from GitHub).
-2. In the project folder run:
-   - `npm install`
-   - `npm run build`
-   - `npx cap sync android`
-   - `npx cap open android`
-3. Android Studio opens the Android project.
-4. In Android Studio, generate the Play upload file:
-   - **Build → Generate Signed Bundle / APK**
-   - Choose **Android App Bundle**
-   - Create/select your keystore
-   - Build **release**
-5. Upload the generated `.aab` to Play Console internal testing.
+Your code already has logic to hide Google Sign-In on native platforms (`Capacitor.isNativePlatform()`), but this only works when the app runs inside the native Capacitor shell with the bundled `dist` files. If you built the app pointing to the live web URL (via `CAP_SERVER_URL`), the app loads the website inside a WebView, and `isNativePlatform()` still returns `true` — so the Google button should have been hidden.
 
-## Where the `.aab` file is usually located
+## What You Need to Do
 
-Most commonly:
-- `android/app/release/app-release.aab`
-or
-- `android/app/build/outputs/bundle/release/app-release.aab`
+There are two paths depending on what Apple says:
 
-If you don’t see it, in Android Studio use project search for:
-- `app-release.aab`
+### If Apple rejects it (most likely scenario)
+1. **Wait for the rejection email** — it will tell you exactly what to fix
+2. The code fix is already in place (Google auth is hidden on native). We just need to make sure your build was using the bundled app, not the live URL
+3. **Rebuild and resubmit** — same process you did before on MacinCloud:
+   - `git pull` (to get latest code)
+   - `npm install && npm run build && npx cap sync ios`
+   - Open Xcode, archive, upload
+   - Go to App Store Connect, select the new build, submit for review
 
-## Important
+### If Apple hasn't responded yet
+You can proactively upload a new build now with the same steps above. In App Store Connect, you can replace the build attached to your version before it gets reviewed.
 
-- Keep the keystore file + passwords permanently (you need the same one for all future app updates).
-- MacinCloud is only needed again when you want to ship/update iOS.
+## Verification Step
 
-## If you want, next message I can give you a strict click-by-click Android Studio flow (exact buttons) for Windows with zero guesswork.
+Before rebuilding, we should verify the Google button is truly hidden. On your MacinCloud session (or whenever you rebuild), after running `npx cap sync ios` and opening in Xcode, run the app in the iOS Simulator and navigate to the login screen. The Google Sign-In button should not be visible.
+
+## No Code Changes Needed
+
+The code already correctly hides Google auth on native platforms. The fix is just ensuring you rebuild and resubmit.
+
