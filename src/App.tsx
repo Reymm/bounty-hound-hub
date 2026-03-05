@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, MemoryRouter, Routes, Route } from "react-router-dom";
+import { Capacitor } from '@capacitor/core';
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReviewModalProvider } from "@/contexts/ReviewModalContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -44,13 +45,15 @@ import VintageCars from "./pages/niche/VintageCars";
 import PlushiesBlankets from "./pages/niche/PlushiesBlankets";
 import Fashion from "./pages/niche/Fashion";
 const queryClient = new QueryClient();
+const isNative = Capacitor.isNativePlatform();
+const Router = isNative ? MemoryRouter : BrowserRouter;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <Router>
         <ScrollToTop />
         <AuthProvider>
           <ReviewModalProvider>
@@ -171,7 +174,7 @@ const App = () => (
           </div>
           </ReviewModalProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </Router>
     </TooltipProvider>
   </QueryClientProvider>
 );
