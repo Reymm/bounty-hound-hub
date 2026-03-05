@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'BountyBay',
   webDir: 'dist',
   server: {
-    url: 'https://9acc7140-c85c-4e14-ba01-86ec8ad65881.lovableproject.com?forceHideBadge=true',
+    url: 'https://bountybay.co',
     cleartext: true,
   },
   ios: {
