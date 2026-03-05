@@ -1,13 +1,19 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+const serverUrl = process.env.CAP_SERVER_URL?.trim();
+
 const config: CapacitorConfig = {
   appId: 'co.bountybay.app',
   appName: 'BountyBay',
   webDir: 'dist',
-  server: {
-    url: 'https://bountybay.co',
-    cleartext: true,
-  },
+  ...(serverUrl
+    ? {
+        server: {
+          url: serverUrl,
+          cleartext: serverUrl.startsWith('http://'),
+        },
+      }
+    : {}),
   ios: {
     contentInset: 'automatic',
     backgroundColor: '#ffffff',
