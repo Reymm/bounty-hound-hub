@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.9acc7140c85c4e14ba0186ec8ad65881',
+  appId: 'co.bountybay.app',
   appName: 'BountyBay',
   webDir: 'dist',
   server: {
