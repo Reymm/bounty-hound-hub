@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { ImageOff } from 'lucide-react';
 
@@ -10,6 +10,7 @@ interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 /**
  * Image component with built-in error handling and fallback display.
  * Shows a placeholder when images fail to load.
+ * Safe for native Capacitor environments - all handlers are wrapped in try-catch.
  */
 export function SafeImage({
   src,
@@ -17,20 +18,44 @@ export function SafeImage({
   className,
   fallbackClassName,
   showFallbackIcon = true,
+  onClick,
   ...props
 }: SafeImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleError = () => {
-    console.warn('[SafeImage] Failed to load image:', src);
+  const handleError = useCallback(() => {
+    try {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('[SafeImage] Failed to load image:', src);
+      }
+    } catch {
+      // Silently ignore logging errors in native environments
+    }
     setHasError(true);
     setIsLoading(false);
-  };
+  }, [src]);
 
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
     setIsLoading(false);
-  };
+  }, []);
+
+  // Wrap onClick to prevent crashes in native environments
+  const handleClick = useCallback((e: React.MouseEvent<HTMLImageElement | HTMLDivElement>) => {
+    if (!onClick) return;
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick(e as React.MouseEvent<HTMLImageElement>);
+    } catch (error) {
+      // Silently catch to prevent native app crash
+      try {
+        console.error('[SafeImage] onClick error:', error);
+      } catch {
+        // Ignore
+      }
+    }
+  }, [onClick]);
 
   if (hasError || !src) {
     return (
@@ -41,6 +66,7 @@ export function SafeImage({
         )}
         role="img"
         aria-label={alt || "Image unavailable"}
+        onClick={onClick ? handleClick : undefined}
       >
         {showFallbackIcon && (
           <div className="flex flex-col items-center gap-2 p-4">
@@ -68,6 +94,7 @@ export function SafeImage({
         className={cn(className, isLoading && "hidden")}
         onError={handleError}
         onLoad={handleLoad}
+        onClick={onClick ? handleClick : undefined}
         {...props}
       />
     </>
