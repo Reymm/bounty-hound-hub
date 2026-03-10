@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Cookie, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 
 const COOKIE_CONSENT_KEY = 'bountybay-cookie-consent';
 
@@ -10,6 +11,9 @@ export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Never show cookie consent in native app (App Store guideline 5.1.2)
+    if (Capacitor.isNativePlatform()) return;
+
     // Check if user has already consented
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!consent) {
