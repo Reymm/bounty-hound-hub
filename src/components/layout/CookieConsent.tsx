@@ -11,6 +11,9 @@ export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    // Never show cookie consent in native app (App Store guideline 5.1.2)
+    if (Capacitor.isNativePlatform()) return;
+
     // Check if user has already consented
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!consent) {
