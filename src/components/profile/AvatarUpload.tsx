@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { isNativePlatform, pickPhotoNative } from '@/lib/native-camera';
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string;
