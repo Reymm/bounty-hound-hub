@@ -19,6 +19,13 @@ const config: CapacitorConfig = {
     backgroundColor: '#ffffff',
     preferredContentMode: 'mobile',
     scheme: 'BountyBay',
+    // Persist Info.plist entries across cap sync
+    appendToInfoPlist: {
+      NSCameraUsageDescription: 'BountyBay needs camera access to take profile photos and upload proof images.',
+      NSPhotoLibraryUsageDescription: 'BountyBay needs photo library access to upload profile photos and proof images.',
+      ITSAppUsesNonExemptEncryption: false,
+      CFBundleDisplayName: 'BountyBay',
+    },
   },
   plugins: {
     SplashScreen: {
