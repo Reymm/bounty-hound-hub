@@ -167,7 +167,14 @@ export function AvatarUpload({
             type="button"
             size="sm"
             className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={async () => {
+              if (isNativePlatform()) {
+                const file = await pickPhotoNative();
+                if (file) uploadAvatar(file);
+              } else {
+                fileInputRef.current?.click();
+              }
+            }}
             disabled={uploading}
           >
             <Camera className="h-4 w-4" />
