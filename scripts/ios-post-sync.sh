@@ -49,6 +49,21 @@ if [ -f "$PLIST" ]; then
   else
     echo "✅ NSAppTransportSecurity already set"
   fi
+
+  # 3. Add privacy usage descriptions (required or app crashes)
+  if ! grep -q "NSCameraUsageDescription" "$PLIST"; then
+    /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'BountyBay needs camera access to take profile photos and upload proof images.'" "$PLIST"
+    echo "✅ NSCameraUsageDescription added"
+  else
+    echo "✅ NSCameraUsageDescription already set"
+  fi
+
+  if ! grep -q "NSPhotoLibraryUsageDescription" "$PLIST"; then
+    /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'BountyBay needs photo library access to upload profile photos and proof images.'" "$PLIST"
+    echo "✅ NSPhotoLibraryUsageDescription added"
+  else
+    echo "✅ NSPhotoLibraryUsageDescription already set"
+  fi
 fi
 
 echo ""
