@@ -166,7 +166,25 @@ export function ImageUpload({
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          onClick={() => !disabled && !isUploading && document.getElementById('image-input')?.click()}
+          onClick={async () => {
+            if (disabled || isUploading) return;
+            if (isNativePlatform()) {
+              try {
+                const files = await pickMultiplePhotosNative();
+                if (files.length === 0) {
+                  // Fallback to single photo if pickImages not supported
+                  const single = await pickPhotoNative();
+                  if (single) await handleFiles([single]);
+                } else {
+                  await handleFiles(files);
+                }
+              } catch (e) {
+                console.error('Native photo pick failed:', e);
+              }
+            } else {
+              document.getElementById('image-input')?.click();
+            }
+          }}
         >
           <input
             id="image-input"
