@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { X, Upload, Loader2, CheckCircle2, Expand, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isNativePlatform, pickMultiplePhotosNative, pickPhotoNative } from '@/lib/native-camera';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -165,7 +166,25 @@ export function ImageUpload({
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          onClick={() => !disabled && !isUploading && document.getElementById('image-input')?.click()}
+          onClick={async () => {
+            if (disabled || isUploading) return;
+            if (isNativePlatform()) {
+              try {
+                const files = await pickMultiplePhotosNative();
+                if (files.length === 0) {
+                  // Fallback to single photo if pickImages not supported
+                  const single = await pickPhotoNative();
+                  if (single) await handleFiles([single]);
+                } else {
+                  await handleFiles(files);
+                }
+              } catch (e) {
+                console.error('Native photo pick failed:', e);
+              }
+            } else {
+              document.getElementById('image-input')?.click();
+            }
+          }}
         >
           <input
             id="image-input"
