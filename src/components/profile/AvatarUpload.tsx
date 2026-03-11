@@ -169,11 +169,14 @@ export function AvatarUpload({
             className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
             onClick={async () => {
               if (isNativePlatform()) {
-                const file = await pickPhotoNative();
-                if (file) uploadAvatar(file);
-              } else {
-                fileInputRef.current?.click();
+                try {
+                  const file = await pickPhotoNative();
+                  if (file) { uploadAvatar(file); return; }
+                } catch (e) {
+                  console.error('Native camera failed, falling back:', e);
+                }
               }
+              fileInputRef.current?.click();
             }}
             disabled={uploading}
           >
@@ -191,11 +194,14 @@ export function AvatarUpload({
               size="sm"
               onClick={async () => {
                 if (isNativePlatform()) {
-                  const file = await pickPhotoNative();
-                  if (file) uploadAvatar(file);
-                } else {
-                  fileInputRef.current?.click();
+                  try {
+                    const file = await pickPhotoNative();
+                    if (file) { uploadAvatar(file); return; }
+                  } catch (e) {
+                    console.error('Native camera failed, falling back:', e);
+                  }
                 }
+                fileInputRef.current?.click();
               }}
               disabled={uploading}
             >
