@@ -194,11 +194,14 @@ export function AvatarUpload({
               size="sm"
               onClick={async () => {
                 if (isNativePlatform()) {
-                  const file = await pickPhotoNative();
-                  if (file) uploadAvatar(file);
-                } else {
-                  fileInputRef.current?.click();
+                  try {
+                    const file = await pickPhotoNative();
+                    if (file) { uploadAvatar(file); return; }
+                  } catch (e) {
+                    console.error('Native camera failed, falling back:', e);
+                  }
                 }
+                fileInputRef.current?.click();
               }}
               disabled={uploading}
             >
