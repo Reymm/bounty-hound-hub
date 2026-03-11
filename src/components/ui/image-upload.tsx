@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { X, Upload, Loader2, CheckCircle2, Expand, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isNativePlatform, pickMultiplePhotosNative, pickPhotoNative } from '@/lib/native-camera';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
