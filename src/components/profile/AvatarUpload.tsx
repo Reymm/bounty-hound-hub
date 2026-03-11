@@ -189,7 +189,14 @@ export function AvatarUpload({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={async () => {
+                if (isNativePlatform()) {
+                  const file = await pickPhotoNative();
+                  if (file) uploadAvatar(file);
+                } else {
+                  fileInputRef.current?.click();
+                }
+              }}
               disabled={uploading}
             >
               <Upload className="h-4 w-4 mr-2" />
