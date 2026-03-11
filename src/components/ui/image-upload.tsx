@@ -168,22 +168,31 @@ export function ImageUpload({
           onDragLeave={handleDragLeave}
           onClick={async () => {
             if (disabled || isUploading) return;
+            
+            // On native, try Camera plugin first, fall back to file input
             if (isNativePlatform()) {
               try {
                 const files = await pickMultiplePhotosNative();
-                if (files.length === 0) {
-                  // Fallback to single photo if pickImages not supported
-                  const single = await pickPhotoNative();
-                  if (single) await handleFiles([single]);
-                } else {
+                if (files.length > 0) {
                   await handleFiles(files);
+                  return;
                 }
+                // pickMultiple returned empty — try single photo
+                const single = await pickPhotoNative();
+                if (single) {
+                  await handleFiles([single]);
+                  return;
+                }
+                // Both returned nothing (user cancelled) — do nothing
+                return;
               } catch (e) {
-                console.error('Native photo pick failed:', e);
+                console.error('Native photo pick failed, falling back to file input:', e);
+                // Fall through to file input as last resort
               }
-            } else {
-              document.getElementById('image-input')?.click();
             }
+            
+            // Web or native fallback — use standard file input
+            document.getElementById('image-input')?.click();
           }}
         >
           <input
