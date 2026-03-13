@@ -8,6 +8,7 @@ import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
 
 import { CompletedBounties } from '@/components/home/CompletedBounties';
+import { HomeFAQ } from '@/components/home/HomeFAQ';
 import { HowItWorksPreview } from '@/components/home/HowItWorksPreview';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
