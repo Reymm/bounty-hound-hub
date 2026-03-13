@@ -2,6 +2,7 @@ import { Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCallback } from 'react';
+import { hapticImpact } from '@/lib/haptics';
 
 interface SaveBountyButtonProps {
   isSaved: boolean;
