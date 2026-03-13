@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, ShieldCheck, HelpCircle, FileSearch, Heart, Shirt } from 'lucide-react';
+import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, ShieldCheck, HelpCircle, FileSearch, Heart, Shirt, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
