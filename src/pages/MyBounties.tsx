@@ -637,5 +637,6 @@ export default function MyBounties() {
         </TabsContent>
       </Tabs>
     </div>
+    </PullToRefresh>
   );
 }
