@@ -103,6 +103,44 @@ const Index = () => {
     <>
       <Helmet>
         <title>BountyBay - Find The Unfindable</title>
+        <meta name="description" content="BountyBay is a peer-to-peer marketplace where you post a reward to find hard-to-find, rare, or discontinued items. Verified hunters search for you. You only pay when they succeed." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "BountyBay",
+            "url": "https://bountybay.co",
+            "logo": "https://bountybay.co/bb-icon.png",
+            "description": "BountyBay is a peer-to-peer marketplace where you post a reward to find hard-to-find, rare, or discontinued items. Verified hunters search for you. You only pay when they succeed.",
+            "sameAs": []
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "BountyBay",
+            "serviceType": "Peer-to-peer bounty hunting marketplace",
+            "description": "Post a bounty for any hard-to-find, rare, discontinued, or sentimental item. Our community of ID-verified hunters searches for it, and you only pay a reward when they succeed.",
+            "provider": {
+              "@type": "Organization",
+              "name": "BountyBay",
+              "url": "https://bountybay.co"
+            },
+            "areaServed": "Worldwide",
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "Bounty Categories",
+              "itemListElement": [
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Rare Collectibles" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Discontinued Toys and Comfort Items" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Vintage Fashion and Accessories" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Classic Cars and Vehicle Parts" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Lost Media and Deleted Content" } }
+              ]
+            }
+          })}
+        </script>
       </Helmet>
       
       {/* Hero Section */}
