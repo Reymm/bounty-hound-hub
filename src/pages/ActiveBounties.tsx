@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -94,7 +95,12 @@ const ActiveBounties = () => {
     setSearchParams({});
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadBounties(true);
+  }, [filters]);
+
   return (
+    <PullToRefresh onRefresh={handlePullRefresh}>
     <div className="min-h-screen bg-background">
       {/* Page Header */}
       <section className="bg-gradient-to-br from-primary/5 via-background to-success/5 border-b border-border">
@@ -161,6 +167,7 @@ const ActiveBounties = () => {
         </div>
       </section>
     </div>
+    </PullToRefresh>
   );
 };
 

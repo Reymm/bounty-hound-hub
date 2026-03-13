@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Share2, Link2, Check, MessageSquare } from 'lucide-react';
+import { hapticImpact } from '@/lib/haptics';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ export function ShareBountyButton({
   // Native share — hands URL to OS share sheet which opens real apps (uses edge function for OG)
   const handleNativeShare = async () => {
     if (navigator.share) {
+      hapticImpact('light');
       try {
         await navigator.share({
           url: metaUrl,

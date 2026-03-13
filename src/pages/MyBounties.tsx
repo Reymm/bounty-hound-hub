@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, MessageCircle, Sparkles, Package, Users, CheckCircle, DollarSign, Truck, Bookmark, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -255,7 +256,12 @@ export default function MyBounties() {
     }
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadMyBounties();
+  }, [user]);
+
   return (
+    <PullToRefresh onRefresh={handlePullRefresh}>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
@@ -631,5 +637,6 @@ export default function MyBounties() {
         </TabsContent>
       </Tabs>
     </div>
+    </PullToRefresh>
   );
 }

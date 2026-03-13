@@ -131,6 +131,25 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Failed to send notification email:', emailError);
     }
 
+    // Send push notification to hunter's device(s)
+    const pushTitle = newStatus === 'accepted' ? 'Submission Accepted! 🎉' : 'Submission Update';
+    const pushBody = newStatus === 'accepted'
+      ? `Your claim for "${bounty.title}" was accepted! Funds are on the way.`
+      : `Your claim for "${bounty.title}" was not accepted.`;
+
+    try {
+      await supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: submission.hunter_id,
+          title: pushTitle,
+          body: pushBody,
+          data: { bountyId: submission.bounty_id, submissionId, route: `/b/${submission.bounty_id}` },
+        }
+      });
+    } catch (pushError) {
+      console.error('Push notification failed (non-blocking):', pushError);
+    }
+
     return new Response(
       JSON.stringify({ success: true }),
       { 

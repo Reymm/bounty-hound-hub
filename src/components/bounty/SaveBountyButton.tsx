@@ -2,6 +2,7 @@ import { Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCallback } from 'react';
+import { hapticImpact } from '@/lib/haptics';
 
 interface SaveBountyButtonProps {
   isSaved: boolean;
@@ -16,6 +17,7 @@ export function SaveBountyButton({ isSaved, onToggle, size = 'icon', className }
     try {
       e.preventDefault();
       e.stopPropagation();
+      hapticImpact('light');
       onToggle();
     } catch (error) {
       // Silently catch to prevent crash in native environment

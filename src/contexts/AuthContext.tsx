@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
+import { initPushNotifications, removePushToken } from '@/lib/push-notifications';
 
 interface AuthContextType {
   user: User | null;
@@ -35,6 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Register for push notifications when user signs in
+        if (session?.user?.id) {
+          initPushNotifications(session.user.id);
+        }
       }
     );
 
@@ -100,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    await removePushToken();
     await supabase.auth.signOut();
     // Force clear all auth-related storage
     localStorage.clear();
