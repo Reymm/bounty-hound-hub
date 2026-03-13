@@ -505,8 +505,11 @@ export function TopNav({ onSearch }: TopNavProps) {
 
             {/* Scrollable menu content */}
             <div
-              className="flex-1 overflow-y-auto overscroll-y-contain px-4 pb-8"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)',
+              }}
             >
               {user ? (
                 <div className="space-y-1">
