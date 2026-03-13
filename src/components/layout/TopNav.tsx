@@ -436,174 +436,244 @@ export function TopNav({ onSearch }: TopNavProps) {
           </div>
         </form>
 
-        {/* Mobile Menu - Fixed scroll, simplified structure */}
+        {/* Mobile Menu - Full screen fixed overlay */}
         {isMobileMenuOpen && (
           <div
-            className="md:hidden border-t border-border py-3 pb-8 pb-safe max-h-[calc(100svh-7rem)] overflow-y-auto overscroll-y-contain touch-pan-y"
-            style={{ WebkitOverflowScrolling: 'touch' }}
+            className="md:hidden fixed inset-0 bg-background z-[200] flex flex-col"
+            style={{
+              paddingTop: 'env(safe-area-inset-top, 0px)',
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            }}
           >
-            {user ? (
-              <div className="space-y-1">
-                {/* Primary Actions */}
-                <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
-                  <Link to="/post" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Post a Bounty
-                  </Link>
+            {/* Overlay header - mirrors nav bar */}
+            <div className="px-4 flex items-center justify-between min-h-16 py-2 border-b border-border">
+              <Link
+                to="/"
+                className="text-2xl font-bold text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                BountyBay
+              </Link>
+              <div className="flex items-center gap-1">
+                {user && (
+                  <>
+                    <Button asChild variant="ghost" size="icon" className="relative h-10 w-10">
+                      <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
+                        <MessageCircle className="h-5 w-5" />
+                        {unreadMessages > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                          >
+                            {unreadMessages}
+                          </Badge>
+                        )}
+                      </Link>
+                    </Button>
+                    <NotificationBell />
+                  </>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-label="Close menu"
+                >
+                  <X className="h-6 w-6" />
                 </Button>
+              </div>
+            </div>
 
-                <Button asChild variant="ghost" className="w-full justify-start relative">
-                  <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Messages
-                    {unreadMessages > 0 && (
-                      <Badge variant="destructive" className="ml-auto">
-                        {unreadMessages}
-                      </Badge>
-                    )}
-                  </Link>
-                </Button>
+            {/* Overlay search */}
+            <div className="px-4 py-3">
+              <form onSubmit={(e) => { handleSearch(e); setIsMobileMenuOpen(false); }}>
+                <div className="relative">
+                  <button
+                    type="submit"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer z-10"
+                    aria-label="Search"
+                  >
+                    <Search className="h-5 w-5" />
+                  </button>
+                  <Input
+                    type="search"
+                    placeholder="Search bounties..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 w-full focus-ring"
+                    aria-label="Search bounties"
+                  />
+                </div>
+              </form>
+            </div>
 
-                {/* Verification */}
-                <Button asChild variant="ghost" className="w-full justify-start h-auto py-2">
-                  <Link to="/verification" onClick={() => setIsMobileMenuOpen(false)}>
-                    <ShieldCheck className={`h-4 w-4 mr-2 flex-shrink-0 ${
-                      !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout 
-                        ? 'text-green-600' 
-                        : ''
-                    }`} />
-                    <div className="flex flex-col items-start flex-1">
-                      <span className={
-                        !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout 
-                          ? 'text-green-600 font-medium' 
+            {/* Scrollable menu content */}
+            <div
+              className="flex-1 overflow-y-auto overscroll-y-contain px-4 pb-8"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              {user ? (
+                <div className="space-y-1">
+                  {/* Primary Actions */}
+                  <Button asChild className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground">
+                    <Link to="/post" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Post a Bounty
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="ghost" className="w-full justify-start relative">
+                    <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)}>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Messages
+                      {unreadMessages > 0 && (
+                        <Badge variant="destructive" className="ml-auto">
+                          {unreadMessages}
+                        </Badge>
+                      )}
+                    </Link>
+                  </Button>
+
+                  {/* Verification */}
+                  <Button asChild variant="ghost" className="w-full justify-start h-auto py-2">
+                    <Link to="/verification" onClick={() => setIsMobileMenuOpen(false)}>
+                      <ShieldCheck className={`h-4 w-4 mr-2 flex-shrink-0 ${
+                        !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout
+                          ? 'text-green-600'
                           : ''
-                      }>Verification</span>
-                      <span className="text-xs text-muted-foreground">(hunters only)</span>
-                    </div>
-                    {!verificationStatus.loading && (
-                      verificationStatus.identity && verificationStatus.payout ? (
-                        <span className="text-xs text-green-600 font-medium">✓</span>
-                      ) : (
-                        <span className="text-xs text-amber-600 font-medium">Action needed</span>
-                      )
-                    )}
-                  </Link>
-                </Button>
-
-                <div className="border-t border-border my-2" />
-
-                {/* Browse */}
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Search className="h-4 w-4 mr-2" />
-                    Browse Bounties
-                  </Link>
-                </Button>
-
-                {/* Niche Pages */}
-                {nichePages.map((niche) => (
-                  <Button key={niche.href} asChild variant="ghost" className="w-full justify-start pl-8 text-muted-foreground">
-                    <Link to={niche.href} onClick={() => setIsMobileMenuOpen(false)}>
-                      <niche.icon className="h-4 w-4 mr-2" />
-                      {niche.title}
+                      }`} />
+                      <div className="flex flex-col items-start flex-1">
+                        <span className={
+                          !verificationStatus.loading && verificationStatus.identity && verificationStatus.payout
+                            ? 'text-green-600 font-medium'
+                            : ''
+                        }>Verification</span>
+                        <span className="text-xs text-muted-foreground">(hunters only)</span>
+                      </div>
+                      {!verificationStatus.loading && (
+                        verificationStatus.identity && verificationStatus.payout ? (
+                          <span className="text-xs text-green-600 font-medium">✓</span>
+                        ) : (
+                          <span className="text-xs text-amber-600 font-medium">Action needed</span>
+                        )
+                      )}
                     </Link>
                   </Button>
-                ))}
 
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
-                    <FolderOpen className="h-4 w-4 mr-2" />
-                    My Bounties
-                  </Link>
-                </Button>
+                  <div className="border-t border-border my-2" />
 
-                <div className="border-t border-border my-2" />
-
-                {/* Account */}
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/me/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                    <User className="h-4 w-4 mr-2" />
-                    Profile Settings
-                  </Link>
-                </Button>
-
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Bug className="h-4 w-4 mr-2" />
-                    Support
-                  </Link>
-                </Button>
-
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    How It Works
-                  </Link>
-                </Button>
-
-                <div className="border-t border-border my-2" />
-
-                <Button asChild variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10">
-                  <Link to="/me/settings" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Account
-                  </Link>
-                </Button>
-
-                <Button 
-                  onClick={handleSignOut}
-                  variant="ghost" 
-                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {/* Auth buttons first for logged-out users */}
-                <Button 
-                  asChild 
-                  className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground"
-                >
-                  <Link to="/auth?tab=signup" onClick={() => setIsMobileMenuOpen(false)}>
-                    Sign Up Free
-                  </Link>
-                </Button>
-                <Button 
-                  onClick={() => { navigate('/auth?tab=signin'); setIsMobileMenuOpen(false); }}
-                  variant="outline" 
-                  className="w-full justify-start"
-                >
-                  Sign In
-                </Button>
-                
-                <div className="border-t border-border my-2" />
-                
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Search className="h-4 w-4 mr-2" />
-                    Browse Bounties
-                  </Link>
-                </Button>
-
-                {nichePages.map((niche) => (
-                  <Button key={niche.href} asChild variant="ghost" className="w-full justify-start pl-8 text-muted-foreground">
-                    <Link to={niche.href} onClick={() => setIsMobileMenuOpen(false)}>
-                      <niche.icon className="h-4 w-4 mr-2" />
-                      {niche.title}
+                  {/* Browse */}
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Search className="h-4 w-4 mr-2" />
+                      Browse Bounties
                     </Link>
                   </Button>
-                ))}
-                
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    How It Works
-                  </Link>
-                </Button>
-              </div>
-            )}
+
+                  {/* Niche Pages */}
+                  {nichePages.map((niche) => (
+                    <Button key={niche.href} asChild variant="ghost" className="w-full justify-start pl-8 text-muted-foreground">
+                      <Link to={niche.href} onClick={() => setIsMobileMenuOpen(false)}>
+                        <niche.icon className="h-4 w-4 mr-2" />
+                        {niche.title}
+                      </Link>
+                    </Button>
+                  ))}
+
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/me/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      My Bounties
+                    </Link>
+                  </Button>
+
+                  <div className="border-t border-border my-2" />
+
+                  {/* Account */}
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/me/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Profile Settings
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/support" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Bug className="h-4 w-4 mr-2" />
+                      Support
+                    </Link>
+                  </Button>
+
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      How It Works
+                    </Link>
+                  </Button>
+
+                  <div className="border-t border-border my-2" />
+
+                  <Button asChild variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Link to="/me/settings" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Account
+                    </Link>
+                  </Button>
+
+                  <Button
+                    onClick={handleSignOut}
+                    variant="ghost"
+                    className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Button
+                    asChild
+                    className="w-full justify-start bg-primary hover:bg-primary-hover text-primary-foreground"
+                  >
+                    <Link to="/auth?tab=signup" onClick={() => setIsMobileMenuOpen(false)}>
+                      Sign Up Free
+                    </Link>
+                  </Button>
+                  <Button
+                    onClick={() => { navigate('/auth?tab=signin'); setIsMobileMenuOpen(false); }}
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    Sign In
+                  </Button>
+
+                  <div className="border-t border-border my-2" />
+
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/bounties" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Search className="h-4 w-4 mr-2" />
+                      Browse Bounties
+                    </Link>
+                  </Button>
+
+                  {nichePages.map((niche) => (
+                    <Button key={niche.href} asChild variant="ghost" className="w-full justify-start pl-8 text-muted-foreground">
+                      <Link to={niche.href} onClick={() => setIsMobileMenuOpen(false)}>
+                        <niche.icon className="h-4 w-4 mr-2" />
+                        {niche.title}
+                      </Link>
+                    </Button>
+                  ))}
+
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      How It Works
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
