@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, ShieldCheck, HelpCircle, FileSearch, Heart, Shirt } from 'lucide-react';
+import { Search, MessageCircle, User, Menu, X, LogOut, FolderOpen, Bug, ChevronDown, Sparkles, Car, ShieldCheck, HelpCircle, FileSearch, Heart, Shirt, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -321,6 +321,13 @@ export function TopNav({ onSearch }: TopNavProps) {
                       <Link to="/legal/privacy">Privacy Policy</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="text-destructive focus:text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Account
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
@@ -508,6 +515,13 @@ export function TopNav({ onSearch }: TopNavProps) {
                 </Button>
 
                 <div className="border-t border-border my-2" />
+
+                <Button asChild variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10">
+                  <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Account
+                  </Link>
+                </Button>
 
                 <Button 
                   onClick={handleSignOut}

@@ -617,7 +617,7 @@ export default function Messages() {
         {/* Chat Panel - hidden on mobile when no thread selected */}
         <div className={`${
           isMobile && !selectedThread ? 'hidden' : 'flex'
-        } flex-1 flex-col min-w-0`}>
+        } flex-1 flex-col min-w-0 overflow-hidden`}>
           {!selectedThread ? (
             <div className="flex-1 flex items-center justify-center">
               <EmptyState
