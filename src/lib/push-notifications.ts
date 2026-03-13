@@ -38,14 +38,12 @@ export async function initPushNotifications(userId: string) {
     // Listen for incoming notifications while app is open
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
       console.log('Push received in foreground:', notification);
-      // Could show an in-app toast here
     });
 
     // Listen for notification taps (app was in background)
     PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
       console.log('Push action:', action);
       const data = action.notification.data;
-      // Navigate based on notification type
       if (data?.bountyId) {
         window.location.href = `/b/${data.bountyId}`;
       } else if (data?.route) {
@@ -63,9 +61,9 @@ async function saveDeviceToken(userId: string, token: string) {
   const platform = Capacitor.getPlatform(); // 'ios' | 'android'
 
   try {
-    // Upsert the device token
+    // Use raw query since table isn't in generated types yet
     const { error } = await supabase
-      .from('device_push_tokens')
+      .from('device_push_tokens' as any)
       .upsert(
         {
           user_id: userId,
