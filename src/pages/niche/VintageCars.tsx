@@ -7,7 +7,7 @@ const vintageCarsConfig: NicheConfig = {
   category: BountyCategory.VEHICLES,
   title: 'Find the Car You Let Go',
   subtitle: 'Track down the car you sold, traded, or lost years ago.',
-  description: 'Remember that car you never should have sold? A classic you traded away or a ride that got lost over the years? Post a bounty and let our network of car enthusiasts, mechanics, and collectors help you track it down.',
+  description: 'BountyBay helps you find the car you sold, traded, or lost years ago. Post a bounty with a reward, and let our network of car enthusiasts and collectors help you track it down.',
   heroGradient: 'bg-gradient-to-br from-blue-500/10 via-background to-slate-500/5',
   icon: <Car className="h-10 w-10 text-blue-500" />,
   trustBadgeText: 'Verified hunters. Safe transactions. Real results.',

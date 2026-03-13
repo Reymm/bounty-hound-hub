@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { Sparkles, TrendingUp, ShieldCheck, Heart, Search, Users } from 'lucide-react';
+import { Sparkles, TrendingUp, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { supabaseApi } from '@/lib/api/supabase';
@@ -87,14 +87,15 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
     <>
       <Helmet>
         <title>{pageTitle}</title>
-        <meta name="description" content={config.description} />
+        <meta name="description" content={`BountyBay: ${config.description}`} />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href={pageUrl} />
         
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={config.description} />
+        <meta property="og:description" content={`BountyBay: ${config.description}`} />
         <meta property="og:image" content={ogImage} />
         <meta property="og:site_name" content="BountyBay" />
         
@@ -178,10 +179,10 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3">
-              Active Bounties
+              Browse Active Bounties
             </h2>
             <p className="text-muted-foreground">
-              Help someone today — browse active requests and earn rewards
+              Help someone find what they are looking for and earn a reward
             </p>
           </div>
 
@@ -213,7 +214,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3">
-              How BountyBay Works
+              How to Use a Bounty to Find Rare or Discontinued Items
             </h2>
             <p className="text-muted-foreground">
               Safe, simple, and secure

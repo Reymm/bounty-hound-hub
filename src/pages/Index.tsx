@@ -8,6 +8,7 @@ import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { SearchFilters } from '@/components/filters/SearchFilters';
 
 import { CompletedBounties } from '@/components/home/CompletedBounties';
+import { HomeFAQ } from '@/components/home/HomeFAQ';
 import { HowItWorksPreview } from '@/components/home/HowItWorksPreview';
 import { supabaseApi } from '@/lib/api/supabase';
 import { Bounty, SearchFilters as SearchFiltersType } from '@/lib/types';
@@ -103,6 +104,44 @@ const Index = () => {
     <>
       <Helmet>
         <title>BountyBay - Find The Unfindable</title>
+        <meta name="description" content="BountyBay is a peer-to-peer marketplace where you post a reward to find hard-to-find, rare, or discontinued items. Verified hunters search for you. You only pay when they succeed." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "BountyBay",
+            "url": "https://bountybay.co",
+            "logo": "https://bountybay.co/bb-icon.png",
+            "description": "BountyBay is a peer-to-peer marketplace where you post a reward to find hard-to-find, rare, or discontinued items. Verified hunters search for you. You only pay when they succeed.",
+            "sameAs": []
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "BountyBay",
+            "serviceType": "Peer-to-peer bounty hunting marketplace",
+            "description": "Post a bounty for any hard-to-find, rare, discontinued, or sentimental item. Our community of ID-verified hunters searches for it, and you only pay a reward when they succeed.",
+            "provider": {
+              "@type": "Organization",
+              "name": "BountyBay",
+              "url": "https://bountybay.co"
+            },
+            "areaServed": "Worldwide",
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "Bounty Categories",
+              "itemListElement": [
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Rare Collectibles" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Discontinued Toys and Comfort Items" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Vintage Fashion and Accessories" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Classic Cars and Vehicle Parts" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Find Lost Media and Deleted Content" } }
+              ]
+            }
+          })}
+        </script>
       </Helmet>
       
       {/* Hero Section */}
@@ -201,12 +240,12 @@ const Index = () => {
                 <Trophy className="h-6 w-6 text-warning" />
               )}
               <div>
-                <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-                  {sortByTop ? 'Top Bounties' : 'Active Bounties'}
+              <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+                  {sortByTop ? 'Highest Reward Bounties' : 'Browse Active Bounties for Rare and Hard to Find Items'}
                 </h2>
                 <p className="text-primary">
                   {sortByTop 
-                    ? 'Highest paying bounties - biggest rewards first'
+                    ? 'Biggest rewards first. Earn more for tougher finds.'
                     : 'Discover what people are looking for and start earning'}
                 </p>
               </div>
@@ -277,6 +316,9 @@ const Index = () => {
       {!hasActiveFilters && (
         <CompletedBounties />
       )}
+
+      {/* FAQ Section for AEO */}
+      {!hasActiveFilters && <HomeFAQ />}
     </>
   );
 };
