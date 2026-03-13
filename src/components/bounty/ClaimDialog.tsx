@@ -398,6 +398,7 @@ export function ClaimDialog({ bountyId, bountyTitle, bountyAmount, isLeadOnly = 
       setUploadedImageDisplay([]);
       setExistingSubmission(null);
       setIsEditMode(false);
+      hapticNotification('success');
       onClaimSubmitted();
       onClose();
     } catch (error) {

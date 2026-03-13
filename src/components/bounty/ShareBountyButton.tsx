@@ -40,6 +40,7 @@ export function ShareBountyButton({
   // Native share — hands URL to OS share sheet which opens real apps (uses edge function for OG)
   const handleNativeShare = async () => {
     if (navigator.share) {
+      hapticImpact('light');
       try {
         await navigator.share({
           url: metaUrl,
