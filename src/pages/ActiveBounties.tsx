@@ -95,7 +95,12 @@ const ActiveBounties = () => {
     setSearchParams({});
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    await loadBounties(true);
+  }, [filters]);
+
   return (
+    <PullToRefresh onRefresh={handlePullRefresh}>
     <div className="min-h-screen bg-background">
       {/* Page Header */}
       <section className="bg-gradient-to-br from-primary/5 via-background to-success/5 border-b border-border">
