@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { Sparkles, TrendingUp, ShieldCheck, Heart, Search, Users } from 'lucide-react';
+import { Sparkles, TrendingUp, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BountyGrid } from '@/components/bounty/BountyGrid';
 import { supabaseApi } from '@/lib/api/supabase';
