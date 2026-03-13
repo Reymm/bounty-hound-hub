@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Share2, Link2, Check, MessageSquare } from 'lucide-react';
+import { hapticImpact } from '@/lib/haptics';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
