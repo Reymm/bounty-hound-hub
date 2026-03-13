@@ -239,12 +239,12 @@ const Index = () => {
                 <Trophy className="h-6 w-6 text-warning" />
               )}
               <div>
-                <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-                  {sortByTop ? 'Top Bounties' : 'Active Bounties'}
+              <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+                  {sortByTop ? 'Highest Reward Bounties' : 'Browse Active Bounties for Rare and Hard to Find Items'}
                 </h2>
                 <p className="text-primary">
                   {sortByTop 
-                    ? 'Highest paying bounties - biggest rewards first'
+                    ? 'Biggest rewards first. Earn more for tougher finds.'
                     : 'Discover what people are looking for and start earning'}
                 </p>
               </div>

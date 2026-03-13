@@ -94,7 +94,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
         <meta property="og:type" content="website" />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={config.description} />
+        <meta property="og:description" content={`BountyBay: ${config.description}`} />
         <meta property="og:image" content={ogImage} />
         <meta property="og:site_name" content="BountyBay" />
         
