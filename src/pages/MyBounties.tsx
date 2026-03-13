@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, MessageCircle, Sparkles, Package, Users, CheckCircle, DollarSign, Truck, Bookmark, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
