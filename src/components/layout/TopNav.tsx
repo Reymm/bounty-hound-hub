@@ -75,16 +75,13 @@ export function TopNav({ onSearch }: TopNavProps) {
 
     const originalBodyOverflow = document.body.style.overflow;
     const originalBodyOverscroll = document.body.style.overscrollBehaviorY;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = 'hidden';
     document.body.style.overscrollBehaviorY = 'contain';
-    document.documentElement.style.overflow = 'hidden';
 
     return () => {
       document.body.style.overflow = originalBodyOverflow;
       document.body.style.overscrollBehaviorY = originalBodyOverscroll;
-      document.documentElement.style.overflow = originalHtmlOverflow;
     };
   }, [isMobileMenuOpen]);
 
