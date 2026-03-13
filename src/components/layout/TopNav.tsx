@@ -322,7 +322,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/settings" className="text-destructive focus:text-destructive">
+                      <Link to="/me/settings" className="text-destructive focus:text-destructive">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete Account
                       </Link>
