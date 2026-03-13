@@ -6,9 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowIncompleteProfile?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowIncompleteProfile = false }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
   const [profileCheck, setProfileCheck] = useState<{ loading: boolean; hasUsername: boolean }>({

@@ -70,13 +70,25 @@ export function TopNav({ onSearch }: TopNavProps) {
     navigate('/');
   };
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalBodyOverscroll = document.body.style.overscrollBehaviorY;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehaviorY = 'contain';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.overscrollBehaviorY = originalBodyOverscroll;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [isMobileMenuOpen]);
+
   const getUserInitials = () => {
-    if (profileData.username) {
-      return profileData.username.substring(0, 2).toUpperCase();
-    }
-    // Fallback: use first letter only to avoid exposing email prefix
-    return (user?.email?.charAt(0) || 'U').toUpperCase();
-  };
 
   // Fetch real unread message count with real-time updates
   const [unreadMessages, setUnreadMessages] = useState(0);
