@@ -36,6 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Register for push notifications when user signs in
+        if (session?.user?.id) {
+          initPushNotifications(session.user.id);
+        }
       }
     );
 
