@@ -178,10 +178,10 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3">
-              Active Bounties
+              Browse Active Bounties
             </h2>
             <p className="text-muted-foreground">
-              Help someone today — browse active requests and earn rewards
+              Help someone find what they are looking for and earn a reward
             </p>
           </div>
 
