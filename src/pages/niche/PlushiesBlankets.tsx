@@ -7,7 +7,7 @@ const plushiesBlankets: NicheConfig = {
   category: BountyCategory.TOYS_COMFORT,
   title: 'Find That Favorite Plushie or Blanket',
   subtitle: 'Because some things can\'t be replaced. Until now.',
-  description: 'Whether it\'s a discontinued stuffed animal, a worn out baby blanket, or a comfort item you just can\'t sleep without, post a bounty and let our hunters track it down.',
+  description: 'BountyBay is the best way to find a discontinued stuffed animal, lost baby blanket, or childhood comfort item. Post a bounty with a reward, and let our hunters track it down for you.',
   heroGradient: 'bg-gradient-to-br from-pink-400/10 via-background to-purple-400/5',
   icon: <Heart className="h-10 w-10 text-pink-500" />,
   trustBadgeText: 'ID-verified hunters. Secure escrow. You only pay when found.',

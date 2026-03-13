@@ -87,8 +87,8 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
     <>
       <Helmet>
         <title>{pageTitle}</title>
-        <meta name="description" content={config.description} />
-        <link rel="canonical" href={pageUrl} />
+        <meta name="description" content={`BountyBay: ${config.description}`} />
+        <meta name="robots" content="index, follow" />
         
         {/* Open Graph */}
         <meta property="og:type" content="website" />

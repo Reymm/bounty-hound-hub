@@ -316,6 +316,9 @@ const Index = () => {
       {!hasActiveFilters && (
         <CompletedBounties />
       )}
+
+      {/* FAQ Section for AEO */}
+      {!hasActiveFilters && <HomeFAQ />}
     </>
   );
 };

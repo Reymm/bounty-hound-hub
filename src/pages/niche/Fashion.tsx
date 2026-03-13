@@ -7,7 +7,7 @@ const fashionConfig: NicheConfig = {
   category: BountyCategory.FASHION,
   title: 'Track Down Fashion Pieces You Miss',
   subtitle: 'Find discontinued clothing, vintage designer items, and fashion pieces you regret letting go.',
-  description: 'Whether it\'s a vintage handbag, a discontinued pair of shoes, or a designer piece you once owned — post a bounty and let our community of fashion hunters find it for you.',
+  description: 'BountyBay helps you find discontinued clothing, vintage designer items, and fashion pieces you can not find anywhere else. Post a bounty with a reward, and let our hunters find it for you.',
   heroGradient: 'bg-gradient-to-br from-pink-500/10 via-background to-purple-500/5',
   icon: <Shirt className="h-10 w-10 text-pink-500" />,
   trustBadgeText: 'Verified hunters. Secure escrow. Authentic items.',
