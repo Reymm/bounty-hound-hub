@@ -436,10 +436,9 @@ export function TopNav({ onSearch }: TopNavProps) {
         {/* Mobile Menu - Full screen fixed overlay */}
         {isMobileMenuOpen && (
           <div
-            className="md:hidden fixed inset-0 bg-background z-[200] flex flex-col"
+            className="md:hidden fixed inset-0 h-[100dvh] bg-background z-[200] flex flex-col overflow-hidden"
             style={{
               paddingTop: 'env(safe-area-inset-top, 0px)',
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
           >
             {/* Overlay header - mirrors nav bar */}
