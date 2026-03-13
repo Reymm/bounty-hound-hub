@@ -426,7 +426,10 @@ export function TopNav({ onSearch }: TopNavProps) {
 
         {/* Mobile Menu - Fixed scroll, simplified structure */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border py-3 pb-8 max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
+          <div
+            className="md:hidden border-t border-border py-3 pb-8 pb-safe max-h-[calc(100svh-7rem)] overflow-y-auto overscroll-y-contain touch-pan-y"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {user ? (
               <div className="space-y-1">
                 {/* Primary Actions */}

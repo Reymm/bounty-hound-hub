@@ -114,7 +114,7 @@ const App = () => (
                         </ProtectedRoute>
                       } />
                       <Route path="/me/settings" element={
-                        <ProtectedRoute>
+                        <ProtectedRoute allowIncompleteProfile>
                           <Settings />
                         </ProtectedRoute>
                       } />

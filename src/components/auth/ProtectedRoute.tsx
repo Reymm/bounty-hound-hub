@@ -58,8 +58,9 @@ export function ProtectedRoute({ children, allowIncompleteProfile = false }: Pro
     return <Navigate to="/auth?tab=signin" state={{ from: location }} replace />;
   }
 
-  // If user has no username and isn't already on the setup page or admin routes, redirect there
-  if (!profileCheck.hasUsername && location.pathname !== '/setup' && !location.pathname.startsWith('/admin')) {
+  // If user has no username and isn't already on the setup page/admin routes,
+  // redirect unless this route explicitly allows incomplete profiles.
+  if (!profileCheck.hasUsername && !allowIncompleteProfile && location.pathname !== '/setup' && !location.pathname.startsWith('/admin')) {
     return <Navigate to="/setup" replace />;
   }
 
