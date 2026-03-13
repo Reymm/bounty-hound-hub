@@ -116,10 +116,10 @@ export function CompletedBounties() {
             </div>
             <div>
               <h2 className="text-xl lg:text-2xl font-bold text-foreground">
-                Recent Success Stories
+                Items Found Through BountyBay
               </h2>
               <p className="text-sm text-muted-foreground">
-                Real bounties found and paid out
+                Real bounties completed and paid out by our hunters
               </p>
             </div>
           </div>
