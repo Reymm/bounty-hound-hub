@@ -167,6 +167,7 @@ const ActiveBounties = () => {
         </div>
       </section>
     </div>
+    </PullToRefresh>
   );
 };
 
