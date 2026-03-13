@@ -241,7 +241,7 @@ const Index = () => {
               )}
               <div>
               <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-                  {sortByTop ? 'Highest Reward Bounties' : 'Browse Active Bounties for Rare and Hard to Find Items'}
+                  {sortByTop ? 'Top Bounties' : 'Active Bounties'}
                 </h2>
                 <p className="text-primary">
                   {sortByTop 
