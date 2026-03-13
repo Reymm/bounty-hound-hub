@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { hapticNotification } from '@/lib/haptics';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
