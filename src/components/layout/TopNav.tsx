@@ -517,7 +517,7 @@ export function TopNav({ onSearch }: TopNavProps) {
                 <div className="border-t border-border my-2" />
 
                 <Button asChild variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10">
-                  <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link to="/me/settings" onClick={() => setIsMobileMenuOpen(false)}>
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete Account
                   </Link>
