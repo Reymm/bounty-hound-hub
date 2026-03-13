@@ -17,6 +17,7 @@ export function SaveBountyButton({ isSaved, onToggle, size = 'icon', className }
     try {
       e.preventDefault();
       e.stopPropagation();
+      hapticImpact('light');
       onToggle();
     } catch (error) {
       // Silently catch to prevent crash in native environment
