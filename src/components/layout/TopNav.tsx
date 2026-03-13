@@ -75,16 +75,13 @@ export function TopNav({ onSearch }: TopNavProps) {
 
     const originalBodyOverflow = document.body.style.overflow;
     const originalBodyOverscroll = document.body.style.overscrollBehaviorY;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = 'hidden';
     document.body.style.overscrollBehaviorY = 'contain';
-    document.documentElement.style.overflow = 'hidden';
 
     return () => {
       document.body.style.overflow = originalBodyOverflow;
       document.body.style.overscrollBehaviorY = originalBodyOverscroll;
-      document.documentElement.style.overflow = originalHtmlOverflow;
     };
   }, [isMobileMenuOpen]);
 
@@ -439,10 +436,9 @@ export function TopNav({ onSearch }: TopNavProps) {
         {/* Mobile Menu - Full screen fixed overlay */}
         {isMobileMenuOpen && (
           <div
-            className="md:hidden fixed inset-0 bg-background z-[200] flex flex-col"
+            className="md:hidden fixed inset-0 h-[100dvh] bg-background z-[200] flex flex-col overflow-hidden"
             style={{
               paddingTop: 'env(safe-area-inset-top, 0px)',
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
           >
             {/* Overlay header - mirrors nav bar */}
@@ -509,8 +505,11 @@ export function TopNav({ onSearch }: TopNavProps) {
 
             {/* Scrollable menu content */}
             <div
-              className="flex-1 overflow-y-auto overscroll-y-contain px-4 pb-8"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)',
+              }}
             >
               {user ? (
                 <div className="space-y-1">
