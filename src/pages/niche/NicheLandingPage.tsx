@@ -213,7 +213,7 @@ export function NicheLandingPage({ config }: NicheLandingPageProps) {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3">
-              How BountyBay Works
+              How to Use a Bounty to Find Rare or Discontinued Items
             </h2>
             <p className="text-muted-foreground">
               Safe, simple, and secure
