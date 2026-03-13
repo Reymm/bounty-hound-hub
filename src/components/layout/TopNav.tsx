@@ -70,6 +70,24 @@ export function TopNav({ onSearch }: TopNavProps) {
     navigate('/');
   };
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalBodyOverscroll = document.body.style.overscrollBehaviorY;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehaviorY = 'contain';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.overscrollBehaviorY = originalBodyOverscroll;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [isMobileMenuOpen]);
+
   const getUserInitials = () => {
     if (profileData.username) {
       return profileData.username.substring(0, 2).toUpperCase();
@@ -414,7 +432,10 @@ export function TopNav({ onSearch }: TopNavProps) {
 
         {/* Mobile Menu - Fixed scroll, simplified structure */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border py-3 pb-8 max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
+          <div
+            className="md:hidden border-t border-border py-3 pb-8 pb-safe max-h-[calc(100svh-7rem)] overflow-y-auto overscroll-y-contain touch-pan-y"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {user ? (
               <div className="space-y-1">
                 {/* Primary Actions */}

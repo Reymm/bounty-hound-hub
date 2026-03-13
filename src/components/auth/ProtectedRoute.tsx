@@ -6,9 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowIncompleteProfile?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowIncompleteProfile = false }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
   const [profileCheck, setProfileCheck] = useState<{ loading: boolean; hasUsername: boolean }>({
@@ -57,8 +58,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth?tab=signin" state={{ from: location }} replace />;
   }
 
-  // If user has no username and isn't already on the setup page or admin routes, redirect there
-  if (!profileCheck.hasUsername && location.pathname !== '/setup' && !location.pathname.startsWith('/admin')) {
+  // If user has no username and isn't already on the setup page/admin routes,
+  // redirect unless this route explicitly allows incomplete profiles.
+  if (!profileCheck.hasUsername && !allowIncompleteProfile && location.pathname !== '/setup' && !location.pathname.startsWith('/admin')) {
     return <Navigate to="/setup" replace />;
   }
 
