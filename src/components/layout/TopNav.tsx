@@ -184,7 +184,13 @@ export function TopNav({ onSearch }: TopNavProps) {
   }, [user]);
 
   return (
-    <nav className="sticky top-0 z-[100] bg-background border-b border-border shadow-sm safe-top" style={{ isolation: 'isolate' }}>
+    <nav
+      className="sticky top-0 z-[100] bg-background border-b border-border shadow-sm"
+      style={{
+        isolation: 'isolate',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.25rem)',
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between min-h-16 py-2">
           {/* Logo and Explore Dropdown */}
