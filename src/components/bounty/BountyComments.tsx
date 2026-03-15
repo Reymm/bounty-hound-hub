@@ -25,6 +25,7 @@ interface Comment {
 interface BountyCommentsProps {
   bountyId: string;
   bountyStatus: string;
+  posterId?: string;
 }
 
 export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) {
