@@ -88,6 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
           title: 'New Claim Submitted 🎯',
           body: `${hunterProfile?.username || 'A hunter'} submitted a claim for "${bountyData.title}"`,
           data: { bountyId, submissionId, route: `/b/${bountyId}` },
+          notification_type: 'claims',
         }
       });
     } catch (pushError) {

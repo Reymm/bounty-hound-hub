@@ -109,6 +109,9 @@ export default function Settings() {
         </p>
       </div>
 
+      {/* Notification Preferences */}
+      {user && <NotificationPreferences />}
+
       {/* Connected Accounts */}
       {user && <ConnectedAccounts user={user} />}
 
