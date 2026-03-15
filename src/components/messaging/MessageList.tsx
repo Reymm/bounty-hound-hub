@@ -184,10 +184,6 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
       throw new Error('Failed to upload image');
     }
 
-    const { data: urlData } = supabase.storage
-      .from('message-attachments')
-      .getPublicUrl(fileName);
-
     // Since bucket is private, we need to create a signed URL
     const { data: signedUrlData, error: signedError } = await supabase.storage
       .from('message-attachments')
