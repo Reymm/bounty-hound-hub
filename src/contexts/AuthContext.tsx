@@ -49,6 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Ensure push is initialized even when a session already exists
+        if (session?.user?.id) {
+          initPushNotifications(session.user.id);
+        }
+
         setLoading(false);
       })
       .catch((error) => {

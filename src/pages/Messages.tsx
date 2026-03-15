@@ -382,6 +382,26 @@ export default function Messages() {
         .rpc('get_public_profile_data', { profile_id: user.id })
         .maybeSingle();
 
+      const senderName = senderProfile?.username || 'Someone';
+      const previewBody = (newMessage.trim() || (attachmentUrl ? '📷 Sent an image' : 'New message')).slice(0, 100);
+      const pushData: Record<string, string> = { route: '/messages' };
+      if (selectedThread.bountyId) {
+        pushData.bountyId = selectedThread.bountyId;
+      }
+
+      // Fire-and-forget push for each message
+      supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: recipientId,
+          title: `💬 ${senderName}`,
+          body: previewBody,
+          data: pushData,
+          notification_type: 'messages',
+        },
+      }).catch((pushError) => {
+        console.error('Push invoke failed:', pushError);
+      });
+
       // Add the message to local state
       const message: Message = {
         id: data.id,
