@@ -25,9 +25,10 @@ interface Comment {
 interface BountyCommentsProps {
   bountyId: string;
   bountyStatus: string;
+  posterId?: string;
 }
 
-export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) {
+export function BountyComments({ bountyId, bountyStatus, posterId }: BountyCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -137,6 +138,20 @@ export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) 
         title: 'Comment posted!',
         description: 'Your comment has been added.',
       });
+
+      // Send push notification to bounty poster (if commenter isn't the poster)
+      if (posterId && posterId !== user.id) {
+        const commenterName = profile?.username || 'Someone';
+        supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: posterId,
+            title: 'New Comment 💬',
+            body: `${commenterName} commented on your bounty`,
+            data: { bountyId, route: `/b/${bountyId}` },
+            notification_type: 'comments',
+          }
+        }).catch(() => {});
+      }
     } catch (error) {
       console.error('Error posting comment:', error);
       toast({

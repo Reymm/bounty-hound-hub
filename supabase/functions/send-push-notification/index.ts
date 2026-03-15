@@ -10,6 +10,8 @@ interface PushPayload {
   title: string;
   body: string;
   data?: Record<string, string>;
+  // Notification type for preference checking: 'claims' | 'messages' | 'comments' | 'status_updates'
+  notification_type?: string;
 }
 
 Deno.serve(async (req) => {
@@ -24,13 +26,30 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { user_id, title, body, data } = (await req.json()) as PushPayload;
+    const { user_id, title, body, data, notification_type } = (await req.json()) as PushPayload;
 
     if (!user_id || !title || !body) {
       return new Response(
         JSON.stringify({ error: 'Missing user_id, title, or body' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Check user notification preferences if a type is specified
+    if (notification_type) {
+      const { data: prefs } = await supabase
+        .from('notification_preferences')
+        .select(notification_type)
+        .eq('user_id', user_id)
+        .maybeSingle();
+
+      // If preferences exist and the type is disabled, skip sending
+      if (prefs && prefs[notification_type] === false) {
+        return new Response(
+          JSON.stringify({ message: 'User has disabled this notification type', sent: 0, skipped: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Get all device tokens for this user
@@ -49,7 +68,6 @@ Deno.serve(async (req) => {
     let sent = 0;
     const errors: string[] = [];
 
-    // Send via FCM if configured
     if (fcmServerKey) {
       for (const deviceToken of tokens) {
         try {
@@ -61,12 +79,7 @@ Deno.serve(async (req) => {
             },
             body: JSON.stringify({
               to: deviceToken.token,
-              notification: {
-                title,
-                body,
-                sound: 'default',
-                badge: '1',
-              },
+              notification: { title, body, sound: 'default', badge: '1' },
               data: data || {},
               priority: 'high',
             }),
@@ -77,12 +90,8 @@ Deno.serve(async (req) => {
             sent++;
           } else {
             errors.push(`Token ${deviceToken.token.slice(0, 8)}...: ${JSON.stringify(result.results)}`);
-            // Clean up invalid tokens
             if (result.results?.[0]?.error === 'NotRegistered' || result.results?.[0]?.error === 'InvalidRegistration') {
-              await supabase
-                .from('device_push_tokens')
-                .delete()
-                .eq('token', deviceToken.token);
+              await supabase.from('device_push_tokens').delete().eq('token', deviceToken.token);
             }
           }
         } catch (e) {
@@ -90,7 +99,6 @@ Deno.serve(async (req) => {
         }
       }
     } else {
-      // No FCM key configured — log tokens for debugging
       console.log(`FCM_SERVER_KEY not set. Would send "${title}" to ${tokens.length} device(s).`);
     }
 

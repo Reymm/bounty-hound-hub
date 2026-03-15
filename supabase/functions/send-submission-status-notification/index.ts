@@ -144,6 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
           title: pushTitle,
           body: pushBody,
           data: { bountyId: submission.bounty_id, submissionId, route: `/b/${submission.bounty_id}` },
+          notification_type: 'status_updates',
         }
       });
     } catch (pushError) {

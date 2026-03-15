@@ -557,6 +557,39 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          claims: boolean
+          comments: boolean
+          created_at: string
+          id: string
+          messages: boolean
+          status_updates: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claims?: boolean
+          comments?: boolean
+          created_at?: string
+          id?: string
+          messages?: boolean
+          status_updates?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claims?: boolean
+          comments?: boolean
+          created_at?: string
+          id?: string
+          messages?: boolean
+          status_updates?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           bounty_id: string | null

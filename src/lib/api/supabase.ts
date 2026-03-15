@@ -814,7 +814,7 @@ export const supabaseApi = {
       const senderProfile = senderProfileResult.data;
       const bountyTitle = bountyResult.data?.title || 'a bounty';
 
-      // Create notification for recipient if this is the first message
+      // Create notification + push for recipient if this is the first message
       if (isFirstMessage) {
         const senderName = senderProfile?.username || 'Someone';
         await supabase.from('notifications').insert({
@@ -825,6 +825,18 @@ export const supabaseApi = {
           bounty_id: bountyId
         });
       }
+
+      // Always send push for every message (preference check happens server-side)
+      const senderName = senderProfile?.username || 'Someone';
+      supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: recipientId,
+          title: `💬 ${senderName}`,
+          body: body.length > 100 ? body.slice(0, 100) + '…' : body,
+          data: { bountyId, route: `/messages` },
+          notification_type: 'messages',
+        }
+      }).catch(() => {}); // fire-and-forget
 
       return {
         id: data.id,

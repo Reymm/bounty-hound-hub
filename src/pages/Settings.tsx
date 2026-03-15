@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ConnectedAccounts } from '@/components/profile/ConnectedAccounts';
+import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
 import { Profile as ProfileType } from '@/lib/types';
 import { supabaseApi } from '@/lib/api/supabase';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,6 +108,9 @@ export default function Settings() {
           Manage your account and connected services
         </p>
       </div>
+
+      {/* Notification Preferences */}
+      {user && <NotificationPreferences />}
 
       {/* Connected Accounts */}
       {user && <ConnectedAccounts user={user} />}
