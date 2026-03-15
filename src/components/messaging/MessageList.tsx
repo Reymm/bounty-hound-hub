@@ -184,10 +184,6 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
       throw new Error('Failed to upload image');
     }
 
-    const { data: urlData } = supabase.storage
-      .from('message-attachments')
-      .getPublicUrl(fileName);
-
     // Since bucket is private, we need to create a signed URL
     const { data: signedUrlData, error: signedError } = await supabase.storage
       .from('message-attachments')
@@ -238,17 +234,36 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
         pushData.bountyId = bountyId;
       }
 
-      supabase.functions.invoke('send-push-notification', {
-        body: {
+      const [notificationResult, pushResult] = await Promise.allSettled([
+        supabase.from('notifications').insert({
           user_id: recipientId,
+          type: 'new_message',
           title: `💬 ${senderName}`,
-          body: previewBody,
-          data: pushData,
-          notification_type: 'messages',
-        },
-      }).catch((pushError) => {
-        console.error('Push invoke failed:', pushError);
-      });
+          message: previewBody,
+          bounty_id: bountyId ?? null,
+        }),
+        supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: recipientId,
+            title: `💬 ${senderName}`,
+            body: previewBody,
+            data: pushData,
+            notification_type: 'messages',
+          },
+        }),
+      ]);
+
+      if (notificationResult.status === 'fulfilled' && notificationResult.value.error) {
+        console.error('In-app notification insert failed:', notificationResult.value.error);
+      } else if (notificationResult.status === 'rejected') {
+        console.error('In-app notification insert failed:', notificationResult.reason);
+      }
+
+      if (pushResult.status === 'fulfilled' && pushResult.value.error) {
+        console.error('Push invoke failed:', pushResult.value.error);
+      } else if (pushResult.status === 'rejected') {
+        console.error('Push invoke failed:', pushResult.reason);
+      }
       
       setNewMessage('');
       clearSelectedImage();
