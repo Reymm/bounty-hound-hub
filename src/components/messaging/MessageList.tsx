@@ -227,7 +227,7 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
         .rpc('get_public_profile_data', { profile_id: currentUserId })
         .maybeSingle();
 
-      const senderName = senderProfile?.username || senderProfile?.full_name || 'Someone';
+      const senderName = senderProfile?.username || 'Someone';
       const previewBody = (newMessage.trim() || (attachmentUrl ? '📷 Sent an image' : 'New message')).slice(0, 100);
       const pushData: Record<string, string> = { route: '/messages' };
       if (bountyId) {
