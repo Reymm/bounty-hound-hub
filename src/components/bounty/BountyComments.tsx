@@ -28,7 +28,7 @@ interface BountyCommentsProps {
   posterId?: string;
 }
 
-export function BountyComments({ bountyId, bountyStatus }: BountyCommentsProps) {
+export function BountyComments({ bountyId, bountyStatus, posterId }: BountyCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
