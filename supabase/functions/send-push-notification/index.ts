@@ -110,6 +110,9 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { user_id, title, body, data, notification_type } = (await req.json()) as PushPayload;
+    const payloadData = Object.fromEntries(
+      Object.entries(data ?? {}).map(([key, value]) => [key, String(value)]),
+    );
 
     if (!user_id || !title || !body) {
       return new Response(
@@ -117,6 +120,11 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
+
+    console.log(
+      '[send-push-notification] Incoming request',
+      JSON.stringify({ user_id, notification_type, payload_keys: Object.keys(payloadData) }),
+    );
 
     // Check user notification preferences
     if (notification_type) {
@@ -127,12 +135,42 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (prefs && prefs[notification_type] === false) {
+        console.log(
+          '[send-push-notification] Notification skipped by user preference',
+          JSON.stringify({ user_id, notification_type }),
+        );
         return new Response(
           JSON.stringify({ message: 'User has disabled this notification type', sent: 0, skipped: true }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
     }
+
+    const notificationRecord = {
+      user_id,
+      type: notification_type ?? 'system',
+      title,
+      message: body,
+      bounty_id: payloadData.bountyId ?? null,
+      submission_id: payloadData.submissionId ?? null,
+    };
+
+    const { error: notificationError } = await supabase.from('notifications').insert(notificationRecord);
+    if (notificationError) {
+      console.error('[send-push-notification] Failed to insert notification row:', notificationError);
+    }
+
+    const { count: unreadCount, error: unreadCountError } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user_id)
+      .eq('is_read', false);
+
+    if (unreadCountError) {
+      console.error('[send-push-notification] Failed to count unread notifications:', unreadCountError);
+    }
+
+    const badgeCount = Math.max(1, unreadCount ?? 1);
 
     // Get device tokens
     const { data: tokens, error: tokenError } = await supabase
@@ -141,8 +179,17 @@ Deno.serve(async (req) => {
       .eq('user_id', user_id);
 
     if (tokenError || !tokens || tokens.length === 0) {
+      console.warn(
+        '[send-push-notification] No device tokens found',
+        JSON.stringify({ user_id, tokenError: tokenError?.message ?? null, badgeCount }),
+      );
       return new Response(
-        JSON.stringify({ message: 'No device tokens found for user', sent: 0 }),
+        JSON.stringify({
+          message: 'No device tokens found for user',
+          sent: 0,
+          badge_count: badgeCount,
+          notification_saved: !notificationError,
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
@@ -159,14 +206,21 @@ Deno.serve(async (req) => {
         const message: Record<string, unknown> = {
           token: deviceToken.token,
           notification: { title, body },
-          data: data || {},
+          data: payloadData,
         };
 
         // Platform-specific config
         if (deviceToken.platform === 'ios') {
           (message as any).apns = {
+            headers: {
+              'apns-priority': '10',
+              'apns-push-type': 'alert',
+            },
             payload: {
-              aps: { sound: 'default', badge: 1 },
+              aps: {
+                sound: 'default',
+                badge: badgeCount,
+              },
             },
           };
         } else {
@@ -205,8 +259,13 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log(
+      '[send-push-notification] Send summary',
+      JSON.stringify({ user_id, sent, total_tokens: tokens.length, badgeCount, error_count: errors.length }),
+    );
+
     return new Response(
-      JSON.stringify({ sent, total_tokens: tokens.length, errors }),
+      JSON.stringify({ sent, total_tokens: tokens.length, badge_count: badgeCount, errors }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {

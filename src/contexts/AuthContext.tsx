@@ -37,10 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Register for push notifications when user signs in
-        if (session?.user?.id) {
-          void initPushNotifications(session.user.id);
-        }
       }
     );
 
@@ -49,11 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
-
-        // Ensure push is initialized even when a session already exists
-        if (session?.user?.id) {
-          void initPushNotifications(session.user.id);
-        }
 
         setLoading(false);
       })
@@ -65,6 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!session?.user?.id || !Capacitor.isNativePlatform()) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void initPushNotifications(session.user.id);
+    }, 1200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [session?.user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
