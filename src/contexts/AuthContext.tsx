@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Register for push notifications when user signs in
         if (session?.user?.id) {
-          initPushNotifications(session.user.id);
+          void initPushNotifications(session.user.id);
         }
       }
     );
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Ensure push is initialized even when a session already exists
         if (session?.user?.id) {
-          initPushNotifications(session.user.id);
+          void initPushNotifications(session.user.id);
         }
 
         setLoading(false);
