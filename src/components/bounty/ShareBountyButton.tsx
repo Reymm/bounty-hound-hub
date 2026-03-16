@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Share2, Link2, Check, MessageSquare } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { hapticImpact } from '@/lib/haptics';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,25 +31,27 @@ export function ShareBountyButton({
 }: ShareBountyButtonProps) {
   const [copied, setCopied] = useState(false);
   
-  const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
+  const isNative = Capacitor.isNativePlatform();
+  const supportsNativeShare = isNative || (typeof navigator !== 'undefined' && !!navigator.share);
 
   // Clean URL for display/copy — looks professional in chat apps
   const cleanUrl = `https://bountybay.co/b/${bountyId}`;
   // Edge function URL for native share — serves OG tags for iMessage crawlers
   const metaUrl = `https://auth.bountybay.co/functions/v1/bounty-meta/${bountyId}`;
 
-  // Native share — hands URL to OS share sheet which opens real apps (uses edge function for OG)
+  // Native share — uses Capacitor Share plugin on native, falls back to Web Share API
   const handleNativeShare = async () => {
-    if (navigator.share) {
-      hapticImpact('light');
-      try {
-        await navigator.share({
-          url: metaUrl,
-        });
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Share failed:', error);
-        }
+    hapticImpact('light');
+    try {
+      if (isNative) {
+        const { Share } = await import('@capacitor/share');
+        await Share.share({ url: metaUrl });
+      } else if (navigator.share) {
+        await navigator.share({ url: metaUrl });
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Share failed:', error);
       }
     }
   };
