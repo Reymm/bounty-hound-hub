@@ -783,15 +783,6 @@ export const supabaseApi = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User must be authenticated');
 
-      // Check if this is the first message in this conversation (for notification)
-      const { count: existingMessageCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('bounty_id', bountyId)
-        .or(`and(sender_id.eq.${user.id},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${user.id})`);
-
-      const isFirstMessage = (existingMessageCount ?? 0) === 0;
-
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -805,28 +796,10 @@ export const supabaseApi = {
 
       if (error) throw error;
 
-      // Fetch sender's username and bounty title for notification
-      const [senderProfileResult, bountyResult] = await Promise.all([
-        supabase.rpc('get_public_profile_data', { profile_id: user.id }).maybeSingle(),
-        supabase.from('Bounties').select('title').eq('id', bountyId).single()
-      ]);
+      const { data: senderProfile } = await supabase
+        .rpc('get_public_profile_data', { profile_id: user.id })
+        .maybeSingle();
 
-      const senderProfile = senderProfileResult.data;
-      const bountyTitle = bountyResult.data?.title || 'a bounty';
-
-      // Create notification + push for recipient if this is the first message
-      if (isFirstMessage) {
-        const senderName = senderProfile?.username || 'Someone';
-        await supabase.from('notifications').insert({
-          user_id: recipientId,
-          type: 'new_message',
-          title: 'New message',
-          message: `${senderName} sent you a message about "${bountyTitle}"`,
-          bounty_id: bountyId
-        });
-      }
-
-      // Always send push for every message (preference check happens server-side)
       const senderName = senderProfile?.username || 'Someone';
       supabase.functions.invoke('send-push-notification', {
         body: {

@@ -162,33 +162,40 @@ async function registerForPush(userId: string): Promise<PushInitResult> {
 
 async function saveDeviceToken(userId: string, token: string): Promise<{ ok: boolean; error?: string }> {
   const platform = Capacitor.getPlatform();
+  let lastError = 'Unknown token save error';
 
-  try {
-    const { error } = await supabase
-      .from('device_push_tokens')
-      .upsert(
-        {
-          user_id: userId,
-          token,
-          platform,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'token' }
-      );
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      if (attempt > 1) {
+        await supabase.auth.getSession();
+        await new Promise((resolve) => window.setTimeout(resolve, 750));
+      }
 
-    if (error) {
-      console.error('Failed to save push token:', error);
-      return { ok: false, error: error.message };
+      const { error } = await supabase
+        .from('device_push_tokens')
+        .upsert(
+          {
+            user_id: userId,
+            token,
+            platform,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'token' }
+        );
+
+      if (!error) {
+        return { ok: true };
+      }
+
+      lastError = error.message;
+      console.error(`Failed to save push token (attempt ${attempt}):`, error);
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'Unknown token save error';
+      console.error(`Error saving device token (attempt ${attempt}):`, error);
     }
-
-    return { ok: true };
-  } catch (error) {
-    console.error('Error saving device token:', error);
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : 'Unknown token save error',
-    };
   }
+
+  return { ok: false, error: lastError };
 }
 
 export async function removePushToken() {

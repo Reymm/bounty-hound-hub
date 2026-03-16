@@ -57,6 +57,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!session?.user?.id || !Capacitor.isNativePlatform()) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void initPushNotifications(session.user.id);
+    }, 1200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [session?.user?.id]);
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,

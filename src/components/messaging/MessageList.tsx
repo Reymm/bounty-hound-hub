@@ -234,35 +234,18 @@ export function MessageList({ recipientId, bountyId, currentUserId }: MessageLis
         pushData.bountyId = bountyId;
       }
 
-      const [notificationResult, pushResult] = await Promise.allSettled([
-        supabase.from('notifications').insert({
+      const { error: pushError } = await supabase.functions.invoke('send-push-notification', {
+        body: {
           user_id: recipientId,
-          type: 'new_message',
           title: `💬 ${senderName}`,
-          message: previewBody,
-          bounty_id: bountyId ?? null,
-        }),
-        supabase.functions.invoke('send-push-notification', {
-          body: {
-            user_id: recipientId,
-            title: `💬 ${senderName}`,
-            body: previewBody,
-            data: pushData,
-            notification_type: 'messages',
-          },
-        }),
-      ]);
+          body: previewBody,
+          data: pushData,
+          notification_type: 'messages',
+        },
+      });
 
-      if (notificationResult.status === 'fulfilled' && notificationResult.value.error) {
-        console.error('In-app notification insert failed:', notificationResult.value.error);
-      } else if (notificationResult.status === 'rejected') {
-        console.error('In-app notification insert failed:', notificationResult.reason);
-      }
-
-      if (pushResult.status === 'fulfilled' && pushResult.value.error) {
-        console.error('Push invoke failed:', pushResult.value.error);
-      } else if (pushResult.status === 'rejected') {
-        console.error('Push invoke failed:', pushResult.reason);
+      if (pushError) {
+        console.error('Push invoke failed:', pushError);
       }
       
       setNewMessage('');
