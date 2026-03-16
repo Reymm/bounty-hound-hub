@@ -1,11 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Bell } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import {
+  getPushPermissionState,
+  initPushNotifications,
+  type NativePushPermission,
+} from '@/lib/push-notifications';
 
 interface Preferences {
   claims: boolean;
@@ -21,28 +28,48 @@ const defaultPrefs: Preferences = {
   status_updates: true,
 };
 
+const nativePermissionCopy: Record<NativePushPermission, string> = {
+  granted: 'iPhone notifications are enabled for this device.',
+  denied: 'Notifications are off on this iPhone. Open Settings > Notifications > BountyBay to turn them back on.',
+  prompt: 'This iPhone has not granted notification access yet.',
+  'prompt-with-rationale': 'This iPhone still needs notification permission.',
+  unavailable: 'Native push is only available inside the installed iPhone or Android app.',
+};
+
 export function NotificationPreferences() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isNativePlatform = Capacitor.isNativePlatform();
   const [prefs, setPrefs] = useState<Preferences>(defaultPrefs);
   const [loading, setLoading] = useState(true);
+  const [nativePermission, setNativePermission] = useState<NativePushPermission>('unavailable');
+  const [syncingNativePush, setSyncingNativePush] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    loadPreferences();
-  }, [user]);
+
+    void loadPreferences();
+    if (isNativePlatform) {
+      void loadNativePermission();
+    }
+  }, [user, isNativePlatform]);
 
   const loadPreferences = async () => {
     const { data } = await supabase
-      .from('notification_preferences' as any)
+      .from('notification_preferences')
       .select('claims, messages, comments, status_updates')
       .eq('user_id', user!.id)
       .maybeSingle();
 
     if (data) {
-      setPrefs(data as any);
+      setPrefs(data);
     }
     setLoading(false);
+  };
+
+  const loadNativePermission = async () => {
+    const permission = await getPushPermissionState();
+    setNativePermission(permission);
   };
 
   const updatePref = async (key: keyof Preferences, value: boolean) => {
@@ -50,16 +77,45 @@ export function NotificationPreferences() {
     setPrefs(newPrefs);
 
     const { error } = await supabase
-      .from('notification_preferences' as any)
+      .from('notification_preferences')
       .upsert(
         { user_id: user!.id, ...newPrefs, updated_at: new Date().toISOString() },
         { onConflict: 'user_id' }
       );
 
     if (error) {
-      setPrefs(prefs); // revert
+      setPrefs(prefs);
       toast({ title: 'Failed to save', variant: 'destructive' });
     }
+  };
+
+  const syncNativePush = async () => {
+    if (!user || !isNativePlatform) return;
+
+    setSyncingNativePush(true);
+    const result = await initPushNotifications(user.id);
+    setNativePermission(result.permission);
+    setSyncingNativePush(false);
+
+    if (result.status === 'registered') {
+      toast({ title: 'Native notifications enabled' });
+      return;
+    }
+
+    if (result.status === 'denied') {
+      toast({
+        title: 'Notifications are off',
+        description: 'Enable them in iPhone Settings > Notifications > BountyBay.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Native push setup failed',
+      description: result.error ?? 'Please reopen the app and try again.',
+      variant: 'destructive',
+    });
   };
 
   const items: { key: keyof Preferences; label: string; description: string }[] = [
@@ -96,6 +152,29 @@ export function NotificationPreferences() {
             />
           </div>
         ))}
+
+        {isNativePlatform && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Native phone notifications</p>
+              <p className="text-xs text-muted-foreground">
+                {nativePermissionCopy[nativePermission]}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant={nativePermission === 'granted' ? 'outline' : 'default'}
+              onClick={syncNativePush}
+              disabled={syncingNativePush}
+            >
+              {syncingNativePush
+                ? 'Checking iPhone notifications...'
+                : nativePermission === 'granted'
+                  ? 'Refresh native registration'
+                  : 'Enable iPhone notifications'}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

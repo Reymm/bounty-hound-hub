@@ -6,71 +6,166 @@ import { supabase } from '@/integrations/supabase/client';
  * Uses @capacitor/push-notifications for APNs (iOS) and FCM (Android).
  */
 
+export type NativePushPermission = 'prompt' | 'prompt-with-rationale' | 'granted' | 'denied' | 'unavailable';
+
+type PushInitStatus = 'unsupported' | 'denied' | 'registered' | 'registration_failed' | 'save_failed';
+
+export interface PushInitResult {
+  status: PushInitStatus;
+  permission: NativePushPermission;
+  token?: string;
+  error?: string;
+}
+
 let pushInitialized = false;
+let activeUserId: string | null = null;
+let initPromise: Promise<PushInitResult> | null = null;
 
-export async function initPushNotifications(userId: string) {
-  if (!Capacitor.isNativePlatform() || pushInitialized) return;
-
-  // Lock immediately to avoid duplicate init races from multiple auth events.
-  pushInitialized = true;
+export async function getPushPermissionState(): Promise<NativePushPermission> {
+  if (!Capacitor.isNativePlatform()) return 'unavailable';
 
   try {
     const { PushNotifications } = await import('@capacitor/push-notifications');
-
-    // Ensure clean listener state before re-attaching.
-    await PushNotifications.removeAllListeners();
-
-    // Listen for registration success → store token.
-    // Must be attached BEFORE register() to avoid missing fast callbacks.
-    PushNotifications.addListener('registration', async (token) => {
-      console.log('Push token:', token.value);
-      await saveDeviceToken(userId, token.value);
-    });
-
-    // Listen for registration errors
-    PushNotifications.addListener('registrationError', (error) => {
-      console.error('Push registration error:', error);
-    });
-
-    // Listen for incoming notifications while app is open
-    PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push received in foreground:', notification);
-    });
-
-    // Listen for notification taps (app was in background)
-    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-      console.log('Push action:', action);
-      const data = action.notification.data;
-      if (data?.bountyId) {
-        window.location.href = `/b/${data.bountyId}`;
-      } else if (data?.route) {
-        window.location.href = data.route;
-      }
-    });
-
-    // Request permission
-    const permResult = await PushNotifications.requestPermissions();
-    if (permResult.receive !== 'granted') {
-      console.log('Push permission not granted');
-      pushInitialized = false;
-      return;
-    }
-
-    // Register with APNs/FCM
-    await PushNotifications.register();
+    const permissions = await PushNotifications.checkPermissions();
+    return permissions.receive as NativePushPermission;
   } catch (error) {
-    pushInitialized = false;
-    console.error('Push notification init failed:', error);
+    console.error('Unable to read push permission state:', error);
+    return 'unavailable';
   }
 }
 
-async function saveDeviceToken(userId: string, token: string) {
-  const platform = Capacitor.getPlatform(); // 'ios' | 'android'
+export async function initPushNotifications(userId: string): Promise<PushInitResult> {
+  if (!Capacitor.isNativePlatform()) {
+    return { status: 'unsupported', permission: 'unavailable' };
+  }
+
+  if (pushInitialized && activeUserId === userId) {
+    return {
+      status: 'registered',
+      permission: await getPushPermissionState(),
+    };
+  }
+
+  if (initPromise && activeUserId === userId) {
+    return initPromise;
+  }
+
+  activeUserId = userId;
+  initPromise = registerForPush(userId);
+
+  const result = await initPromise;
+  initPromise = null;
+  return result;
+}
+
+async function registerForPush(userId: string): Promise<PushInitResult> {
+  try {
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+    await PushNotifications.removeAllListeners();
+
+    const registrationResult = new Promise<PushInitResult>((resolve) => {
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        pushInitialized = false;
+        activeUserId = null;
+        resolve({
+          status: 'registration_failed',
+          permission: 'granted',
+          error: 'Timed out waiting for the device push token.',
+        });
+      }, 12000);
+
+      const finalize = (result: PushInitResult) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeoutId);
+        resolve(result);
+      };
+
+      PushNotifications.addListener('registration', async (token) => {
+        console.log('Push token:', token.value);
+        const saveResult = await saveDeviceToken(userId, token.value);
+
+        if (!saveResult.ok) {
+          pushInitialized = false;
+          activeUserId = null;
+          finalize({
+            status: 'save_failed',
+            permission: 'granted',
+            token: token.value,
+            error: saveResult.error,
+          });
+          return;
+        }
+
+        pushInitialized = true;
+        finalize({
+          status: 'registered',
+          permission: 'granted',
+          token: token.value,
+        });
+      });
+
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('Push registration error:', error);
+        pushInitialized = false;
+        activeUserId = null;
+        finalize({
+          status: 'registration_failed',
+          permission: 'granted',
+          error: JSON.stringify(error),
+        });
+      });
+
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Push received in foreground:', notification);
+      });
+
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('Push action:', action);
+        const data = action.notification.data;
+        if (data?.bountyId) {
+          window.location.href = `/b/${data.bountyId}`;
+        } else if (data?.route) {
+          window.location.href = data.route;
+        }
+      });
+    });
+
+    let permission = await getPushPermissionState();
+    if (permission === 'prompt' || permission === 'prompt-with-rationale') {
+      const requested = await PushNotifications.requestPermissions();
+      permission = requested.receive as NativePushPermission;
+    }
+
+    if (permission !== 'granted') {
+      pushInitialized = false;
+      activeUserId = null;
+      return { status: 'denied', permission };
+    }
+
+    await PushNotifications.register();
+    return await registrationResult;
+  } catch (error) {
+    pushInitialized = false;
+    activeUserId = null;
+    console.error('Push notification init failed:', error);
+    return {
+      status: 'registration_failed',
+      permission: await getPushPermissionState(),
+      error: error instanceof Error ? error.message : 'Unknown push initialization error',
+    };
+  }
+}
+
+async function saveDeviceToken(userId: string, token: string): Promise<{ ok: boolean; error?: string }> {
+  const platform = Capacitor.getPlatform();
 
   try {
-    // Use raw query since table isn't in generated types yet
     const { error } = await supabase
-      .from('device_push_tokens' as any)
+      .from('device_push_tokens')
       .upsert(
         {
           user_id: userId,
@@ -83,9 +178,16 @@ async function saveDeviceToken(userId: string, token: string) {
 
     if (error) {
       console.error('Failed to save push token:', error);
+      return { ok: false, error: error.message };
     }
-  } catch (e) {
-    console.error('Error saving device token:', e);
+
+    return { ok: true };
+  } catch (error) {
+    console.error('Error saving device token:', error);
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Unknown token save error',
+    };
   }
 }
 
@@ -96,7 +198,9 @@ export async function removePushToken() {
     const { PushNotifications } = await import('@capacitor/push-notifications');
     await PushNotifications.removeAllListeners();
     pushInitialized = false;
-  } catch (e) {
-    console.error('Error removing push listeners:', e);
+    activeUserId = null;
+    initPromise = null;
+  } catch (error) {
+    console.error('Error removing push listeners:', error);
   }
 }
