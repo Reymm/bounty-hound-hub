@@ -1,94 +1,68 @@
 
 
-## Google Play Store Submission Plan
+# Get BountyBay Ready for Apple Store Resubmission
 
-### Prerequisites
-- Google Play Developer account ($25 one-time fee): https://play.google.com/console/signup
-- Android Studio installed on your computer
-- The GitHub repo (now private) cloned locally
+Based on the rejection history (Guideline 4.2 - Minimum Functionality) and current state, here's exactly what needs to happen:
 
-### Step 1: Build the Android APK/AAB
+---
 
-```text
-cd bountybay
-git pull
-npm install
-npm run build
-npx cap sync android
-npx cap open android
-```
+## What's blocking you right now
 
-This opens Android Studio. Wait for Gradle sync to finish (can take a few minutes first time).
+| Item | Status | Impact |
+|------|--------|--------|
+| Firebase project (FCM) | Not created | Push notifications won't fire, no badge |
+| Native Share Sheet | Code uses `navigator.share` (web API) — works but not using `@capacitor/share` | Apple wants native feel |
+| Test account content | Unknown if `emma_iso` has active bounties to demo | Reviewer needs clear paths to test |
 
-In Android Studio:
-1. **Build → Generate Signed Bundle / APK**
-2. Choose **Android App Bundle (.aab)** (Google Play requires this)
-3. **Create new keystore** (SAVE THIS FILE AND PASSWORDS — you need them for every future update):
-   - Key store path: pick a safe location outside the project folder
-   - Password: choose something strong
-   - Key alias: `bountybay`
-   - Key password: same or different
-   - Fill in at least your name in the certificate fields
-4. Click **Next**, select **release**, click **Create**
-5. The .aab file will be in `android/app/release/`
+---
 
-### Step 2: Google Play Console Setup
+## Plan — 3 things to ship
 
-1. Go to https://play.google.com/console
-2. **Create app**:
-   - App name: **BountyBay**
-   - Default language: English (US)
-   - App type: App
-   - Free or paid: Free
-   - Declarations: check both boxes
-3. Complete the **Dashboard checklist** (Privacy policy, app access, content rating, target audience, etc.):
-   - Privacy policy URL: `https://bountybay.co/legal/privacy`
-   - App category: **Shopping**
-   - Contact email: your email
-   - Content rating: fill out the questionnaire (no violence, no mature content)
+### 1. Upgrade Share to use `@capacitor/share` (native iOS share sheet)
 
-### Step 3: Store Listing
+Currently `ShareBountyButton.tsx` uses the Web Share API (`navigator.share`). On native iOS, `@capacitor/share` provides the real native share sheet with full app list.
 
-- **Short description:** Post a bounty. Get it found.
-- **Full description:** Same as your App Store description
-- **Screenshots:** You need at minimum:
-  - 2 phone screenshots (min 320px, max 3840px, 16:9 or 9:16)
-  - You can reuse your App Store screenshots
-- **Feature graphic:** 1024x500 px (required) — this is the banner at top of listing
-- **App icon:** 512x512 px (you already have `public/android-chrome-512x512.png`)
+**Changes:**
+- Install `@capacitor/share`
+- Update `ShareBountyButton.tsx`: detect native platform → use `Share.share()` from Capacitor instead of `navigator.share`
+- Falls back to current web behavior on non-native
 
-### Step 4: Closed Testing (MANDATORY for new accounts)
+This is ~15 minutes of work and immediately visible to Apple reviewers.
 
-Google requires **20 testers for 14 continuous days** before you can publish to production.
+### 2. Firebase + FCM setup (you do this manually)
 
-1. Go to **Testing → Closed testing → Create track**
-2. Name it "Beta testers"
-3. Upload your .aab file
-4. Create a testers list — add 20 email addresses
-5. Use a Fiverr service (~$20-50) to get real testers, or recruit from your network
-6. **Roll out** the closed test
-7. Wait 14 days
+This is not code — it's configuration you need to do:
 
-### Step 5: Production Release
+1. Go to [Firebase Console](https://console.firebase.google.com/) → Create project "BountyBay"
+2. Add iOS app with bundle ID `co.bountybay.app`
+3. Download `GoogleService-Info.plist` → drag into Xcode project root
+4. Project Settings → Cloud Messaging → enable "Cloud Messaging API (Legacy)" → copy Server Key
+5. Give me the Server Key → I store it as `FCM_SERVER_KEY` secret in Supabase
 
-After the 14-day closed testing period:
-1. Go to **Production → Create new release**
-2. Upload the same (or updated) .aab
-3. Write release notes
-4. **Submit for review** — Google review typically takes 1-3 days for new apps
+Once done: push notifications + app icon badge will work.
 
-### Important Notes
+### 3. Ensure test account has demo content for reviewer
 
-- **Keep your keystore file safe.** If you lose it, you can never update the app.
-- The 14-day closed testing clock starts when you roll out to testers, so do this ASAP.
-- The Bundle ID is already set to `co.bountybay.app` in your Capacitor config.
+The reviewer logs in as `emma_iso` and needs to see:
+- Active bounties to browse
+- Ability to post a bounty
+- Ability to claim/comment on a bounty
+- Messages accessible
 
-### Timeline
+I can seed demo bounties if needed, but you should verify the test account has content by logging in as `emma_iso` before submitting.
 
-```text
-Day 0:  Build AAB, create store listing, start closed testing
-Day 14: Closed testing complete, submit for production review
-Day 15-17: Google review (1-3 days)
-Day 17+: Live on Google Play
-```
+---
+
+## Build sequence
+
+1. **I implement** the native share sheet upgrade (code change, ~15 min)
+2. **You set up** Firebase and give me the Server Key
+3. **You verify** `emma_iso` has content to demo
+4. **You rebuild**: `git pull → npm run build → npx cap sync ios → ./scripts/ios-post-sync.sh → Archive → TestFlight`
+
+---
+
+## What to tell Apple in the resubmission notes
+
+> "This update adds native iOS Share Sheet integration via Capacitor, Push Notifications with APNs/FCM for real-time alerts on bounty claims and messages, Haptic Feedback on key actions, and Pull-to-Refresh on all list views. The test account (emma_iso) has active bounties demonstrating the full marketplace loop: browse → post → claim → message → fulfill."
 
