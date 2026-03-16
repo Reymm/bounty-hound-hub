@@ -63,6 +63,7 @@ async function registerForPush(userId: string): Promise<PushInitResult> {
     const { PushNotifications } = await import('@capacitor/push-notifications');
     await PushNotifications.removeAllListeners();
 
+    let finalizeRegistration: ((result: PushInitResult) => void) | null = null;
     const registrationResult = new Promise<PushInitResult>((resolve) => {
       let settled = false;
       const timeoutId = window.setTimeout(() => {
@@ -77,13 +78,15 @@ async function registerForPush(userId: string): Promise<PushInitResult> {
         });
       }, 12000);
 
-      const finalize = (result: PushInitResult) => {
+      finalizeRegistration = (result) => {
         if (settled) return;
         settled = true;
         window.clearTimeout(timeoutId);
         resolve(result);
       };
+    });
 
+    await Promise.all([
       PushNotifications.addListener('registration', async (token) => {
         console.log('Push token:', token.value);
         const saveResult = await saveDeviceToken(userId, token.value);
@@ -91,7 +94,7 @@ async function registerForPush(userId: string): Promise<PushInitResult> {
         if (!saveResult.ok) {
           pushInitialized = false;
           activeUserId = null;
-          finalize({
+          finalizeRegistration?.({
             status: 'save_failed',
             permission: 'granted',
             token: token.value,
@@ -101,28 +104,25 @@ async function registerForPush(userId: string): Promise<PushInitResult> {
         }
 
         pushInitialized = true;
-        finalize({
+        finalizeRegistration?.({
           status: 'registered',
           permission: 'granted',
           token: token.value,
         });
-      });
-
+      }),
       PushNotifications.addListener('registrationError', (error) => {
         console.error('Push registration error:', error);
         pushInitialized = false;
         activeUserId = null;
-        finalize({
+        finalizeRegistration?.({
           status: 'registration_failed',
           permission: 'granted',
           error: JSON.stringify(error),
         });
-      });
-
+      }),
       PushNotifications.addListener('pushNotificationReceived', (notification) => {
         console.log('Push received in foreground:', notification);
-      });
-
+      }),
       PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
         console.log('Push action:', action);
         const data = action.notification.data;
@@ -131,8 +131,8 @@ async function registerForPush(userId: string): Promise<PushInitResult> {
         } else if (data?.route) {
           window.location.href = data.route;
         }
-      });
-    });
+      }),
+    ]);
 
     let permission = await getPushPermissionState();
     if (permission === 'prompt' || permission === 'prompt-with-rationale') {
