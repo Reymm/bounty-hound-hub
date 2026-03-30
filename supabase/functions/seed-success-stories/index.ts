@@ -266,7 +266,7 @@ serve(async (req) => {
     logStep("Admin verified", { userId: userData.user.id });
 
     const body = await req.json();
-    const { action = 'create_stories', site_url = 'https://bountybay.lovable.app' } = body;
+    const { action = 'create_stories', site_url = 'https://bountybay.co' } = body;
 
     if (action === 'clear_stories') {
       // Get all seeded user IDs
