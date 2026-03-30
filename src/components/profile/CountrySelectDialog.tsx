@@ -179,7 +179,7 @@ export function CountrySelectDialog({
                       We've pre-filled this for you, but if you see it, just enter:
                     </p>
                     <code className="block bg-amber-100 px-3 py-2 rounded text-amber-900 font-mono text-sm select-all">
-                      bountybay.lovable.app
+                      bountybay.co
                     </code>
                     <p className="text-xs text-amber-600">
                       This is normal for payment platforms — it's how Stripe verifies you're a real person earning income.
