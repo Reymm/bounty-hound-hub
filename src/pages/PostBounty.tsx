@@ -61,6 +61,7 @@ function PostBountyForm() {
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>([MANDATORY_VERIFICATION_REQUIREMENT]);
   const [currentRequirement, setCurrentRequirement] = useState('');
+  const [includeVerifiedLink, setIncludeVerifiedLink] = useState(true);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
