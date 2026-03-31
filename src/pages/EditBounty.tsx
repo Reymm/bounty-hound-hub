@@ -457,25 +457,34 @@ export default function EditBounty() {
               <p className="text-sm text-muted-foreground">
                 What proof do you need from hunters?
               </p>
-              {verificationRequirements.map((req, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={req}
-                    onChange={(e) => updateVerificationRequirement(index, e.target.value)}
-                    placeholder="e.g., Photo of item with timestamp"
-                  />
-                  {verificationRequirements.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeVerificationRequirement(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+              {verificationRequirements.map((req, index) => {
+                const isMandatory = req === MANDATORY_VERIFICATION_REQUIREMENT;
+                return (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={req}
+                      onChange={(e) => updateVerificationRequirement(index, e.target.value)}
+                      placeholder="e.g., Photo of item with timestamp"
+                      disabled={isMandatory}
+                      className={isMandatory ? 'bg-primary/5 border-primary/30' : ''}
+                    />
+                    {isMandatory ? (
+                      <div className="flex items-center justify-center w-10 h-10 text-primary">
+                        <Lock className="h-4 w-4" />
+                      </div>
+                    ) : verificationRequirements.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeVerificationRequirement(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
               {verificationRequirements.length < 5 && (
                 <Button
                   type="button"
