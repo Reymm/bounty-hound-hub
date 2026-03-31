@@ -265,6 +265,11 @@ export default function Profile() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Verification Status */}
+          <VerificationStatusCard
+            identityVerified={profile.identityVerified || false}
+            payoutsEnabled={profile.stripeConnectPayoutsEnabled || false}
+          />
           {/* Profile Summary */}
           <Card>
             <CardHeader>

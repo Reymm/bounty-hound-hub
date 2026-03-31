@@ -317,6 +317,12 @@ export function TopNav({ onSearch }: TopNavProps) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/verification">
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        Verification
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/support">
                         <MessageCircle className="mr-2 h-4 w-4" />
                         Support
