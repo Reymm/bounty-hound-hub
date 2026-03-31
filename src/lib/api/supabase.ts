@@ -180,8 +180,11 @@ export const supabaseApi = {
 
       if (error) throw error;
 
-      // Fetch profile data for all bounties using secure function
-      const profileMap = await this._fetchProfileMap(data);
+      // Fetch related metadata for all bounties in parallel
+      const [profileMap, claimsCountMap] = await Promise.all([
+        this._fetchProfileMap(data),
+        this._fetchClaimsCountMap(data),
+      ]);
 
       return {
         data: data?.map(bounty => {
@@ -189,7 +192,12 @@ export const supabaseApi = {
           const sanitizedBounty = { ...bounty };
           delete sanitizedBounty.shipping_details;
           const profile = profileMap.get(bounty.poster_id);
-          return transformBountyRow(sanitizedBounty, profile, 0, profile?.isOfficial);
+          return transformBountyRow(
+            sanitizedBounty,
+            profile,
+            claimsCountMap.get(bounty.id) || 0,
+            profile?.isOfficial
+          );
         }) || [],
         total: count || 0,
         page,
@@ -225,13 +233,21 @@ export const supabaseApi = {
       return this._getBountiesIlikeFallback(page, limit, filters);
     }
 
-    // Fetch profile data
-    const profileMap = await this._fetchProfileMap(data);
+    // Fetch related metadata in parallel
+    const [profileMap, claimsCountMap] = await Promise.all([
+      this._fetchProfileMap(data),
+      this._fetchClaimsCountMap(data),
+    ]);
 
     return {
       data: data.map((row: any) => {
         const profile = profileMap.get(row.poster_id);
-        return transformBountyRow(row as BountyRow, profile, 0, profile?.isOfficial);
+        return transformBountyRow(
+          row as BountyRow,
+          profile,
+          claimsCountMap.get(row.id) || 0,
+          profile?.isOfficial
+        );
       }),
       total: data.length + offset, // Approximate; FTS doesn't give exact count easily
       page,
@@ -265,14 +281,22 @@ export const supabaseApi = {
     const { data, error } = await query.range(start, start + limit - 1);
     if (error) throw error;
 
-    const profileMap = await this._fetchProfileMap(data);
+    const [profileMap, claimsCountMap] = await Promise.all([
+      this._fetchProfileMap(data),
+      this._fetchClaimsCountMap(data),
+    ]);
 
     return {
       data: data?.map(bounty => {
         const sanitizedBounty = { ...bounty };
         delete sanitizedBounty.shipping_details;
         const profile = profileMap.get(bounty.poster_id);
-        return transformBountyRow(sanitizedBounty, profile, 0, profile?.isOfficial);
+        return transformBountyRow(
+          sanitizedBounty,
+          profile,
+          claimsCountMap.get(bounty.id) || 0,
+          profile?.isOfficial
+        );
       }) || [],
       total: data?.length || 0,
       page,
@@ -318,6 +342,35 @@ export const supabaseApi = {
     }
 
     return profileMap;
+  },
+
+  /** Shared helper to fetch claim counts for a list of bounty rows */
+  async _fetchClaimsCountMap(data: any[] | null | undefined): Promise<Map<string, number>> {
+    const bountyIds = data?.map(b => b.id).filter(Boolean) || [];
+    const uniqueBountyIds = [...new Set(bountyIds)];
+
+    if (uniqueBountyIds.length === 0) {
+      return new Map<string, number>();
+    }
+
+    const claimCounts = await Promise.all(
+      uniqueBountyIds.map(async (bountyId) => {
+        try {
+          const { data: count, error } = await supabase.rpc('get_bounty_claims_count', {
+            p_bounty_id: bountyId,
+          });
+
+          if (error) throw error;
+
+          return [bountyId, count || 0] as const;
+        } catch (error) {
+          console.warn(`Failed to fetch claim count for bounty ${bountyId}:`, error);
+          return [bountyId, 0] as const;
+        }
+      })
+    );
+
+    return new Map(claimCounts);
   },
 
   async getBounty(id: string): Promise<Bounty | null> {
@@ -407,6 +460,7 @@ export const supabaseApi = {
           .filter(Boolean)
           .map(p => [p.id, p])
       );
+      const claimsCountMap = await this._fetchClaimsCountMap(data);
 
       // Maintain order of IDs
       const bountyMap = new Map(data?.map(b => [b.id, b]) || []);
@@ -416,7 +470,11 @@ export const supabaseApi = {
         .map(bounty => {
           const sanitizedBounty = { ...bounty };
           delete sanitizedBounty.shipping_details;
-          return transformBountyRow(sanitizedBounty, profileMap.get(bounty.poster_id));
+          return transformBountyRow(
+            sanitizedBounty,
+            profileMap.get(bounty.poster_id),
+            claimsCountMap.get(bounty.id) || 0
+          );
         });
     } catch (error) {
       console.error('Error fetching bounties by IDs:', error);
@@ -1293,6 +1351,7 @@ export const supabaseApi = {
 
       const bountyById = new Map<string, any>();
       (bounties || []).forEach((b: any) => bountyById.set(b.id, b));
+      const claimsCountMap = await this._fetchClaimsCountMap(bounties || []);
 
       // Transform the data
       const result = await Promise.all(
@@ -1308,7 +1367,11 @@ export const supabaseApi = {
           const profile = posterProfile?.[0] || null;
 
           // Transform bounty
-          const bounty = transformBountyRow(bountyData, profile);
+          const bounty = transformBountyRow(
+            bountyData,
+            profile,
+            claimsCountMap.get(bountyData.id) || 0
+          );
 
           // Transform claim
           const claim: Claim = {
