@@ -1285,7 +1285,7 @@ function PostBountyForm() {
                 <p className="text-sm text-destructive">{errors.verificationRequirements.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Add up to 10 verification requirements
+                Add up to 10 verification requirements. "Verified link to listing or source" is always required.
               </p>
             </div>
           </CardContent>
