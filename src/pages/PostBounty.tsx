@@ -95,7 +95,25 @@ function PostBountyForm() {
   const watchedTargetMin = watch('targetPriceMin');
   const watchedTargetMax = watch('targetPriceMax');
   const selectedCategory = watch('category');
-  
+
+  // Auto-manage mandatory "Verified link" requirement based on bounty type
+  useEffect(() => {
+    if (bountyType === 'lead-only') {
+      // Add mandatory requirement if not present
+      if (!verificationRequirements.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+        const updated = [MANDATORY_VERIFICATION_REQUIREMENT, ...verificationRequirements];
+        setVerificationRequirements(updated);
+        setValue('verificationRequirements', updated);
+      }
+    } else {
+      // Remove mandatory requirement for find-and-ship
+      if (verificationRequirements.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+        const updated = verificationRequirements.filter(r => r !== MANDATORY_VERIFICATION_REQUIREMENT);
+        setVerificationRequirements(updated);
+        setValue('verificationRequirements', updated);
+      }
+    }
+  }, [bountyType]);
 
 
   // Track if draft has already been loaded (prevents overwrites)
