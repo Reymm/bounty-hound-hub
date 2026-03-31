@@ -11,3 +11,6 @@ export const MAXIMUM_BOUNTY_AMOUNT = 10000;
 // MVP: No cancellation fees
 // Future: May add fees for cancellations after certain conditions
 export const CANCELLATION_FEE_PERCENT = 0;
+
+// Mandatory verification requirement - always included on every bounty
+export const MANDATORY_VERIFICATION_REQUIREMENT = 'Verified link to listing or source';

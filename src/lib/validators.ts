@@ -1,6 +1,7 @@
 // Form validation schemas using Zod
 import { z } from 'zod';
 import { BountyCategory, ClaimType } from './types';
+import { MANDATORY_VERIFICATION_REQUIREMENT } from './constants';
 
 // Post Bounty form validation
 export const postBountySchema = z.object({
