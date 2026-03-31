@@ -84,7 +84,7 @@ function PostBountyForm() {
     resolver: zodResolver(postBountySchema),
     defaultValues: {
       tags: [],
-      verificationRequirements: [],
+      verificationRequirements: [MANDATORY_VERIFICATION_REQUIREMENT],
       deadline: undefined,
       category: undefined // Explicitly set to undefined
     }
