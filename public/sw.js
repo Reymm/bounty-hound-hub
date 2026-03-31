@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bountybay-v2';
+const CACHE_NAME = 'bountybay-v3';
 const STATIC_ASSETS = [
   '/',
   '/favicon-32x32.png?v=10',

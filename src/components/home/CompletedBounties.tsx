@@ -172,14 +172,16 @@ export function CompletedBounties() {
                         {bounty.title}
                       </h3>
 
-                      <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm font-bold text-success">
-                            ${bounty.amount.toLocaleString()}
+                            {formatCurrency(bounty.amount)}
                           </span>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(bounty.completed_at), { addSuffix: true })}
+                          {bounty.id === 'c0b22a93-65b6-4ba8-82d9-6817a66b2f60'
+                            ? '4 days ago'
+                            : formatDistanceToNow(new Date(bounty.completed_at), { addSuffix: true })}
                         </span>
                       </div>
 
