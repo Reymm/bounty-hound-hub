@@ -1254,8 +1254,8 @@ function PostBountyForm() {
               )}
             </div>
 
-            {/* Fee Breakdown - only show when bounty amount is a valid positive number */}
-            {typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && (
+            {/* Fee Breakdown - only show when bounty amount is valid and no promo applied */}
+            {!promoApplied && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && (
               <div className="bg-background border border-border p-4 rounded-lg space-y-3">
                 <h4 className="font-medium text-sm sm:text-base">Payment Breakdown <span className="text-xs font-normal text-muted-foreground">(all amounts in USD)</span></h4>
                 <div className="space-y-2 text-sm">
