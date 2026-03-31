@@ -101,7 +101,12 @@ export default function EditBounty() {
       setBounty(data);
       setUploadedImages(data.images || []);
       setTags(data.tags || []);
-      setVerificationRequirements(data.verification_requirements || ['']);
+      const existingReqs = data.verification_requirements || [''];
+      // Ensure mandatory requirement is always present
+      if (!existingReqs.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+        existingReqs.unshift(MANDATORY_VERIFICATION_REQUIREMENT);
+      }
+      setVerificationRequirements(existingReqs);
 
       // Set form values
       reset({
