@@ -579,6 +579,50 @@ export default function BountyDetail() {
                   </div>
                 </CardContent>
               </Card>
+
+              {bounty.id === 'c0b22a93-65b6-4ba8-82d9-6817a66b2f60' && (
+                <>
+                  {/* Original Post */}
+                  <Card className="border-l-4 border-l-primary/50 mt-4">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Original Post</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <blockquote className="text-muted-foreground italic leading-relaxed space-y-3 border-l-2 border-border pl-4">
+                        <p>Hi</p>
+                        <p>Does anyone please have one of these that they no longer need? My severely disabled daughter, Rachel, is absolutely obsessed with this. It vibrates and sings happy birthday. Years ago she had a clown that sang the same song and we were lucky enough to find this toy from the same company.</p>
+                        <p>I've tried buying other toys that sing happy birthday but she won't touch them. Predictably. We have one working one at present but she's very hard on her toys as she constantly presses the buttons and is a thrower too.</p>
+                        <p>More than happy to pay. I would be most grateful.</p>
+                        <p>Thank you</p>
+                      </blockquote>
+                      <a
+                        href="https://www.facebook.com/share/p/1GQHWjZXke/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-4"
+                      >
+                        <Link2 className="h-4 w-4" />
+                        View original Facebook post
+                      </a>
+                    </CardContent>
+                  </Card>
+
+                  {/* Poster's Feedback */}
+                  <Card className="border-l-4 border-l-success mt-4 bg-success/5">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <MessageCircle className="h-5 w-5 text-success" />
+                        Poster's Feedback
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <blockquote className="text-foreground italic leading-relaxed">
+                        "Over 20 years ago, Rachel and I found a toy at Woolworths that sang Happy Birthday — she named it 'Clowny.' Rachel is non-verbal and severely disabled, but she absolutely loves birthdays and Christmas. She plays with her toys constantly and they wear out. Since Woolworths closed, replacements became impossible to find. She's going to be absolutely thrilled to have a new Clowny!"
+                      </blockquote>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="requirements">
