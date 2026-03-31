@@ -1,0 +1,1 @@
+UPDATE "Bounties" SET amount = 30 WHERE id = 'c0b22a93-65b6-4ba8-82d9-6817a66b2f60';
