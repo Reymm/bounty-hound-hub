@@ -91,7 +91,7 @@ export function CompletedBounties() {
               <CheckCircle className="h-6 w-6 text-success" />
             </div>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
-              Items Found Through BountyBay
+              Recent Success Stories
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Loading...
