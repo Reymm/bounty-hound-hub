@@ -173,7 +173,6 @@ export function CompletedBounties() {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <DollarSign className="h-4 w-4 text-success" />
                           <span className="text-sm font-bold text-success">
                             ${bounty.amount.toLocaleString()}
                           </span>
