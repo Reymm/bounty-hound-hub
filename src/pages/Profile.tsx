@@ -19,6 +19,7 @@ import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { ActivityHistory } from '@/components/profile/ActivityHistory';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { RatingSummary } from '@/components/ratings/RatingSummary';
+import { VerificationStatusCard } from '@/components/profile/VerificationStatusCard';
 import { ReferralCard } from '@/components/referral/ReferralCard';
 import { profileUpdateSchema, ProfileUpdateFormData } from '@/lib/validators';
 import { Profile as ProfileType } from '@/lib/types';
@@ -264,6 +265,11 @@ export default function Profile() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Verification Status */}
+          <VerificationStatusCard
+            identityVerified={profile.identityVerified || false}
+            payoutsEnabled={profile.stripeConnectPayoutsEnabled || false}
+          />
           {/* Profile Summary */}
           <Card>
             <CardHeader>
