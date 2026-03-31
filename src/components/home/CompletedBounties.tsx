@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { formatCurrency } from '@/lib/utils';
 
 interface CompletedBounty {
   id: string;
