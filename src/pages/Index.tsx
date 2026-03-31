@@ -273,17 +273,52 @@ const Index = () => {
             />
           </div>
 
+          {/* First 6 bounties */}
           <BountyGrid 
-            bounties={hasActiveFilters ? bounties : bounties.slice(0, 12)}
+            bounties={hasActiveFilters ? bounties : bounties.slice(0, 6)}
             loading={loading && page === 1}
             emptyMessage="No bounties match your criteria"
             emptyDescription="Try adjusting your filters or check back later for new bounties."
           />
+        </div>
+      </section>
 
-          {/* View All / Load More */}
-          {hasActiveFilters ? (
-            // When filtering, show load more pagination
-            hasMore && bounties.length > 0 && (
+      {/* Success Stories Section - After first 6 bounties */}
+      {!hasActiveFilters && bounties.length > 0 && (
+        <CompletedBounties />
+      )}
+
+      {/* Remaining Bounties */}
+      {!hasActiveFilters && bounties.length > 6 && (
+        <section className="py-8 lg:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <BountyGrid 
+              bounties={bounties.slice(6, 12)}
+              loading={false}
+              emptyMessage=""
+              emptyDescription=""
+            />
+
+            {bounties.length > 12 && (
+              <div className="mt-8 text-center">
+                <Button 
+                  asChild
+                  variant="outline"
+                  size="lg"
+                >
+                  <Link to="/bounties">View All Bounties →</Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Load more when filtering */}
+      {hasActiveFilters && (
+        <section className="pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {hasMore && bounties.length > 0 && (
               <div className="mt-8 text-center">
                 <Button 
                   onClick={() => loadBounties(false)}
@@ -294,27 +329,9 @@ const Index = () => {
                   {loading ? 'Loading...' : 'Load More Bounties'}
                 </Button>
               </div>
-            )
-          ) : (
-            // On homepage default view, show "View All" button
-            bounties.length > 12 && (
-              <div className="mt-8 text-center">
-                <Button 
-                  asChild
-                  variant="outline"
-                  size="lg"
-                >
-                  <Link to="/bounties">View All Bounties →</Link>
-                </Button>
-              </div>
-            )
-          )}
-        </div>
-      </section>
-
-      {/* Success Stories Section - Hidden when filters active */}
-      {!hasActiveFilters && (
-        <CompletedBounties />
+            )}
+          </div>
+        </section>
       )}
 
       {/* FAQ Section for AEO */}
