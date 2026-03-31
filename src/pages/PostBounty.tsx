@@ -341,6 +341,39 @@ function PostBountyForm() {
     }
   };
 
+  const validatePromoCode = async (code: string) => {
+    if (!code.trim()) return;
+    setPromoValidating(true);
+    setPromoError('');
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-promo-code', {
+        body: { code: code.trim() }
+      });
+      if (error) throw error;
+      if (data.valid) {
+        setPromoApplied({ maxAmount: data.max_amount, remainingUses: data.remaining_uses });
+        setValue('bountyAmount', data.max_amount);
+        setPlatformFee(0);
+        setTotalCharge(0);
+        toast({ title: "Promo code applied!", description: `Your $${data.max_amount} bounty is sponsored — no payment needed.` });
+      } else {
+        setPromoError(data.error || 'Invalid promo code');
+        setPromoApplied(null);
+      }
+    } catch (err: any) {
+      setPromoError('Failed to validate code');
+      setPromoApplied(null);
+    } finally {
+      setPromoValidating(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode('');
+    setPromoApplied(null);
+    setPromoError('');
+  };
+
   const onDetailsSubmit = async (data: PostBountyFormData) => {
     try {
       setIsSubmitting(true);
