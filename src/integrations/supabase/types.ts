@@ -899,6 +899,51 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_amount: number
+          max_uses: number
+          sponsor_id: string
+          stripe_customer_id: string
+          stripe_payment_method_id: string
+          times_used: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          max_uses?: number
+          sponsor_id: string
+          stripe_customer_id: string
+          stripe_payment_method_id: string
+          times_used?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          max_uses?: number
+          sponsor_id?: string
+          stripe_customer_id?: string
+          stripe_payment_method_id?: string
+          times_used?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           converted_at: string | null
