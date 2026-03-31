@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile, deleteFile } from '@/lib/storage';
 import { BountyCategory, CATEGORY_STRUCTURE } from '@/lib/types';
+import { MANDATORY_VERIFICATION_REQUIREMENT } from '@/lib/constants';
 
 interface EditBountyFormData {
   title: string;

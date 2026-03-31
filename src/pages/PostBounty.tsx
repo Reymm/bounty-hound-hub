@@ -1234,20 +1234,26 @@ function PostBountyForm() {
               {/* Show added requirements as badges */}
               {verificationRequirements.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {verificationRequirements.map((req) => (
-                    <Badge key={req} variant="secondary" className="text-sm py-1 px-3">
-                      {req}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto p-0 ml-2 hover:bg-transparent"
-                        onClick={() => removeVerificationRequirement(req)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
+                  {verificationRequirements.map((req) => {
+                    const isMandatory = req === MANDATORY_VERIFICATION_REQUIREMENT;
+                    return (
+                      <Badge key={req} variant="secondary" className={`text-sm py-1 px-3 ${isMandatory ? 'bg-primary/10 border border-primary/30' : ''}`}>
+                        {isMandatory && <Lock className="h-3 w-3 mr-1.5 text-primary" />}
+                        {req}
+                        {!isMandatory && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 ml-2 hover:bg-transparent"
+                            onClick={() => removeVerificationRequirement(req)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </Badge>
+                    );
+                  })}
                 </div>
               )}
 
