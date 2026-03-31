@@ -56,6 +56,58 @@ serve(async (req) => {
 
     // Parse and validate input
     const rawBody = await req.json();
+    
+    // Check for promo code - if valid, skip payment setup entirely
+    if (rawBody.promo_code) {
+      const promoCode = String(rawBody.promo_code).toUpperCase().trim();
+      logStep("Promo code provided, checking validity", { code: promoCode });
+      
+      const { data: promoData, error: promoError } = await supabaseClient
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCode)
+        .eq('is_active', true)
+        .single();
+      
+      if (promoError || !promoData) {
+        return new Response(JSON.stringify({ error: 'Invalid promo code' }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      
+      if (promoData.times_used >= promoData.max_uses) {
+        return new Response(JSON.stringify({ error: 'This promo code has been fully used' }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      
+      if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
+        return new Response(JSON.stringify({ error: 'This promo code has expired' }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      
+      logStep("Promo code valid, skipping payment setup", { 
+        code: promoCode, 
+        maxAmount: promoData.max_amount,
+        remainingUses: promoData.max_uses - promoData.times_used
+      });
+      
+      return new Response(JSON.stringify({
+        promo_sponsored: true,
+        promo_code: promoCode,
+        bounty_amount: promoData.max_amount,
+        stripe_fee: 0,
+        total_charge: 0,
+        hunter_fee: 0,
+        payment_mode: 'sponsored',
+        status: 'promo_sponsored'
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+    
     const validation = escrowPaymentSchema.safeParse(rawBody);
     
     if (!validation.success) {
