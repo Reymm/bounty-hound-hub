@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, Upload, X, AlertCircle, CreditCard, Shield, Package, Link2 } from 'lucide-react';
+import { Calendar, DollarSign, Upload, X, AlertCircle, CreditCard, Shield, Package, Link2, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
