@@ -1,0 +1,2 @@
+INSERT INTO public.promo_codes (code, sponsor_id, stripe_payment_method_id, stripe_customer_id, max_amount, max_uses, is_active)
+VALUES ('HELPFIND15', '8f050746-36d4-4ac7-99d8-a2419e09cc55', 'pm_1TH7P6HQ9JaJlRZTQAkXkV4M', 'cus_TKEVcuu7VZaSmO', 15, 20, true);
