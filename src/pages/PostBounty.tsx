@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, Upload, X, AlertCircle, CreditCard, Shield, Package, Link2, Lock } from 'lucide-react';
+import { Calendar, DollarSign, Upload, X, AlertCircle, CreditCard, Shield, Package, Link2, Lock, Gift, Check } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -66,6 +66,13 @@ function PostBountyForm() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
   const [bountyType, setBountyType] = useState<'lead-only' | 'find-and-ship'>('lead-only');
+  
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('');
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoApplied, setPromoApplied] = useState<{ maxAmount: number; remainingUses: number } | null>(null);
+  const [promoError, setPromoError] = useState('');
+  const [showPromoInput, setShowPromoInput] = useState(false);
   
 
   // Derive requiresShipping and hunterPurchasesItem from bountyType
@@ -334,6 +341,39 @@ function PostBountyForm() {
     }
   };
 
+  const validatePromoCode = async (code: string) => {
+    if (!code.trim()) return;
+    setPromoValidating(true);
+    setPromoError('');
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-promo-code', {
+        body: { code: code.trim() }
+      });
+      if (error) throw error;
+      if (data.valid) {
+        setPromoApplied({ maxAmount: data.max_amount, remainingUses: data.remaining_uses });
+        setValue('bountyAmount', data.max_amount);
+        setPlatformFee(0);
+        setTotalCharge(0);
+        toast({ title: "Promo code applied!", description: `Your $${data.max_amount} bounty is sponsored — no payment needed.` });
+      } else {
+        setPromoError(data.error || 'Invalid promo code');
+        setPromoApplied(null);
+      }
+    } catch (err: any) {
+      setPromoError('Failed to validate code');
+      setPromoApplied(null);
+    } finally {
+      setPromoValidating(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode('');
+    setPromoApplied(null);
+    setPromoError('');
+  };
+
   const onDetailsSubmit = async (data: PostBountyFormData) => {
     try {
       setIsSubmitting(true);
@@ -400,6 +440,59 @@ function PostBountyForm() {
         });
         setIsSubmitting(false);
         return;
+      }
+      
+      // PROMO CODE FLOW: skip payment step entirely
+      if (promoApplied) {
+        setCurrentStep('processing');
+        setTimeout(() => window.scrollTo(0, 0), 50);
+        
+        try {
+          const { data: bountyData, error: bountyError } = await supabase.functions.invoke('confirm-escrow-and-create-bounty', {
+            body: {
+              promo_code: promoCode,
+              bounty_data: {
+                title: data.title,
+                description: data.description,
+                category: data.category,
+                subcategory: data.subcategory,
+                location: data.location,
+                deadline: hasDeadline ? data.deadline : null,
+                targetPriceMin: data.targetPriceMin,
+                targetPriceMax: data.targetPriceMax,
+                tags,
+                verificationRequirements: verificationRequirements.filter(req => req.trim()),
+                images: uploadedImages,
+                requires_shipping: requiresShipping,
+                hunter_purchases_item: hunterPurchasesItem
+              }
+            }
+          });
+
+          if (bountyError) {
+            let errorMsg = 'Failed to create bounty.';
+            try {
+              const parsed = typeof bountyError === 'string' ? JSON.parse(bountyError) : bountyError;
+              if (parsed?.error) errorMsg = parsed.error;
+            } catch { if (typeof bountyError.message === 'string') errorMsg = bountyError.message; }
+            throw new Error(errorMsg);
+          }
+
+          toast({
+            title: "Bounty posted — sponsored!",
+            description: "Your bounty is live. The sponsor covers the cost when you accept a submission.",
+          });
+
+          sessionStorage.removeItem('bounty_post_in_progress');
+          sessionStorage.removeItem('bounty_draft');
+          navigate(`/b/${bountyData.bounty_id}`);
+          return;
+        } catch (error: any) {
+          toast({ title: "Error", description: error.message || "Please try again.", variant: "destructive" });
+          setCurrentStep('details');
+          setIsSubmitting(false);
+          return;
+        }
       }
       
       // If we already have a client secret (user went back to edit), 
@@ -1064,6 +1157,66 @@ function PostBountyForm() {
               </AlertDescription>
             </Alert>
 
+            {/* Promo Code Section */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setShowPromoInput(!showPromoInput)}
+                className="text-sm text-primary hover:underline flex items-center gap-1"
+              >
+                <Gift className="h-3.5 w-3.5" />
+                {showPromoInput ? 'Hide promo code' : 'Have a promo code?'}
+              </button>
+              
+              {showPromoInput && (
+                <div className="space-y-2">
+                  {promoApplied ? (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                      <Check className="h-4 w-4 text-emerald-600" />
+                      <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                        Sponsored — your ${promoApplied.maxAmount} bounty is covered!
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removePromoCode}
+                        className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter promo code"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        className="uppercase tracking-wider font-mono"
+                        maxLength={30}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            validatePromoCode(promoCode);
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => validatePromoCode(promoCode)}
+                        disabled={!promoCode.trim() || promoValidating}
+                        variant="outline"
+                        className="shrink-0"
+                      >
+                        {promoValidating ? 'Checking...' : 'Apply'}
+                      </Button>
+                    </div>
+                  )}
+                  {promoError && (
+                    <p className="text-sm text-destructive">{promoError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="bountyAmount">
                 Bounty Reward (Finder's Fee) <span className="text-destructive">*</span>
@@ -1077,7 +1230,8 @@ function PostBountyForm() {
                   max="10000"
                   step="1"
                   placeholder="500"
-                  className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 10) ? 'border-destructive' : ''}`}
+                  disabled={!!promoApplied}
+                  className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 10) ? 'border-destructive' : ''} ${promoApplied ? 'opacity-60' : ''}`}
                   {...register('bountyAmount', { 
                     valueAsNumber: true
                   })}
@@ -1089,13 +1243,19 @@ function PostBountyForm() {
               {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && watchedBountyAmount < 10 && (
                 <p className="text-sm text-destructive">Minimum bounty must be $10 USD</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                💰 This is your reward to the hunter for <strong>finding</strong> the item ($10 - $10,000 USD)
-              </p>
+              {promoApplied ? (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                  🎁 This bounty is sponsored — amount locked at ${promoApplied.maxAmount}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1">
+                  💰 This is your reward to the hunter for <strong>finding</strong> the item ($10 - $10,000 USD)
+                </p>
+              )}
             </div>
 
-            {/* Fee Breakdown - only show when bounty amount is a valid positive number */}
-            {typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && (
+            {/* Fee Breakdown - only show when bounty amount is valid and no promo applied */}
+            {!promoApplied && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && (
               <div className="bg-background border border-border p-4 rounded-lg space-y-3">
                 <h4 className="font-medium text-sm sm:text-base">Payment Breakdown <span className="text-xs font-normal text-muted-foreground">(all amounts in USD)</span></h4>
                 <div className="space-y-2 text-sm">
@@ -1400,7 +1560,7 @@ function PostBountyForm() {
             }
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
-            {isSubmitting ? 'Creating Payment...' : `Continue to Payment${typeof totalCharge === 'number' && !isNaN(totalCharge) && totalCharge > 0 ? ` ($${totalCharge.toFixed(2)})` : typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 ? ` ($${watchedBountyAmount})` : ''}`}
+            {isSubmitting ? (promoApplied ? 'Creating Bounty...' : 'Creating Payment...') : promoApplied ? '🎁 Post Sponsored Bounty' : `Continue to Payment${typeof totalCharge === 'number' && !isNaN(totalCharge) && totalCharge > 0 ? ` ($${totalCharge.toFixed(2)})` : typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 ? ` ($${watchedBountyAmount})` : ''}`}
           </Button>
         </div>
       </form>

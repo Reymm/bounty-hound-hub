@@ -42,9 +42,125 @@ serve(async (req) => {
     const requestBody = await req.json();
     logStep("Raw request received", { body: requestBody });
     
-    // Now we only support SetupIntent flow (card-save only, no auth holds)
-    const { setup_intent_id, bounty_data } = requestBody;
+    const { setup_intent_id, bounty_data, promo_code } = requestBody;
     
+    // PROMO CODE FLOW: sponsor pays instead of poster
+    if (promo_code) {
+      const promoCodeStr = String(promo_code).toUpperCase().trim();
+      logStep("Promo code flow", { code: promoCodeStr });
+      
+      if (!bounty_data) throw new Error("Bounty data is required");
+      
+      // Validate bounty data server-side
+      const verificationRequirements = bounty_data.verificationRequirements || [];
+      const validRequirements = verificationRequirements.filter((r: string) => typeof r === 'string' && r.trim().length > 0);
+      if (validRequirements.length === 0) throw new Error("At least one verification requirement is required");
+      if (!bounty_data.title || bounty_data.title.trim().length < 10) throw new Error("Bounty title must be at least 10 characters");
+      if (!bounty_data.description || bounty_data.description.trim().length < 20) throw new Error("Bounty description must be at least 20 characters");
+      
+      // Get and validate promo code
+      const { data: promoData, error: promoError } = await supabaseClient
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCodeStr)
+        .eq('is_active', true)
+        .single();
+      
+      if (promoError || !promoData) throw new Error("Invalid promo code");
+      if (promoData.times_used >= promoData.max_uses) throw new Error("Promo code fully used");
+      if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) throw new Error("Promo code expired");
+      
+      const bountyAmount = Number(promoData.max_amount);
+      logStep("Promo validated", { amount: bountyAmount, sponsor: promoData.sponsor_id });
+      
+      // Calculate fees for the sponsor
+      const STRIPE_FEE_RATE = 0.037;
+      const STRIPE_FIXED_FEE = 0.30;
+      const totalCharge = Math.round(((bountyAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_FEE_RATE)) * 100) / 100;
+      const stripeFee = Math.round((totalCharge - bountyAmount) * 100) / 100;
+      const hunterFee = Math.round((2 + bountyAmount * 0.05) * 100) / 100;
+      
+      // Create escrow record linked to sponsor's payment method
+      const { data: escrowData, error: escrowInsertError } = await supabaseClient
+        .from('escrow_transactions')
+        .insert({
+          poster_id: promoData.sponsor_id, // Sponsor pays
+          stripe_setup_intent_id: `promo_${promoCodeStr}_${Date.now()}`,
+          stripe_payment_intent_id: `promo_${promoCodeStr}_${Date.now()}`,
+          stripe_payment_method_id: promoData.stripe_payment_method_id,
+          amount: bountyAmount,
+          total_charge_amount: totalCharge,
+          stripe_fee_amount: stripeFee,
+          platform_fee_amount: hunterFee,
+          currency: 'usd',
+          status: 'card_saved',
+          card_saved_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (escrowInsertError) {
+        logStep("Escrow insert error", { error: escrowInsertError });
+        throw new Error("Failed to create escrow record");
+      }
+      
+      // Create the bounty (poster_id is the actual user, not the sponsor)
+      const { data: bountyResult, error: bountyInsertError } = await supabaseClient
+        .from('Bounties')
+        .insert({
+          title: bounty_data.title,
+          description: bounty_data.description,
+          amount: bountyAmount,
+          poster_id: user.id, // The actual poster
+          status: 'open',
+          escrow_status: 'card_saved',
+          escrow_amount: bountyAmount,
+          images: bounty_data.images || [],
+          category: bounty_data.category,
+          subcategory: bounty_data.subcategory,
+          location: bounty_data.location,
+          deadline: bounty_data.deadline,
+          tags: bounty_data.tags || [],
+          verification_requirements: bounty_data.verificationRequirements || [],
+          target_price_min: bounty_data.targetPriceMin,
+          target_price_max: bounty_data.targetPriceMax,
+          requires_shipping: bounty_data.requires_shipping || false,
+          hunter_purchases_item: bounty_data.hunter_purchases_item || false,
+        })
+        .select()
+        .single();
+      
+      if (bountyInsertError) {
+        logStep("Bounty insert error", { error: bountyInsertError });
+        throw new Error("Failed to create bounty");
+      }
+      
+      // Link escrow to bounty
+      await supabaseClient
+        .from('escrow_transactions')
+        .update({ bounty_id: bountyResult.id, updated_at: new Date().toISOString() })
+        .eq('id', escrowData.id);
+      
+      // Increment promo code usage
+      await supabaseClient
+        .from('promo_codes')
+        .update({ times_used: promoData.times_used + 1, updated_at: new Date().toISOString() })
+        .eq('id', promoData.id);
+      
+      logStep("Promo bounty created", { bountyId: bountyResult.id, promoCode: promoCodeStr });
+      
+      return new Response(JSON.stringify({
+        bounty_id: bountyResult.id,
+        escrow_status: 'card_saved',
+        payment_mode: 'sponsored',
+        message: 'Bounty created with promo code! The sponsor covers the cost.'
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+    
+    // NORMAL FLOW: SetupIntent required
     if (!setup_intent_id || !bounty_data) {
       throw new Error("SetupIntent ID and bounty data are required");
     }
