@@ -442,6 +442,59 @@ function PostBountyForm() {
         return;
       }
       
+      // PROMO CODE FLOW: skip payment step entirely
+      if (promoApplied) {
+        setCurrentStep('processing');
+        setTimeout(() => window.scrollTo(0, 0), 50);
+        
+        try {
+          const { data: bountyData, error: bountyError } = await supabase.functions.invoke('confirm-escrow-and-create-bounty', {
+            body: {
+              promo_code: promoCode,
+              bounty_data: {
+                title: data.title,
+                description: data.description,
+                category: data.category,
+                subcategory: data.subcategory,
+                location: data.location,
+                deadline: hasDeadline ? data.deadline : null,
+                targetPriceMin: data.targetPriceMin,
+                targetPriceMax: data.targetPriceMax,
+                tags,
+                verificationRequirements: verificationRequirements.filter(req => req.trim()),
+                images: uploadedImages,
+                requires_shipping: requiresShipping,
+                hunter_purchases_item: hunterPurchasesItem
+              }
+            }
+          });
+
+          if (bountyError) {
+            let errorMsg = 'Failed to create bounty.';
+            try {
+              const parsed = typeof bountyError === 'string' ? JSON.parse(bountyError) : bountyError;
+              if (parsed?.error) errorMsg = parsed.error;
+            } catch { if (typeof bountyError.message === 'string') errorMsg = bountyError.message; }
+            throw new Error(errorMsg);
+          }
+
+          toast({
+            title: "Bounty posted — sponsored!",
+            description: "Your bounty is live. The sponsor covers the cost when you accept a submission.",
+          });
+
+          sessionStorage.removeItem('bounty_post_in_progress');
+          sessionStorage.removeItem('bounty_draft');
+          navigate(`/b/${bountyData.bounty_id}`);
+          return;
+        } catch (error: any) {
+          toast({ title: "Error", description: error.message || "Please try again.", variant: "destructive" });
+          setCurrentStep('details');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
       // If we already have a client secret (user went back to edit), 
       // just go back to payment without creating a new one
       if (clientSecret && intentId) {
