@@ -59,7 +59,7 @@ function PostBountyForm() {
   const [paymentMode, setPaymentMode] = useState<'immediate' | 'deferred'>('deferred');
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
-  const [verificationRequirements, setVerificationRequirements] = useState<string[]>([]);
+  const [verificationRequirements, setVerificationRequirements] = useState<string[]>([MANDATORY_VERIFICATION_REQUIREMENT]);
   const [currentRequirement, setCurrentRequirement] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
