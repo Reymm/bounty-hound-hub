@@ -1560,7 +1560,7 @@ function PostBountyForm() {
             }
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
-            {isSubmitting ? 'Creating Payment...' : `Continue to Payment${typeof totalCharge === 'number' && !isNaN(totalCharge) && totalCharge > 0 ? ` ($${totalCharge.toFixed(2)})` : typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 ? ` ($${watchedBountyAmount})` : ''}`}
+            {isSubmitting ? (promoApplied ? 'Creating Bounty...' : 'Creating Payment...') : promoApplied ? '🎁 Post Sponsored Bounty' : `Continue to Payment${typeof totalCharge === 'number' && !isNaN(totalCharge) && totalCharge > 0 ? ` ($${totalCharge.toFixed(2)})` : typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 ? ` ($${watchedBountyAmount})` : ''}`}
           </Button>
         </div>
       </form>
