@@ -1,0 +1,1 @@
+UPDATE "Bounties" SET updated_at = now() - interval '4 days' WHERE id = 'c0b22a93-65b6-4ba8-82d9-6817a66b2f60';
