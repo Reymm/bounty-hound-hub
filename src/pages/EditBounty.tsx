@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { ArrowLeft, Loader2, X, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Plus, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile, deleteFile } from '@/lib/storage';
 import { BountyCategory, CATEGORY_STRUCTURE } from '@/lib/types';
+import { MANDATORY_VERIFICATION_REQUIREMENT } from '@/lib/constants';
 
 interface EditBountyFormData {
   title: string;
@@ -100,7 +101,12 @@ export default function EditBounty() {
       setBounty(data);
       setUploadedImages(data.images || []);
       setTags(data.tags || []);
-      setVerificationRequirements(data.verification_requirements || ['']);
+      const existingReqs = data.verification_requirements || [''];
+      // Ensure mandatory requirement is always present
+      if (!existingReqs.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+        existingReqs.unshift(MANDATORY_VERIFICATION_REQUIREMENT);
+      }
+      setVerificationRequirements(existingReqs);
 
       // Set form values
       reset({
@@ -165,6 +171,8 @@ export default function EditBounty() {
   };
 
   const removeVerificationRequirement = (index: number) => {
+    // Prevent removing the mandatory requirement
+    if (verificationRequirements[index] === MANDATORY_VERIFICATION_REQUIREMENT) return;
     setVerificationRequirements(verificationRequirements.filter((_, i) => i !== index));
   };
 
@@ -449,25 +457,34 @@ export default function EditBounty() {
               <p className="text-sm text-muted-foreground">
                 What proof do you need from hunters?
               </p>
-              {verificationRequirements.map((req, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={req}
-                    onChange={(e) => updateVerificationRequirement(index, e.target.value)}
-                    placeholder="e.g., Photo of item with timestamp"
-                  />
-                  {verificationRequirements.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeVerificationRequirement(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+              {verificationRequirements.map((req, index) => {
+                const isMandatory = req === MANDATORY_VERIFICATION_REQUIREMENT;
+                return (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={req}
+                      onChange={(e) => updateVerificationRequirement(index, e.target.value)}
+                      placeholder="e.g., Photo of item with timestamp"
+                      disabled={isMandatory}
+                      className={isMandatory ? 'bg-primary/5 border-primary/30' : ''}
+                    />
+                    {isMandatory ? (
+                      <div className="flex items-center justify-center w-10 h-10 text-primary">
+                        <Lock className="h-4 w-4" />
+                      </div>
+                    ) : verificationRequirements.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeVerificationRequirement(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
               {verificationRequirements.length < 5 && (
                 <Button
                   type="button"

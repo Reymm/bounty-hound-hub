@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, DollarSign, Upload, X, AlertCircle, CreditCard, Shield, Package, Link2 } from 'lucide-react';
+import { Calendar, DollarSign, Upload, X, AlertCircle, CreditCard, Shield, Package, Link2, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import { uploadFile, deleteFile } from '@/lib/storage';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { LocationPicker } from '@/components/ui/location-picker';
 import { useAuth } from '@/contexts/AuthContext';
+import { MANDATORY_VERIFICATION_REQUIREMENT } from '@/lib/constants';
 
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -58,7 +59,7 @@ function PostBountyForm() {
   const [paymentMode, setPaymentMode] = useState<'immediate' | 'deferred'>('deferred');
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
-  const [verificationRequirements, setVerificationRequirements] = useState<string[]>([]);
+  const [verificationRequirements, setVerificationRequirements] = useState<string[]>([MANDATORY_VERIFICATION_REQUIREMENT]);
   const [currentRequirement, setCurrentRequirement] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -83,7 +84,7 @@ function PostBountyForm() {
     resolver: zodResolver(postBountySchema),
     defaultValues: {
       tags: [],
-      verificationRequirements: [],
+      verificationRequirements: [MANDATORY_VERIFICATION_REQUIREMENT],
       deadline: undefined,
       category: undefined // Explicitly set to undefined
     }
@@ -118,7 +119,14 @@ function PostBountyForm() {
         });
         // Restore other state
         if (parsed.tags) setTags(parsed.tags);
-        if (parsed.verificationRequirements) setVerificationRequirements(parsed.verificationRequirements);
+        if (parsed.verificationRequirements) {
+          const restored = parsed.verificationRequirements as string[];
+          // Ensure mandatory requirement is always present
+          if (!restored.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+            restored.unshift(MANDATORY_VERIFICATION_REQUIREMENT);
+          }
+          setVerificationRequirements(restored);
+        }
         if (parsed.uploadedImages) setUploadedImages(parsed.uploadedImages);
         if (parsed.hasDeadline !== undefined) setHasDeadline(parsed.hasDeadline);
         
@@ -204,6 +212,8 @@ function PostBountyForm() {
   };
 
   const removeVerificationRequirement = (reqToRemove: string) => {
+    // Prevent removing the mandatory requirement
+    if (reqToRemove === MANDATORY_VERIFICATION_REQUIREMENT) return;
     const newRequirements = verificationRequirements.filter(req => req !== reqToRemove);
     setVerificationRequirements(newRequirements);
     setValue('verificationRequirements', newRequirements);
@@ -1224,20 +1234,26 @@ function PostBountyForm() {
               {/* Show added requirements as badges */}
               {verificationRequirements.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {verificationRequirements.map((req) => (
-                    <Badge key={req} variant="secondary" className="text-sm py-1 px-3">
-                      {req}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto p-0 ml-2 hover:bg-transparent"
-                        onClick={() => removeVerificationRequirement(req)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
+                  {verificationRequirements.map((req) => {
+                    const isMandatory = req === MANDATORY_VERIFICATION_REQUIREMENT;
+                    return (
+                      <Badge key={req} variant="secondary" className={`text-sm py-1 px-3 ${isMandatory ? 'bg-primary/10 border border-primary/30' : ''}`}>
+                        {isMandatory && <Lock className="h-3 w-3 mr-1.5 text-primary" />}
+                        {req}
+                        {!isMandatory && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 ml-2 hover:bg-transparent"
+                            onClick={() => removeVerificationRequirement(req)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </Badge>
+                    );
+                  })}
                 </div>
               )}
 
@@ -1269,7 +1285,7 @@ function PostBountyForm() {
                 <p className="text-sm text-destructive">{errors.verificationRequirements.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Add up to 10 verification requirements
+                Add up to 10 verification requirements. "Verified link to listing or source" is always required.
               </p>
             </div>
           </CardContent>

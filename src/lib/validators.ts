@@ -1,6 +1,7 @@
 // Form validation schemas using Zod
 import { z } from 'zod';
 import { BountyCategory, ClaimType } from './types';
+import { MANDATORY_VERIFICATION_REQUIREMENT } from './constants';
 
 // Post Bounty form validation
 export const postBountySchema = z.object({
@@ -51,7 +52,8 @@ export const postBountySchema = z.object({
   verificationRequirements: z.array(z.string().min(1, 'Requirement cannot be empty'))
     .min(1, 'Add at least one verification requirement')
     .max(10, 'Maximum 10 verification requirements')
-    .refine(arr => arr.every(req => req.trim().length > 0), 'All requirements must be non-empty'),
+    .refine(arr => arr.every(req => req.trim().length > 0), 'All requirements must be non-empty')
+    .refine(arr => arr.includes(MANDATORY_VERIFICATION_REQUIREMENT), `"${MANDATORY_VERIFICATION_REQUIREMENT}" is required`),
     
   images: z.array(z.string().url())
     .max(5, 'Maximum 5 images allowed')
