@@ -67,6 +67,13 @@ function PostBountyForm() {
   const [hasDeadline, setHasDeadline] = useState(false);
   const [bountyType, setBountyType] = useState<'lead-only' | 'find-and-ship'>('lead-only');
   
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('');
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoApplied, setPromoApplied] = useState<{ maxAmount: number; remainingUses: number } | null>(null);
+  const [promoError, setPromoError] = useState('');
+  const [showPromoInput, setShowPromoInput] = useState(false);
+  
 
   // Derive requiresShipping and hunterPurchasesItem from bountyType
   // Find & Ship = shipping ON + hunter purchases ON (bundled together)
