@@ -171,6 +171,8 @@ export default function EditBounty() {
   };
 
   const removeVerificationRequirement = (index: number) => {
+    // Prevent removing the mandatory requirement
+    if (verificationRequirements[index] === MANDATORY_VERIFICATION_REQUIREMENT) return;
     setVerificationRequirements(verificationRequirements.filter((_, i) => i !== index));
   };
 
