@@ -61,6 +61,7 @@ function PostBountyForm() {
   const [currentTag, setCurrentTag] = useState('');
   const [verificationRequirements, setVerificationRequirements] = useState<string[]>([MANDATORY_VERIFICATION_REQUIREMENT]);
   const [currentRequirement, setCurrentRequirement] = useState('');
+  
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
@@ -94,7 +95,25 @@ function PostBountyForm() {
   const watchedTargetMin = watch('targetPriceMin');
   const watchedTargetMax = watch('targetPriceMax');
   const selectedCategory = watch('category');
-  
+
+  // Auto-manage mandatory "Verified link" requirement based on bounty type
+  useEffect(() => {
+    if (bountyType === 'lead-only') {
+      // Add mandatory requirement if not present
+      if (!verificationRequirements.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+        const updated = [MANDATORY_VERIFICATION_REQUIREMENT, ...verificationRequirements];
+        setVerificationRequirements(updated);
+        setValue('verificationRequirements', updated);
+      }
+    } else {
+      // Remove mandatory requirement for find-and-ship
+      if (verificationRequirements.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+        const updated = verificationRequirements.filter(r => r !== MANDATORY_VERIFICATION_REQUIREMENT);
+        setVerificationRequirements(updated);
+        setValue('verificationRequirements', updated);
+      }
+    }
+  }, [bountyType]);
 
 
   // Track if draft has already been loaded (prevents overwrites)
@@ -1230,30 +1249,37 @@ function PostBountyForm() {
               <p className="text-sm text-muted-foreground mb-3">
                 Specify what hunters need to provide as proof of finding your item
               </p>
+
+              {/* Mandatory checkbox for lead-only bounties */}
+              {bountyType === 'lead-only' && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 mb-3">
+                  <div className="h-4 w-4 rounded border border-primary bg-primary flex items-center justify-center">
+                    <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium">{MANDATORY_VERIFICATION_REQUIREMENT}</span>
+                  <Lock className="h-3 w-3 text-muted-foreground ml-auto" />
+                </div>
+              )}
               
-              {/* Show added requirements as badges */}
-              {verificationRequirements.length > 0 && (
+              {/* Show added requirements as badges (excluding mandatory) */}
+              {verificationRequirements.filter(r => r !== MANDATORY_VERIFICATION_REQUIREMENT).length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {verificationRequirements.map((req) => {
-                    const isMandatory = req === MANDATORY_VERIFICATION_REQUIREMENT;
-                    return (
-                      <Badge key={req} variant="secondary" className={`text-sm py-1 px-3 ${isMandatory ? 'bg-primary/10 border border-primary/30' : ''}`}>
-                        {isMandatory && <Lock className="h-3 w-3 mr-1.5 text-primary" />}
-                        {req}
-                        {!isMandatory && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 ml-2 hover:bg-transparent"
-                            onClick={() => removeVerificationRequirement(req)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </Badge>
-                    );
-                  })}
+                  {verificationRequirements.filter(r => r !== MANDATORY_VERIFICATION_REQUIREMENT).map((req) => (
+                    <Badge key={req} variant="secondary" className="text-sm py-1 px-3">
+                      {req}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto p-0 ml-2 hover:bg-transparent"
+                        onClick={() => removeVerificationRequirement(req)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
                 </div>
               )}
 
@@ -1285,7 +1311,10 @@ function PostBountyForm() {
                 <p className="text-sm text-destructive">{errors.verificationRequirements.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Add up to 10 verification requirements. "Verified link to listing or source" is always required.
+                {bountyType === 'lead-only' 
+                  ? 'A verified link is always required for Lead Only bounties. Add up to 9 more requirements.'
+                  : 'Add up to 10 verification requirements.'
+                }
               </p>
             </div>
           </CardContent>
