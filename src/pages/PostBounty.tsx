@@ -1157,6 +1157,66 @@ function PostBountyForm() {
               </AlertDescription>
             </Alert>
 
+            {/* Promo Code Section */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setShowPromoInput(!showPromoInput)}
+                className="text-sm text-primary hover:underline flex items-center gap-1"
+              >
+                <Gift className="h-3.5 w-3.5" />
+                {showPromoInput ? 'Hide promo code' : 'Have a promo code?'}
+              </button>
+              
+              {showPromoInput && (
+                <div className="space-y-2">
+                  {promoApplied ? (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                      <Check className="h-4 w-4 text-emerald-600" />
+                      <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                        Sponsored — your ${promoApplied.maxAmount} bounty is covered!
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removePromoCode}
+                        className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter promo code"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        className="uppercase tracking-wider font-mono"
+                        maxLength={30}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            validatePromoCode(promoCode);
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => validatePromoCode(promoCode)}
+                        disabled={!promoCode.trim() || promoValidating}
+                        variant="outline"
+                        className="shrink-0"
+                      >
+                        {promoValidating ? 'Checking...' : 'Apply'}
+                      </Button>
+                    </div>
+                  )}
+                  {promoError && (
+                    <p className="text-sm text-destructive">{promoError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="bountyAmount">
                 Bounty Reward (Finder's Fee) <span className="text-destructive">*</span>
@@ -1170,7 +1230,8 @@ function PostBountyForm() {
                   max="10000"
                   step="1"
                   placeholder="500"
-                  className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 10) ? 'border-destructive' : ''}`}
+                  disabled={!!promoApplied}
+                  className={`pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.bountyAmount || (watchedBountyAmount && watchedBountyAmount < 10) ? 'border-destructive' : ''} ${promoApplied ? 'opacity-60' : ''}`}
                   {...register('bountyAmount', { 
                     valueAsNumber: true
                   })}
@@ -1182,9 +1243,15 @@ function PostBountyForm() {
               {!errors.bountyAmount && typeof watchedBountyAmount === 'number' && !isNaN(watchedBountyAmount) && watchedBountyAmount > 0 && watchedBountyAmount < 10 && (
                 <p className="text-sm text-destructive">Minimum bounty must be $10 USD</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                💰 This is your reward to the hunter for <strong>finding</strong> the item ($10 - $10,000 USD)
-              </p>
+              {promoApplied ? (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                  🎁 This bounty is sponsored — amount locked at ${promoApplied.maxAmount}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1">
+                  💰 This is your reward to the hunter for <strong>finding</strong> the item ($10 - $10,000 USD)
+                </p>
+              )}
             </div>
 
             {/* Fee Breakdown - only show when bounty amount is a valid positive number */}
