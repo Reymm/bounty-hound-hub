@@ -119,7 +119,14 @@ function PostBountyForm() {
         });
         // Restore other state
         if (parsed.tags) setTags(parsed.tags);
-        if (parsed.verificationRequirements) setVerificationRequirements(parsed.verificationRequirements);
+        if (parsed.verificationRequirements) {
+          const restored = parsed.verificationRequirements as string[];
+          // Ensure mandatory requirement is always present
+          if (!restored.includes(MANDATORY_VERIFICATION_REQUIREMENT)) {
+            restored.unshift(MANDATORY_VERIFICATION_REQUIREMENT);
+          }
+          setVerificationRequirements(restored);
+        }
         if (parsed.uploadedImages) setUploadedImages(parsed.uploadedImages);
         if (parsed.hasDeadline !== undefined) setHasDeadline(parsed.hasDeadline);
         
