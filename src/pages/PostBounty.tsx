@@ -212,6 +212,8 @@ function PostBountyForm() {
   };
 
   const removeVerificationRequirement = (reqToRemove: string) => {
+    // Prevent removing the mandatory requirement
+    if (reqToRemove === MANDATORY_VERIFICATION_REQUIREMENT) return;
     const newRequirements = verificationRequirements.filter(req => req !== reqToRemove);
     setVerificationRequirements(newRequirements);
     setValue('verificationRequirements', newRequirements);
